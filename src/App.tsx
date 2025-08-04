@@ -6,9 +6,33 @@ import { useAuthStore } from './stores/auth.store';
 // Pages
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
+import HomePage from './pages/HomePage';
+import AdminDashboard from './pages/AdminDashboard';
 
-// Protected Route Component
+// Protected Route Component for Admin
+interface AdminRouteProps {
+  children: React.ReactNode;
+}
+
+const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
+  const { isLoggedIn, user } = useAuthStore();
+  
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Check if user has admin role
+  if (user?.role?.name !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Protected Route Component for Users
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
@@ -25,10 +49,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 // Public Route Component (redirect if already logged in)
 const PublicRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isLoggedIn } = useAuthStore();
+  const { isLoggedIn, user } = useAuthStore();
   
   if (isLoggedIn) {
-    return <Navigate to="/dashboard" replace />;
+    // Redirect based on user role
+    if (user?.role?.name === 'admin') {
+      return <Navigate to="/admin" replace />;
+    } else {
+      return <Navigate to="/" replace />;
+    }
   }
   
   return <>{children}</>;
@@ -90,8 +119,37 @@ function App() {
               </PublicRoute>
             }
           />
+          <Route
+            path="/forgot-password"
+            element={
+              <PublicRoute>
+                <ForgotPasswordPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <PublicRoute>
+                <ResetPasswordPage />
+              </PublicRoute>
+            }
+          />
 
-          {/* Protected Routes */}
+          {/* Home Page - accessible by everyone */}
+          <Route path="/" element={<HomePage />} />
+
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+
+          {/* User Dashboard (legacy) */}
           <Route
             path="/dashboard"
             element={
@@ -101,9 +159,6 @@ function App() {
             }
           />
 
-          {/* Default Routes */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          
           {/* 404 Route */}
           <Route
             path="*"
@@ -113,10 +168,10 @@ function App() {
                   <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
                   <p className="text-xl text-gray-600 mb-8">Page not found</p>
                   <a
-                    href="/dashboard"
-                    className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                    href="/"
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Go to Dashboard
+                    Go to Home
                   </a>
                 </div>
               </div>

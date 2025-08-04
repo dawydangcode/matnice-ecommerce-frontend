@@ -174,8 +174,12 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className={`h-2 rounded-full transition-all duration-300 ${passwordStrength.color}`}
-                    style={{ width: `${Math.min((passwordStrength.strength / 5) * 100, 100)}%` }}
+                    className={`h-2 rounded-full transition-all duration-300 ${passwordStrength.color} ${
+                      passwordStrength.strength === 1 ? 'w-1/5' :
+                      passwordStrength.strength === 2 ? 'w-2/5' :
+                      passwordStrength.strength === 3 ? 'w-3/5' :
+                      passwordStrength.strength === 4 ? 'w-4/5' : 'w-full'
+                    }`}
                   ></div>
                 </div>
               </div>

@@ -67,7 +67,7 @@ class AuthService {
       const response = await apiService.post<{
         success: boolean;
         message: string;
-      }>(`${this.baseUrl}/request-reset-password`, email);
+      }>(`${this.baseUrl}/forgot-password/send-mail`, email);
       return response;
     } catch (error: any) {
       throw new Error(

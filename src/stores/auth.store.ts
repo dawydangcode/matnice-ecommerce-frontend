@@ -44,22 +44,41 @@ export const useAuthStore = create<AuthStore>()(
           const response = await authService.login({ username, password });
 
           if (response.accessToken) {
-            // For now, create a basic user object since we only have userId
-            const user = {
-              id: response.userId,
-              username: username,
-              email: "", // Will be filled later from profile API
-              roleId: 0,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            };
+            // After successful login, fetch user profile with role information
+            try {
+              const userProfile = await authService.getCurrentUser();
 
-            set({
-              user: user,
-              isLoggedIn: true,
-              isLoading: false,
-              error: null,
-            });
+              // Store the complete user object
+              localStorage.setItem("user", JSON.stringify(userProfile));
+
+              set({
+                user: userProfile,
+                isLoggedIn: true,
+                isLoading: false,
+                error: null,
+              });
+            } catch (profileError) {
+              console.error("Failed to fetch user profile:", profileError);
+
+              // Fallback: create basic user object
+              const basicUser = {
+                id: response.userId,
+                username: username,
+                email: "",
+                roleId: 0,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+
+              localStorage.setItem("user", JSON.stringify(basicUser));
+
+              set({
+                user: basicUser,
+                isLoggedIn: true,
+                isLoading: false,
+                error: null,
+              });
+            }
           } else {
             throw new Error("Login failed - no access token");
           }
