@@ -1,0 +1,214 @@
+import { apiService } from "./api.service";
+import {
+  Product,
+  ProductsResponse,
+  CreateProductRequest,
+  UpdateProductRequest,
+  ProductQueryParams,
+  Category,
+  Brand,
+  ProductImage,
+} from "../types/product.types";
+
+class ProductService {
+  private readonly baseUrl = "/api/v1";
+
+  // Products
+  async getProducts(params?: ProductQueryParams): Promise<ProductsResponse> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append("page", params.page.toString());
+      if (params?.limit) queryParams.append("limit", params.limit.toString());
+      if (params?.search) queryParams.append("search", params.search);
+      if (params?.category)
+        queryParams.append("category", params.category.toString());
+      if (params?.brand) queryParams.append("brand", params.brand.toString());
+      if (params?.type) queryParams.append("type", params.type);
+      if (params?.gender) queryParams.append("gender", params.gender);
+
+      const url = `${this.baseUrl}/products/list${
+        queryParams.toString() ? "?" + queryParams.toString() : ""
+      }`;
+      const response = await apiService.get<ProductsResponse>(url);
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch products"
+      );
+    }
+  }
+
+  async getProductById(productId: number): Promise<Product> {
+    try {
+      const response = await apiService.get<Product>(
+        `${this.baseUrl}/product/${productId}/detail`
+      );
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch product"
+      );
+    }
+  }
+
+  async createProduct(productData: CreateProductRequest): Promise<Product> {
+    try {
+      const response = await apiService.post<Product>(
+        `${this.baseUrl}/product/create`,
+        productData
+      );
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to create product"
+      );
+    }
+  }
+
+  async updateProduct(
+    productId: number,
+    productData: Partial<CreateProductRequest>
+  ): Promise<Product> {
+    try {
+      const response = await apiService.put<Product>(
+        `${this.baseUrl}/product/${productId}/update`,
+        productData
+      );
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to update product"
+      );
+    }
+  }
+
+  async deleteProduct(
+    productId: number
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiService.delete<{
+        success: boolean;
+        message: string;
+      }>(`${this.baseUrl}/product/${productId}/delete`);
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to delete product"
+      );
+    }
+  }
+
+  // Categories
+  async getCategories(): Promise<Category[]> {
+    try {
+      const response = await apiService.get<Category[]>(
+        `${this.baseUrl}/product-category/list`
+      );
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch categories"
+      );
+    }
+  }
+
+  // Brands
+  async getBrands(): Promise<Brand[]> {
+    try {
+      const response = await apiService.get<Brand[]>(
+        `${this.baseUrl}/brand/list`
+      );
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch brands"
+      );
+    }
+  }
+
+  // Product Images
+  async uploadProductImages(
+    productId: number,
+    images: File[]
+  ): Promise<ProductImage[]> {
+    try {
+      const formData = new FormData();
+      formData.append("productId", productId.toString());
+
+      images.forEach((image, index) => {
+        formData.append(`images`, image);
+      });
+
+      const response = await apiService.post<ProductImage[]>(
+        `${this.baseUrl}/product-image/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to upload images"
+      );
+    }
+  }
+
+  async uploadImages(images: File[]): Promise<string[]> {
+    try {
+      const formData = new FormData();
+
+      images.forEach((image) => {
+        formData.append(`images`, image);
+      });
+
+      const response = await apiService.post<string[]>(
+        `${this.baseUrl}/product-image/upload-temporary`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to upload images"
+      );
+    }
+  }
+
+  async deleteProductImage(
+    imageId: number
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiService.delete<{
+        success: boolean;
+        message: string;
+      }>(`${this.baseUrl}/product-image/${imageId}/delete`);
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to delete image"
+      );
+    }
+  }
+
+  async getProductImages(productId: number): Promise<ProductImage[]> {
+    try {
+      const response = await apiService.get<ProductImage[]>(
+        `${this.baseUrl}/product-image/product/${productId}/list`
+      );
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to fetch product images"
+      );
+    }
+  }
+}
+
+export const productService = new ProductService();

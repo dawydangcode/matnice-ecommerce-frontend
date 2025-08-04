@@ -1,7 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { jwtDecode } from "jwt-decode";
 import { User } from "../types/auth.types";
 import { authService } from "../services/auth.service";
+
+interface JwtPayload {
+  userId: number;
+  sessionId: number;
+  email: string;
+  roleId: number;
+  role: string;
+  iat: number;
+  exp: number;
+}
 
 interface AuthState {
   user: User | null;
@@ -44,40 +55,73 @@ export const useAuthStore = create<AuthStore>()(
           const response = await authService.login({ username, password });
 
           if (response.accessToken) {
-            // After successful login, fetch user profile with role information
+            // Decode JWT to get user information
             try {
-              const userProfile = await authService.getCurrentUser();
+              const decoded = jwtDecode<JwtPayload>(response.accessToken.token);
+              console.log("JWT Payload:", decoded);
 
-              // Store the complete user object
-              localStorage.setItem("user", JSON.stringify(userProfile));
-
-              set({
-                user: userProfile,
-                isLoggedIn: true,
-                isLoading: false,
-                error: null,
-              });
-            } catch (profileError) {
-              console.error("Failed to fetch user profile:", profileError);
-
-              // Fallback: create basic user object
-              const basicUser = {
-                id: response.userId,
-                username: username,
-                email: "",
-                roleId: 0,
+              // Create user object from JWT payload
+              const userFromJWT: User = {
+                id: decoded.userId,
+                username: username, // We get this from login form
+                email: decoded.email,
+                roleId: decoded.roleId,
+                role: {
+                  id: decoded.roleId,
+                  name: decoded.role,
+                  type: decoded.role, // Use role string as type
+                },
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
               };
 
-              localStorage.setItem("user", JSON.stringify(basicUser));
+              // Store the user object
+              localStorage.setItem("user", JSON.stringify(userFromJWT));
 
               set({
-                user: basicUser,
+                user: userFromJWT,
                 isLoggedIn: true,
                 isLoading: false,
                 error: null,
               });
+
+              console.log("User stored:", userFromJWT);
+            } catch (jwtError) {
+              console.error("Failed to decode JWT:", jwtError);
+
+              // Fallback: try to fetch user profile from API
+              try {
+                const userProfile = await authService.getCurrentUser();
+                localStorage.setItem("user", JSON.stringify(userProfile));
+
+                set({
+                  user: userProfile,
+                  isLoggedIn: true,
+                  isLoading: false,
+                  error: null,
+                });
+              } catch (profileError) {
+                console.error("Failed to fetch user profile:", profileError);
+
+                // Last fallback: create basic user object
+                const basicUser = {
+                  id: response.userId,
+                  username: username,
+                  email: "",
+                  roleId: 0,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                };
+
+                localStorage.setItem("user", JSON.stringify(basicUser));
+
+                set({
+                  user: basicUser,
+                  isLoggedIn: true,
+                  isLoading: false,
+                  error: null,
+                });
+              }
             }
           } else {
             throw new Error("Login failed - no access token");

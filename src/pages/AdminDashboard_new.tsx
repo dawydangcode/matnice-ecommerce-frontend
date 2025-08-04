@@ -190,10 +190,11 @@ const AdminDashboard: React.FC = () => {
                 />
               </div>
               
-              <button 
+              <button
                 className="relative p-2 text-gray-400 hover:text-gray-600"
-                title="Thông báo"
+                title="Notifications"
               >
+                
                 <Bell className="w-6 h-6" />
                 <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full"></span>
               </button>

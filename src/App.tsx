@@ -25,7 +25,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   }
   
   // Check if user has admin role
-  if (user?.role?.name !== 'admin') {
+  if (user?.role?.name !== 'admin' && user?.role?.type !== 'admin') {
     return <Navigate to="/" replace />;
   }
   
@@ -53,7 +53,7 @@ const PublicRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   
   if (isLoggedIn) {
     // Redirect based on user role
-    if (user?.role?.name === 'admin') {
+    if (user?.role?.name === 'admin' || user?.role?.type === 'admin') {
       return <Navigate to="/admin" replace />;
     } else {
       return <Navigate to="/" replace />;

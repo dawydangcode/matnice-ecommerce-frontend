@@ -29,7 +29,14 @@ class ApiService {
     this.api.interceptors.request.use(
       (config) => {
         const token = localStorage.getItem("accessToken");
+        console.log(
+          "API Request:",
+          config.url,
+          "Token:",
+          token ? "Present" : "Missing"
+        );
         if (token) {
+          console.log("Token value:", token.substring(0, 50) + "...");
           config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
@@ -72,8 +79,8 @@ class ApiService {
     return response.data;
   }
 
-  async post<T>(url: string, data?: any): Promise<T> {
-    const response = await this.api.post(url, data);
+  async post<T>(url: string, data?: any, config?: any): Promise<T> {
+    const response = await this.api.post(url, data, config);
     return response.data;
   }
 

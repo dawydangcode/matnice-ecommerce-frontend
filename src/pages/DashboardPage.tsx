@@ -69,7 +69,9 @@ const DashboardPage: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-gray-600">Role:</span>
-                  <span className="ml-2 font-medium capitalize">{user?.role?.type || 'User'}</span>
+                  <span className="ml-2 font-medium capitalize">
+                    {user?.role?.type || user?.role?.name || 'User'}
+                  </span>
                 </div>
               </div>
             </div>

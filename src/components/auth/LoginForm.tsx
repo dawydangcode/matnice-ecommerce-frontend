@@ -37,7 +37,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       if (onSuccess) {
         onSuccess();
       } else {
-        navigate('/dashboard');
+        // Get user info after login to determine redirect
+        const { user } = useAuthStore.getState();
+        
+        // Redirect based on user role
+        if (user?.role?.name === 'admin' || user?.role?.type === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       }
     } catch (error: any) {
       toast.error(error.message || 'Login failed');

@@ -34,7 +34,7 @@ const HomePage: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <User className="w-4 h-4" />
                     <span className="text-sm">{user?.username}</span>
-                    {user?.role?.name === 'admin' && (
+                    {(user?.role?.name === 'admin' || user?.role?.type === 'admin') && (
                       <Link to="/admin" className="text-blue-600 hover:text-blue-800 text-sm">
                         Admin
                       </Link>
