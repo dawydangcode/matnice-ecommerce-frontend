@@ -12,7 +12,9 @@ import {
   LogOut,
   Tag,
   Layers,
-  Eye
+  Eye,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { useBrandStore } from '../stores/brand.store';
@@ -25,6 +27,7 @@ import BrandListPage from './admin/BrandListPage';
 import CategoryListPage from './admin/CategoryListPage';
 import LensListPage from './admin/LensListPage';
 import LensQualityListPage from './admin/LensQualityListPage';
+import LensManagementPage from './admin/LensManagementPage';
 import BrandForm from '../components/admin/BrandForm';
 import CategoryForm from '../components/admin/CategoryForm';
 import LensForm from '../components/admin/LensForm';
@@ -34,7 +37,7 @@ import { Brand } from '../types/brand.types';
 import { Category } from '../types/category.types';
 import { Lens, LensQuality } from '../types/lens.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-form' | 'lens-quality' | 'lens-quality-form';
+type AdminView = 'dashboard' | 'products' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -42,6 +45,7 @@ const AdminDashboard: React.FC = () => {
   const { createCategory, updateCategory } = useCategoryStore();
   const { createLens, updateLens, createLensQuality, updateLensQuality } = useLensStore();
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -211,13 +215,30 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const toggleMenu = (menuId: string) => {
+    const newExpanded = new Set(expandedMenus);
+    if (newExpanded.has(menuId)) {
+      newExpanded.delete(menuId);
+    } else {
+      newExpanded.add(menuId);
+    }
+    setExpandedMenus(newExpanded);
+  };
+
   const menuItems = [
     { id: 'dashboard', label: 'Tổng quan', icon: BarChart3 },
     { id: 'products', label: 'Quản lý sản phẩm', icon: Package },
     { id: 'brands', label: 'Thương hiệu', icon: Tag },
     { id: 'categories', label: 'Danh mục', icon: Layers },
-    { id: 'lenses', label: 'Lens', icon: Eye },
-    { id: 'lens-quality', label: 'Chất lượng Lens', icon: Settings },
+    { 
+      id: 'lenses', 
+      label: 'Lens', 
+      icon: Eye,
+      children: [
+        { id: 'lens-management', label: 'Quản lý Lens', icon: Eye },
+        { id: 'lens-quality', label: 'Chất lượng Lens', icon: Settings },
+      ]
+    },
     { id: 'orders', label: 'Đơn hàng', icon: ShoppingCart },
     { id: 'customers', label: 'Khách hàng', icon: Users },
     { id: 'settings', label: 'Cài đặt', icon: Settings },
@@ -235,42 +256,97 @@ const AdminDashboard: React.FC = () => {
           <div className="px-4 space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const hasChildren = item.children && item.children.length > 0;
+              const isExpanded = expandedMenus.has(item.id);
+              
+              // Check if current view matches this item or its children
               const isActive = currentView === item.id || 
                              (currentView === 'product-form' && item.id === 'products') ||
                              (currentView === 'enhanced-product-form' && item.id === 'products') ||
                              (currentView === 'brand-form' && item.id === 'brands') ||
                              (currentView === 'category-form' && item.id === 'categories') ||
                              (currentView === 'lens-form' && item.id === 'lenses') ||
-                             (currentView === 'lens-quality-form' && item.id === 'lens-quality');
+                             (currentView === 'lens-management' && item.id === 'lenses') ||
+                             (currentView === 'lens-quality' && item.id === 'lenses') ||
+                             (currentView === 'lens-quality-form' && item.id === 'lenses');
+              
+              const isChildActive = hasChildren && item.children?.some(child => 
+                currentView === child.id || 
+                (currentView === 'lens-quality-form' && child.id === 'lens-quality')
+              );
               
               return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    if (item.id === 'products') {
-                      setCurrentView('products');
-                    } else if (item.id === 'dashboard') {
-                      setCurrentView('dashboard');
-                    } else if (item.id === 'brands') {
-                      setCurrentView('brands');
-                    } else if (item.id === 'categories') {
-                      setCurrentView('categories');
-                    } else if (item.id === 'lenses') {
-                      setCurrentView('lenses');
-                    } else if (item.id === 'lens-quality') {
-                      setCurrentView('lens-quality');
-                    }
-                    // Handle other menu items later
-                  }}
-                  className={`w-full flex items-center px-4 py-3 rounded-lg transition ${
-                    isActive
-                      ? 'text-blue-700 bg-blue-50'
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <Icon className="w-5 h-5 mr-3" />
-                  <span>{item.label}</span>
-                </button>
+                <div key={item.id}>
+                  <button
+                    onClick={() => {
+                      if (hasChildren) {
+                        toggleMenu(item.id);
+                      } else {
+                        if (item.id === 'products') {
+                          setCurrentView('products');
+                        } else if (item.id === 'dashboard') {
+                          setCurrentView('dashboard');
+                        } else if (item.id === 'brands') {
+                          setCurrentView('brands');
+                        } else if (item.id === 'categories') {
+                          setCurrentView('categories');
+                        }
+                        // Handle other menu items later
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition ${
+                      isActive || isChildActive
+                        ? 'text-blue-700 bg-blue-50'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <Icon className="w-5 h-5 mr-3" />
+                      <span>{item.label}</span>
+                    </div>
+                    {hasChildren && (
+                      <div className="ml-auto">
+                        {isExpanded ? (
+                          <ChevronDown className="w-4 h-4" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4" />
+                        )}
+                      </div>
+                    )}
+                  </button>
+                  
+                  {/* Children menu items */}
+                  {hasChildren && isExpanded && (
+                    <div className="ml-8 mt-2 space-y-1">
+                      {item.children?.map((child) => {
+                        const ChildIcon = child.icon;
+                        const isChildItemActive = currentView === child.id ||
+                                                (currentView === 'lens-quality-form' && child.id === 'lens-quality');
+                        
+                        return (
+                          <button
+                            key={child.id}
+                            onClick={() => {
+                              if (child.id === 'lens-management') {
+                                setCurrentView('lens-management');
+                              } else if (child.id === 'lens-quality') {
+                                setCurrentView('lens-quality');
+                              }
+                            }}
+                            className={`w-full flex items-center px-4 py-2 rounded-lg transition text-sm ${
+                              isChildItemActive
+                                ? 'text-blue-700 bg-blue-50'
+                                : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                          >
+                            <ChildIcon className="w-4 h-4 mr-3" />
+                            <span>{child.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -304,6 +380,7 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'categories' && 'Quản lý danh mục'}
                 {currentView === 'category-form' && 'Thêm/Sửa danh mục'}
                 {currentView === 'lenses' && 'Quản lý Lens'}
+                {currentView === 'lens-management' && 'Quản lý Lens'}
                 {currentView === 'lens-form' && 'Thêm/Sửa Lens'}
                 {currentView === 'lens-quality' && 'Quản lý chất lượng Lens'}
                 {currentView === 'lens-quality-form' && 'Thêm/Sửa chất lượng Lens'}
@@ -392,6 +469,7 @@ const AdminDashboard: React.FC = () => {
               onCancel={handleCategoryFormCancel}
             />
           )}
+          {currentView === 'lens-management' && <LensManagementPage />}
           {currentView === 'lenses' && (
             <LensListPage
               onEditLens={handleEditLens}
