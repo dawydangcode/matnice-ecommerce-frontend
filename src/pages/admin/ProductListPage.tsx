@@ -95,15 +95,14 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
     const labels = {
       [ProductType.GLASSES]: 'Kính mắt',
       [ProductType.SUNGLASSES]: 'Kính râm',
-      [ProductType.CONTACT_LENSES]: 'Kính áp tròng',
     };
     return labels[type] || type;
   };
 
   const getGenderLabel = (gender: ProductGenderType) => {
     const labels = {
-      [ProductGenderType.MEN]: 'Nam',
-      [ProductGenderType.WOMEN]: 'Nữ',
+      [ProductGenderType.MALE]: 'Nam',
+      [ProductGenderType.FEMALE]: 'Nữ',
       [ProductGenderType.UNISEX]: 'Unisex',
     };
     return labels[gender] || gender;
@@ -221,7 +220,6 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
                   <option value="">Tất cả loại</option>
                   <option value={ProductType.GLASSES}>Kính mắt</option>
                   <option value={ProductType.SUNGLASSES}>Kính râm</option>
-                  <option value={ProductType.CONTACT_LENSES}>Kính áp tròng</option>
                 </select>
               </div>
 
@@ -237,8 +235,8 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
                   aria-label="Chọn giới tính để lọc"
                 >
                   <option value="">Tất cả</option>
-                  <option value={ProductGenderType.MEN}>Nam</option>
-                  <option value={ProductGenderType.WOMEN}>Nữ</option>
+                  <option value={ProductGenderType.MALE}>Nam</option>
+                  <option value={ProductGenderType.FEMALE}>Nữ</option>
                   <option value={ProductGenderType.UNISEX}>Unisex</option>
                 </select>
               </div>

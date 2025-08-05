@@ -56,13 +56,77 @@ export interface Brand {
 export enum ProductType {
   GLASSES = "glasses",
   SUNGLASSES = "sunglasses",
-  CONTACT_LENSES = "contact_lenses",
 }
 
 export enum ProductGenderType {
-  MEN = "men",
-  WOMEN = "women",
+  MALE = "male",
+  FEMALE = "female",
   UNISEX = "unisex",
+}
+
+// Frame related enums
+export enum FrameType {
+  FULL_RIM = "full_rim",
+  HALF_RIM = "half_rim",
+  NO_RIM = "no_rim",
+  RIMLESS = "rimless",
+}
+
+export enum FrameShapeType {
+  ROUND = "round",
+  SQUARE = "square",
+  RECTANGLE = "rectangle",
+  BROWLINE = "browline",
+  BUTTERFLY = "butterfly",
+  AVIATOR = "aviator",
+  NARROW = "narrow",
+  OVAL = "oval",
+}
+
+export enum FrameMaterialType {
+  PLASTIC = "plastic",
+  METAL = "metal",
+  TITAN = "titan",
+  WOOD = "wood",
+  CARBON = "carbon",
+  ALUMINIUM = "aluminium",
+  CELLULOSE = "cellulose",
+  LEATHER = "leather",
+}
+
+// Product Detail interface
+export interface ProductDetail {
+  id: number;
+  productId: number;
+  productNumber: string;
+  color: string;
+  bridgeWidth: number;
+  frameWidth: number;
+  lensHeight: number;
+  lensWidth: number;
+  templeLength: number;
+  frameColor: string;
+  frameMaterial: FrameMaterialType;
+  frameShape: FrameShapeType;
+  frameType: FrameType;
+  springHinge: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProductDetailRequest {
+  productNumber: string;
+  color: string;
+  bridgeWidth: number;
+  frameWidth: number;
+  lensHeight: number;
+  lensWidth: number;
+  templeLength: number;
+  frameColor: string;
+  frameMaterial: FrameMaterialType;
+  frameShape: FrameShapeType;
+  frameType: FrameType;
+  springHinge: boolean;
 }
 
 // Request/Response types
@@ -76,12 +140,9 @@ export interface CreateProductRequest {
   stock: number;
   description?: string;
   isSustainable?: boolean;
-  material?: string;
-  shape?: string;
-  color?: string;
-  lensType?: string;
-  frameMaterial?: string;
   imageUrls?: string[];
+  // Product detail included in creation
+  productDetail?: CreateProductDetailRequest;
 }
 
 export interface UpdateProductRequest extends Partial<CreateProductRequest> {

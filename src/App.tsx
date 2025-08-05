@@ -11,6 +11,8 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminTestPage from './pages/admin/AdminTestPage';
+import ProductFormDemoPage from './pages/admin/ProductFormDemoPage';
 
 // Protected Route Component for Admin
 interface AdminRouteProps {
@@ -145,6 +147,26 @@ function App() {
             element={
               <AdminRoute>
                 <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          
+          {/* Admin Test Routes */}
+          <Route
+            path="/admin/test"
+            element={
+              <AdminRoute>
+                <AdminTestPage />
+              </AdminRoute>
+            }
+          />
+          
+          {/* Product Form Demo */}
+          <Route
+            path="/admin/product-form"
+            element={
+              <AdminRoute>
+                <ProductFormDemoPage />
               </AdminRoute>
             }
           />

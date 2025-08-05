@@ -102,10 +102,11 @@ class ProductService {
   async getCategories(): Promise<Category[]> {
     try {
       const response = await apiService.get<Category[]>(
-        `${this.baseUrl}/product-category/list`
+        `${this.baseUrl}/category/list`
       );
       return response;
     } catch (error: any) {
+      console.error("Error fetching categories:", error);
       throw new Error(
         error.response?.data?.message || "Failed to fetch categories"
       );
@@ -120,6 +121,7 @@ class ProductService {
       );
       return response;
     } catch (error: any) {
+      console.error("Error fetching brands:", error);
       throw new Error(
         error.response?.data?.message || "Failed to fetch brands"
       );

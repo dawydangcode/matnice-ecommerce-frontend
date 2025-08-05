@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { 
   Save, 
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useProductStore } from '../../stores/product.store';
 import { Product, ProductType, ProductGenderType, CreateProductRequest } from '../../types/product.types';
+import { productCategoryService } from '../../services/product-category.service';
 import toast from 'react-hot-toast';
 
 interface ProductFormPageProps {
@@ -22,20 +23,16 @@ type FormData = {
   stock: number;
   productType: string;
   gender: string;
-  categoryId: number;
+  categoryIds: number[];
   brandId: number;
   description?: string;
-  material?: string;
-  shape?: string;
-  color?: string;
-  lensType?: string;
-  frameMaterial?: string;
+  isSustainable?: boolean;
 };
 
 const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, onSuccess }) => {
   const {
-    categories,
-    brands,
+    categories: rawCategories,
+    brands: rawBrands,
     isLoading,
     createProduct,
     updateProduct,
@@ -44,10 +41,15 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
     fetchBrands,
   } = useProductStore();
 
+  // Ensure we always have arrays
+  const categories = useMemo(() => Array.isArray(rawCategories) ? rawCategories : [], [rawCategories]);
+  const brands = useMemo(() => Array.isArray(rawBrands) ? rawBrands : [], [rawBrands]);
+
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
 
   const {
     register,
@@ -61,23 +63,30 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
     fetchBrands();
   }, [fetchCategories, fetchBrands]);
 
+  // Debug log để kiểm tra dữ liệu
+  useEffect(() => {
+    console.log('Categories:', categories);
+    console.log('Brands:', brands);
+    console.log('isLoading:', isLoading);
+  }, [categories, brands, isLoading]);
+
   useEffect(() => {
     if (product) {
+      const categoryIds = product.categories?.map(cat => cat.id) || (product.category ? [product.category.id] : []);
+      
       reset({
         productName: product.productName,
         price: product.price,
         stock: product.stock,
         productType: product.productType,
         gender: product.gender,
-        categoryId: product.category?.id,
+        categoryIds: categoryIds,
         brandId: product.brand?.id,
         description: product.description || '',
-        material: product.material || '',
-        shape: product.shape || '',
-        color: product.color || '',
-        lensType: product.lensType || '',
-        frameMaterial: product.frameMaterial || '',
+        isSustainable: product.isSustainable || false,
       });
+
+      setSelectedCategoryIds(categoryIds);
 
       if (product.images) {
         setExistingImages(product.images.map(img => img.imageUrl));
@@ -124,6 +133,12 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
   };
 
   const onSubmit = async (data: FormData) => {
+    // Validate categories
+    if (selectedCategoryIds.length === 0) {
+      toast.error('Vui lòng chọn ít nhất một danh mục');
+      return;
+    }
+
     try {
       setUploading(true);
 
@@ -141,23 +156,34 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
         stock: data.stock,
         productType: data.productType as ProductType,
         gender: data.gender as ProductGenderType,
-        categoryId: data.categoryId,
+        categoryId: selectedCategoryIds[0], // Sử dụng category đầu tiên làm primary
         brandId: data.brandId,
         description: data.description || undefined,
-        material: data.material || undefined,
-        shape: data.shape || undefined,
-        color: data.color || undefined,
-        lensType: data.lensType || undefined,
-        frameMaterial: data.frameMaterial || undefined,
+        isSustainable: data.isSustainable || false,
         imageUrls,
       };
 
+      let productId: number;
+
       if (product) {
         await updateProduct(product.productId, productData);
+        productId = product.productId;
         toast.success('Cập nhật sản phẩm thành công!');
       } else {
-        await createProduct(productData);
+        const createdProduct = await createProduct(productData);
+        productId = createdProduct?.productId || 0;
         toast.success('Tạo sản phẩm thành công!');
+      }
+
+      // Update product categories if we have multiple categories
+      if (selectedCategoryIds.length > 1 && productId) {
+        try {
+          await productCategoryService.updateProductCategories(productId, selectedCategoryIds);
+          toast.success('Cập nhật danh mục sản phẩm thành công!');
+        } catch (error) {
+          console.error('Error updating product categories:', error);
+          toast.error('Có lỗi khi cập nhật danh mục sản phẩm');
+        }
       }
 
       onSuccess();
@@ -167,6 +193,18 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
       setUploading(false);
     }
   };
+
+  // Show loading if data is still being fetched
+  if (isLoading && (categories.length === 0 || brands.length === 0)) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-gray-600">Đang tải dữ liệu...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -260,7 +298,6 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
                   <option value="">Chọn loại sản phẩm</option>
                   <option value={ProductType.GLASSES}>Kính mắt</option>
                   <option value={ProductType.SUNGLASSES}>Kính râm</option>
-                  <option value={ProductType.CONTACT_LENSES}>Kính áp tròng</option>
                 </select>
                 {errors.productType && (
                   <p className="mt-1 text-sm text-red-600">{errors.productType.message}</p>
@@ -278,8 +315,8 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
                   aria-label="Chọn giới tính"
                 >
                   <option value="">Chọn giới tính</option>
-                  <option value={ProductGenderType.MEN}>Nam</option>
-                  <option value={ProductGenderType.WOMEN}>Nữ</option>
+                  <option value={ProductGenderType.MALE}>Nam</option>
+                  <option value={ProductGenderType.FEMALE}>Nữ</option>
                   <option value={ProductGenderType.UNISEX}>Unisex</option>
                 </select>
                 {errors.gender && (
@@ -287,28 +324,38 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
                 )}
               </div>
 
-              {/* Category */}
-              <div>
+              {/* Categories */}
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Danh mục *
+                  Danh mục * (Chọn một hoặc nhiều)
                 </label>
-                <select
-                  {...register('categoryId', { 
-                    required: 'Danh mục là bắt buộc',
-                    valueAsNumber: true
-                  })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  aria-label="Chọn danh mục"
-                >
-                  <option value="">Chọn danh mục</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.categoryId && (
-                  <p className="mt-1 text-sm text-red-600">{errors.categoryId.message}</p>
+                <div className="border border-gray-300 rounded-lg p-3 max-h-40 overflow-y-auto">
+                  {categories.length === 0 ? (
+                    <p className="text-gray-500 text-sm">Không có danh mục nào</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {categories.map((category) => (
+                        <label key={category.id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategoryIds.includes(category.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCategoryIds(prev => [...prev, category.id]);
+                              } else {
+                                setSelectedCategoryIds(prev => prev.filter(id => id !== category.id));
+                              }
+                            }}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">{category.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {selectedCategoryIds.length === 0 && (
+                  <p className="mt-1 text-sm text-red-600">Ít nhất một danh mục là bắt buộc</p>
                 )}
               </div>
 
@@ -343,73 +390,6 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
           <div className="mb-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Thông tin chi tiết</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Material */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Chất liệu
-                </label>
-                <input
-                  type="text"
-                  {...register('material')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Nhập chất liệu"
-                />
-              </div>
-
-              {/* Shape */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Hình dáng
-                </label>
-                <input
-                  type="text"
-                  {...register('shape')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Nhập hình dáng"
-                />
-              </div>
-
-              {/* Color */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Màu sắc
-                </label>
-                <input
-                  type="text"
-                  {...register('color')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Nhập màu sắc"
-                />
-              </div>
-
-              {/* Lens Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Loại tròng
-                </label>
-                <input
-                  type="text"
-                  {...register('lensType')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Nhập loại tròng"
-                />
-              </div>
-
-              {/* Frame Material */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Chất liệu gọng
-                </label>
-                <input
-                  type="text"
-                  {...register('frameMaterial')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Nhập chất liệu gọng"
-                />
-              </div>
-            </div>
-
             {/* Description */}
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -421,6 +401,18 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Nhập mô tả sản phẩm"
               />
+            </div>
+
+            {/* Sustainable */}
+            <div className="mt-6">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  {...register('isSustainable')}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <span className="text-sm font-medium text-gray-700">Sản phẩm thân thiện với môi trường</span>
+              </label>
             </div>
           </div>
 
