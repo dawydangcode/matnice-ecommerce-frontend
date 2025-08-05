@@ -35,6 +35,8 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
   const [selectedBrand, setSelectedBrand] = useState<number | undefined>();
+  const [brandSearchTerm, setBrandSearchTerm] = useState('');
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
   const [selectedType, setSelectedType] = useState<ProductType | undefined>();
   const [selectedGender, setSelectedGender] = useState<ProductGenderType | undefined>();
   const [showFilters, setShowFilters] = useState(false);
@@ -68,8 +70,10 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
     setSearchTerm('');
     setSelectedCategory(undefined);
     setSelectedBrand(undefined);
+    setBrandSearchTerm('');
     setSelectedType(undefined);
     setSelectedGender(undefined);
+    setShowBrandDropdown(false);
     fetchProducts();
   };
 
@@ -106,6 +110,29 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
       [ProductGenderType.UNISEX]: 'Unisex',
     };
     return labels[gender] || gender;
+  };
+
+  // Filter brands based on search term
+  const filteredBrands = brands.filter(brand =>
+    brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase())
+  );
+
+  const handleBrandSelect = (brand: { id: number; name: string }) => {
+    setSelectedBrand(brand.id);
+    setBrandSearchTerm(brand.name);
+    setShowBrandDropdown(false);
+  };
+
+  const handleBrandInputChange = (value: string) => {
+    setBrandSearchTerm(value);
+    setShowBrandDropdown(true);
+    // Reset selected brand if the input doesn't match exactly
+    const exactMatch = brands.find(brand => brand.name.toLowerCase() === value.toLowerCase());
+    if (exactMatch) {
+      setSelectedBrand(exactMatch.id);
+    } else {
+      setSelectedBrand(undefined);
+    }
   };
 
   return (
@@ -187,23 +214,52 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
               </div>
 
               {/* Brand Filter */}
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Thương hiệu
                 </label>
-                <select
-                  value={selectedBrand || ''}
-                  onChange={(e) => setSelectedBrand(e.target.value ? Number(e.target.value) : undefined)}
+                <input
+                  type="text"
+                  value={brandSearchTerm}
+                  onChange={(e) => handleBrandInputChange(e.target.value)}
+                  onFocus={() => setShowBrandDropdown(true)}
+                  onBlur={() => {
+                    // Delay hiding dropdown to allow click on options
+                    setTimeout(() => setShowBrandDropdown(false), 200);
+                  }}
+                  placeholder="Tìm kiếm thương hiệu..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  aria-label="Chọn thương hiệu để lọc"
-                >
-                  <option value="">Tất cả thương hiệu</option>
-                  {brands.map((brand) => (
-                    <option key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </option>
-                  ))}
-                </select>
+                  aria-label="Tìm kiếm thương hiệu"
+                />
+                
+                {/* Dropdown */}
+                {showBrandDropdown && brandSearchTerm && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredBrands.length > 0 ? (
+                      filteredBrands.map((brand) => (
+                        <button
+                          key={brand.id}
+                          type="button"
+                          onClick={() => handleBrandSelect(brand)}
+                          className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                        >
+                          {brand.name}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-3 py-2 text-gray-500 text-sm">
+                        Không tìm thấy thương hiệu nào
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Show selected brand */}
+                {selectedBrand && !brandSearchTerm && (
+                  <div className="mt-1 text-sm text-green-600">
+                    Đã chọn: {brands.find(b => b.id === selectedBrand)?.name}
+                  </div>
+                )}
               </div>
 
               {/* Type Filter */}
@@ -242,14 +298,17 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
               </div>
             </div>
 
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={handleClearFilters}
-                className="text-gray-600 hover:text-gray-800 transition"
-              >
-                Xóa bộ lọc
-              </button>
-            </div>
+            {/* Clear Filters Button - Only show if any filter is active */}
+            {(searchTerm || selectedCategory || selectedBrand || brandSearchTerm || selectedType || selectedGender) && (
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={handleClearFilters}
+                  className="text-gray-600 hover:text-gray-800 transition"
+                >
+                  Xóa bộ lọc
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

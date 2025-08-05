@@ -101,10 +101,12 @@ class ProductService {
   // Categories
   async getCategories(): Promise<Category[]> {
     try {
-      const response = await apiService.get<Category[]>(
-        `${this.baseUrl}/category/list`
-      );
-      return response;
+      const response = await apiService.get<{
+        total: number;
+        data: Category[];
+      }>(`${this.baseUrl}/category/list`);
+      console.log("Categories API response:", response);
+      return response.data || [];
     } catch (error: any) {
       console.error("Error fetching categories:", error);
       throw new Error(
@@ -116,10 +118,11 @@ class ProductService {
   // Brands
   async getBrands(): Promise<Brand[]> {
     try {
-      const response = await apiService.get<Brand[]>(
+      const response = await apiService.get<{ total: number; data: Brand[] }>(
         `${this.baseUrl}/brand/list`
       );
-      return response;
+      console.log("Brands API response:", response);
+      return response.data || [];
     } catch (error: any) {
       console.error("Error fetching brands:", error);
       throw new Error(

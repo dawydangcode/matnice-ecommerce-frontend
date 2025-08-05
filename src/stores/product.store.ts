@@ -195,8 +195,10 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
   fetchCategories: async () => {
     try {
       const categories = await productService.getCategories();
+      console.log("Store fetchCategories - received:", categories);
       set({ categories: Array.isArray(categories) ? categories : [] });
     } catch (error: any) {
+      console.error("Store fetchCategories - error:", error);
       set({
         categories: [], // Đảm bảo categories luôn là array
         error: error.message || "Failed to fetch categories",
@@ -207,8 +209,10 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
   fetchBrands: async () => {
     try {
       const brands = await productService.getBrands();
+      console.log("Store fetchBrands - received:", brands);
       set({ brands: Array.isArray(brands) ? brands : [] });
     } catch (error: any) {
+      console.error("Store fetchBrands - error:", error);
       set({
         brands: [], // Đảm bảo brands luôn là array
         error: error.message || "Failed to fetch brands",

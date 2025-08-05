@@ -116,7 +116,6 @@ export interface ProductDetail {
 
 export interface CreateProductDetailRequest {
   productNumber: string;
-  color: string;
   bridgeWidth: number;
   frameWidth: number;
   lensHeight: number;

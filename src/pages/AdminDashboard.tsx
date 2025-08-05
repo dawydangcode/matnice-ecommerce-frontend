@@ -16,20 +16,21 @@ import {
 import { useAuthStore } from '../stores/auth.store';
 import ProductListPage from './admin/ProductListPage';
 import ProductFormPage from './admin/ProductFormPage';
+import EnhancedProductForm from '../components/admin/EnhancedProductForm';
 import BrandListPage from './admin/BrandListPage';
 import CategoryListPage from './admin/CategoryListPage';
 import { Product } from '../types/product.types';
-import { Brand } from '../types/brand.types';
-import { Category } from '../types/category.types';
+// import { Brand } from '../types/brand.types';
+// import { Category } from '../types/category.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form';
+type AdminView = 'dashboard' | 'products' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  // const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+  // const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   const handleLogout = () => {
     logout();
@@ -42,10 +43,20 @@ const AdminDashboard: React.FC = () => {
 
   const handleCreateProduct = () => {
     setEditingProduct(null);
-    setCurrentView('product-form');
+    setCurrentView('enhanced-product-form');
   };
 
+  // const handleCreateEnhancedProduct = () => {
+  //   setEditingProduct(null);
+  //   setCurrentView('enhanced-product-form');
+  // };
+
   const handleProductFormCancel = () => {
+    setEditingProduct(null);
+    setCurrentView('products');
+  };
+
+  const handleEnhancedProductFormCancel = () => {
     setEditingProduct(null);
     setCurrentView('products');
   };
@@ -55,6 +66,13 @@ const AdminDashboard: React.FC = () => {
     setCurrentView('products');
   };
 
+  const handleEnhancedProductFormSuccess = () => {
+    setEditingProduct(null);
+    setCurrentView('products');
+  };
+
+  // Brand handlers - commented out for future use
+  /*
   const handleEditBrand = (brand: Brand) => {
     setEditingBrand(brand);
     setCurrentView('brand-form');
@@ -94,10 +112,11 @@ const AdminDashboard: React.FC = () => {
     setEditingCategory(null);
     setCurrentView('categories');
   };
+  */
 
   const menuItems = [
     { id: 'dashboard', label: 'Tổng quan', icon: BarChart3 },
-    { id: 'products', label: 'Sản phẩm', icon: Package },
+    { id: 'products', label: 'Quản lý sản phẩm', icon: Package },
     { id: 'brands', label: 'Thương hiệu', icon: Tag },
     { id: 'categories', label: 'Danh mục', icon: Layers },
     { id: 'orders', label: 'Đơn hàng', icon: ShoppingCart },
@@ -119,6 +138,7 @@ const AdminDashboard: React.FC = () => {
               const Icon = item.icon;
               const isActive = currentView === item.id || 
                              (currentView === 'product-form' && item.id === 'products') ||
+                             (currentView === 'enhanced-product-form' && item.id === 'products') ||
                              (currentView === 'brand-form' && item.id === 'brands') ||
                              (currentView === 'category-form' && item.id === 'categories');
               
@@ -171,6 +191,7 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold text-gray-800">
                 {currentView === 'dashboard' && 'Tổng quan'}
+                {currentView === 'enhanced-product-form' && 'Thêm sản phẩm mới'}
                 {currentView === 'products' && 'Quản lý sản phẩm'}
                 {currentView === 'product-form' && (editingProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm')}
                 {currentView === 'brands' && 'Quản lý thương hiệu'}
@@ -216,6 +237,13 @@ const AdminDashboard: React.FC = () => {
         {/* Page Content */}
         <main className="flex-1 p-6 overflow-auto">
           {currentView === 'dashboard' && <DashboardContent />}
+          {currentView === 'enhanced-product-form' && (
+            <EnhancedProductForm
+              product={editingProduct}
+              onCancel={handleEnhancedProductFormCancel}
+              onSuccess={handleEnhancedProductFormSuccess}
+            />
+          )}
           {currentView === 'products' && (
             <ProductListPage
               onEditProduct={handleEditProduct}
@@ -231,14 +259,14 @@ const AdminDashboard: React.FC = () => {
           )}
           {currentView === 'brands' && (
             <BrandListPage
-              onEditBrand={handleEditBrand}
-              onCreateBrand={handleCreateBrand}
+              onEditBrand={() => {}}
+              onCreateBrand={() => {}}
             />
           )}
           {currentView === 'categories' && (
             <CategoryListPage
-              onEditCategory={handleEditCategory}
-              onCreateCategory={handleCreateCategory}
+              onEditCategory={() => {}}
+              onCreateCategory={() => {}}
             />
           )}
         </main>

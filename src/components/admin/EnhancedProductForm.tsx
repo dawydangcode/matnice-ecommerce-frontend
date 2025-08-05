@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { 
   Save, 
@@ -42,7 +42,6 @@ type FormData = {
   
   // Product Detail
   productNumber: string;
-  color: string;
   bridgeWidth: number;
   frameWidth: number;
   lensHeight: number;
@@ -72,8 +71,8 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
   } = useProductStore();
 
   // Ensure we always have arrays
-  const categories = Array.isArray(rawCategories) ? rawCategories : [];
-  const brands = Array.isArray(rawBrands) ? rawBrands : [];
+  const categories = useMemo(() => Array.isArray(rawCategories) ? rawCategories : [], [rawCategories]);
+  const brands = useMemo(() => Array.isArray(rawBrands) ? rawBrands : [], [rawBrands]);
 
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
@@ -81,13 +80,19 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
   const [uploading, setUploading] = useState(false);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState<'basic' | 'detail' | 'images'>('basic');
+  
+  // Brand search states
+  const [brandSearchTerm, setBrandSearchTerm] = useState('');
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [selectedBrandId, setSelectedBrandId] = useState<number | undefined>();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-    watch
+    watch,
+    setValue
   } = useForm<FormData>({
     defaultValues: {
       isSustainable: false,
@@ -105,6 +110,13 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
     fetchBrands();
   }, [fetchCategories, fetchBrands]);
 
+  // Debug log để kiểm tra dữ liệu
+  useEffect(() => {
+    console.log('EnhancedProductForm - Categories:', categories);
+    console.log('EnhancedProductForm - Brands:', brands);
+    console.log('EnhancedProductForm - isLoading:', isLoading);
+  }, [categories, brands, isLoading]);
+
   useEffect(() => {
     if (product) {
       const categoryIds = product.categories?.map(cat => cat.id) || (product.category ? [product.category.id] : []);
@@ -120,7 +132,6 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
         isSustainable: product.isSustainable || false,
         // Add default values for product detail if editing
         productNumber: '',
-        color: '',
         bridgeWidth: 18,
         frameWidth: 135,
         lensHeight: 35,
@@ -135,9 +146,20 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
 
       setSelectedCategoryIds(categoryIds);
 
+      // Set brand search term when editing
+      if (product.brand) {
+        setSelectedBrandId(product.brand.id);
+        setBrandSearchTerm(product.brand.name);
+      }
+
       if (product.images) {
         setExistingImages(product.images.map(img => img.imageUrl));
       }
+    } else {
+      // Reset brand search when creating new product
+      setBrandSearchTerm('');
+      setSelectedBrandId(undefined);
+      setShowBrandDropdown(false);
     }
   }, [product, reset]);
 
@@ -165,6 +187,45 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
     // Create preview URLs
     const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file));
     setImagePreviewUrls(prev => [...prev, ...newPreviewUrls]);
+  };
+
+  // Brand search logic
+  const filteredBrands = useMemo(() => {
+    if (!brandSearchTerm) return brands;
+    return brands.filter(brand =>
+      brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase())
+    );
+  }, [brands, brandSearchTerm]);
+
+  const handleBrandSelect = (brand: { id: number; name: string }) => {
+    setSelectedBrandId(brand.id);
+    setBrandSearchTerm(brand.name);
+    setShowBrandDropdown(false);
+    
+    // Update form value using react-hook-form setValue
+    setValue('brandId', brand.id);
+  };
+
+  const handleBrandInputChange = (value: string) => {
+    setBrandSearchTerm(value);
+    setShowBrandDropdown(true);
+    
+    // If input is empty, clear the selected brand
+    if (!value) {
+      setSelectedBrandId(undefined);
+      setValue('brandId', '' as any); // Clear form value
+      return;
+    }
+    
+    // Reset selected brand if the input doesn't match exactly
+    const exactMatch = brands.find(brand => brand.name.toLowerCase() === value.toLowerCase());
+    if (exactMatch) {
+      setSelectedBrandId(exactMatch.id);
+      setValue('brandId', exactMatch.id);
+    } else {
+      setSelectedBrandId(undefined);
+      setValue('brandId', '' as any); // Clear form value if no match
+    }
   };
 
   const removeImage = (index: number, isExisting: boolean = false) => {
@@ -203,7 +264,6 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
       // Prepare product detail data
       const productDetail: CreateProductDetailRequest = {
         productNumber: data.productNumber,
-        color: data.color,
         bridgeWidth: data.bridgeWidth,
         frameWidth: data.frameWidth,
         lensHeight: data.lensHeight,
@@ -252,6 +312,15 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
           toast.error('Có lỗi khi cập nhật danh mục sản phẩm');
         }
       }
+
+      // Reset form states
+      setBrandSearchTerm('');
+      setSelectedBrandId(undefined);
+      setShowBrandDropdown(false);
+      setSelectedCategoryIds([]);
+      setSelectedImages([]);
+      setImagePreviewUrls([]);
+      setExistingImages([]);
 
       onSuccess();
     } catch (error) {
@@ -441,24 +510,64 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
                 </div>
 
                 {/* Brand */}
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Thương hiệu *
                   </label>
-                  <select
+                  
+                  {/* Hidden input for react-hook-form */}
+                  <input
+                    type="hidden"
+                    id="brandId"
                     {...register('brandId', { 
                       required: 'Thương hiệu là bắt buộc',
                       valueAsNumber: true
                     })}
+                  />
+                  
+                  {/* Search input */}
+                  <input
+                    type="text"
+                    value={brandSearchTerm}
+                    onChange={(e) => handleBrandInputChange(e.target.value)}
+                    onFocus={() => setShowBrandDropdown(true)}
+                    onBlur={() => {
+                      // Delay hiding dropdown to allow click on options
+                      setTimeout(() => setShowBrandDropdown(false), 200);
+                    }}
+                    placeholder="Tìm kiếm thương hiệu..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Chọn thương hiệu</option>
-                    {brands.map((brand) => (
-                      <option key={brand.id} value={brand.id}>
-                        {brand.name}
-                      </option>
-                    ))}
-                  </select>
+                  />
+                  
+                  {/* Dropdown */}
+                  {showBrandDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredBrands.length > 0 ? (
+                        filteredBrands.map((brand) => (
+                          <button
+                            key={brand.id}
+                            type="button"
+                            onClick={() => handleBrandSelect(brand)}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                          >
+                            {brand.name}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-gray-500 text-sm">
+                          Không tìm thấy thương hiệu nào
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Show selected brand */}
+                  {selectedBrandId && !brandSearchTerm && (
+                    <div className="mt-1 text-sm text-green-600">
+                      Đã chọn: {brands.find(b => b.id === selectedBrandId)?.name}
+                    </div>
+                  )}
+                  
                   {errors.brandId && (
                     <p className="mt-1 text-sm text-red-600">{errors.brandId.message}</p>
                   )}
@@ -627,26 +736,6 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
                   )}
                 </div>
 
-                {/* Color */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Màu sắc *
-                  </label>
-                  <input
-                    type="text"
-                    {...register('color', {
-                      required: 'Màu sắc là bắt buộc'
-                    })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.color ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Ví dụ: Đen, Nâu, Bạc"
-                  />
-                  {errors.color && (
-                    <p className="mt-1 text-sm text-red-600">{errors.color.message}</p>
-                  )}
-                </div>
-
                 {/* Bridge Width */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -765,17 +854,17 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
                 {/* Frame Color */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Màu khung *
+                    Màu sắc *
                   </label>
                   <input
                     type="text"
                     {...register('frameColor', {
-                      required: 'Màu khung là bắt buộc'
+                      required: 'Màu sắc là bắt buộc'
                     })}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.frameColor ? 'border-red-300' : 'border-gray-300'
                     }`}
-                    placeholder="Ví dụ: Đen bóng, Nâu mờ"
+                    placeholder="Ví dụ: Đen, Nâu, Bạc"
                   />
                   {errors.frameColor && (
                     <p className="mt-1 text-sm text-red-600">{errors.frameColor.message}</p>
