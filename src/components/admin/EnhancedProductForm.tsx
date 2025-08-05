@@ -41,7 +41,6 @@ type FormData = {
   isSustainable: boolean;
   
   // Product Detail
-  productNumber: string;
   bridgeWidth: number;
   frameWidth: number;
   lensHeight: number;
@@ -131,7 +130,6 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
         description: product.description || '',
         isSustainable: product.isSustainable || false,
         // Add default values for product detail if editing
-        productNumber: '',
         bridgeWidth: 18,
         frameWidth: 135,
         lensHeight: 35,
@@ -263,7 +261,7 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
 
       // Prepare product detail data
       const productDetail: CreateProductDetailRequest = {
-        productNumber: data.productNumber,
+        productNumber: data.productName.toUpperCase().replace(/\s+/g, '-'), // Auto-generate from product name
         bridgeWidth: data.bridgeWidth,
         frameWidth: data.frameWidth,
         lensHeight: data.lensHeight,
@@ -710,32 +708,27 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
             </div>
           )}
 
+          {/* Basic Info Tab Navigation */}
+          {activeTab === 'basic' && (
+            <div className="flex justify-between items-center pt-6 border-t">
+              <div></div> {/* Empty div for spacing */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('detail')}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <span>Tiếp theo</span>
+                <span>→</span>
+              </button>
+            </div>
+          )}
+
           {/* Product Detail Tab */}
           {activeTab === 'detail' && (
             <div className="space-y-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Chi tiết kỹ thuật</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Product Number */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Số sản phẩm *
-                  </label>
-                  <input
-                    type="text"
-                    {...register('productNumber', {
-                      required: 'Số sản phẩm là bắt buộc'
-                    })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.productNumber ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Ví dụ: GF-001"
-                  />
-                  {errors.productNumber && (
-                    <p className="mt-1 text-sm text-red-600">{errors.productNumber.message}</p>
-                  )}
-                </div>
-
                 {/* Bridge Width */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -956,6 +949,28 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
             </div>
           )}
 
+          {/* Detail Tab Navigation */}
+          {activeTab === 'detail' && (
+            <div className="flex justify-between items-center pt-6 border-t">
+              <button
+                type="button"
+                onClick={() => setActiveTab('basic')}
+                className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <span>←</span>
+                <span>Trở lại</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('images')}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <span>Tiếp theo</span>
+                <span>→</span>
+              </button>
+            </div>
+          )}
+
           {/* Images Tab */}
           {activeTab === 'images' && (
             <div className="space-y-6">
@@ -1039,6 +1054,21 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Images Tab Navigation */}
+          {activeTab === 'images' && (
+            <div className="flex justify-between items-center pt-6 border-t">
+              <button
+                type="button"
+                onClick={() => setActiveTab('detail')}
+                className="flex items-center space-x-2 px-4 py-2 border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <span>←</span>
+                <span>Trở lại</span>
+              </button>
+              <div></div> {/* Empty div for spacing */}
             </div>
           )}
         </div>

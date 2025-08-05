@@ -115,7 +115,7 @@ export interface ProductDetail {
 }
 
 export interface CreateProductDetailRequest {
-  productNumber: string;
+  productNumber?: string; // Optional since we'll auto-generate from productName
   bridgeWidth: number;
   frameWidth: number;
   lensHeight: number;
