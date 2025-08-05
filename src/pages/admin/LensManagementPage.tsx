@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { 
   Eye,
   Layers,
@@ -14,6 +15,10 @@ import {
 } from 'lucide-react';
 import LensListPage from './LensListPage';
 import LensQualityListPage from './LensQualityListPage';
+import LensForm from '../../components/admin/LensForm';
+import LensQualityForm from '../../components/admin/LensQualityForm';
+import { Lens, LensQuality, CreateLensDto, CreateLensQualityDto } from '../../types/lens.types';
+import { useLensStore } from '../../stores/lens.store';
 
 // Lazy load components to avoid circular imports
 const LensThicknessPage = React.lazy(() => import('./LensThicknessPage'));
@@ -33,6 +38,80 @@ interface MenuItem {
 const LensManagementPage: React.FC = () => {
   const [activeMenuItem, setActiveMenuItem] = useState('lenses.basic');
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['lenses', 'quality']);
+  
+  // State for lens CRUD operations
+  const [showLensForm, setShowLensForm] = useState(false);
+  const [editingLens, setEditingLens] = useState<Lens | null>(null);
+  const [showLensQualityForm, setShowLensQualityForm] = useState(false);
+  const [editingLensQuality, setEditingLensQuality] = useState<LensQuality | null>(null);
+
+  const { createLens, updateLens, createLensQuality, updateLensQuality } = useLensStore();
+
+  // Lens CRUD handlers
+  const handleCreateLens = () => {
+    setEditingLens(null);
+    setShowLensForm(true);
+  };
+
+  const handleEditLens = (lens: Lens) => {
+    setEditingLens(lens);
+    setShowLensForm(true);
+  };
+
+  const handleLensFormSubmit = async (data: CreateLensDto) => {
+    try {
+      if (editingLens) {
+        await updateLens(editingLens.id, data);
+        toast.success('Lens updated successfully');
+      } else {
+        await createLens(data);
+        toast.success('Lens created successfully');
+      }
+      setShowLensForm(false);
+      setEditingLens(null);
+    } catch (error) {
+      console.error('Error saving lens:', error);
+      toast.error('Error saving lens');
+    }
+  };
+
+  const handleLensFormCancel = () => {
+    setShowLensForm(false);
+    setEditingLens(null);
+  };
+
+  // Lens Quality CRUD handlers
+  const handleCreateLensQuality = () => {
+    setEditingLensQuality(null);
+    setShowLensQualityForm(true);
+  };
+
+  const handleEditLensQuality = (lensQuality: LensQuality) => {
+    setEditingLensQuality(lensQuality);
+    setShowLensQualityForm(true);
+  };
+
+  const handleLensQualityFormSubmit = async (data: CreateLensQualityDto) => {
+    try {
+      if (editingLensQuality) {
+        await updateLensQuality(editingLensQuality.id, data);
+        toast.success('Lens quality updated successfully');
+      } else {
+        await createLensQuality(data);
+        toast.success('Lens quality created successfully');
+      }
+      setShowLensQualityForm(false);
+      setEditingLensQuality(null);
+    } catch (error) {
+      console.error('Error saving lens quality:', error);
+      toast.error('Error saving lens quality');
+    }
+  };
+
+  const handleLensQualityFormCancel = () => {
+    setShowLensQualityForm(false);
+    setEditingLensQuality(null);
+  };
 
   const menuItems: MenuItem[] = [
     {
@@ -250,8 +329,8 @@ const LensManagementPage: React.FC = () => {
               </div>
             }
           >
-            {activeMenuItem === 'lenses.basic' && <ActiveComponent onEditLens={() => {}} onCreateLens={() => {}} />}
-            {activeMenuItem === 'quality.basic' && <LensQualityListPage onEditLensQuality={() => {}} onCreateLensQuality={() => {}} />}
+            {activeMenuItem === 'lenses.basic' && <ActiveComponent onEditLens={handleEditLens} onCreateLens={handleCreateLens} />}
+            {activeMenuItem === 'quality.basic' && <LensQualityListPage onEditLensQuality={handleEditLensQuality} onCreateLensQuality={handleCreateLensQuality} />}
             {activeMenuItem === 'lenses.thickness' && <LensThicknessPage />}
             {activeMenuItem === 'quality.tints' && <LensTintPage />}
             {activeMenuItem === 'upgrades.features' && <LensUpgradePage />}
@@ -259,6 +338,38 @@ const LensManagementPage: React.FC = () => {
           </React.Suspense>
         </div>
       </div>
+
+      {/* Lens Form Modal */}
+      {showLensForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <h2 className="text-xl font-bold mb-4">
+              {editingLens ? 'Chỉnh sửa kính' : 'Thêm kính mới'}
+            </h2>
+            <LensForm
+              lens={editingLens}
+              onSubmit={handleLensFormSubmit}
+              onCancel={handleLensFormCancel}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Lens Quality Form Modal */}
+      {showLensQualityForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+            <h2 className="text-xl font-bold mb-4">
+              {editingLensQuality ? 'Chỉnh sửa chất lượng kính' : 'Thêm chất lượng kính mới'}
+            </h2>
+            <LensQualityForm
+              lensQuality={editingLensQuality}
+              onSubmit={handleLensQualityFormSubmit}
+              onCancel={handleLensQualityFormCancel}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

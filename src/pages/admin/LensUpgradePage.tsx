@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Zap, Shield, Eye, Sparkles } from 'lucide-react';
 import { useLensStore } from '../../stores/lens.store';
 import { LensUpgrade, CreateLensUpgradeDto, UpdateLensUpgradeDto } from '../../types/lens.types';
+import { formatVNDWithSymbol } from '../../utils/currency';
 
 const LensUpgradePage: React.FC = () => {
   const {
@@ -155,7 +156,7 @@ const LensUpgradePage: React.FC = () => {
                   </div>
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900 mb-1">{upgradeType.name}</h4>
-                    <span className="text-lg font-bold text-green-600">£{upgradeType.price.toFixed(2)}</span>
+                    <span className="text-lg font-bold text-green-600">{formatVNDWithSymbol(Number(upgradeType.price || 0))}</span>
                   </div>
                 </div>
                 <p className="text-sm text-gray-600">{upgradeType.description}</p>
@@ -214,7 +215,7 @@ const LensUpgradePage: React.FC = () => {
 
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold text-green-600">
-                £{upgrade.price.toFixed(2)}
+                {formatVNDWithSymbol(Number(upgrade.price || 0))}
               </span>
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                 Enhancement
@@ -262,17 +263,17 @@ const LensUpgradePage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Price (£) *
+                  Giá (VNĐ) *
                 </label>
                 <input
                   type="number"
-                  step="0.01"
+                  step="1000"
                   min="0"
                   required
                   value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0.00"
+                  placeholder="0"
                 />
               </div>
 

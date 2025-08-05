@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Layers } from 'lucide-react';
 import { useLensStore } from '../../stores/lens.store';
 import { LensThickness, CreateLensThicknessDto, UpdateLensThicknessDto } from '../../types/lens.types';
+import { formatVNDWithSymbol } from '../../utils/currency';
 
 const LensThicknessPage: React.FC = () => {
   const {
@@ -31,10 +32,25 @@ const LensThicknessPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Validate data before sending
+      const submitData = {
+        name: formData.name.trim(),
+        indexValue: Number(formData.indexValue),
+        price: Number(formData.price),
+        description: formData.description?.trim() || ''
+      };
+
+      // Check for invalid numbers
+      if (isNaN(submitData.indexValue) || isNaN(submitData.price)) {
+        throw new Error('Invalid number values');
+      }
+
+      console.log('Submitting lens thickness data:', submitData);
+
       if (editingItem) {
-        await updateLensThickness(editingItem.id, formData as UpdateLensThicknessDto);
+        await updateLensThickness(editingItem.id, submitData as UpdateLensThicknessDto);
       } else {
-        await createLensThickness(formData);
+        await createLensThickness(submitData);
       }
       resetForm();
       fetchLensThicknesses();
@@ -153,7 +169,7 @@ const LensThicknessPage: React.FC = () => {
 
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold text-green-600">
-                £{thickness.price.toFixed(2)}
+                {formatVNDWithSymbol(Number(thickness.price || 0))}
               </span>
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 Available
@@ -210,7 +226,10 @@ const LensThicknessPage: React.FC = () => {
                   max="2.0"
                   required
                   value={formData.indexValue}
-                  onChange={(e) => setFormData({ ...formData, indexValue: parseFloat(e.target.value) })}
+                  onChange={(e) => setFormData({ 
+                    ...formData, 
+                    indexValue: parseFloat(e.target.value) || 1.50 
+                  })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="1.50"
                   title="Refractive Index"
@@ -219,18 +238,18 @@ const LensThicknessPage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Price (£) *
+                  Giá (VNĐ) *
                 </label>
                 <input
                   type="number"
-                  step="0.01"
+                  step="1000"
                   min="0"
                   required
                   value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0.00"
-                  title="Price in GBP"
+                  placeholder="0"
+                  title="Giá bằng VNĐ"
                 />
               </div>
 

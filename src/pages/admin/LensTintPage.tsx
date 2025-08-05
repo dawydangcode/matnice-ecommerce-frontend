@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Palette } from 'lucide-react';
 import { useLensStore } from '../../stores/lens.store';
 import { LensTint, CreateLensTintDto, UpdateLensTintDto } from '../../types/lens.types';
+import { formatVNDWithSymbol } from '../../utils/currency';
 
 const LensTintPage: React.FC = () => {
   const {
@@ -34,25 +35,25 @@ const LensTintPage: React.FC = () => {
     {
       name: 'Polarised Lenses',
       description: 'Minimise disruptive glare from reflective surfaces',
-      price: 49.95,
+      price: 1498500, // 49.95 * 30000
       color: '#1f2937'
     },
     {
       name: 'Sunglasses Tint',
       description: 'Wear your glasses as sunglasses with 100% UV protection',
-      price: 19.95,
+      price: 598500, // 19.95 * 30000
       color: '#374151'
     },
     {
       name: 'Gradient Tint',
       description: 'Darker at the top edge and gradually becomes lighter towards the bottom',
-      price: 44.95,
+      price: 1348500, // 44.95 * 30000
       color: 'linear-gradient(to bottom, #374151, #f3f4f6)'
     },
     {
       name: 'Mirrored Lenses',
       description: 'Mirror effect for a stylish look and 100% UV protection',
-      price: 44.95,
+      price: 1348500, // 44.95 * 30000
       color: '#c0392b'
     }
   ];
@@ -168,7 +169,7 @@ const LensTintPage: React.FC = () => {
                 />
                 <span className="font-medium text-sm">{tintType.name}</span>
               </div>
-              <span className="text-xs text-green-600 font-medium">£{tintType.price.toFixed(2)}</span>
+              <span className="text-xs text-green-600 font-medium">{formatVNDWithSymbol(Number(tintType.price || 0))}</span>
             </button>
           ))}
         </div>
@@ -223,7 +224,7 @@ const LensTintPage: React.FC = () => {
 
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold text-green-600">
-                £{tint.price.toFixed(2)}
+                {formatVNDWithSymbol(Number(tint.price || 0))}
               </span>
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 Available
@@ -271,17 +272,17 @@ const LensTintPage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Price (£) *
+                  Giá (VNĐ) *
                 </label>
                 <input
                   type="number"
-                  step="0.01"
+                  step="1000"
                   min="0"
                   required
                   value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0.00"
+                  placeholder="0"
                 />
               </div>
 

@@ -270,20 +270,29 @@ class LensService {
     data: UpdateLensThicknessDto
   ): Promise<LensThickness> {
     try {
+      console.log("Update request URL:", `/api/v1/lens-thickness/${id}/update`);
+      console.log("Update request data:", data);
+
       const response = await apiService.put<LensThickness>(
-        `/api/v1/lens-thickness/${id}`,
+        `/api/v1/lens-thickness/${id}/update`,
         data
       );
       return response;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating lens thickness:", error);
+      console.error(
+        "Response data:",
+        JSON.stringify(error.response?.data, null, 2)
+      );
+      console.error("Response status:", error.response?.status);
+      console.error("Response headers:", error.response?.headers);
       throw error;
     }
   }
 
   async deleteLensThickness(id: number): Promise<boolean> {
     try {
-      await apiService.delete(`/api/v1/lens-thickness/${id}`);
+      await apiService.delete(`/api/v1/lens-thickness/${id}/delete`);
       return true;
     } catch (error) {
       console.error("Error deleting lens thickness:", error);

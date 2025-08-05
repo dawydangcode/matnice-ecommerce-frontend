@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Plus, Edit, Trash2, Search, Filter, Check } from 'lucide-react';
 import { useLensStore } from '../../stores/lens.store';
 import { LensQuality } from '../../types/lens.types';
+import { formatVND } from '../../utils/currency';
 
 interface LensQualityListPageProps {
   onEditLensQuality: (lensQuality: LensQuality) => void;
@@ -41,13 +42,6 @@ const LensQualityListPage: React.FC<LensQualityListPageProps> = ({
     if (window.confirm(`Bạn có chắc chắn muốn xóa chất lượng lens "${lensQuality.name}"?`)) {
       await deleteLensQuality(lensQuality.id);
     }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
   };
 
   if (lensQualityError) {
@@ -152,7 +146,7 @@ const LensQualityListPage: React.FC<LensQualityListPageProps> = ({
                       <div className="text-sm font-medium text-gray-900">{lensQuality.name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{formatPrice(lensQuality.price)}</div>
+                      <div className="text-sm text-gray-900">{formatVND(lensQuality.price)}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">

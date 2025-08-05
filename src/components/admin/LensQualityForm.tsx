@@ -111,12 +111,12 @@ const LensQualityForm: React.FC<LensQualityFormProps> = ({
             {/* Price */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Giá *
+                Giá (VNĐ) *
               </label>
               <input
                 type="number"
                 min="0"
-                step="0.01"
+                step="1000"
                 {...register('price', {
                   required: 'Giá là bắt buộc',
                   min: {
@@ -127,7 +127,7 @@ const LensQualityForm: React.FC<LensQualityFormProps> = ({
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.price ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="Nhập giá..."
+                placeholder="Nhập giá bằng VNĐ..."
               />
               {errors.price && (
                 <p className="mt-1 text-sm text-red-600">{errors.price.message}</p>

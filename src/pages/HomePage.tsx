@@ -239,8 +239,8 @@ const HomePage: React.FC = () => {
                 <h3 className="font-semibold text-gray-800">Miu Miu</h3>
                 <p className="text-gray-600 text-sm">MU 11WS 1AB5S0</p>
                 <div className="flex items-center space-x-2">
-                  <span className="text-red-500 line-through text-sm">£359.95</span>
-                  <span className="font-bold text-lg">£269.95</span>
+                  <span className="text-red-500 line-through text-sm">10.798.500₫</span>
+                  <span className="font-bold text-lg">8.098.500₫</span>
                 </div>
               </div>
             </div>
@@ -268,8 +268,8 @@ const HomePage: React.FC = () => {
                 <p className="text-gray-600 text-sm">SL M115 004</p>
                 <p className="text-sm text-gray-500">Prescription-ready</p>
                 <div className="flex items-center space-x-2">
-                  <span className="text-red-500 line-through text-sm">£297.95</span>
-                  <span className="font-bold text-lg">£208.45</span>
+                  <span className="text-red-500 line-through text-sm">8.938.500₫</span>
+                  <span className="font-bold text-lg">6.253.500₫</span>
                 </div>
               </div>
             </div>
@@ -296,8 +296,8 @@ const HomePage: React.FC = () => {
                 <h3 className="font-semibold text-gray-800">Tom Ford</h3>
                 <p className="text-gray-600 text-sm">Bronson FT 1044 01E</p>
                 <div className="flex items-center space-x-2">
-                  <span className="text-red-500 line-through text-sm">£373.95</span>
-                  <span className="font-bold text-lg">£205.45</span>
+                  <span className="text-red-500 line-through text-sm">11.218.500₫</span>
+                  <span className="font-bold text-lg">6.163.500₫</span>
                 </div>
               </div>
             </div>
@@ -318,7 +318,7 @@ const HomePage: React.FC = () => {
                 <h3 className="font-semibold text-gray-800">Boss</h3>
                 <p className="text-gray-600 text-sm">BV 1033 R80</p>
                 <div className="flex items-center space-x-2">
-                  <span className="font-bold text-lg">£189.95</span>
+                  <span className="font-bold text-lg">5.698.500₫</span>
                 </div>
               </div>
             </div>
