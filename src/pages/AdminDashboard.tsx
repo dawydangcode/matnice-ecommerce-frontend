@@ -11,26 +11,42 @@ import {
   Settings,
   LogOut,
   Tag,
-  Layers
+  Layers,
+  Eye
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
+import { useBrandStore } from '../stores/brand.store';
+import { useCategoryStore } from '../stores/category.store';
+import { useLensStore } from '../stores/lens.store';
 import ProductListPage from './admin/ProductListPage';
 import ProductFormPage from './admin/ProductFormPage';
 import EnhancedProductForm from '../components/admin/EnhancedProductForm';
 import BrandListPage from './admin/BrandListPage';
 import CategoryListPage from './admin/CategoryListPage';
+import LensListPage from './admin/LensListPage';
+import LensQualityListPage from './admin/LensQualityListPage';
+import BrandForm from '../components/admin/BrandForm';
+import CategoryForm from '../components/admin/CategoryForm';
+import LensForm from '../components/admin/LensForm';
+import LensQualityForm from '../components/admin/LensQualityForm';
 import { Product } from '../types/product.types';
-// import { Brand } from '../types/brand.types';
-// import { Category } from '../types/category.types';
+import { Brand } from '../types/brand.types';
+import { Category } from '../types/category.types';
+import { Lens, LensQuality } from '../types/lens.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form';
+type AdminView = 'dashboard' | 'products' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-form' | 'lens-quality' | 'lens-quality-form';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
+  const { createBrand, updateBrand } = useBrandStore();
+  const { createCategory, updateCategory } = useCategoryStore();
+  const { createLens, updateLens, createLensQuality, updateLensQuality } = useLensStore();
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  // const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
-  // const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingLens, setEditingLens] = useState<Lens | null>(null);
+  const [editingLensQuality, setEditingLensQuality] = useState<LensQuality | null>(null);
 
   const handleLogout = () => {
     logout();
@@ -71,8 +87,7 @@ const AdminDashboard: React.FC = () => {
     setCurrentView('products');
   };
 
-  // Brand handlers - commented out for future use
-  /*
+  // Brand handlers
   const handleEditBrand = (brand: Brand) => {
     setEditingBrand(brand);
     setCurrentView('brand-form');
@@ -88,11 +103,22 @@ const AdminDashboard: React.FC = () => {
     setCurrentView('brands');
   };
 
-  const handleBrandFormSuccess = () => {
-    setEditingBrand(null);
-    setCurrentView('brands');
+  const handleBrandFormSubmit = async (data: any) => {
+    try {
+      if (editingBrand) {
+        await updateBrand(editingBrand.id, data);
+      } else {
+        await createBrand(data);
+      }
+      setEditingBrand(null);
+      setCurrentView('brands');
+    } catch (error) {
+      console.error('Error submitting brand form:', error);
+      throw error;
+    }
   };
 
+  // Category handlers
   const handleEditCategory = (category: Category) => {
     setEditingCategory(category);
     setCurrentView('category-form');
@@ -108,17 +134,90 @@ const AdminDashboard: React.FC = () => {
     setCurrentView('categories');
   };
 
-  const handleCategoryFormSuccess = () => {
-    setEditingCategory(null);
-    setCurrentView('categories');
+  const handleCategoryFormSubmit = async (data: any) => {
+    try {
+      if (editingCategory) {
+        await updateCategory(editingCategory.id, data);
+      } else {
+        await createCategory(data);
+      }
+      setEditingCategory(null);
+      setCurrentView('categories');
+    } catch (error) {
+      console.error('Error submitting category form:', error);
+      throw error;
+    }
   };
-  */
+
+  // Lens handlers
+  const handleEditLens = (lens: Lens) => {
+    setEditingLens(lens);
+    setCurrentView('lens-form');
+  };
+
+  const handleCreateLens = () => {
+    setEditingLens(null);
+    setCurrentView('lens-form');
+  };
+
+  const handleLensFormCancel = () => {
+    setEditingLens(null);
+    setCurrentView('lenses');
+  };
+
+  const handleLensFormSubmit = async (data: any) => {
+    try {
+      if (editingLens) {
+        await updateLens(editingLens.id, data);
+      } else {
+        await createLens(data);
+      }
+      setEditingLens(null);
+      setCurrentView('lenses');
+    } catch (error) {
+      console.error('Error submitting lens form:', error);
+      throw error;
+    }
+  };
+
+  // Lens Quality handlers
+  const handleEditLensQuality = (lensQuality: LensQuality) => {
+    setEditingLensQuality(lensQuality);
+    setCurrentView('lens-quality-form');
+  };
+
+  const handleCreateLensQuality = () => {
+    setEditingLensQuality(null);
+    setCurrentView('lens-quality-form');
+  };
+
+  const handleLensQualityFormCancel = () => {
+    setEditingLensQuality(null);
+    setCurrentView('lens-quality');
+  };
+
+  const handleLensQualityFormSubmit = async (data: any) => {
+    try {
+      if (editingLensQuality) {
+        await updateLensQuality(editingLensQuality.id, data);
+      } else {
+        await createLensQuality(data);
+      }
+      setEditingLensQuality(null);
+      setCurrentView('lens-quality');
+    } catch (error) {
+      console.error('Error submitting lens quality form:', error);
+      throw error;
+    }
+  };
 
   const menuItems = [
     { id: 'dashboard', label: 'Tổng quan', icon: BarChart3 },
     { id: 'products', label: 'Quản lý sản phẩm', icon: Package },
     { id: 'brands', label: 'Thương hiệu', icon: Tag },
     { id: 'categories', label: 'Danh mục', icon: Layers },
+    { id: 'lenses', label: 'Lens', icon: Eye },
+    { id: 'lens-quality', label: 'Chất lượng Lens', icon: Settings },
     { id: 'orders', label: 'Đơn hàng', icon: ShoppingCart },
     { id: 'customers', label: 'Khách hàng', icon: Users },
     { id: 'settings', label: 'Cài đặt', icon: Settings },
@@ -140,7 +239,9 @@ const AdminDashboard: React.FC = () => {
                              (currentView === 'product-form' && item.id === 'products') ||
                              (currentView === 'enhanced-product-form' && item.id === 'products') ||
                              (currentView === 'brand-form' && item.id === 'brands') ||
-                             (currentView === 'category-form' && item.id === 'categories');
+                             (currentView === 'category-form' && item.id === 'categories') ||
+                             (currentView === 'lens-form' && item.id === 'lenses') ||
+                             (currentView === 'lens-quality-form' && item.id === 'lens-quality');
               
               return (
                 <button
@@ -154,6 +255,10 @@ const AdminDashboard: React.FC = () => {
                       setCurrentView('brands');
                     } else if (item.id === 'categories') {
                       setCurrentView('categories');
+                    } else if (item.id === 'lenses') {
+                      setCurrentView('lenses');
+                    } else if (item.id === 'lens-quality') {
+                      setCurrentView('lens-quality');
                     }
                     // Handle other menu items later
                   }}
@@ -198,6 +303,10 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'brand-form' && 'Thêm/Sửa thương hiệu'}
                 {currentView === 'categories' && 'Quản lý danh mục'}
                 {currentView === 'category-form' && 'Thêm/Sửa danh mục'}
+                {currentView === 'lenses' && 'Quản lý Lens'}
+                {currentView === 'lens-form' && 'Thêm/Sửa Lens'}
+                {currentView === 'lens-quality' && 'Quản lý chất lượng Lens'}
+                {currentView === 'lens-quality-form' && 'Thêm/Sửa chất lượng Lens'}
               </h1>
             </div>
             
@@ -259,14 +368,54 @@ const AdminDashboard: React.FC = () => {
           )}
           {currentView === 'brands' && (
             <BrandListPage
-              onEditBrand={() => {}}
-              onCreateBrand={() => {}}
+              onEditBrand={handleEditBrand}
+              onCreateBrand={handleCreateBrand}
+            />
+          )}
+          {currentView === 'brand-form' && (
+            <BrandForm
+              brand={editingBrand}
+              onSubmit={handleBrandFormSubmit}
+              onCancel={handleBrandFormCancel}
             />
           )}
           {currentView === 'categories' && (
             <CategoryListPage
-              onEditCategory={() => {}}
-              onCreateCategory={() => {}}
+              onEditCategory={handleEditCategory}
+              onCreateCategory={handleCreateCategory}
+            />
+          )}
+          {currentView === 'category-form' && (
+            <CategoryForm
+              category={editingCategory}
+              onSubmit={handleCategoryFormSubmit}
+              onCancel={handleCategoryFormCancel}
+            />
+          )}
+          {currentView === 'lenses' && (
+            <LensListPage
+              onEditLens={handleEditLens}
+              onCreateLens={handleCreateLens}
+            />
+          )}
+          {currentView === 'lens-form' && (
+            <LensForm
+              lens={editingLens}
+              onSubmit={handleLensFormSubmit}
+              onCancel={handleLensFormCancel}
+            />
+          )}
+          {currentView === 'lens-quality' && (
+            <LensQualityListPage
+              onEditLensQuality={handleEditLensQuality}
+              onCreateLensQuality={handleCreateLensQuality}
+            />
+          )}
+          {currentView === 'lens-quality-form' && (
+            <LensQualityForm
+              lensQuality={editingLensQuality}
+              onSubmit={handleLensQualityFormSubmit}
+              onCancel={handleLensQualityFormCancel}
             />
           )}
         </main>
