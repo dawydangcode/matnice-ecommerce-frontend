@@ -13,14 +13,12 @@ import {
   FrameMaterialType,
   CreateProductDetailRequest
 } from '../../types/product.types';
-import { Lens } from '../../types/lens.types';
 import { 
   Save, 
   X, 
   Upload, 
   Image as ImageIcon, 
   Palette, 
-  Eye,
   Info,
   Settings,
   Trash2,
@@ -32,7 +30,7 @@ const productSchema = z.object({
   productName: z.string().min(1, 'Tên sản phẩm là bắt buộc'),
   description: z.string().optional(),
   brandId: z.string().min(1, 'Thương hiệu là bắt buộc'),
-  categoryId: z.string().min(1, 'Danh mục là bắt buộc'),
+  categoryIds: z.array(z.string()).min(1, 'Phải chọn ít nhất một danh mục'),
   productType: z.nativeEnum(ProductType),
   gender: z.nativeEnum(ProductGenderType),
   price: z.number().min(0, 'Giá phải lớn hơn 0'),
@@ -56,12 +54,10 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
   const [activeTab, setActiveTab] = useState('basic');
   const [thumbnailImages, setThumbnailImages] = useState<File[]>([]);
   const [productColors, setProductColors] = useState<{
-    color: string;
     name: string;
     images: File[];
   }[]>([]);
   const [productDetail, setProductDetail] = useState<Partial<CreateProductDetailRequest>>({
-    productNumber: '',
     bridgeWidth: 0,
     frameWidth: 0,
     lensHeight: 0,
@@ -73,7 +69,6 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
     frameType: FrameType.FULL_RIM,
     springHinge: false
   });
-  const [lensOptions, setLensOptions] = useState<Partial<Lens>[]>([]);
 
   const { brands, fetchBrands } = useBrandStore();
   const { categories, fetchCategories } = useCategoryStore();
@@ -82,14 +77,15 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
     register,
     handleSubmit,
     formState: { errors },
-    setValue
+    setValue,
+    getValues
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       productName: product?.productName || '',
       description: product?.description || '',
       brandId: product?.brandId?.toString() || '',
-      categoryId: product?.categoryId?.toString() || '',
+      categoryIds: product?.categoryId ? [product.categoryId.toString()] : [],
       productType: product?.productType || ProductType.GLASSES,
       gender: product?.gender || ProductGenderType.UNISEX,
       price: product?.price || 0,
@@ -109,7 +105,7 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
       setValue('productName', product.productName);
       setValue('description', product.description || '');
       setValue('brandId', product.brandId?.toString() || '');
-      setValue('categoryId', product.categoryId?.toString() || '');
+      setValue('categoryIds', product.categoryId ? [product.categoryId.toString()] : []);
       setValue('productType', product.productType);
       setValue('gender', product.gender);
       setValue('price', product.price);
@@ -134,10 +130,10 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
 
   // Handle color management
   const addColor = () => {
-    setProductColors(prev => [...prev, { color: '#000000', name: '', images: [] }]);
+    setProductColors(prev => [...prev, { name: '', images: [] }]);
   };
 
-  const updateColor = (index: number, field: 'color' | 'name', value: string) => {
+  const updateColor = (index: number, field: 'name', value: string) => {
     setProductColors(prev => prev.map((item, i) => 
       i === index ? { ...item, [field]: value } : item
     ));
@@ -168,22 +164,18 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
     setProductDetail(prev => ({ ...prev, [field]: value }));
   };
 
-  // Handle lens options
-  const addLensOption = () => {
-    setLensOptions(prev => [...prev, { 
-      name: '', 
-      id: 0
-    }]);
-  };
-
-  const updateLensOption = (index: number, field: keyof Lens, value: any) => {
-    setLensOptions(prev => prev.map((item, i) => 
-      i === index ? { ...item, [field]: value } : item
-    ));
-  };
-
-  const removeLensOption = (index: number) => {
-    setLensOptions(prev => prev.filter((_, i) => i !== index));
+  // Handle category selection
+  const handleCategoryChange = (categoryId: string, checked: boolean) => {
+    const currentValues = getValues('categoryIds') || [];
+    let newValues: string[];
+    
+    if (checked) {
+      newValues = [...currentValues, categoryId];
+    } else {
+      newValues = currentValues.filter(id => id !== categoryId);
+    }
+    
+    setValue('categoryIds', newValues, { shouldValidate: true });
   };
 
   // Form submission
@@ -202,7 +194,6 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
 
     // Product colors and their images
     productColors.forEach((color, colorIndex) => {
-      formData.append(`colors[${colorIndex}][color]`, color.color);
       formData.append(`colors[${colorIndex}][name]`, color.name);
       color.images.forEach((file, imageIndex) => {
         formData.append(`colors[${colorIndex}][images][${imageIndex}]`, file);
@@ -216,13 +207,6 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
       });
     }
 
-    // Lens options
-    lensOptions.forEach((lens, index) => {
-      Object.entries(lens).forEach(([key, value]) => {
-        formData.append(`lens[${index}][${key}]`, value?.toString() || '');
-      });
-    });
-
     onSuccess(formData);
   };
 
@@ -230,8 +214,7 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
     { id: 'basic', label: 'Thông tin cơ bản', icon: Info },
     { id: 'detail', label: 'Chi tiết kỹ thuật', icon: Settings },
     { id: 'images', label: 'Hình ảnh thumbnail', icon: ImageIcon },
-    { id: 'colors', label: 'Màu sắc', icon: Palette },
-    { id: 'lens', label: 'Tùy chọn lens', icon: Eye }
+    { id: 'colors', label: 'Màu sắc', icon: Palette }
   ];
 
   return (
@@ -345,19 +328,26 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Danh mục *
                 </label>
-                <select
-                  {...register('categoryId')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Chọn danh mục</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id.toString()}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.categoryId && (
-                  <p className="mt-1 text-sm text-red-600">{errors.categoryId.message}</p>
+                <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2 space-y-2">
+                  {categories.map((category) => {
+                    const selectedCategories = getValues('categoryIds') || [];
+                    const isChecked = selectedCategories.includes(category.id.toString());
+                    
+                    return (
+                      <label key={category.id} className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => handleCategoryChange(category.id.toString(), e.target.checked)}
+                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">{category.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {errors.categoryIds && (
+                  <p className="mt-1 text-sm text-red-600">{errors.categoryIds.message}</p>
                 )}
               </div>
 
@@ -423,19 +413,6 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
             <h3 className="text-lg font-medium text-gray-900">Chi tiết kỹ thuật (không bao gồm màu sắc)</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mã sản phẩm
-                </label>
-                <input
-                  type="text"
-                  value={productDetail.productNumber || ''}
-                  onChange={(e) => updateProductDetail('productNumber', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="VD: RB2140"
-                />
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Chiều rộng cầu mũi (mm)
@@ -647,29 +624,7 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
 
             {productColors.map((color, colorIndex) => (
               <div key={colorIndex} className="border rounded-lg p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mã màu
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="color"
-                        value={color.color}
-                        onChange={(e) => updateColor(colorIndex, 'color', e.target.value)}
-                        className="w-12 h-10 border border-gray-300 rounded-md"
-                        title="Chọn mã màu"
-                        aria-label="Chọn mã màu"
-                      />
-                      <input
-                        type="text"
-                        value={color.color}
-                        onChange={(e) => updateColor(colorIndex, 'color', e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="#000000"
-                      />
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Tên màu
@@ -740,69 +695,6 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
             {productColors.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 Chưa có màu sắc nào. Nhấn "Thêm màu" để bắt đầu.
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Lens Options Tab */}
-        {activeTab === 'lens' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Tùy chọn lens</h3>
-              <button
-                type="button"
-                onClick={addLensOption}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Thêm lens</span>
-              </button>
-            </div>
-
-            {lensOptions.map((lens, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên lens
-                  </label>
-                  <input
-                    type="text"
-                    value={lens.name || ''}
-                    onChange={(e) => updateLensOption(index, 'name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Tên lens"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ID Lens
-                  </label>
-                  <input
-                    type="number"
-                    value={lens.id || 0}
-                    onChange={(e) => updateLensOption(index, 'id', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="0"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <button
-                    type="button"
-                    onClick={() => removeLensOption(index)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-md"
-                    title="Xóa lens này"
-                    aria-label="Xóa lens này"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {lensOptions.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                Chưa có tùy chọn lens nào. Nhấn "Thêm lens" để bắt đầu.
               </div>
             )}
           </div>
