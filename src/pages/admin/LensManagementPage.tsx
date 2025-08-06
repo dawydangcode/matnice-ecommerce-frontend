@@ -3,12 +3,8 @@ import toast from 'react-hot-toast';
 import { 
   Eye,
   Layers,
-  Settings,
   Palette,
-  Zap,
   Package,
-  ChevronDown,
-  ChevronRight,
   Grid3X3,
   Star,
   Sparkles
@@ -32,12 +28,11 @@ interface MenuItem {
   icon: React.ReactNode;
   component?: React.ComponentType<any>;
   description: string;
-  children?: MenuItem[];
+  category?: string;
 }
 
 const LensManagementPage: React.FC = () => {
   const [activeMenuItem, setActiveMenuItem] = useState('lenses.basic');
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['lenses', 'quality']);
   
   // State for lens CRUD operations
   const [showLensForm, setShowLensForm] = useState(false);
@@ -115,103 +110,63 @@ const LensManagementPage: React.FC = () => {
 
   const menuItems: MenuItem[] = [
     {
-      id: 'lenses',
-      label: 'Lens Types & Configurations',
-      icon: <Eye className="w-5 h-5" />,
-      description: 'Manage all lens types and basic configurations',
-      children: [
-        {
-          id: 'lenses.basic',
-          label: 'Basic Lens Types',
-          icon: <Grid3X3 className="w-4 h-4" />,
-          component: LensListPage,
-          description: 'Single Vision, Progressive, Office lenses'
-        },
-        {
-          id: 'lenses.thickness',
-          label: 'Lens Thickness',
-          icon: <Layers className="w-4 h-4" />,
-          component: LensThicknessPage,
-          description: 'Standard, Thin, Very Thin, Extra Thin options'
-        },
-        {
-          id: 'lenses.details',
-          label: 'Lens Details & Specs',
-          icon: <Package className="w-4 h-4" />,
-          component: LensDetailPage,
-          description: 'Detailed lens specifications and configurations'
-        }
-      ]
+      id: 'lenses.basic',
+      label: 'Basic Lens Types',
+      icon: <Grid3X3 className="w-5 h-5" />,
+      component: LensListPage,
+      description: 'Single Vision, Progressive, Office lenses',
+      category: 'Lens Types'
     },
     {
-      id: 'quality',
-      label: 'Quality & Coatings',
+      id: 'lenses.thickness',
+      label: 'Lens Thickness',
+      icon: <Layers className="w-5 h-5" />,
+      component: LensThicknessPage,
+      description: 'Standard, Thin, Very Thin, Extra Thin options',
+      category: 'Lens Types'
+    },
+    {
+      id: 'lenses.details',
+      label: 'Lens Details & Specs',
+      icon: <Package className="w-5 h-5" />,
+      component: LensDetailPage,
+      description: 'Detailed lens specifications and configurations',
+      category: 'Lens Types'
+    },
+    {
+      id: 'quality.basic',
+      label: 'Quality Options',
       icon: <Star className="w-5 h-5" />,
-      description: 'Manage lens quality options and coatings',
-      children: [
-        {
-          id: 'quality.basic',
-          label: 'Quality Options',
-          icon: <Settings className="w-4 h-4" />,
-          component: LensQualityListPage,
-          description: 'Classic, SpexPro, Premium quality options'
-        },
-        {
-          id: 'quality.tints',
-          label: 'Tints & Colors',
-          icon: <Palette className="w-4 h-4" />,
-          component: LensTintPage,
-          description: 'Polarised, Sunglasses, Gradient, etc.'
-        }
-      ]
+      component: LensQualityListPage,
+      description: 'Classic, SpexPro, Premium quality options',
+      category: 'Quality & Coatings'
     },
     {
-      id: 'upgrades',
-      label: 'Premium Upgrades',
+      id: 'quality.tints',
+      label: 'Tints & Colors',
+      icon: <Palette className="w-5 h-5" />,
+      component: LensTintPage,
+      description: 'Polarised, Sunglasses, Gradient, etc.',
+      category: 'Quality & Coatings'
+    },
+    {
+      id: 'upgrades.features',
+      label: 'Lens Upgrades',
       icon: <Sparkles className="w-5 h-5" />,
-      description: 'Additional premium features and enhancements',
-      children: [
-        {
-          id: 'upgrades.features',
-          label: 'Lens Upgrades',
-          icon: <Zap className="w-4 h-4" />,
-          component: LensUpgradePage,
-          description: 'Blue Light Filter, Smart Focus, etc.'
-        }
-      ]
+      component: LensUpgradePage,
+      description: 'Blue Light Filter, Smart Focus, etc.',
+      category: 'Premium Upgrades'
     }
   ];
 
-  const toggleMenuExpanded = (menuId: string) => {
-    setExpandedMenus(prev => 
-      prev.includes(menuId) 
-        ? prev.filter(id => id !== menuId)
-        : [...prev, menuId]
-    );
-  };
-
   const getActiveComponent = () => {
-    for (const menu of menuItems) {
-      if (menu.children) {
-        const activeChild = menu.children.find(child => child.id === activeMenuItem);
-        if (activeChild && activeChild.component) {
-          return activeChild.component;
-        }
-      }
-    }
-    return LensListPage;
+    const activeMenu = menuItems.find(menu => menu.id === activeMenuItem);
+    return activeMenu?.component || LensListPage;
   };
 
   const getActiveDescription = () => {
-    for (const menu of menuItems) {
-      if (menu.children) {
-        const activeChild = menu.children.find(child => child.id === activeMenuItem);
-        if (activeChild) {
-          return activeChild.description;
-        }
-      }
-    }
-    return 'Manage lens configurations';
+    const activeMenu = menuItems.find(menu => menu.id === activeMenuItem);
+    return activeMenu?.description || 'Manage lens configurations';
   };
 
   const ActiveComponent = getActiveComponent();
@@ -234,52 +189,43 @@ const LensManagementPage: React.FC = () => {
         </div>
 
         {/* Menu Items */}
-        <div className="p-4">
-          {menuItems.map((menu) => (
-            <div key={menu.id} className="mb-4">
-              {/* Parent Menu Item */}
-              <button
-                onClick={() => toggleMenuExpanded(menu.id)}
-                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="flex items-center gap-3">
-                  {menu.icon}
-                  <div>
-                    <h3 className="font-medium text-gray-900">{menu.label}</h3>
-                    <p className="text-xs text-gray-500">{menu.description}</p>
-                  </div>
-                </div>
-                {expandedMenus.includes(menu.id) ? (
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
-                ) : (
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                )}
-              </button>
-
-              {/* Child Menu Items */}
-              {expandedMenus.includes(menu.id) && menu.children && (
-                <div className="ml-6 mt-2 space-y-1">
-                  {menu.children.map((child) => (
+        <div className="p-4 space-y-2">
+          {/* Group by category */}
+          {['Lens Types', 'Quality & Coatings', 'Premium Upgrades'].map((category) => (
+            <div key={category} className="mb-6">
+              {/* Category Header */}
+              <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {category}
+              </div>
+              
+              {/* Menu Items in Category */}
+              <div className="space-y-1">
+                {menuItems
+                  .filter(item => item.category === category)
+                  .map((item) => (
                     <button
-                      key={child.id}
-                      onClick={() => setActiveMenuItem(child.id)}
+                      key={item.id}
+                      onClick={() => setActiveMenuItem(item.id)}
                       className={`
                         w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left
-                        ${activeMenuItem === child.id 
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                        ${activeMenuItem === item.id 
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm' 
                           : 'hover:bg-gray-50 text-gray-700'
                         }
                       `}
                     >
-                      {child.icon}
-                      <div>
-                        <h4 className="text-sm font-medium">{child.label}</h4>
-                        <p className="text-xs text-gray-500">{child.description}</p>
+                      <div className={`
+                        ${activeMenuItem === item.id ? 'text-blue-600' : 'text-gray-500'}
+                      `}>
+                        {item.icon}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium">{item.label}</h4>
+                        <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
                       </div>
                     </button>
                   ))}
-                </div>
-              )}
+              </div>
             </div>
           ))}
         </div>
@@ -313,7 +259,7 @@ const LensManagementPage: React.FC = () => {
         {/* Content Header */}
         <div className="bg-white border-b border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900">
-            {menuItems.find(m => m.children?.some(c => c.id === activeMenuItem))?.children?.find(c => c.id === activeMenuItem)?.label || 'Lens Management'}
+            {menuItems.find(m => m.id === activeMenuItem)?.label || 'Lens Management'}
           </h2>
           <p className="text-sm text-gray-600 mt-1">
             {getActiveDescription()}

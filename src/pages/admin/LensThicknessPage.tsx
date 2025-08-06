@@ -139,7 +139,7 @@ const LensThicknessPage: React.FC = () => {
       {/* Thickness Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         {filteredThicknesses.map((thickness) => (
-          <div key={thickness.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+          <div key={thickness.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow flex flex-col">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900">{thickness.name}</h3>
@@ -163,13 +163,13 @@ const LensThicknessPage: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-gray-600 text-sm mb-4 min-h-[3rem]">
+            <p className="text-gray-600 text-sm mb-4 flex-1">
               {thickness.description || 'No description'}
             </p>
 
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mt-auto">
               <span className="text-lg font-bold text-green-600">
-                {formatVNDWithSymbol(Number(thickness.price || 0))}
+                {Number(thickness.price) === 0 ? 'Free' : formatVNDWithSymbol(Number(thickness.price || 0))}
               </span>
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 Available
@@ -242,7 +242,6 @@ const LensThicknessPage: React.FC = () => {
                 </label>
                 <input
                   type="number"
-                  step="1000"
                   min="0"
                   required
                   value={formData.price}

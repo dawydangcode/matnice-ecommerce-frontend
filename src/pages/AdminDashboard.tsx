@@ -13,6 +13,10 @@ import {
   Tag,
   Layers,
   Eye,
+  Grid3X3,
+  Star,
+  Palette,
+  Sparkles,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
@@ -28,6 +32,10 @@ import CategoryListPage from './admin/CategoryListPage';
 import LensListPage from './admin/LensListPage';
 import LensQualityListPage from './admin/LensQualityListPage';
 import LensManagementPage from './admin/LensManagementPage';
+import LensThicknessPage from './admin/LensThicknessPage';
+import LensTintPage from './admin/LensTintPage';
+import LensUpgradePage from './admin/LensUpgradePage';
+import LensDetailPage from './admin/LensDetailPage';
 import BrandForm from '../components/admin/BrandForm';
 import CategoryForm from '../components/admin/CategoryForm';
 import LensForm from '../components/admin/LensForm';
@@ -37,7 +45,7 @@ import { Brand } from '../types/brand.types';
 import { Category } from '../types/category.types';
 import { Lens, LensQuality } from '../types/lens.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form';
+type AdminView = 'dashboard' | 'products' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form' | 'lens-thickness' | 'lens-tints' | 'lens-upgrades' | 'lens-details';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -45,7 +53,7 @@ const AdminDashboard: React.FC = () => {
   const { createCategory, updateCategory } = useCategoryStore();
   const { createLens, updateLens, createLensQuality, updateLensQuality } = useLensStore();
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
-  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['lenses']));
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -230,15 +238,20 @@ const AdminDashboard: React.FC = () => {
     { id: 'products', label: 'Quản lý sản phẩm', icon: Package },
     { id: 'brands', label: 'Thương hiệu', icon: Tag },
     { id: 'categories', label: 'Danh mục', icon: Layers },
+    // Lens Management (nested)
     { 
       id: 'lenses', 
-      label: 'Lens', 
+      label: 'Quản lý Lens', 
       icon: Eye,
       children: [
-        { id: 'lens-management', label: 'Quản lý Lens', icon: Eye },
-        { id: 'lens-quality', label: 'Chất lượng Lens', icon: Settings },
+        { id: 'lens-thickness', label: 'Lens Thickness', icon: Layers },
+        { id: 'lens-tints', label: 'Tints & Colors', icon: Palette },
+        { id: 'lens-quality', label: 'Lens Quality', icon: Star },
+        { id: 'lens-upgrades', label: 'Lens Upgrades', icon: Sparkles },
+        { id: 'lens-details', label: 'Lens Details', icon: Grid3X3 },
       ]
     },
+    // Other items
     { id: 'orders', label: 'Đơn hàng', icon: ShoppingCart },
     { id: 'customers', label: 'Khách hàng', icon: Users },
     { id: 'settings', label: 'Cài đặt', icon: Settings },
@@ -266,9 +279,7 @@ const AdminDashboard: React.FC = () => {
                              (currentView === 'brand-form' && item.id === 'brands') ||
                              (currentView === 'category-form' && item.id === 'categories') ||
                              (currentView === 'lens-form' && item.id === 'lenses') ||
-                             (currentView === 'lens-management' && item.id === 'lenses') ||
-                             (currentView === 'lens-quality' && item.id === 'lenses') ||
-                             (currentView === 'lens-quality-form' && item.id === 'lenses');
+                             (currentView === 'lens-quality-form' && item.id === 'lens-quality');
               
               const isChildActive = hasChildren && item.children?.some(child => 
                 currentView === child.id || 
@@ -317,7 +328,7 @@ const AdminDashboard: React.FC = () => {
                   
                   {/* Children menu items */}
                   {hasChildren && isExpanded && (
-                    <div className="ml-8 mt-2 space-y-1">
+                    <div className="ml-6 mt-2 space-y-1">
                       {item.children?.map((child) => {
                         const ChildIcon = child.icon;
                         const isChildItemActive = currentView === child.id ||
@@ -327,15 +338,21 @@ const AdminDashboard: React.FC = () => {
                           <button
                             key={child.id}
                             onClick={() => {
-                              if (child.id === 'lens-management') {
-                                setCurrentView('lens-management');
+                              if (child.id === 'lens-thickness') {
+                                setCurrentView('lens-thickness');
+                              } else if (child.id === 'lens-tints') {
+                                setCurrentView('lens-tints');
                               } else if (child.id === 'lens-quality') {
                                 setCurrentView('lens-quality');
+                              } else if (child.id === 'lens-upgrades') {
+                                setCurrentView('lens-upgrades');
+                              } else if (child.id === 'lens-details') {
+                                setCurrentView('lens-details');
                               }
                             }}
                             className={`w-full flex items-center px-4 py-2 rounded-lg transition text-sm ${
                               isChildItemActive
-                                ? 'text-blue-700 bg-blue-50'
+                                ? 'text-blue-700 bg-blue-50 border border-blue-200'
                                 : 'text-gray-600 hover:bg-gray-50'
                             }`}
                           >
@@ -382,8 +399,12 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'lenses' && 'Quản lý Lens'}
                 {currentView === 'lens-management' && 'Quản lý Lens'}
                 {currentView === 'lens-form' && 'Thêm/Sửa Lens'}
-                {currentView === 'lens-quality' && 'Quản lý chất lượng Lens'}
+                {currentView === 'lens-quality' && 'Lens Quality Management'}
                 {currentView === 'lens-quality-form' && 'Thêm/Sửa chất lượng Lens'}
+                {currentView === 'lens-thickness' && 'Lens Thickness Management'}
+                {currentView === 'lens-tints' && 'Lens Tints & Colors Management'}
+                {currentView === 'lens-upgrades' && 'Lens Upgrades Management'}
+                {currentView === 'lens-details' && 'Lens Details & Specifications'}
               </h1>
             </div>
             
@@ -496,6 +517,10 @@ const AdminDashboard: React.FC = () => {
               onCancel={handleLensQualityFormCancel}
             />
           )}
+          {currentView === 'lens-thickness' && <LensThicknessPage />}
+          {currentView === 'lens-tints' && <LensTintPage />}
+          {currentView === 'lens-upgrades' && <LensUpgradePage />}
+          {currentView === 'lens-details' && <LensDetailPage />}
         </main>
       </div>
     </div>
