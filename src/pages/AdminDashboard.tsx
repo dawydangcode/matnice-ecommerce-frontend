@@ -260,9 +260,9 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg">
+      <div className="w-64 bg-gradient-to-b from-[#43AC78] to-[#64C695] shadow-lg">
         <div className="p-6">
-          <h2 className="text-xl font-bold text-gray-800">Admin Panel</h2>
+          <h2 className="text-xl font-bold text-white">Admin Panel</h2>
         </div>
         
         <nav className="mt-6">
@@ -307,8 +307,8 @@ const AdminDashboard: React.FC = () => {
                     }}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition ${
                       isActive || isChildActive
-                        ? 'text-blue-700 bg-blue-50'
-                        : 'text-gray-600 hover:bg-gray-50'
+                        ? 'text-white bg-[#66D6A2] shadow-md'
+                        : 'text-white hover:bg-[#93E9BE] hover:bg-opacity-30'
                     }`}
                   >
                     <div className="flex items-center">
@@ -352,8 +352,8 @@ const AdminDashboard: React.FC = () => {
                             }}
                             className={`w-full flex items-center px-4 py-2 rounded-lg transition text-sm ${
                               isChildItemActive
-                                ? 'text-blue-700 bg-blue-50 border border-blue-200'
-                                : 'text-gray-600 hover:bg-gray-50'
+                                ? 'text-white bg-[#A8EDCB] shadow-md border border-[#93E9BE]'
+                                : 'text-white hover:bg-[#93E9BE] hover:bg-opacity-40'
                             }`}
                           >
                             <ChildIcon className="w-4 h-4 mr-3" />
@@ -372,7 +372,7 @@ const AdminDashboard: React.FC = () => {
           <div className="mt-auto pt-6 px-4">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition"
+              className="w-full flex items-center px-4 py-3 text-red-300 hover:bg-red-500 hover:bg-opacity-20 hover:text-red-200 rounded-lg transition"
             >
               <LogOut className="w-5 h-5 mr-3" />
               <span>Đăng xuất</span>
@@ -384,10 +384,10 @@ const AdminDashboard: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-gradient-to-r from-[#64C695] to-[#66D6A2] shadow-sm border-b border-[#93E9BE]">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-800">
+              <h1 className="text-2xl font-bold text-white drop-shadow-sm">
                 {currentView === 'dashboard' && 'Tổng quan'}
                 {currentView === 'enhanced-product-form' && 'Thêm sản phẩm mới'}
                 {currentView === 'products' && 'Quản lý sản phẩm'}
@@ -410,28 +410,28 @@ const AdminDashboard: React.FC = () => {
             
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#43AC78] w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="pl-10 pr-4 py-2 border border-[#93E9BE] rounded-lg focus:ring-2 focus:ring-[#66D6A2] focus:border-[#43AC78] bg-white/90 backdrop-blur-sm"
                 />
               </div>
               
               <button 
-                className="relative p-2 text-gray-400 hover:text-gray-600"
+                className="relative p-2 text-white hover:text-[#A8EDCB] transition-colors"
                 title="Thông báo"
               >
                 <Bell className="w-6 h-6" />
-                <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full"></span>
+                <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full ring-2 ring-white"></span>
               </button>
               
               <div className="flex items-center space-x-3">
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-700">{user?.username}</p>
-                  <p className="text-xs text-gray-500">Administrator</p>
+                  <p className="text-sm font-medium text-white drop-shadow-sm">{user?.username}</p>
+                  <p className="text-xs text-white/80">Administrator</p>
                 </div>
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-[#43AC78] to-[#A8EDCB] rounded-full flex items-center justify-center ring-2 ring-white/30 shadow-md">
                   <span className="text-sm font-medium text-white">
                     {user?.username?.charAt(0).toUpperCase()}
                   </span>
@@ -442,7 +442,7 @@ const AdminDashboard: React.FC = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-6 overflow-auto bg-gradient-to-br from-gray-50 to-[#A8EDCB]/10">
           {currentView === 'dashboard' && <DashboardContent />}
           {currentView === 'enhanced-product-form' && (
             <EnhancedProductForm
@@ -533,9 +533,9 @@ const DashboardContent: React.FC = () => {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-500 rounded-lg">
+            <div className="p-2 bg-gradient-to-br from-[#43AC78] to-[#64C695] rounded-lg shadow-sm">
               <DollarSign className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
@@ -544,15 +544,15 @@ const DashboardContent: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-center">
-            <TrendingUp className="w-4 h-4 text-green-500" />
-            <span className="text-sm text-green-600 ml-1">+12%</span>
+            <TrendingUp className="w-4 h-4 text-[#43AC78]" />
+            <span className="text-sm text-[#43AC78] ml-1 font-medium">+12%</span>
             <span className="text-sm text-gray-500 ml-1">so với tháng trước</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-green-500 rounded-lg">
+            <div className="p-2 bg-gradient-to-br from-[#64C695] to-[#66D6A2] rounded-lg shadow-sm">
               <ShoppingCart className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
@@ -561,15 +561,15 @@ const DashboardContent: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-center">
-            <TrendingUp className="w-4 h-4 text-green-500" />
-            <span className="text-sm text-green-600 ml-1">+8%</span>
+            <TrendingUp className="w-4 h-4 text-[#43AC78]" />
+            <span className="text-sm text-[#43AC78] ml-1 font-medium">+8%</span>
             <span className="text-sm text-gray-500 ml-1">so với tháng trước</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-500 rounded-lg">
+            <div className="p-2 bg-gradient-to-br from-[#66D6A2] to-[#93E9BE] rounded-lg shadow-sm">
               <Package className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
@@ -578,15 +578,15 @@ const DashboardContent: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-center">
-            <TrendingUp className="w-4 h-4 text-green-500" />
-            <span className="text-sm text-green-600 ml-1">+23</span>
+            <TrendingUp className="w-4 h-4 text-[#43AC78]" />
+            <span className="text-sm text-[#43AC78] ml-1 font-medium">+23</span>
             <span className="text-sm text-gray-500 ml-1">sản phẩm mới</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-orange-500 rounded-lg">
+            <div className="p-2 bg-gradient-to-br from-[#93E9BE] to-[#A8EDCB] rounded-lg shadow-sm">
               <Users className="w-6 h-6 text-white" />
             </div>
             <div className="ml-4">
@@ -595,8 +595,8 @@ const DashboardContent: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-center">
-            <TrendingUp className="w-4 h-4 text-green-500" />
-            <span className="text-sm text-green-600 ml-1">+15%</span>
+            <TrendingUp className="w-4 h-4 text-[#43AC78]" />
+            <span className="text-sm text-[#43AC78] ml-1 font-medium">+15%</span>
             <span className="text-sm text-gray-500 ml-1">so với tháng trước</span>
           </div>
         </div>
@@ -604,26 +604,26 @@ const DashboardContent: React.FC = () => {
 
       {/* Charts and Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Doanh thu theo tháng</h3>
-          <div className="h-64 flex items-center justify-center text-gray-500">
+          <div className="h-64 flex items-center justify-center text-[#64C695]">
             <BarChart3 className="w-16 h-16" />
             <span className="ml-2">Biểu đồ sẽ được hiển thị ở đây</span>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Đơn hàng gần đây</h3>
           <div className="space-y-4">
             {[1, 2, 3, 4, 5].map((order) => (
-              <div key={order} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={order} className="flex items-center justify-between p-3 bg-gradient-to-r from-[#A8EDCB]/20 to-[#93E9BE]/20 rounded-lg border border-[#93E9BE]/30 hover:shadow-sm transition-all">
                 <div>
                   <p className="text-sm font-medium text-gray-900">Đơn hàng #{order}001</p>
                   <p className="text-xs text-gray-500">2 sản phẩm</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-900">₫456,789</p>
-                  <p className="text-xs text-green-600">Đã thanh toán</p>
+                  <p className="text-xs text-[#43AC78] font-medium">Đã thanh toán</p>
                 </div>
               </div>
             ))}
