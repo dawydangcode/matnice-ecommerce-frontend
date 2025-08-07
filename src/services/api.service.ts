@@ -80,8 +80,28 @@ class ApiService {
   }
 
   async post<T>(url: string, data?: any, config?: any): Promise<T> {
-    const response = await this.api.post(url, data, config);
-    return response.data;
+    console.log("ApiService.post:", { url, data, config });
+    console.log("Full URL:", this.baseURL + url);
+
+    try {
+      const response = await this.api.post(url, data, config);
+      console.log("ApiService.post success:", {
+        url,
+        status: response.status,
+        data: response.data,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error("ApiService.post failed:", {
+        url,
+        error,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+      });
+      throw error;
+    }
   }
 
   async put<T>(url: string, data?: any): Promise<T> {

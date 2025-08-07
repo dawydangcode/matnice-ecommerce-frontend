@@ -1,4 +1,4 @@
-import { apiService } from "./api.service";
+import { apiService } from './api.service';
 import {
   Product,
   ProductsResponse,
@@ -8,32 +8,45 @@ import {
   Category,
   Brand,
   ProductImage,
-} from "../types/product.types";
+} from '../types/product.types';
 
 class ProductService {
-  private readonly baseUrl = "/api/v1";
+  private readonly baseUrl = '/api/v1';
 
   // Products
   async getProducts(params?: ProductQueryParams): Promise<ProductsResponse> {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.page) queryParams.append("page", params.page.toString());
-      if (params?.limit) queryParams.append("limit", params.limit.toString());
-      if (params?.search) queryParams.append("search", params.search);
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      if (params?.search) queryParams.append('search', params.search);
       if (params?.category)
-        queryParams.append("category", params.category.toString());
-      if (params?.brand) queryParams.append("brand", params.brand.toString());
-      if (params?.type) queryParams.append("type", params.type);
-      if (params?.gender) queryParams.append("gender", params.gender);
+        queryParams.append('category', params.category.toString());
+      if (params?.brand) queryParams.append('brand', params.brand.toString());
+      if (params?.type) queryParams.append('type', params.type);
+      if (params?.gender) queryParams.append('gender', params.gender);
 
       const url = `${this.baseUrl}/products/list${
-        queryParams.toString() ? "?" + queryParams.toString() : ""
+        queryParams.toString() ? '?' + queryParams.toString() : ''
       }`;
       const response = await apiService.get<ProductsResponse>(url);
       return response;
     } catch (error: any) {
       throw new Error(
-        error.response?.data?.message || "Failed to fetch products"
+        error.response?.data?.message || 'Failed to fetch products',
+      );
+    }
+  }
+
+  async getProductsWithColors(): Promise<Product[]> {
+    try {
+      const response = await apiService.get<Product[]>(
+        `${this.baseUrl}/products/with-colors`,
+      );
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch products with colors',
       );
     }
   }
@@ -41,49 +54,63 @@ class ProductService {
   async getProductById(productId: number): Promise<Product> {
     try {
       const response = await apiService.get<Product>(
-        `${this.baseUrl}/product/${productId}/detail`
+        `${this.baseUrl}/product/${productId}/detail`,
       );
       return response;
     } catch (error: any) {
       throw new Error(
-        error.response?.data?.message || "Failed to fetch product"
+        error.response?.data?.message || 'Failed to fetch product',
       );
     }
   }
 
   async createProduct(productData: CreateProductRequest): Promise<Product> {
+    console.log('ProductService.createProduct called with:', productData);
+    const url = `${this.baseUrl}/product/create`;
+    console.log('API URL:', url);
+
     try {
-      const response = await apiService.post<Product>(
-        `${this.baseUrl}/product/create`,
-        productData
-      );
-      return response;
+      const response = await apiService.post<any>(url, productData);
+      console.log('ProductService.createProduct success:', response);
+
+      // Transform the response to match our Product interface
+      const product: Product = {
+        ...response,
+        productId: response.id || response.productId, // Handle both id and productId
+      };
+
+      return product;
     } catch (error: any) {
+      console.error('ProductService.createProduct failed:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Request URL:', url);
+      console.error('Request data:', productData);
       throw new Error(
-        error.response?.data?.message || "Failed to create product"
+        error.response?.data?.message || 'Failed to create product',
       );
     }
   }
 
   async updateProduct(
     productId: number,
-    productData: Partial<CreateProductRequest>
+    productData: Partial<CreateProductRequest>,
   ): Promise<Product> {
     try {
       const response = await apiService.put<Product>(
         `${this.baseUrl}/product/${productId}/update`,
-        productData
+        productData,
       );
       return response;
     } catch (error: any) {
       throw new Error(
-        error.response?.data?.message || "Failed to update product"
+        error.response?.data?.message || 'Failed to update product',
       );
     }
   }
 
   async deleteProduct(
-    productId: number
+    productId: number,
   ): Promise<{ success: boolean; message: string }> {
     try {
       const response = await apiService.delete<{
@@ -93,7 +120,7 @@ class ProductService {
       return response;
     } catch (error: any) {
       throw new Error(
-        error.response?.data?.message || "Failed to delete product"
+        error.response?.data?.message || 'Failed to delete product',
       );
     }
   }
@@ -105,12 +132,12 @@ class ProductService {
         total: number;
         data: Category[];
       }>(`${this.baseUrl}/category/list`);
-      console.log("Categories API response:", response);
+      console.log('Categories API response:', response);
       return response.data || [];
     } catch (error: any) {
-      console.error("Error fetching categories:", error);
+      console.error('Error fetching categories:', error);
       throw new Error(
-        error.response?.data?.message || "Failed to fetch categories"
+        error.response?.data?.message || 'Failed to fetch categories',
       );
     }
   }
@@ -119,14 +146,14 @@ class ProductService {
   async getBrands(): Promise<Brand[]> {
     try {
       const response = await apiService.get<{ total: number; data: Brand[] }>(
-        `${this.baseUrl}/brand/list`
+        `${this.baseUrl}/brand/list`,
       );
-      console.log("Brands API response:", response);
+      console.log('Brands API response:', response);
       return response.data || [];
     } catch (error: any) {
-      console.error("Error fetching brands:", error);
+      console.error('Error fetching brands:', error);
       throw new Error(
-        error.response?.data?.message || "Failed to fetch brands"
+        error.response?.data?.message || 'Failed to fetch brands',
       );
     }
   }
@@ -134,11 +161,11 @@ class ProductService {
   // Product Images
   async uploadProductImages(
     productId: number,
-    images: File[]
+    images: File[],
   ): Promise<ProductImage[]> {
     try {
       const formData = new FormData();
-      formData.append("productId", productId.toString());
+      formData.append('productId', productId.toString());
 
       images.forEach((image, index) => {
         formData.append(`images`, image);
@@ -149,14 +176,14 @@ class ProductService {
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            'Content-Type': 'multipart/form-data',
           },
-        }
+        },
       );
       return response;
     } catch (error: any) {
       throw new Error(
-        error.response?.data?.message || "Failed to upload images"
+        error.response?.data?.message || 'Failed to upload images',
       );
     }
   }
@@ -174,20 +201,20 @@ class ProductService {
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            'Content-Type': 'multipart/form-data',
           },
-        }
+        },
       );
       return response;
     } catch (error: any) {
       throw new Error(
-        error.response?.data?.message || "Failed to upload images"
+        error.response?.data?.message || 'Failed to upload images',
       );
     }
   }
 
   async deleteProductImage(
-    imageId: number
+    imageId: number,
   ): Promise<{ success: boolean; message: string }> {
     try {
       const response = await apiService.delete<{
@@ -197,7 +224,7 @@ class ProductService {
       return response;
     } catch (error: any) {
       throw new Error(
-        error.response?.data?.message || "Failed to delete image"
+        error.response?.data?.message || 'Failed to delete image',
       );
     }
   }
@@ -205,12 +232,12 @@ class ProductService {
   async getProductImages(productId: number): Promise<ProductImage[]> {
     try {
       const response = await apiService.get<ProductImage[]>(
-        `${this.baseUrl}/product-image/product/${productId}/list`
+        `${this.baseUrl}/product-image/product/${productId}/list`,
       );
       return response;
     } catch (error: any) {
       throw new Error(
-        error.response?.data?.message || "Failed to fetch product images"
+        error.response?.data?.message || 'Failed to fetch product images',
       );
     }
   }

@@ -23,6 +23,7 @@ export interface Product {
   category?: Category;
   categories?: Category[];
   images?: ProductImage[];
+  productDetail?: ProductDetail;
 }
 
 export interface ProductImage {
@@ -54,44 +55,44 @@ export interface Brand {
 }
 
 export enum ProductType {
-  GLASSES = "glasses",
-  SUNGLASSES = "sunglasses",
+  GLASSES = 'glasses',
+  SUNGLASSES = 'sunglasses',
 }
 
 export enum ProductGenderType {
-  MALE = "male",
-  FEMALE = "female",
-  UNISEX = "unisex",
+  MALE = 'male',
+  FEMALE = 'female',
+  UNISEX = 'unisex',
 }
 
 // Frame related enums
 export enum FrameType {
-  FULL_RIM = "full_rim",
-  HALF_RIM = "half_rim",
-  NO_RIM = "no_rim",
-  RIMLESS = "rimless",
+  FULL_RIM = 'full_rim',
+  HALF_RIM = 'half_rim',
+  NO_RIM = 'no_rim',
+  RIMLESS = 'rimless',
 }
 
 export enum FrameShapeType {
-  ROUND = "round",
-  SQUARE = "square",
-  RECTANGLE = "rectangle",
-  BROWLINE = "browline",
-  BUTTERFLY = "butterfly",
-  AVIATOR = "aviator",
-  NARROW = "narrow",
-  OVAL = "oval",
+  ROUND = 'round',
+  SQUARE = 'square',
+  RECTANGLE = 'rectangle',
+  BROWLINE = 'browline',
+  BUTTERFLY = 'butterfly',
+  AVIATOR = 'aviator',
+  NARROW = 'narrow',
+  OVAL = 'oval',
 }
 
 export enum FrameMaterialType {
-  PLASTIC = "plastic",
-  METAL = "metal",
-  TITAN = "titan",
-  WOOD = "wood",
-  CARBON = "carbon",
-  ALUMINIUM = "aluminium",
-  CELLULOSE = "cellulose",
-  LEATHER = "leather",
+  PLASTIC = 'plastic',
+  METAL = 'metal',
+  TITAN = 'titan',
+  WOOD = 'wood',
+  CARBON = 'carbon',
+  ALUMINIUM = 'aluminium',
+  CELLULOSE = 'cellulose',
+  LEATHER = 'leather',
 }
 
 // Product Detail interface

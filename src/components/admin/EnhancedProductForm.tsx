@@ -2,8 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import toast from 'react-hot-toast';
 import { useBrandStore } from '../../stores/brand.store';
 import { useCategoryStore } from '../../stores/category.store';
+import { useProductStore } from '../../stores/product.store';
+import { productCategoryService } from '../../services/product-category.service';
+import { productColorService } from '../../services/product-color.service';
+import { productDetailService } from '../../services/product-detail.service';
 import { 
   Product, 
   ProductType,
@@ -42,7 +47,7 @@ type ProductFormData = z.infer<typeof productSchema>;
 
 interface EnhancedProductFormProps {
   product?: Product | null;
-  onSuccess: (data: any) => void;
+  onSuccess: () => void;
   onCancel: () => void;
 }
 
@@ -69,9 +74,16 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
     frameType: FrameType.FULL_RIM,
     springHinge: false
   });
+  const [submitting, setSubmitting] = useState(false);
 
   const { brands, fetchBrands } = useBrandStore();
   const { categories, fetchCategories } = useCategoryStore();
+  const { 
+    createProduct, 
+    updateProduct, 
+    uploadImages, 
+    isLoading 
+  } = useProductStore();
 
   const {
     register,
@@ -179,35 +191,204 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
   };
 
   // Form submission
-  const onFormSubmit = (data: ProductFormData) => {
-    const formData = new FormData();
-    
-    // Basic product data
-    Object.entries(data).forEach(([key, value]) => {
-      formData.append(key, value?.toString() || '');
-    });
+  const onFormSubmit = async (data: ProductFormData) => {
+    console.log('=== ENHANCED FORM SUBMIT STARTED ===');
+    console.log('Form data:', data);
+    console.log('Form errors:', errors);
+    console.log('Form validation state:', Object.keys(errors).length === 0 ? 'VALID' : 'INVALID');
+    console.log('Thumbnail images:', thumbnailImages);
+    console.log('Product colors:', productColors);
+    console.log('Product detail:', productDetail);
+    console.log('onSuccess callback exists:', !!onSuccess);
 
-    // Thumbnail images
-    thumbnailImages.forEach((file, index) => {
-      formData.append(`thumbnail_${index}`, file);
-    });
-
-    // Product colors and their images
-    productColors.forEach((color, colorIndex) => {
-      formData.append(`colors[${colorIndex}][name]`, color.name);
-      color.images.forEach((file, imageIndex) => {
-        formData.append(`colors[${colorIndex}][images][${imageIndex}]`, file);
-      });
-    });
-
-    // Product detail
-    if (productDetail) {
-      Object.entries(productDetail).forEach(([key, value]) => {
-        formData.append(`detail[${key}]`, value?.toString() || '');
-      });
+    // Check if form has basic validation errors first
+    if (Object.keys(errors).length > 0) {
+      console.error('=== ENHANCED FORM VALIDATION FAILED ===');
+      console.error('Validation errors:', errors);
+      toast.error('Vui lòng sửa các lỗi trong form trước khi submit');
+      return;
     }
 
-    onSuccess(formData);
+    // Validate categories
+    const categoryIds = data.categoryIds.map(id => parseInt(id));
+    if (categoryIds.length === 0) {
+      console.error('Validation failed: No categories selected');
+      toast.error('Vui lòng chọn ít nhất một danh mục');
+      return;
+    }
+
+    // Validate colors (at least one with name)
+    const validColors = productColors.filter(color => color.name.trim() !== '');
+    console.log('Valid colors:', validColors);
+    if (validColors.length === 0) {
+      console.error('Validation failed: No valid colors');
+      toast.error('Vui lòng thêm ít nhất một màu sắc');
+      return;
+    }
+
+    // Validate product details
+    if (!productDetail.frameMaterial || !productDetail.frameShape || !productDetail.frameType) {
+      console.error('Validation failed: Missing product details', {
+        frameMaterial: productDetail.frameMaterial,
+        frameShape: productDetail.frameShape,
+        frameType: productDetail.frameType
+      });
+      toast.error('Vui lòng điền đầy đủ thông tin chi tiết sản phẩm');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      console.log('=== UPLOAD PHASE STARTED ===');
+
+      let imageUrls: string[] = [];
+      console.log('Initial image URLs:', imageUrls);
+
+      // Upload thumbnail images if any
+      if (thumbnailImages.length > 0) {
+        console.log('Uploading thumbnail images:', thumbnailImages);
+        try {
+          const uploadedUrls = await uploadImages(thumbnailImages);
+          console.log('Uploaded thumbnail URLs:', uploadedUrls);
+          imageUrls = [...imageUrls, ...uploadedUrls];
+        } catch (uploadError) {
+          console.error('Thumbnail upload failed:', uploadError);
+          toast.error('Lỗi khi upload hình ảnh thumbnail');
+          return;
+        }
+      }
+
+      console.log('Final image URLs:', imageUrls);
+
+      // Create product data
+      const productData = {
+        productName: data.productName,
+        price: data.price,
+        stock: data.stock,
+        productType: data.productType,
+        gender: data.gender,
+        categoryId: categoryIds[0], // Use first category as primary
+        brandId: parseInt(data.brandId),
+        description: data.description || undefined,
+        isSustainable: data.isSustainable || false,
+        imageUrls,
+      };
+
+      console.log('=== PRODUCT CREATION PHASE ===');
+      console.log('Product data to be created:', productData);
+
+      let productId: number;
+
+      if (product) {
+        console.log('Updating existing product:', product.productId);
+        await updateProduct(product.productId, productData);
+        productId = product.productId;
+        console.log('Product updated successfully');
+        toast.success('Cập nhật sản phẩm thành công!');
+      } else {
+        console.log('Creating new product...');
+        try {
+          const createdProduct = await createProduct(productData);
+          console.log('Created product response:', createdProduct);
+          productId = createdProduct?.productId || 0;
+          console.log('New product ID:', productId);
+          
+          if (!productId) {
+            throw new Error('Product ID not returned from createProduct');
+          }
+          
+          toast.success('Tạo sản phẩm thành công!');
+        } catch (createError) {
+          console.error('Product creation failed:', createError);
+          throw createError;
+        }
+      }
+
+      // Update product categories if we have multiple categories
+      if (categoryIds.length > 1 && productId) {
+        console.log('=== UPDATING CATEGORIES PHASE ===');
+        console.log('Updating categories for product:', productId, 'Categories:', categoryIds);
+        try {
+          await productCategoryService.updateProductCategories(productId, categoryIds);
+          console.log('Categories updated successfully');
+          toast.success('Cập nhật danh mục sản phẩm thành công!');
+        } catch (error) {
+          console.error('Error updating product categories:', error);
+          toast.error('Có lỗi khi cập nhật danh mục sản phẩm');
+        }
+      }
+
+      // Create product colors and details
+      if (productId && !product) { // Only for new products
+        console.log('=== CREATING COLORS AND DETAILS PHASE ===');
+        console.log('Creating colors and details for product:', productId);
+        
+        for (let index = 0; index < validColors.length; index++) {
+          const colorData = validColors[index];
+          console.log(`Creating color ${index + 1}/${validColors.length}:`, colorData.name);
+          try {
+            const color = await productColorService.createProductColor(productId, {
+              colorName: colorData.name.trim()
+            });
+            console.log('Color created:', color);
+            
+            // Create product detail for this color
+            const detailData = {
+              productId: productId,
+              bridgeWidth: productDetail.bridgeWidth || 0,
+              frameWidth: productDetail.frameWidth || 0,
+              lensHeight: productDetail.lensHeight || 0,
+              lensWidth: productDetail.lensWidth || 0,
+              templeLength: productDetail.templeLength || 0,
+              productNumber: 0, // EnhancedForm doesn't have productNumber field
+              frameMaterial: productDetail.frameMaterial || '',
+              frameShape: productDetail.frameShape || '',
+              frameType: productDetail.frameType || '',
+              bridgeDesign: '', // EnhancedForm doesn't have bridgeDesign field  
+              style: '', // EnhancedForm doesn't have style field
+              springHinges: productDetail.springHinge || false,
+              weight: 0, // EnhancedForm doesn't have weight field
+              multifocal: false, // EnhancedForm doesn't have multifocal field
+            };
+            
+            console.log('Creating detail for product:', productId, 'Detail data:', detailData);
+            
+            const detail = await productDetailService.createProductDetail(detailData);
+            console.log('Detail created:', detail);
+            
+          } catch (error) {
+            console.error(`Error creating color ${colorData.name}:`, error);
+            toast.error(`Có lỗi khi tạo màu ${colorData.name}`);
+          }
+        }
+        console.log('Colors and details creation completed');
+        toast.success('Tạo màu sắc và chi tiết sản phẩm thành công!');
+      }
+
+      console.log('=== CALLING onSuccess() ===');
+      console.log('onSuccess function:', onSuccess);
+      
+      // Add a small delay to see all toasts before navigation
+      setTimeout(() => {
+        console.log('Executing onSuccess callback...');
+        if (onSuccess && typeof onSuccess === 'function') {
+          onSuccess();
+          console.log('onSuccess callback executed');
+        } else {
+          console.error('onSuccess is not a function:', onSuccess);
+        }
+      }, 1000);
+      
+      console.log('=== ENHANCED FORM SUBMIT COMPLETED SUCCESSFULLY ===');
+    } catch (error) {
+      console.error('=== ENHANCED FORM SUBMIT FAILED ===');
+      console.error('Error details:', error);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      toast.error(product ? 'Cập nhật sản phẩm thất bại!' : 'Tạo sản phẩm thất bại!');
+    } finally {
+      setSubmitting(false);
+      console.log('=== ENHANCED FORM SUBMIT FINISHED ===');
+    }
   };
 
   const tabs = [
@@ -704,6 +885,24 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
         <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
           <button
             type="button"
+            onClick={() => {
+              console.log('=== ENHANCED FORM DEBUG ===');
+              console.log('Form errors:', errors);
+              console.log('Form data:', getValues());
+              console.log('Thumbnail images:', thumbnailImages);
+              console.log('Product colors:', productColors);
+              console.log('Product detail:', productDetail);
+              console.log('Form is valid:', Object.keys(errors).length === 0);
+              console.log('Network status:', navigator.onLine ? 'Online' : 'Offline');
+              console.log('Current URL:', window.location.href);
+              console.log('Auth token:', localStorage.getItem('accessToken') ? 'Present' : 'Missing');
+            }}
+            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+          >
+            Debug
+          </button>
+          <button
+            type="button"
             onClick={onCancel}
             className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
           >
@@ -711,10 +910,20 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
           </button>
           <button
             type="submit"
-            className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            disabled={isLoading || submitting}
+            className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50"
           >
-            <Save className="h-4 w-4" />
-            <span>{product ? 'Cập nhật' : 'Tạo mới'}</span>
+            {(isLoading || submitting) ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>{submitting ? 'Đang tạo sản phẩm...' : 'Đang xử lý...'}</span>
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                <span>{product ? 'Cập nhật' : 'Tạo mới'}</span>
+              </>
+            )}
           </button>
         </div>
       </form>

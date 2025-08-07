@@ -113,10 +113,13 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
   },
 
   createProduct: async (productData: CreateProductRequest) => {
+    console.log("ProductStore.createProduct called with:", productData);
     set({ isLoading: true, error: null });
 
     try {
+      console.log("Calling productService.createProduct...");
       const newProduct = await productService.createProduct(productData);
+      console.log("ProductStore.createProduct success:", newProduct);
 
       // Add to products list
       set((state) => ({
@@ -126,6 +129,9 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
 
       return newProduct;
     } catch (error: any) {
+      console.error("ProductStore.createProduct failed:", error);
+      console.error("Error message:", error.message);
+      console.error("Error response:", error.response?.data);
       set({
         error: error.message || "Failed to create product",
         isLoading: false,

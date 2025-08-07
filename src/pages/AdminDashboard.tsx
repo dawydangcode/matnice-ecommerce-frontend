@@ -18,9 +18,11 @@ import {
   Palette,
   Sparkles,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Image
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
+import { useProductStore } from '../stores/product.store';
 import { useBrandStore } from '../stores/brand.store';
 import { useCategoryStore } from '../stores/category.store';
 import { useLensStore } from '../stores/lens.store';
@@ -40,20 +42,23 @@ import BrandForm from '../components/admin/BrandForm';
 import CategoryForm from '../components/admin/CategoryForm';
 import LensForm from '../components/admin/LensForm';
 import LensQualityForm from '../components/admin/LensQualityForm';
+import ImageManagementShowcase from '../components/admin/ImageManagementShowcase';
+import ProductLoader from '../components/admin/ProductLoader';
 import { Product } from '../types/product.types';
 import { Brand } from '../types/brand.types';
 import { Category } from '../types/category.types';
 import { Lens, LensQuality } from '../types/lens.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form' | 'lens-thickness' | 'lens-tints' | 'lens-upgrades' | 'lens-details';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-images' | 'product-loader' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form' | 'lens-thickness' | 'lens-tints' | 'lens-upgrades' | 'lens-details';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
+  const { fetchProducts } = useProductStore();
   const { createBrand, updateBrand } = useBrandStore();
   const { createCategory, updateCategory } = useCategoryStore();
   const { createLens, updateLens, createLensQuality, updateLensQuality } = useLensStore();
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
-  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['lenses']));
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['lenses', 'products']));
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -89,14 +94,36 @@ const AdminDashboard: React.FC = () => {
     setCurrentView('products');
   };
 
-  const handleProductFormSuccess = () => {
+  const handleProductFormSuccess = async () => {
+    console.log('=== handleProductFormSuccess called ===');
     setEditingProduct(null);
     setCurrentView('products');
+    
+    // Refresh products list to show the new product
+    try {
+      console.log('Refreshing products list...');
+      await fetchProducts();
+      console.log('Products list refreshed successfully');
+    } catch (error) {
+      console.error('Error refreshing products list:', error);
+    }
   };
 
-  const handleEnhancedProductFormSuccess = () => {
+  const handleEnhancedProductFormSuccess = async () => {
+    console.log('=== handleEnhancedProductFormSuccess called ===');
+    console.log('Product created successfully by EnhancedProductForm');
+    
     setEditingProduct(null);
     setCurrentView('products');
+    
+    // Refresh products list to show the new product
+    try {
+      console.log('Refreshing products list...');
+      await fetchProducts();
+      console.log('Products list refreshed successfully');
+    } catch (error) {
+      console.error('Error refreshing products list:', error);
+    }
   };
 
   // Brand handlers
@@ -235,7 +262,17 @@ const AdminDashboard: React.FC = () => {
 
   const menuItems = [
     { id: 'dashboard', label: 'Tổng quan', icon: BarChart3 },
-    { id: 'products', label: 'Quản lý sản phẩm', icon: Package },
+    { 
+      id: 'products', 
+      label: 'Quản lý sản phẩm', 
+      icon: Package,
+      children: [
+        { id: 'product-list', label: 'Danh sách sản phẩm', icon: Package },
+        { id: 'product-images', label: 'Hình ảnh', icon: Image },
+        { id: 'product-loader', label: 'Test Load Products', icon: Search },
+      ]
+    },
+
     { id: 'brands', label: 'Thương hiệu', icon: Tag },
     { id: 'categories', label: 'Danh mục', icon: Layers },
     // Lens Management (nested)
@@ -276,6 +313,8 @@ const AdminDashboard: React.FC = () => {
               const isActive = currentView === item.id || 
                              (currentView === 'product-form' && item.id === 'products') ||
                              (currentView === 'enhanced-product-form' && item.id === 'products') ||
+                             (currentView === 'product-list' && item.id === 'products') ||
+                             (currentView === 'product-images' && item.id === 'products') ||
                              (currentView === 'brand-form' && item.id === 'brands') ||
                              (currentView === 'category-form' && item.id === 'categories') ||
                              (currentView === 'lens-form' && item.id === 'lenses') ||
@@ -283,7 +322,9 @@ const AdminDashboard: React.FC = () => {
               
               const isChildActive = hasChildren && item.children?.some(child => 
                 currentView === child.id || 
-                (currentView === 'lens-quality-form' && child.id === 'lens-quality')
+                (currentView === 'lens-quality-form' && child.id === 'lens-quality') ||
+                (currentView === 'product-form' && child.id === 'product-list') ||
+                (currentView === 'enhanced-product-form' && child.id === 'product-list')
               );
               
               return (
@@ -293,9 +334,7 @@ const AdminDashboard: React.FC = () => {
                       if (hasChildren) {
                         toggleMenu(item.id);
                       } else {
-                        if (item.id === 'products') {
-                          setCurrentView('products');
-                        } else if (item.id === 'dashboard') {
+                        if (item.id === 'dashboard') {
                           setCurrentView('dashboard');
                         } else if (item.id === 'brands') {
                           setCurrentView('brands');
@@ -332,13 +371,21 @@ const AdminDashboard: React.FC = () => {
                       {item.children?.map((child) => {
                         const ChildIcon = child.icon;
                         const isChildItemActive = currentView === child.id ||
-                                                (currentView === 'lens-quality-form' && child.id === 'lens-quality');
+                                                (currentView === 'lens-quality-form' && child.id === 'lens-quality') ||
+                                                (currentView === 'product-form' && child.id === 'product-list') ||
+                                                (currentView === 'enhanced-product-form' && child.id === 'product-list');
                         
                         return (
                           <button
                             key={child.id}
                             onClick={() => {
-                              if (child.id === 'lens-thickness') {
+                              if (child.id === 'product-list') {
+                                setCurrentView('product-list');
+                              } else if (child.id === 'product-images') {
+                                setCurrentView('product-images');
+                              } else if (child.id === 'product-loader') {
+                                setCurrentView('product-loader');
+                              } else if (child.id === 'lens-thickness') {
                                 setCurrentView('lens-thickness');
                               } else if (child.id === 'lens-tints') {
                                 setCurrentView('lens-tints');
@@ -391,6 +438,9 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'dashboard' && 'Tổng quan'}
                 {currentView === 'enhanced-product-form' && 'Thêm sản phẩm mới'}
                 {currentView === 'products' && 'Quản lý sản phẩm'}
+                {currentView === 'product-list' && 'Danh sách sản phẩm'}
+                {currentView === 'product-images' && 'Quản lý hình ảnh sản phẩm'}
+                {currentView === 'product-loader' && 'Test Load Products'}
                 {currentView === 'product-form' && (editingProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm')}
                 {currentView === 'brands' && 'Quản lý thương hiệu'}
                 {currentView === 'brand-form' && 'Thêm/Sửa thương hiệu'}
@@ -457,6 +507,14 @@ const AdminDashboard: React.FC = () => {
               onCreateProduct={handleCreateProduct}
             />
           )}
+          {currentView === 'product-list' && (
+            <ProductListPage
+              onEditProduct={handleEditProduct}
+              onCreateProduct={handleCreateProduct}
+            />
+          )}
+          {currentView === 'product-images' && <ImageManagementShowcase />}
+          {currentView === 'product-loader' && <ProductLoader />}
           {currentView === 'product-form' && (
             <ProductFormPage
               product={editingProduct}
