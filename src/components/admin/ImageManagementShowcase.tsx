@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Package, Image, Upload, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Package, Image, Upload, Eye, ToggleLeft, ToggleRight, Plus } from 'lucide-react';
 import { productService } from '../../services/product.service';
-import { productColorImageService } from '../../services/product-color-image.service';
+import { productColorService, ProductColor } from '../../services/product-color.service';
 import { ProductColorImageManager } from './ProductColorImageManager';
+import { ProductColorForm } from './ProductColorForm';
 import { Product } from '../../types/product.types';
+import { CreateProductColorRequest } from '../../types/product-color.types';
 import { ColorImageUploadData } from '../../types/product-image.types';
 import './ImageManagementShowcase.css';
 
@@ -13,9 +15,35 @@ interface ProductStats {
   colors: { [colorName: string]: number };
 }
 
+const showNotification = (type: 'success' | 'error', message: string) => {
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 500;
+    z-index: 9999;
+    background: ${type === 'success' ? '#52c41a' : '#ff4d4f'};
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+};
+
 export const ImageManagementShowcase: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productColors, setProductColors] = useState<ProductColor[]>([]);
+  const [selectedProductColor, setSelectedProductColor] = useState<ProductColor | null>(null);
   const [colorImages, setColorImages] = useState<{ [colorId: number]: ColorImageUploadData[] }>({});
   const [productStats, setProductStats] = useState<ProductStats>({
     totalImages: 0,
@@ -24,6 +52,8 @@ export const ImageManagementShowcase: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [showColorForm, setShowColorForm] = useState(false);
+  const [colorFormLoading, setColorFormLoading] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -32,14 +62,68 @@ export const ImageManagementShowcase: React.FC = () => {
   const loadProducts = async () => {
     try {
       console.log('Loading products for ImageManagementShowcase...');
-      
-      // Use the working API endpoint
       const productResponse = await productService.getProducts({ limit: 100 });
       const productList = productResponse.products || [];
       setProducts(productList);
-      console.log('Loaded products for ImageManagementShowcase:', productList); // Debug log
+      console.log('Loaded products for ImageManagementShowcase:', productList);
     } catch (error) {
       console.error('Failed to load products:', error);
+    }
+  };
+
+  const loadProductColors = async (productId: number) => {
+    try {
+      console.log('Loading product colors for product:', productId);
+      const colors = await productColorService.getProductColors(productId);
+      setProductColors(colors);
+      console.log('Loaded product colors:', colors);
+    } catch (error) {
+      console.error('Failed to load product colors:', error);
+      setProductColors([]);
+    }
+  };
+
+  const handleCreateProductColor = async (data: CreateProductColorRequest) => {
+    setColorFormLoading(true);
+    try {
+      console.log('Creating product color:', data);
+      const newColor = await productColorService.createProductColor(data.productId, data);
+      console.log('Created product color:', newColor);
+      
+      await loadProductColors(data.productId);
+      setShowColorForm(false);
+      showNotification('success', 'Tạo biến thể sản phẩm thành công!');
+    } catch (error) {
+      console.error('Failed to create product color:', error);
+      showNotification('error', 'Tạo biến thể sản phẩm thất bại!');
+    } finally {
+      setColorFormLoading(false);
+    }
+  };
+
+  const handleProductSelect = (product: Product) => {
+    setSelectedProduct(product);
+    setSelectedProductColor(null);
+    setColorImages({});
+    setProductStats({ totalImages: 0, thumbnailCount: 0, colors: {} });
+    loadProductColors(product.productId);
+  };
+
+  const handleProductColorSelect = (productColor: ProductColor) => {
+    setSelectedProductColor(productColor);
+    loadProductColorImages(productColor.id);
+  };
+
+  const loadProductColorImages = async (productColorId: number) => {
+    setLoading(true);
+    try {
+      console.log('Loading images for product color:', productColorId);
+      const images: ColorImageUploadData[] = [];
+      setColorImages({ [productColorId]: images });
+    } catch (error) {
+      console.error('Failed to load product color images:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,9 +139,7 @@ export const ImageManagementShowcase: React.FC = () => {
           thumbnailCount++;
         }
         
-        // Find color name for this image
         if (selectedProduct) {
-          // For now, use a mock color structure since Product doesn't have colors directly
           const mockColor = { id: image.colorId, name: `Color ${image.colorId}` };
           if (mockColor) {
             colors[mockColor.name] = (colors[mockColor.name] || 0) + 1;
@@ -69,43 +151,6 @@ export const ImageManagementShowcase: React.FC = () => {
     setProductStats({ totalImages, thumbnailCount, colors });
   }, [selectedProduct]);
 
-  const loadProductImages = useCallback(async () => {
-    if (!selectedProduct) return;
-
-    setLoading(true);
-    try {
-      const imagesData = await productColorImageService.getProductImagesGroupedByColor(
-        selectedProduct.productId
-      );
-      
-      // Convert the API response to the expected format
-      const convertedImages: { [colorId: number]: ColorImageUploadData[] } = {};
-      Object.entries(imagesData).forEach(([colorId, images]) => {
-        convertedImages[parseInt(colorId)] = images.map((img: any) => ({
-          id: img.id,
-          colorId: parseInt(colorId),
-          imageOrder: img.imageOrder,
-          imageUrl: img.imageUrl,
-          isThumbnail: img.isThumbnail,
-          productNumber: selectedProduct.productDetail?.productNumber || selectedProduct.productName
-        }));
-      });
-      
-      setColorImages(convertedImages);
-      calculateStats(convertedImages);
-    } catch (error) {
-      console.error('Failed to load product images:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedProduct, calculateStats]);
-
-  useEffect(() => {
-    if (selectedProduct) {
-      loadProductImages();
-    }
-  }, [selectedProduct, loadProductImages]);
-
   const handleImagesChange = (colorId: number, images: ColorImageUploadData[]) => {
     const newColorImages = {
       ...colorImages,
@@ -115,23 +160,17 @@ export const ImageManagementShowcase: React.FC = () => {
     calculateStats(newColorImages);
   };
 
-  const handleProductSelect = (product: Product) => {
-    setSelectedProduct(product);
-    setColorImages({});
-    setProductStats({ totalImages: 0, thumbnailCount: 0, colors: {} });
-  };
-
   const renderModeToggle = () => (
     <div className="mode-toggle-container">
       <div className="mode-info">
         <h2>Product Image Management System</h2>
-        <p>Hệ thống quản lý hình ảnh sản phẩm với AWS S3 integration</p>
+        <p>Hệ thống quản lý hình ảnh sản phẩm với biến thể màu sắc</p>
       </div>
       
       <div className="alert-info">
         <div className="alert-content">
-          <div><strong>Production Mode:</strong> Giao diện chính thức với đầy đủ tính năng quản lý sản phẩm</div>
-          <div><strong>Demo Mode:</strong> Giao diện demo với dữ liệu mẫu để test chức năng upload</div>
+          <div><strong>Production Mode:</strong> Workflow: Chọn sản phẩm → Tạo biến thể → Upload hình ảnh</div>
+          <div><strong>Demo Mode:</strong> Giao diện demo với dữ liệu mẫu</div>
         </div>
       </div>
 
@@ -151,167 +190,132 @@ export const ImageManagementShowcase: React.FC = () => {
     </div>
   );
 
-  const renderProductSelector = () => (
-    <div className="product-selector">
-      <div className="selector-header">
-        <Package size={20} />
-        <h3>Select Product</h3>
-      </div>
-      
-      <div className="product-grid">
-        {products.map(product => (
-          <div
-            key={product.productId}
-            className={`product-card ${selectedProduct?.productId === product.productId ? 'selected' : ''}`}
-            onClick={() => handleProductSelect(product)}
-          >
-            <div className="product-info">
-              <div className="product-number">#{product.productDetail?.productNumber || 'N/A'}</div>
-              <div className="product-name">{product.productName}</div>
-              <div className="product-colors">
-                0 colors available
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderStatsPanel = () => (
-    <div className="stats-panel">
-      <div className="stats-header">
-        <Eye size={20} />
-        <h4>Image Statistics</h4>
-      </div>
-      
-      <div className="stats-grid">
-        <div className="stat-item">
-          <div className="stat-number">{productStats.totalImages}</div>
-          <div className="stat-label">Total Images</div>
-        </div>
-        
-        <div className="stat-item">
-          <div className="stat-number">{productStats.thumbnailCount}</div>
-          <div className="stat-label">Thumbnails</div>
-        </div>
-        
-        <div className="stat-item">
-          <div className="stat-number">{Object.keys(productStats.colors).length}</div>
-          <div className="stat-label">Colors with Images</div>
-        </div>
-      </div>
-      
-      {Object.keys(productStats.colors).length > 0 && (
-        <div className="color-breakdown">
-          <h5>Images by Color:</h5>
-          <ul className="color-list">
-            {Object.entries(productStats.colors).map(([colorName, count]) => (
-              <li key={colorName} className="color-item">
-                <span className="color-name">{colorName}</span>
-                <span className="color-count">{count} images</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderImageManagers = () => {
-    if (!selectedProduct) {
-      return (
-        <div className="no-selection">
-          <Image size={48} />
-          <p>Select a product to manage its color images</p>
-        </div>
-      );
-    }
-
-    if (loading) {
-      return (
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Loading product images...</p>
-        </div>
-      );
-    }
-
-    // For demo purposes, create some mock colors
-    const mockColors = [
-      { id: 1, name: 'Black' },
-      { id: 2, name: 'White' },
-      { id: 3, name: 'Brown' }
-    ];
-
-    return (
-      <div className="image-managers">
-        <div className="managers-header">
-          <Upload size={20} />
-          <h4>Manage Color Images for {selectedProduct.productName}</h4>
-        </div>
-        
-        {mockColors.map(color => (
-          <ProductColorImageManager
-            key={color.id}
-            productId={selectedProduct.productId}
-            colorId={color.id}
-            colorName={color.name}
-            productNumber={selectedProduct.productDetail?.productNumber || selectedProduct.productName}
-            initialImages={colorImages[color.id] || []}
-            onImagesChange={handleImagesChange}
-          />
-        ))}
-      </div>
-    );
-  };
-
-  const renderDemoMode = () => (
-    <div className="demo-container">
-      <div className="demo-header">
-        <h3>Demo Mode - Sample Product</h3>
-        <p>This is a demo version with sample data for testing</p>
-      </div>
-      
-      <ProductColorImageManager
-        productId={1}
-        colorId={1}
-        colorName="Black"
-        productNumber="DEMO001"
-        onImagesChange={() => {}}
-        disabled={false}
-      />
-      
-      <ProductColorImageManager
-        productId={1}
-        colorId={2}
-        colorName="White"
-        productNumber="DEMO001"
-        onImagesChange={() => {}}
-        disabled={false}
-      />
-    </div>
-  );
-
   return (
     <div className="image-management-showcase">
       {renderModeToggle()}
       
       {showDemo ? (
-        renderDemoMode()
+        <div className="demo-container">
+          <div className="demo-header">
+            <h3>Demo Mode - Sample Product</h3>
+            <p>This is a demo version with sample data for testing</p>
+          </div>
+          
+          <ProductColorImageManager
+            productId={1}
+            colorId={1}
+            colorName="Black"
+            productNumber="DEMO001"
+            onImagesChange={() => {}}
+            disabled={false}
+          />
+        </div>
       ) : (
         <div className="showcase-content">
           <div className="left-panel">
-            {renderProductSelector()}
-            {selectedProduct && renderStatsPanel()}
+            <div className="product-selector">
+              <div className="selector-header">
+                <Package size={20} />
+                <h3>1. Chọn Sản Phẩm</h3>
+              </div>
+              
+              <div className="product-grid">
+                {products.map(product => (
+                  <div
+                    key={product.productId}
+                    className={`product-card ${selectedProduct?.productId === product.productId ? 'selected' : ''}`}
+                    onClick={() => handleProductSelect(product)}
+                  >
+                    <div className="product-info">
+                      <div className="product-number">#{product.productId}</div>
+                      <div className="product-name">{product.productName}</div>
+                      <div className="product-colors">
+                        {productColors.length} biến thể
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {selectedProduct && (
+              <div className="product-colors-section">
+                <div className="section-header">
+                  <Eye size={20} />
+                  <h3>2. Quản Lý Biến Thể</h3>
+                  <button 
+                    className="add-button"
+                    onClick={() => setShowColorForm(true)}
+                  >
+                    <Plus size={16} />
+                    Thêm Biến Thể
+                  </button>
+                </div>
+
+                <div className="product-colors-list">
+                  {productColors.map(color => (
+                    <div
+                      key={color.id}
+                      className={`color-card ${selectedProductColor?.id === color.id ? 'selected' : ''}`}
+                      onClick={() => handleProductColorSelect(color)}
+                    >
+                      <div className="color-info">
+                        <div className="color-name">{color.color_name}</div>
+                        <div className="variant-name">{color.product_variant_name}</div>
+                        <div className="product-number">{color.product_number}</div>
+                        <div className="stock">Stock: {color.stock}</div>
+                        {color.is_thumbnail && <div className="thumbnail-badge">Thumbnail</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="main-panel">
-            {renderImageManagers()}
+            {selectedProductColor ? (
+              <div className="image-manager-section">
+                <div className="section-header">
+                  <Upload size={20} />
+                  <h3>3. Upload Hình Ảnh - {selectedProductColor.color_name}</h3>
+                </div>
+                
+                <ProductColorImageManager
+                  productId={selectedProduct!.productId}
+                  colorId={selectedProductColor.id}
+                  colorName={selectedProductColor.color_name}
+                  productNumber={selectedProductColor.product_number}
+                  initialImages={colorImages[selectedProductColor.id] || []}
+                  onImagesChange={handleImagesChange}
+                />
+              </div>
+            ) : selectedProduct ? (
+              <div className="no-color-selection">
+                <Image size={48} />
+                <p>Vui lòng chọn một biến thể để quản lý hình ảnh</p>
+                <p className="help-text">Hoặc tạo biến thể mới bằng nút "Thêm Biến Thể"</p>
+              </div>
+            ) : (
+              <div className="no-selection">
+                <Package size={48} />
+                <p>Vui lòng chọn một sản phẩm để bắt đầu</p>
+              </div>
+            )}
           </div>
         </div>
+      )}
+
+      {showColorForm && selectedProduct && (
+        <ProductColorForm
+          productId={selectedProduct.productId}
+          onSubmit={handleCreateProductColor}
+          onCancel={() => setShowColorForm(false)}
+          loading={colorFormLoading}
+        />
       )}
     </div>
   );
 };
+
 export default ImageManagementShowcase;

@@ -1,7 +1,7 @@
 // Demo file to test Product Color and Product Detail creation workflow
 
-import { productColorService } from "../services/product-color.service";
-import { productDetailService } from "../services/product-detail.service";
+import { productColorService } from '../services/product-color.service';
+import { productDetailService } from '../services/product-detail.service';
 
 export const createCompleteProductWorkflow = async (
   productId: number,
@@ -20,7 +20,7 @@ export const createCompleteProductWorkflow = async (
     springHinges: boolean;
     weight: number;
     multifocal: boolean;
-  }
+  },
 ) => {
   const results = [];
   let detailCreated = false; // Track if detail has been created
@@ -29,7 +29,12 @@ export const createCompleteProductWorkflow = async (
     try {
       // Step 1: Create color
       const color = await productColorService.createProductColor(productId, {
-        colorName: colorData.colorName,
+        productId: productId,
+        product_variant_name: colorData.colorName,
+        product_number: `${productId}-${colorData.colorName.toUpperCase()}`,
+        color_name: colorData.colorName,
+        stock: 0,
+        is_thumbnail: false, // Can be updated later
       });
 
       // Step 2: Create detail for this product (only once, not per color)
@@ -47,8 +52,8 @@ export const createCompleteProductWorkflow = async (
           frameMaterial: details.frameMaterial,
           frameShape: details.frameShape,
           frameType: details.frameType,
-          bridgeDesign: details.bridgeDesign || "",
-          style: details.style || "",
+          bridgeDesign: details.bridgeDesign || '',
+          style: details.style || '',
           springHinges: details.springHinges,
           weight: details.weight,
           multifocal: details.multifocal,
@@ -64,7 +69,7 @@ export const createCompleteProductWorkflow = async (
     } catch (error) {
       results.push({
         colorName: colorData.colorName,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
         success: false,
       });
     }

@@ -161,7 +161,7 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
       if (colors.length > 0) {
         setProductColors(colors.map(color => ({ 
           id: color.id, 
-          colorName: color.colorName, 
+          colorName: color.color_name, 
           isNew: false 
         })));
         
@@ -396,7 +396,12 @@ const ProductFormPage: React.FC<ProductFormPageProps> = ({ product, onCancel, on
           console.log(`Creating color ${index + 1}/${validColors.length}:`, colorData.colorName);
           try {
             const color = await productColorService.createProductColor(productId, {
-              colorName: colorData.colorName.trim()
+              productId: productId,
+              product_variant_name: colorData.colorName.trim(),
+              product_number: `${productId}-${colorData.colorName.trim().toUpperCase()}`,
+              color_name: colorData.colorName.trim(),
+              stock: 0,
+              is_thumbnail: index === 0 // First color as thumbnail
             });
             console.log('Color created:', color);
             

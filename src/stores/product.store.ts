@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 import {
   Product,
   ProductsResponse,
@@ -7,8 +7,8 @@ import {
   Category,
   Brand,
   ProductImage,
-} from "../types/product.types";
-import { productService } from "../services/product.service";
+} from '../types/product.types';
+import { productService } from '../services/product.service';
 
 interface ProductState {
   products: Product[];
@@ -32,7 +32,7 @@ interface ProductActions {
   createProduct: (productData: CreateProductRequest) => Promise<Product>;
   updateProduct: (
     productId: number,
-    productData: Partial<CreateProductRequest>
+    productData: Partial<CreateProductRequest>,
   ) => Promise<Product>;
   deleteProduct: (productId: number) => Promise<void>;
 
@@ -44,7 +44,7 @@ interface ProductActions {
   fetchProductImages: (productId: number) => Promise<void>;
   uploadProductImages: (
     productId: number,
-    images: File[]
+    images: File[],
   ) => Promise<ProductImage[]>;
   uploadImages: (images: File[]) => Promise<string[]>;
   deleteProductImage: (imageId: number) => Promise<void>;
@@ -77,7 +77,18 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
+      console.log(
+        'Store fetchProducts - calling productService.getProducts with params:',
+        params,
+      );
       const response = await productService.getProducts(params);
+      console.log('Store fetchProducts - received response:', response);
+      console.log('Store fetchProducts - products array:', response.products);
+      console.log(
+        'Store fetchProducts - products count:',
+        response.products?.length,
+      );
+
       set({
         products: response.products || [],
         pagination: {
@@ -87,9 +98,15 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
         },
         isLoading: false,
       });
+
+      console.log(
+        'Store fetchProducts - updated state with products count:',
+        response.products?.length,
+      );
     } catch (error: any) {
+      console.error('Store fetchProducts - error:', error);
       set({
-        error: error.message || "Failed to fetch products",
+        error: error.message || 'Failed to fetch products',
         isLoading: false,
       });
     }
@@ -106,20 +123,20 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
       });
     } catch (error: any) {
       set({
-        error: error.message || "Failed to fetch product",
+        error: error.message || 'Failed to fetch product',
         isLoading: false,
       });
     }
   },
 
   createProduct: async (productData: CreateProductRequest) => {
-    console.log("ProductStore.createProduct called with:", productData);
+    console.log('ProductStore.createProduct called with:', productData);
     set({ isLoading: true, error: null });
 
     try {
-      console.log("Calling productService.createProduct...");
+      console.log('Calling productService.createProduct...');
       const newProduct = await productService.createProduct(productData);
-      console.log("ProductStore.createProduct success:", newProduct);
+      console.log('ProductStore.createProduct success:', newProduct);
 
       // Add to products list
       set((state) => ({
@@ -129,11 +146,11 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
 
       return newProduct;
     } catch (error: any) {
-      console.error("ProductStore.createProduct failed:", error);
-      console.error("Error message:", error.message);
-      console.error("Error response:", error.response?.data);
+      console.error('ProductStore.createProduct failed:', error);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response?.data);
       set({
-        error: error.message || "Failed to create product",
+        error: error.message || 'Failed to create product',
         isLoading: false,
       });
       throw error;
@@ -142,20 +159,20 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
 
   updateProduct: async (
     productId: number,
-    productData: Partial<CreateProductRequest>
+    productData: Partial<CreateProductRequest>,
   ) => {
     set({ isLoading: true, error: null });
 
     try {
       const updatedProduct = await productService.updateProduct(
         productId,
-        productData
+        productData,
       );
 
       // Update in products list
       set((state) => ({
         products: state.products.map((p) =>
-          p.productId === productId ? updatedProduct : p
+          p.productId === productId ? updatedProduct : p,
         ),
         currentProduct:
           state.currentProduct?.productId === productId
@@ -167,7 +184,7 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
       return updatedProduct;
     } catch (error: any) {
       set({
-        error: error.message || "Failed to update product",
+        error: error.message || 'Failed to update product',
         isLoading: false,
       });
       throw error;
@@ -191,7 +208,7 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
       }));
     } catch (error: any) {
       set({
-        error: error.message || "Failed to delete product",
+        error: error.message || 'Failed to delete product',
         isLoading: false,
       });
       throw error;
@@ -201,13 +218,13 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
   fetchCategories: async () => {
     try {
       const categories = await productService.getCategories();
-      console.log("Store fetchCategories - received:", categories);
+      console.log('Store fetchCategories - received:', categories);
       set({ categories: Array.isArray(categories) ? categories : [] });
     } catch (error: any) {
-      console.error("Store fetchCategories - error:", error);
+      console.error('Store fetchCategories - error:', error);
       set({
         categories: [], // Đảm bảo categories luôn là array
-        error: error.message || "Failed to fetch categories",
+        error: error.message || 'Failed to fetch categories',
       });
     }
   },
@@ -215,13 +232,13 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
   fetchBrands: async () => {
     try {
       const brands = await productService.getBrands();
-      console.log("Store fetchBrands - received:", brands);
+      console.log('Store fetchBrands - received:', brands);
       set({ brands: Array.isArray(brands) ? brands : [] });
     } catch (error: any) {
-      console.error("Store fetchBrands - error:", error);
+      console.error('Store fetchBrands - error:', error);
       set({
         brands: [], // Đảm bảo brands luôn là array
-        error: error.message || "Failed to fetch brands",
+        error: error.message || 'Failed to fetch brands',
       });
     }
   },
@@ -231,7 +248,7 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
       const images = await productService.getProductImages(productId);
       set({ productImages: images });
     } catch (error: any) {
-      set({ error: error.message || "Failed to fetch product images" });
+      set({ error: error.message || 'Failed to fetch product images' });
     }
   },
 
@@ -241,7 +258,7 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
     try {
       const uploadedImages = await productService.uploadProductImages(
         productId,
-        images
+        images,
       );
 
       // Add to product images
@@ -253,7 +270,7 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
       return uploadedImages;
     } catch (error: any) {
       set({
-        error: error.message || "Failed to upload images",
+        error: error.message || 'Failed to upload images',
         isLoading: false,
       });
       throw error;
@@ -269,7 +286,7 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
       return uploadedUrls;
     } catch (error: any) {
       set({
-        error: error.message || "Failed to upload images",
+        error: error.message || 'Failed to upload images',
         isLoading: false,
       });
       throw error;
@@ -285,7 +302,7 @@ export const useProductStore = create<ProductStore>()((set, get) => ({
         productImages: state.productImages.filter((img) => img.id !== imageId),
       }));
     } catch (error: any) {
-      set({ error: error.message || "Failed to delete image" });
+      set({ error: error.message || 'Failed to delete image' });
       throw error;
     }
   },

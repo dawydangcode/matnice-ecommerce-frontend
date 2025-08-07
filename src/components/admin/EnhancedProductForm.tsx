@@ -328,7 +328,12 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
           console.log(`Creating color ${index + 1}/${validColors.length}:`, colorData.name);
           try {
             const color = await productColorService.createProductColor(productId, {
-              colorName: colorData.name.trim()
+              productId: productId,
+              product_variant_name: colorData.name.trim(),
+              product_number: `${productId}-${colorData.name.trim().toUpperCase()}`,
+              color_name: colorData.name.trim(),
+              stock: 0,
+              is_thumbnail: index === 0 // First color as thumbnail
             });
             console.log('Color created:', color);
             

@@ -42,10 +42,18 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
+    console.log('ProductListPage - Initial data fetch');
     fetchProducts();
     fetchCategories();
     fetchBrands();
   }, [fetchProducts, fetchCategories, fetchBrands]);
+
+  useEffect(() => {
+    console.log('ProductListPage - products updated:', products);
+    console.log('ProductListPage - products count:', products.length);
+    console.log('ProductListPage - isLoading:', isLoading);
+    console.log('ProductListPage - error:', error);
+  }, [products, isLoading, error]);
 
   useEffect(() => {
     if (error) {
@@ -318,6 +326,25 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Package className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">Không có sản phẩm</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {error ? `Lỗi: ${error}` : 'Bắt đầu bằng cách tạo sản phẩm mới.'}
+              </p>
+              <div className="mt-6">
+                <button
+                  onClick={onCreateProduct}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Thêm sản phẩm
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
           <>

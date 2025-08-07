@@ -29,7 +29,32 @@ class ProductService {
       const url = `${this.baseUrl}/products/list${
         queryParams.toString() ? '?' + queryParams.toString() : ''
       }`;
-      const response = await apiService.get<ProductsResponse>(url);
+
+      // API returns { total: number, data: Product[] } but we need { products: Product[], total: number, page: number, limit: number }
+      const apiResponse = await apiService.get<{ total: number; data: any[] }>(
+        url,
+      );
+      console.log('Products API response:', apiResponse);
+
+      // Transform the data to match our Product interface (API uses 'id' but we expect 'productId')
+      const transformedProducts =
+        apiResponse.data?.map((product: any) => ({
+          ...product,
+          productId: product.id, // Transform id to productId
+          categoryId: product.categoryId || 0, // Ensure categoryId exists
+          stock: product.stock || 0, // Ensure stock exists (API doesn't provide this yet)
+          // Keep the original id field as well for compatibility
+          id: product.id,
+        })) || [];
+
+      const response: ProductsResponse = {
+        products: transformedProducts,
+        total: apiResponse.total || 0,
+        page: params?.page || 1,
+        limit: params?.limit || 10,
+      };
+
+      console.log('Transformed products response:', response);
       return response;
     } catch (error: any) {
       throw new Error(
