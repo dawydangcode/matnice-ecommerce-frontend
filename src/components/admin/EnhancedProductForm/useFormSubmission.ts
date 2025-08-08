@@ -11,6 +11,8 @@ import {
   CreateProductColorRequest,
 } from '../../../services/product-color.service';
 import { productDetailService } from '../../../services/product-detail.service';
+import { productColorImageService } from '../../../services/product-color-image.service';
+import { ImageOrder } from '../../../types/product-image.types';
 
 export const useFormSubmission = () => {
   const { createProduct, updateProduct, uploadImages, isLoading } =
@@ -218,6 +220,43 @@ export const useFormSubmission = () => {
             const detail =
               await productDetailService.createProductDetail(detailData);
             console.log('Detail created:', detail);
+
+            // Upload color images to database
+            console.log('=== UPLOADING COLOR IMAGES ===');
+            const imageOrders: ImageOrder[] = ['a', 'b', 'c', 'd', 'e'];
+            for (const imageOrder of imageOrders) {
+              const imageFile = colorData.images[imageOrder];
+              if (imageFile) {
+                try {
+                  console.log(
+                    `Uploading image ${imageOrder} for color ${colorData.colorName}`,
+                  );
+                  const uploadedImage =
+                    await productColorImageService.uploadProductColorImage({
+                      productId: productId,
+                      colorId: color.id,
+                      productNumber: colorData.productNumber.trim(),
+                      imageOrder: imageOrder,
+                      file: imageFile,
+                    });
+                  console.log(
+                    `Image ${imageOrder} uploaded successfully:`,
+                    uploadedImage,
+                  );
+                } catch (imageError) {
+                  console.error(
+                    `Failed to upload image ${imageOrder}:`,
+                    imageError,
+                  );
+                  toast.error(
+                    `Có lỗi khi upload ảnh ${imageOrder} cho màu ${colorData.colorName}`,
+                  );
+                }
+              }
+            }
+            console.log(
+              `Color images upload completed for ${colorData.colorName}`,
+            );
           } catch (error) {
             console.error(
               `Error creating color ${colorData.colorName}:`,
