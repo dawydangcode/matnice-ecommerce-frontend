@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Package, Image, Upload, Eye, ToggleLeft, ToggleRight, Plus } from 'lucide-react';
 import { productService } from '../../services/product.service';
-import { productColorService, ProductColor } from '../../services/product-color.service';
+import { productColorService } from '../../services/product-color.service';
 import { ProductColorImageManager } from './ProductColorImageManager';
 import { ProductColorForm } from './ProductColorForm';
 import { Product } from '../../types/product.types';
-import { CreateProductColorRequest } from '../../types/product-color.types';
+import { ProductColor, CreateProductColorRequest } from '../../types/product-color.types';
 import { ColorImageUploadData } from '../../types/product-image.types';
 import './ImageManagementShowcase.css';
 
@@ -260,11 +260,11 @@ export const ImageManagementShowcase: React.FC = () => {
                       onClick={() => handleProductColorSelect(color)}
                     >
                       <div className="color-info">
-                        <div className="color-name">{color.color_name}</div>
-                        <div className="variant-name">{color.product_variant_name}</div>
-                        <div className="product-number">{color.product_number}</div>
+                        <div className="color-name">{color.colorName}</div>
+                        <div className="variant-name">{color.productVariantName}</div>
+                        <div className="product-number">{color.productNumber}</div>
                         <div className="stock">Stock: {color.stock}</div>
-                        {color.is_thumbnail && <div className="thumbnail-badge">Thumbnail</div>}
+                        {color.isThumbnail && <div className="thumbnail-badge">Thumbnail</div>}
                       </div>
                     </div>
                   ))}
@@ -278,14 +278,14 @@ export const ImageManagementShowcase: React.FC = () => {
               <div className="image-manager-section">
                 <div className="section-header">
                   <Upload size={20} />
-                  <h3>3. Upload Hình Ảnh - {selectedProductColor.color_name}</h3>
+                  <h3>3. Upload Hình Ảnh - {selectedProductColor.colorName}</h3>
                 </div>
                 
                 <ProductColorImageManager
                   productId={selectedProduct!.productId}
                   colorId={selectedProductColor.id}
-                  colorName={selectedProductColor.color_name}
-                  productNumber={selectedProductColor.product_number}
+                  colorName={selectedProductColor.colorName}
+                  productNumber={selectedProductColor.productNumber}
                   initialImages={colorImages[selectedProductColor.id] || []}
                   onImagesChange={handleImagesChange}
                 />

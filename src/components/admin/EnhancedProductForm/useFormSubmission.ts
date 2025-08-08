@@ -6,7 +6,10 @@ import {
 } from '../../../types/product.types';
 import { useProductStore } from '../../../stores/product.store';
 import { productCategoryService } from '../../../services/product-category.service';
-import { productColorService } from '../../../services/product-color.service';
+import {
+  productColorService,
+  CreateProductColorRequest,
+} from '../../../services/product-color.service';
 import { productDetailService } from '../../../services/product-detail.service';
 
 export const useFormSubmission = () => {
@@ -176,13 +179,13 @@ export const useFormSubmission = () => {
               productId,
               {
                 productId: productId,
-                product_variant_name:
+                productVariantName:
                   colorData.productVariantName || colorData.colorName.trim(),
-                product_number: `${productId}-${colorData.colorName.trim().toUpperCase()}`,
-                color_name: colorData.colorName.trim(),
+                productNumber: colorData.productNumber.trim(),
+                colorName: colorData.colorName.trim(),
                 stock: colorData.stock,
-                is_thumbnail: colorData.isThumbnail,
-              },
+                isThumbnail: colorData.isThumbnail,
+              } as CreateProductColorRequest,
             );
             console.log('Color created:', color);
 
@@ -198,11 +201,11 @@ export const useFormSubmission = () => {
               frameMaterial: productDetail.frameMaterial || '',
               frameShape: productDetail.frameShape || '',
               frameType: productDetail.frameType || '',
-              bridgeDesign: '',
-              style: '',
-              springHinges: productDetail.springHinge || false,
-              weight: 0,
-              multifocal: false,
+              bridgeDesign: productDetail.bridgeDesign || '',
+              style: productDetail.style || '',
+              springHinges: productDetail.springHinges || false,
+              weight: productDetail.weight || 0,
+              multifocal: productDetail.multifocal || false,
             };
 
             console.log(

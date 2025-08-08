@@ -30,14 +30,12 @@ export const createCompleteProductWorkflow = async (
       // Step 1: Create color
       const color = await productColorService.createProductColor(productId, {
         productId: productId,
-        product_variant_name: colorData.colorName,
-        product_number: `${productId}-${colorData.colorName.toUpperCase()}`,
-        color_name: colorData.colorName,
+        productVariantName: colorData.colorName,
+        productNumber: `${productId}-${colorData.colorName.toUpperCase()}`,
+        colorName: colorData.colorName,
         stock: 0,
-        is_thumbnail: false, // Can be updated later
-      });
-
-      // Step 2: Create detail for this product (only once, not per color)
+        isThumbnail: false, // Can be updated later
+      }); // Step 2: Create detail for this product (only once, not per color)
       let detail = null;
       if (!detailCreated) {
         // Only create detail once for the product

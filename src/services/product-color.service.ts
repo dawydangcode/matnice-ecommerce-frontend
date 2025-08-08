@@ -3,11 +3,11 @@ import { apiService } from './api.service';
 export interface ProductColor {
   id: number;
   productId: number;
-  product_variant_name: string; // Tên biến thể
-  product_number: string; // Mã sản phẩm variant
-  color_name: string; // Tên màu
+  productVariantName: string; // Tên biến thể
+  productNumber: string; // Mã sản phẩm variant
+  colorName: string; // Tên màu
   stock: number; // Số lượng tồn kho
-  is_thumbnail: boolean; // Có phải thumbnail chính không
+  isThumbnail: boolean; // Có phải thumbnail chính không
   createdAt: string;
   createdBy: number;
   updatedAt: string;
@@ -18,29 +18,29 @@ export interface ProductColor {
 
 export interface CreateProductColorRequest {
   productId: number;
-  product_variant_name: string;
-  product_number: string;
-  color_name: string;
+  productVariantName: string;
+  productNumber: string;
+  colorName: string;
   stock: number;
-  is_thumbnail: boolean;
+  isThumbnail: boolean;
 }
 
 export interface UpdateProductColorRequest {
-  product_variant_name?: string;
-  product_number?: string;
-  color_name?: string;
+  productVariantName?: string;
+  productNumber?: string;
+  colorName?: string;
   stock?: number;
-  is_thumbnail?: boolean;
+  isThumbnail?: boolean;
 }
 
 class ProductColorService {
-  private readonly baseUrl = '/api/v1/products';
+  private readonly baseUrl = '/api/v1';
 
   // Get all colors for a product
   async getProductColors(productId: number): Promise<ProductColor[]> {
     try {
       const response = await apiService.get<ProductColor[]>(
-        `${this.baseUrl}/${productId}/colors`,
+        `${this.baseUrl}/product-color/${productId}/product`,
       );
       return response;
     } catch (error: any) {
@@ -57,7 +57,7 @@ class ProductColorService {
   ): Promise<ProductColor> {
     try {
       const response = await apiService.get<ProductColor>(
-        `${this.baseUrl}/${productId}/colors/${colorId}`,
+        `${this.baseUrl}/product-color/${colorId}/detail`,
       );
       return response;
     } catch (error: any) {
@@ -76,7 +76,7 @@ class ProductColorService {
       productId,
       colorData,
     });
-    const url = `${this.baseUrl}/${productId}/colors`;
+    const url = `${this.baseUrl}/product-color/create`;
     console.log('API URL:', url);
 
     try {
@@ -101,7 +101,7 @@ class ProductColorService {
   ): Promise<ProductColor> {
     try {
       const response = await apiService.put<ProductColor>(
-        `${this.baseUrl}/${productId}/colors/${colorId}`,
+        `${this.baseUrl}/product-color/${colorId}/update`,
         colorData,
       );
       return response;
@@ -115,7 +115,9 @@ class ProductColorService {
   // Delete color
   async deleteProductColor(productId: number, colorId: number): Promise<void> {
     try {
-      await apiService.delete(`${this.baseUrl}/${productId}/colors/${colorId}`);
+      await apiService.delete(
+        `${this.baseUrl}/product-color/${colorId}/delete`,
+      );
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || 'Failed to delete product color',

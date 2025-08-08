@@ -47,7 +47,9 @@ export const useEnhancedProductForm = (product?: Product | null) => {
       bridgeDesign: FrameBridgeDesignType.WITHOUT_NOSE_PADS,
       frameShape: FrameShapeType.ROUND,
       style: FrameStyleType.CLASSIC,
-      springHinge: false,
+      springHinges: false,
+      weight: 0,
+      multifocal: false,
     });
 
   const [submitting, setSubmitting] = useState(false);

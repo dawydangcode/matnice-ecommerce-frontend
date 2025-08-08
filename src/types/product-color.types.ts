@@ -2,28 +2,28 @@
 export interface ProductColor {
   id: number;
   productId: number;
-  product_variant_name: string; // Tên biến thể
-  product_number: string; // Mã sản phẩm variant
-  color_name: string; // Tên màu
+  productVariantName: string; // Tên biến thể
+  productNumber: string; // Mã sản phẩm variant
+  colorName: string; // Tên màu
   stock: number; // Số lượng tồn kho
-  is_thumbnail: boolean; // Có phải thumbnail chính không
+  isThumbnail: boolean; // Có phải thumbnail chính không
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface CreateProductColorRequest {
   productId: number;
-  product_variant_name: string;
-  product_number: string;
-  color_name: string;
+  productVariantName: string;
+  productNumber: string;
+  colorName: string;
   stock: number;
-  is_thumbnail: boolean;
+  isThumbnail: boolean;
 }
 
 export interface ProductColorFormData {
-  product_variant_name: string;
-  product_number: string;
-  color_name: string;
+  productVariantName: string;
+  productNumber: string;
+  colorName: string;
   stock: number;
-  is_thumbnail: boolean;
+  isThumbnail: boolean;
 }

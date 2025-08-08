@@ -125,7 +125,9 @@ export interface ProductDetail {
   frameType: FrameType;
   bridgeDesign: FrameBridgeDesignType;
   style: FrameStyleType;
-  springHinge: boolean;
+  springHinges: boolean;
+  weight: number;
+  multifocal: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -140,9 +142,11 @@ export interface CreateProductDetailRequest {
   frameMaterial: FrameMaterialType;
   frameShape: FrameShapeType;
   frameType: FrameType;
-  springHinge: boolean;
+  springHinges: boolean;
   bridgeDesign: FrameBridgeDesignType;
   style: FrameStyleType;
+  weight: number;
+  multifocal: boolean;
 }
 
 // Request/Response types

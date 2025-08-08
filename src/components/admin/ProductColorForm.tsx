@@ -17,11 +17,11 @@ export const ProductColorForm: React.FC<ProductColorFormProps> = ({
   loading = false
 }) => {
   const [formData, setFormData] = useState<Omit<CreateProductColorRequest, 'productId'>>({
-    product_variant_name: '',
-    product_number: '',
-    color_name: '',
+    productVariantName: '',
+    productNumber: '',
+    colorName: '',
     stock: 0,
-    is_thumbnail: false
+    isThumbnail: false
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof typeof formData, string>>>({});
@@ -29,16 +29,16 @@ export const ProductColorForm: React.FC<ProductColorFormProps> = ({
   const validateForm = () => {
     const newErrors: Partial<Record<keyof typeof formData, string>> = {};
 
-    if (!formData.product_variant_name.trim()) {
-      newErrors.product_variant_name = 'Tên biến thể là bắt buộc';
+    if (!formData.productVariantName.trim()) {
+      newErrors.productVariantName = 'Tên biến thể là bắt buộc';
     }
 
-    if (!formData.product_number.trim()) {
-      newErrors.product_number = 'Mã sản phẩm là bắt buộc';
+    if (!formData.productNumber.trim()) {
+      newErrors.productNumber = 'Mã sản phẩm là bắt buộc';
     }
 
-    if (!formData.color_name.trim()) {
-      newErrors.color_name = 'Tên màu là bắt buộc';
+    if (!formData.colorName.trim()) {
+      newErrors.colorName = 'Tên màu là bắt buộc';
     }
 
     if (formData.stock < 0) {
@@ -100,14 +100,14 @@ export const ProductColorForm: React.FC<ProductColorFormProps> = ({
             <input
               id="variant-name"
               type="text"
-              value={formData.product_variant_name}
-              onChange={(e) => handleInputChange('product_variant_name', e.target.value)}
+              value={formData.productVariantName}
+              onChange={(e) => handleInputChange('productVariantName', e.target.value)}
               placeholder="VD: iPhone 15 Pro Max Vàng Titan"
-              className={errors.product_variant_name ? 'error' : ''}
+              className={errors.productVariantName ? 'error' : ''}
               disabled={loading}
             />
-            {errors.product_variant_name && (
-              <span className="error-message">{errors.product_variant_name}</span>
+            {errors.productVariantName && (
+              <span className="error-message">{errors.productVariantName}</span>
             )}
           </div>
 
@@ -116,14 +116,14 @@ export const ProductColorForm: React.FC<ProductColorFormProps> = ({
             <input
               id="product-number"
               type="text"
-              value={formData.product_number}
-              onChange={(e) => handleInputChange('product_number', e.target.value)}
+              value={formData.productNumber}
+              onChange={(e) => handleInputChange('productNumber', e.target.value)}
               placeholder="VD: IP15PM-GOLD"
-              className={errors.product_number ? 'error' : ''}
+              className={errors.productNumber ? 'error' : ''}
               disabled={loading}
             />
-            {errors.product_number && (
-              <span className="error-message">{errors.product_number}</span>
+            {errors.productNumber && (
+              <span className="error-message">{errors.productNumber}</span>
             )}
           </div>
 
@@ -132,14 +132,14 @@ export const ProductColorForm: React.FC<ProductColorFormProps> = ({
             <input
               id="color-name"
               type="text"
-              value={formData.color_name}
-              onChange={(e) => handleInputChange('color_name', e.target.value)}
+              value={formData.colorName}
+              onChange={(e) => handleInputChange('colorName', e.target.value)}
               placeholder="VD: Vàng Titan"
-              className={errors.color_name ? 'error' : ''}
+              className={errors.colorName ? 'error' : ''}
               disabled={loading}
             />
-            {errors.color_name && (
-              <span className="error-message">{errors.color_name}</span>
+            {errors.colorName && (
+              <span className="error-message">{errors.colorName}</span>
             )}
           </div>
 
@@ -163,8 +163,8 @@ export const ProductColorForm: React.FC<ProductColorFormProps> = ({
             <label className="checkbox-label">
               <input
                 type="checkbox"
-                checked={formData.is_thumbnail}
-                onChange={(e) => handleInputChange('is_thumbnail', e.target.checked)}
+                checked={formData.isThumbnail}
+                onChange={(e) => handleInputChange('isThumbnail', e.target.checked)}
                 disabled={loading}
               />
               <span className="checkbox-text">Đặt làm biến thể thumbnail chính</span>

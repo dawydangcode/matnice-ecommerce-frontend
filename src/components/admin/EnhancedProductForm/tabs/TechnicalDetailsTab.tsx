@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreateProductDetailRequest, FrameBridgeDesignType, FrameMaterialType, FrameShapeType, FrameType } from '../../../../types/product.types';
+import { CreateProductDetailRequest, FrameBridgeDesignType, FrameMaterialType, FrameShapeType, FrameStyleType, FrameType } from '../../../../types/product.types';
 
 interface TechnicalDetailsTabProps {
   productDetail: Partial<CreateProductDetailRequest>;
@@ -151,19 +151,65 @@ const TechnicalDetailsTab: React.FC<TechnicalDetailsTabProps> = ({
             <option value={FrameBridgeDesignType.WITH_NOSE_PADS}>Miếng đệm mũi</option>
           </select>
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Phong cách
+          </label>
+          <select
+            value={productDetail.style || FrameStyleType.CLASSIC}
+            onChange={(e) => updateProductDetail('style', e.target.value as FrameStyleType)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            title="Chọn phong cách"
+          >
+            <option value={FrameStyleType.CLASSIC}>Cổ điển</option>
+            <option value={FrameStyleType.MODERN}>Hiện đại</option>
+            <option value={FrameStyleType.EXTRAVAGANT}>Phong cách</option>
+            <option value={FrameStyleType.SPORTY}>Thể thao</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Trọng lượng (g)
+          </label>
+          <input
+            type="number"
+            value={productDetail.weight || 0}
+            onChange={(e) => updateProductDetail('weight', parseFloat(e.target.value))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="25"
+            step="0.1"
+          />
+        </div>
       </div>
 
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          checked={productDetail.springHinge || false}
-          onChange={(e) => updateProductDetail('springHinge', e.target.checked)}
-          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-          title="Có bản lề lò xo"
-        />
-        <label className="ml-2 block text-sm text-gray-700">
-          Có bản lề lò xo
-        </label>
+      <div className="space-y-4">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            checked={productDetail.springHinges || false}
+            onChange={(e) => updateProductDetail('springHinges', e.target.checked)}
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            title="Có bản lề lò xo"
+          />
+          <label className="ml-2 block text-sm text-gray-700">
+            Có bản lề lò xo
+          </label>
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            checked={productDetail.multifocal || false}
+            onChange={(e) => updateProductDetail('multifocal', e.target.checked)}
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            title="Đa tiêu cự"
+          />
+          <label className="ml-2 block text-sm text-gray-700">
+            Đa tiêu cự (Multifocal)
+          </label>
+        </div>
       </div>
     </div>
   );
