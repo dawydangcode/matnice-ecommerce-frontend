@@ -1,5 +1,5 @@
 import toast from 'react-hot-toast';
-import { ProductFormData } from './types';
+import { ProductFormData, ProductColor } from './types';
 import {
   Product,
   CreateProductDetailRequest,
@@ -38,7 +38,7 @@ export const useFormSubmission = () => {
 
     // Validate colors (at least one with name)
     const validColors = productColors.filter(
-      (color) => color.name.trim() !== '',
+      (color) => color.colorName.trim() !== '',
     );
     console.log('Valid colors:', validColors);
     if (validColors.length === 0) {
@@ -79,10 +79,14 @@ export const useFormSubmission = () => {
       }
 
       // Create product data
+      const totalStock = validColors.reduce(
+        (sum, color) => sum + color.stock,
+        0,
+      );
       const productData = {
         productName: data.productName,
         price: data.price,
-        stock: data.stock,
+        stock: totalStock,
         productType: data.productType,
         gender: data.gender,
         categoryId: categoryIds[0], // Use first category as primary
@@ -154,18 +158,19 @@ export const useFormSubmission = () => {
           const colorData = validColors[index];
           console.log(
             `Creating color ${index + 1}/${validColors.length}:`,
-            colorData.name,
+            colorData.colorName,
           );
           try {
             const color = await productColorService.createProductColor(
               productId,
               {
                 productId: productId,
-                product_variant_name: colorData.name.trim(),
-                product_number: `${productId}-${colorData.name.trim().toUpperCase()}`,
-                color_name: colorData.name.trim(),
-                stock: 0,
-                is_thumbnail: index === 0, // First color as thumbnail
+                product_variant_name:
+                  colorData.productVariantName || colorData.colorName.trim(),
+                product_number: `${productId}-${colorData.colorName.trim().toUpperCase()}`,
+                color_name: colorData.colorName.trim(),
+                stock: colorData.stock,
+                is_thumbnail: colorData.isThumbnail,
               },
             );
             console.log('Color created:', color);
@@ -200,8 +205,11 @@ export const useFormSubmission = () => {
               await productDetailService.createProductDetail(detailData);
             console.log('Detail created:', detail);
           } catch (error) {
-            console.error(`Error creating color ${colorData.name}:`, error);
-            toast.error(`Có lỗi khi tạo màu ${colorData.name}`);
+            console.error(
+              `Error creating color ${colorData.colorName}:`,
+              error,
+            );
+            toast.error(`Có lỗi khi tạo màu ${colorData.colorName}`);
           }
         }
         console.log('Colors and details creation completed');

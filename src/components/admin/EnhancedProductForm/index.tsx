@@ -24,12 +24,15 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
   const {
     activeTab,
     setActiveTab,
+    productColors,
     productDetail,
     submitting,
     setSubmitting,
     form,
     updateProductDetail,
-    handleCategoryChange
+    handleCategoryChange,
+    handleProductColorsChange,
+    handleStockChange,
   } = useEnhancedProductForm(product);
 
   const { register, handleSubmit, formState: { errors }, getValues } = form;
@@ -78,7 +81,13 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
           />
         );
       case 'colors':
-        return <ColorsTab />;
+        return (
+          <ColorsTab
+            productColors={productColors}
+            onProductColorsChange={handleProductColorsChange}
+            onStockChange={handleStockChange}
+          />
+        );
       default:
         return null;
     }
@@ -101,7 +110,7 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => setActiveTab(tab.id as 'basic' | 'detail' | 'colors')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'

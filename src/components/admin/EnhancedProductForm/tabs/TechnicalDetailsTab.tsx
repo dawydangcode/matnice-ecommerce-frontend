@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreateProductDetailRequest, FrameMaterialType, FrameShapeType, FrameType } from '../../../../types/product.types';
+import { CreateProductDetailRequest, FrameBridgeDesignType, FrameMaterialType, FrameShapeType, FrameType } from '../../../../types/product.types';
 
 interface TechnicalDetailsTabProps {
   productDetail: Partial<CreateProductDetailRequest>;
@@ -82,19 +82,6 @@ const TechnicalDetailsTab: React.FC<TechnicalDetailsTabProps> = ({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Màu gọng chính
-          </label>
-          <input
-            type="text"
-            value={productDetail.frameColor || ''}
-            onChange={(e) => updateProductDetail('frameColor', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Đen, Nâu, Bạc..."
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
             Chất liệu gọng
           </label>
           <select
@@ -108,6 +95,9 @@ const TechnicalDetailsTab: React.FC<TechnicalDetailsTabProps> = ({
             <option value={FrameMaterialType.TITAN}>Titan</option>
             <option value={FrameMaterialType.WOOD}>Gỗ</option>
             <option value={FrameMaterialType.CARBON}>Carbon</option>
+            <option value={FrameMaterialType.ALUMINIUM}>Nhôm</option>
+            <option value={FrameMaterialType.LEATHER}>Da</option>
+            <option value={FrameMaterialType.PLASTIC}>Nhựa</option>
           </select>
         </div>
 
@@ -143,6 +133,22 @@ const TechnicalDetailsTab: React.FC<TechnicalDetailsTabProps> = ({
             <option value={FrameType.HALF_RIM}>Gọng nửa</option>
             <option value={FrameType.NO_RIM}>Không gọng</option>
             <option value={FrameType.RIMLESS}>Rimless</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Loại cầu kính
+          </label>
+          <select
+            value={productDetail.bridgeDesign || FrameBridgeDesignType.WITHOUT_NOSE_PADS}
+            onChange={(e) => updateProductDetail('bridgeDesign', e.target.value as FrameBridgeDesignType)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            title="Chọn loại cầu kính"
+          >
+            <option value={FrameBridgeDesignType.WITHOUT_NOSE_PADS}>Không cầu kính</option>
+            <option value={FrameBridgeDesignType.WITH_KEYHOLE_BRIDGE}>Cầu kính Keyhole</option>
+            <option value={FrameBridgeDesignType.WITH_NOSE_PADS}>Miếng đệm mũi</option>
           </select>
         </div>
       </div>

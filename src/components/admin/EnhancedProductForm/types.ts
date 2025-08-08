@@ -14,11 +14,26 @@ export const productSchema = z.object({
   productType: z.nativeEnum(ProductType),
   gender: z.nativeEnum(ProductGenderType),
   price: z.number().min(0, 'Giá phải lớn hơn 0'),
-  stock: z.number().min(0, 'Số lượng phải lớn hơn 0'),
   isSustainable: z.boolean(),
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;
+
+export interface ProductColor {
+  id?: number;
+  productVariantName: string;
+  productNumber: string;
+  colorName: string;
+  stock: number;
+  isThumbnail: boolean;
+  images: {
+    a?: File | null;
+    b?: File | null;
+    c?: File | null;
+    d?: File | null;
+    e?: File | null;
+  };
+}
 
 export interface EnhancedProductFormProps {
   product?: Product | null;

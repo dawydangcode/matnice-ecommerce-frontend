@@ -95,6 +95,19 @@ export enum FrameMaterialType {
   LEATHER = 'leather',
 }
 
+export enum FrameBridgeDesignType {
+  WITHOUT_NOSE_PADS = 'without_nose_pads',
+  WITH_NOSE_PADS = 'with_nose_pads',
+  WITH_KEYHOLE_BRIDGE = 'keyhole_bridge',
+}
+
+export enum FrameStyleType {
+  CLASSIC = 'classic',
+  MODERN = 'modern',
+  EXTRAVAGANT = 'extravagant',
+  SPORTY = 'sporty',
+}
+
 // Product Detail interface
 export interface ProductDetail {
   id: number;
@@ -110,6 +123,8 @@ export interface ProductDetail {
   frameMaterial: FrameMaterialType;
   frameShape: FrameShapeType;
   frameType: FrameType;
+  bridgeDesign: FrameBridgeDesignType;
+  style: FrameStyleType;
   springHinge: boolean;
   createdAt: string;
   updatedAt: string;
@@ -122,11 +137,12 @@ export interface CreateProductDetailRequest {
   lensHeight: number;
   lensWidth: number;
   templeLength: number;
-  frameColor: string;
   frameMaterial: FrameMaterialType;
   frameShape: FrameShapeType;
   frameType: FrameType;
   springHinge: boolean;
+  bridgeDesign: FrameBridgeDesignType;
+  style: FrameStyleType;
 }
 
 // Request/Response types

@@ -11,7 +11,7 @@ interface BasicInfoTabProps {
   brands: Brand[];
   categories: Category[];
   getValues: () => ProductFormData;
-  handleCategoryChange: (categoryId: string, checked: boolean) => void;
+  handleCategoryChange: (categoryIds: string[]) => void;
 }
 
 const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
@@ -107,7 +107,13 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
                   <input
                     type="checkbox"
                     checked={isChecked}
-                    onChange={(e) => handleCategoryChange(category.id.toString(), e.target.checked)}
+                    onChange={(e) => {
+                      const selectedCategories = getValues().categoryIds || [];
+                      const newCategories = e.target.checked
+                        ? [...selectedCategories, category.id.toString()]
+                        : selectedCategories.filter(id => id !== category.id.toString());
+                      handleCategoryChange(newCategories);
+                    }}
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">{category.name}</span>
@@ -132,21 +138,6 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           />
           {errors.price && (
             <p className="mt-1 text-sm text-red-600">{errors.price.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Số lượng *
-          </label>
-          <input
-            {...register('stock', { valueAsNumber: true })}
-            type="number"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="0"
-          />
-          {errors.stock && (
-            <p className="mt-1 text-sm text-red-600">{errors.stock.message}</p>
           )}
         </div>
 
