@@ -1,16 +1,18 @@
 import React from 'react';
-import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { ProductFormData } from '../types';
 import { ProductType, ProductGenderType } from '../../../../types/product.types';
 import { Brand } from '../../../../types/brand.types';
 import { Category } from '../../../../types/category.types';
+import SearchableSelect from '../components/SearchableSelect';
 
 interface BasicInfoTabProps {
   register: UseFormRegister<ProductFormData>;
   errors: FieldErrors<ProductFormData>;
   brands: Brand[];
   categories: Category[];
-  getValues: () => ProductFormData;
+  setValue: UseFormSetValue<ProductFormData>;
+  watch: UseFormWatch<ProductFormData>;
   handleCategoryChange: (categoryIds: string[]) => void;
 }
 
@@ -19,9 +21,18 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   errors,
   brands,
   categories,
-  getValues,
+  setValue,
+  watch,
   handleCategoryChange
 }) => {
+  const watchedValues = watch();
+  
+  // Prepare brand options for SearchableSelect
+  const brandOptions = brands.map(brand => ({
+    value: brand.id.toString(),
+    label: brand.name
+  }));
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -77,20 +88,13 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Thương hiệu *
           </label>
-          <select
-            {...register('brandId')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Chọn thương hiệu</option>
-            {brands.map((brand) => (
-              <option key={brand.id} value={brand.id.toString()}>
-                {brand.name}
-              </option>
-            ))}
-          </select>
-          {errors.brandId && (
-            <p className="mt-1 text-sm text-red-600">{errors.brandId.message}</p>
-          )}
+          <SearchableSelect
+            options={brandOptions}
+            value={watchedValues.brandId || ''}
+            onChange={(value) => setValue('brandId', value)}
+            placeholder="Chọn thương hiệu"
+            error={errors.brandId?.message}
+          />
         </div>
 
         <div>
@@ -99,7 +103,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           </label>
           <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2 space-y-2">
             {categories.map((category) => {
-              const selectedCategories = getValues().categoryIds || [];
+              const selectedCategories = watchedValues.categoryIds || [];
               const isChecked = selectedCategories.includes(category.id.toString());
               
               return (
@@ -108,10 +112,10 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
                     type="checkbox"
                     checked={isChecked}
                     onChange={(e) => {
-                      const selectedCategories = getValues().categoryIds || [];
+                      const selectedCategories = watchedValues.categoryIds || [];
                       const newCategories = e.target.checked
                         ? [...selectedCategories, category.id.toString()]
-                        : selectedCategories.filter(id => id !== category.id.toString());
+                        : selectedCategories.filter((id: string) => id !== category.id.toString());
                       handleCategoryChange(newCategories);
                     }}
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"

@@ -36,14 +36,23 @@ export const useFormSubmission = () => {
       return;
     }
 
-    // Validate colors (at least one with name)
+    // Validate colors (at least one with name and one thumbnail)
     const validColors = productColors.filter(
-      (color) => color.colorName.trim() !== '',
+      (color) =>
+        color.colorName.trim() !== '' && color.productNumber.trim() !== '',
     );
     console.log('Valid colors:', validColors);
     if (validColors.length === 0) {
       console.error('Validation failed: No valid colors');
-      toast.error('Vui lòng thêm ít nhất một màu sắc');
+      toast.error('Vui lòng thêm ít nhất một màu sắc với tên và mã sản phẩm');
+      return;
+    }
+
+    // Validate thumbnail (at least one color must be marked as thumbnail)
+    const hasThumbnail = productColors.some((color) => color.isThumbnail);
+    if (!hasThumbnail) {
+      console.error('Validation failed: No thumbnail selected');
+      toast.error('Vui lòng chọn ít nhất một màu làm ảnh đại diện');
       return;
     }
 
