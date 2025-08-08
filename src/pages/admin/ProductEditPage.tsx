@@ -2,14 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   ArrowLeft,
   Save,
-  Edit,
   Tag,
   Palette,
   Settings,
   Upload,
   Trash2,
-  Plus,
-  Minus,
   X
 } from 'lucide-react';
 import { Product, ProductType, ProductGenderType, ProductDetail as ProductDetailType } from '../../types/product.types';
