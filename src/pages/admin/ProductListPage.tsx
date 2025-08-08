@@ -15,9 +15,10 @@ import toast from 'react-hot-toast';
 interface ProductListPageProps {
   onEditProduct: (product: Product) => void;
   onCreateProduct: () => void;
+  onViewProductDetail: (product: Product) => void;
 }
 
-const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCreateProduct }) => {
+const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCreateProduct, onViewProductDetail }) => {
   const {
     products,
     categories,
@@ -400,9 +401,6 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
                         Màu sắc & Kho
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Chi tiết kỹ thuật
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Giá & Trạng thái
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -488,7 +486,7 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
                             {/* Tổng số kho */}
                             <div className="flex items-center space-x-2">
                               <span className="text-sm font-medium text-gray-900">
-                                Tổng: {product.stock}
+                                Tồn kho: {product.stock}
                               </span>
                               <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
                                 product.stock > 10 
@@ -501,30 +499,19 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
                               </span>
                             </div>
                             
-                            {/* Colors info placeholder - In real app, this would come from productColors */}
+                            {/* Colors info */}
                             <div className="space-y-1">
-                              <div className="text-xs text-gray-500">Màu sắc:</div>
-                              <div className="flex flex-wrap gap-1">
-                                {/* This would be dynamic based on product colors */}
-                                <div className="flex items-center space-x-1 px-2 py-1 bg-gray-50 rounded text-xs">
-                                  <div className="w-3 h-3 bg-black rounded-full border"></div>
-                                  <span>Đen (10)</span>
-                                </div>
-                                {/* Add more colors as needed */}
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm text-gray-600">Màu sắc:</span>
+                                <span className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                  {/* This will be dynamic when product colors are available */}
+                                  ? màu
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                Nhấn "Xem" để xem chi tiết màu sắc
                               </div>
                             </div>
-                          </div>
-                        </td>
-
-                        {/* Technical Details */}
-                        <td className="px-6 py-4">
-                          <div className="space-y-1 text-xs text-gray-600">
-                            {/* This would be populated from product details */}
-                            <div>Gọng: Nhựa</div>
-                            <div>Hình dạng: Tròn</div>
-                            <div>Khung: Full rim</div>
-                            <div>Kích thước: 52-18-140</div>
-                            <div className="text-gray-400">...</div>
                           </div>
                         </td>
 
@@ -550,7 +537,7 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex items-center justify-end space-x-2">
                             <button
-                              onClick={() => {/* View product details */}}
+                              onClick={() => onViewProductDetail(product)}
                               className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded"
                               title="Xem chi tiết"
                             >
@@ -662,7 +649,7 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex items-center justify-end space-x-2">
                             <button
-                              onClick={() => {/* View product details */}}
+                              onClick={() => onViewProductDetail(product)}
                               className="text-blue-600 hover:text-blue-900 p-1"
                               title="Xem chi tiết"
                             >

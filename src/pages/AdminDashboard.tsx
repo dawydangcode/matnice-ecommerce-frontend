@@ -27,6 +27,7 @@ import { useBrandStore } from '../stores/brand.store';
 import { useCategoryStore } from '../stores/category.store';
 import { useLensStore } from '../stores/lens.store';
 import ProductListPage from './admin/ProductListPage';
+import ProductDetailPage from './admin/ProductDetailPage';
 import ProductFormPage from './admin/ProductFormPage';
 import EnhancedProductForm from '../components/admin/EnhancedProductForm';
 import BrandListPage from './admin/BrandListPage';
@@ -48,7 +49,7 @@ import { Brand } from '../types/brand.types';
 import { Category } from '../types/category.types';
 import { Lens, LensQuality } from '../types/lens.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-images' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form' | 'lens-thickness' | 'lens-tints' | 'lens-upgrades' | 'lens-details';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-images' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form' | 'lens-thickness' | 'lens-tints' | 'lens-upgrades' | 'lens-details';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -59,6 +60,7 @@ const AdminDashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['lenses', 'products']));
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingLens, setEditingLens] = useState<Lens | null>(null);
@@ -71,6 +73,24 @@ const AdminDashboard: React.FC = () => {
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
     setCurrentView('product-form');
+  };
+
+  const handleViewProductDetail = (product: Product) => {
+    setViewingProduct(product);
+    setCurrentView('product-detail');
+  };
+
+  const handleBackFromProductDetail = () => {
+    setViewingProduct(null);
+    setCurrentView('products');
+  };
+
+  const handleEditFromProductDetail = () => {
+    if (viewingProduct) {
+      setEditingProduct(viewingProduct);
+      setViewingProduct(null);
+      setCurrentView('product-form');
+    }
   };
 
   const handleCreateProduct = () => {
@@ -500,12 +520,21 @@ const AdminDashboard: React.FC = () => {
             <ProductListPage
               onEditProduct={handleEditProduct}
               onCreateProduct={handleCreateProduct}
+              onViewProductDetail={handleViewProductDetail}
             />
           )}
           {currentView === 'product-list' && (
             <ProductListPage
               onEditProduct={handleEditProduct}
               onCreateProduct={handleCreateProduct}
+              onViewProductDetail={handleViewProductDetail}
+            />
+          )}
+          {currentView === 'product-detail' && viewingProduct && (
+            <ProductDetailPage
+              product={viewingProduct}
+              onBack={handleBackFromProductDetail}
+              onEdit={handleEditFromProductDetail}
             />
           )}
           {currentView === 'product-images' && <ImageManagementShowcase />}
