@@ -43,13 +43,12 @@ import CategoryForm from '../components/admin/CategoryForm';
 import LensForm from '../components/admin/LensForm';
 import LensQualityForm from '../components/admin/LensQualityForm';
 import ImageManagementShowcase from '../components/admin/ImageManagementShowcase';
-import ProductLoader from '../components/admin/ProductLoader';
 import { Product } from '../types/product.types';
 import { Brand } from '../types/brand.types';
 import { Category } from '../types/category.types';
 import { Lens, LensQuality } from '../types/lens.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-images' | 'product-loader' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form' | 'lens-thickness' | 'lens-tints' | 'lens-upgrades' | 'lens-details';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-images' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form' | 'lens-thickness' | 'lens-tints' | 'lens-upgrades' | 'lens-details';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -269,7 +268,6 @@ const AdminDashboard: React.FC = () => {
       children: [
         { id: 'product-list', label: 'Danh sách sản phẩm', icon: Package },
         { id: 'product-images', label: 'Hình ảnh', icon: Image },
-        { id: 'product-loader', label: 'Test Load Products', icon: Search },
       ]
     },
 
@@ -383,8 +381,6 @@ const AdminDashboard: React.FC = () => {
                                 setCurrentView('product-list');
                               } else if (child.id === 'product-images') {
                                 setCurrentView('product-images');
-                              } else if (child.id === 'product-loader') {
-                                setCurrentView('product-loader');
                               } else if (child.id === 'lens-thickness') {
                                 setCurrentView('lens-thickness');
                               } else if (child.id === 'lens-tints') {
@@ -440,7 +436,6 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'products' && 'Quản lý sản phẩm'}
                 {currentView === 'product-list' && 'Danh sách sản phẩm'}
                 {currentView === 'product-images' && 'Quản lý hình ảnh sản phẩm'}
-                {currentView === 'product-loader' && 'Test Load Products'}
                 {currentView === 'product-form' && (editingProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm')}
                 {currentView === 'brands' && 'Quản lý thương hiệu'}
                 {currentView === 'brand-form' && 'Thêm/Sửa thương hiệu'}
@@ -514,7 +509,6 @@ const AdminDashboard: React.FC = () => {
             />
           )}
           {currentView === 'product-images' && <ImageManagementShowcase />}
-          {currentView === 'product-loader' && <ProductLoader />}
           {currentView === 'product-form' && (
             <ProductFormPage
               product={editingProduct}
