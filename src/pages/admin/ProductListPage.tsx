@@ -40,6 +40,7 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
   const [selectedType, setSelectedType] = useState<ProductType | undefined>();
   const [selectedGender, setSelectedGender] = useState<ProductGenderType | undefined>();
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'compact' | 'detailed'>('detailed');
 
   useEffect(() => {
     console.log('ProductListPage - Initial data fetch');
@@ -145,6 +146,15 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
 
   return (
     <div className="space-y-6">
+      <style>{`
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -152,13 +162,39 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
           <h1 className="text-2xl font-bold text-gray-900">Quản lý sản phẩm</h1>
         </div>
         
-        <button
-          onClick={onCreateProduct}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Thêm sản phẩm</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('compact')}
+              className={`px-3 py-1 text-sm rounded-md transition ${
+                viewMode === 'compact' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Gọn
+            </button>
+            <button
+              onClick={() => setViewMode('detailed')}
+              className={`px-3 py-1 text-sm rounded-md transition ${
+                viewMode === 'detailed' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Chi tiết
+            </button>
+          </div>
+          
+          <button
+            onClick={onCreateProduct}
+            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Thêm sản phẩm</span>
+          </button>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -348,116 +384,312 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Sản phẩm
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Loại
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Giá
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Kho
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Trạng thái
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Thao tác
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {products.map((product) => (
-                    <tr key={product.productId} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-12 w-12">
-                            {product.images?.[0] ? (
-                              <img
-                                className="h-12 w-12 rounded-lg object-cover"
-                                src={product.images[0].imageUrl}
-                                alt={product.productName}
-                              />
+            {viewMode === 'detailed' ? (
+              /* Detailed View */
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Sản phẩm
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Danh mục & Loại
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Màu sắc & Kho
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Chi tiết kỹ thuật
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Giá & Trạng thái
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Thao tác
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {products.map((product) => (
+                      <tr key={product.productId} className="hover:bg-gray-50">
+                        {/* Product Info */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-start space-x-4">
+                            <div className="flex-shrink-0">
+                              {product.images?.[0] ? (
+                                <img
+                                  className="h-16 w-16 rounded-lg object-cover border"
+                                  src={product.images[0].imageUrl}
+                                  alt={product.productName}
+                                />
+                              ) : (
+                                <div className="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center border">
+                                  <Package className="h-8 w-8 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900 truncate">
+                                {product.productName}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {product.brand?.name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {getGenderLabel(product.gender)} • ID: {product.productId}
+                              </p>
+                              {product.description && (
+                                <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                                  {product.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Categories & Type */}
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <span className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                              {getProductTypeLabel(product.productType)}
+                            </span>
+                            {product.categories && product.categories.length > 0 ? (
+                              <div className="space-y-1">
+                                {product.categories.slice(0, 2).map((category) => (
+                                  <div key={category.id} className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full mr-1">
+                                    {category.name}
+                                  </div>
+                                ))}
+                                {product.categories.length > 2 && (
+                                  <div className="text-xs text-gray-500">
+                                    +{product.categories.length - 2} khác
+                                  </div>
+                                )}
+                              </div>
+                            ) : product.category ? (
+                              <div className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">
+                                {product.category.name}
+                              </div>
                             ) : (
-                              <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
-                                <Package className="h-6 w-6 text-gray-400" />
+                              <span className="text-xs text-gray-400">Chưa phân loại</span>
+                            )}
+                            {product.isSustainable && (
+                              <div className="inline-flex px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                                🌱 Thân thiện môi trường
                               </div>
                             )}
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {product.productName}
+                        </td>
+
+                        {/* Colors & Stock */}
+                        <td className="px-6 py-4">
+                          <div className="space-y-2">
+                            {/* Tổng số kho */}
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-medium text-gray-900">
+                                Tổng: {product.stock}
+                              </span>
+                              <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                                product.stock > 10 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : product.stock > 0 
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {product.stock > 0 ? 'Có sẵn' : 'Hết hàng'}
+                              </span>
                             </div>
-                            <div className="text-sm text-gray-500">
-                              {product.brand?.name} • {getGenderLabel(product.gender)}
+                            
+                            {/* Colors info placeholder - In real app, this would come from productColors */}
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-500">Màu sắc:</div>
+                              <div className="flex flex-wrap gap-1">
+                                {/* This would be dynamic based on product colors */}
+                                <div className="flex items-center space-x-1 px-2 py-1 bg-gray-50 rounded text-xs">
+                                  <div className="w-3 h-3 bg-black rounded-full border"></div>
+                                  <span>Đen (10)</span>
+                                </div>
+                                {/* Add more colors as needed */}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                          {getProductTypeLabel(product.productType)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatPrice(product.price)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                          product.stock > 10 
-                            ? 'bg-green-100 text-green-800' 
-                            : product.stock > 0 
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {product.stock} sản phẩm
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                          product.stock > 0 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {product.stock > 0 ? 'Có sẵn' : 'Hết hàng'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => {/* View product details */}}
-                            className="text-blue-600 hover:text-blue-900 p-1"
-                            title="Xem chi tiết"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => onEditProduct(product)}
-                            className="text-indigo-600 hover:text-indigo-900 p-1"
-                            title="Chỉnh sửa"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProduct(product.productId, product.productName)}
-                            className="text-red-600 hover:text-red-900 p-1"
-                            title="Xóa"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
+                        </td>
+
+                        {/* Technical Details */}
+                        <td className="px-6 py-4">
+                          <div className="space-y-1 text-xs text-gray-600">
+                            {/* This would be populated from product details */}
+                            <div>Gọng: Nhựa</div>
+                            <div>Hình dạng: Tròn</div>
+                            <div>Khung: Full rim</div>
+                            <div>Kích thước: 52-18-140</div>
+                            <div className="text-gray-400">...</div>
+                          </div>
+                        </td>
+
+                        {/* Price & Status */}
+                        <td className="px-6 py-4">
+                          <div className="space-y-2">
+                            <div className="text-sm font-semibold text-gray-900">
+                              {formatPrice(product.price)}
+                            </div>
+                            <div className="space-y-1">
+                              <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                                product.stock > 0 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {product.stock > 0 ? 'Đang bán' : 'Hết hàng'}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => {/* View product details */}}
+                              className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded"
+                              title="Xem chi tiết"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => onEditProduct(product)}
+                              className="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded"
+                              title="Chỉnh sửa"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(product.productId, product.productName)}
+                              className="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded"
+                              title="Xóa"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              /* Compact View */
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Sản phẩm
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Loại
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Giá
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Kho
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Trạng thái
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Thao tác
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {products.map((product) => (
+                      <tr key={product.productId} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-12 w-12">
+                              {product.images?.[0] ? (
+                                <img
+                                  className="h-12 w-12 rounded-lg object-cover"
+                                  src={product.images[0].imageUrl}
+                                  alt={product.productName}
+                                />
+                              ) : (
+                                <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
+                                  <Package className="h-6 w-6 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {product.productName}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {product.brand?.name} • {getGenderLabel(product.gender)}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                            {getProductTypeLabel(product.productType)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatPrice(product.price)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                            product.stock > 10 
+                              ? 'bg-green-100 text-green-800' 
+                              : product.stock > 0 
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {product.stock} sản phẩm
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                            product.stock > 0 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {product.stock > 0 ? 'Có sẵn' : 'Hết hàng'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => {/* View product details */}}
+                              className="text-blue-600 hover:text-blue-900 p-1"
+                              title="Xem chi tiết"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => onEditProduct(product)}
+                              className="text-indigo-600 hover:text-indigo-900 p-1"
+                              title="Chỉnh sửa"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(product.productId, product.productName)}
+                              className="text-red-600 hover:text-red-900 p-1"
+                              title="Xóa"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             {products.length === 0 && (
               <div className="text-center py-12">

@@ -33,9 +33,12 @@ const ColorsTab: React.FC<ColorsTabProps> = ({
   };
 
   const updateProductColor = (index: number, field: keyof ProductColor, value: any) => {
-    const updatedColors = productColors.map((color, i) => 
-      i === index ? { ...color, [field]: value } : color
-    );
+    const updatedColors = productColors.map((color, i) => {
+      if (i === index) {
+        return { ...color, [field]: value };
+      }
+      return color;
+    });
     onProductColorsChange(updatedColors);
   };
 

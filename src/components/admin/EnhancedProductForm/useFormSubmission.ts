@@ -36,11 +36,13 @@ export const useFormSubmission = () => {
       return;
     }
 
-    // Validate colors (at least one with name and one thumbnail)
+    // Validate colors (at least one with name, auto-generate productNumber if missing)
+    // Validate colors - both colorName and productNumber are required
     const validColors = productColors.filter(
       (color) =>
         color.colorName.trim() !== '' && color.productNumber.trim() !== '',
     );
+
     console.log('Valid colors:', validColors);
     if (validColors.length === 0) {
       console.error('Validation failed: No valid colors');
@@ -49,7 +51,7 @@ export const useFormSubmission = () => {
     }
 
     // Validate thumbnail (at least one color must be marked as thumbnail)
-    const hasThumbnail = productColors.some((color) => color.isThumbnail);
+    const hasThumbnail = validColors.some((color) => color.isThumbnail);
     if (!hasThumbnail) {
       console.error('Validation failed: No thumbnail selected');
       toast.error('Vui lòng chọn ít nhất một màu làm ảnh đại diện');

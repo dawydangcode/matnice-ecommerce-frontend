@@ -221,7 +221,7 @@ class ProductService {
         formData.append(`images`, image);
       });
 
-      const response = await apiService.post<string[]>(
+      const response = await apiService.post<{ imageUrls: string[] }>(
         `${this.baseUrl}/product-image/upload-temporary`,
         formData,
         {
@@ -230,7 +230,7 @@ class ProductService {
           },
         },
       );
-      return response;
+      return response.imageUrls; // Extract imageUrls from response
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || 'Failed to upload images',

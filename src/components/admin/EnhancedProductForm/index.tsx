@@ -209,11 +209,22 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
   }, [fetchBrands, fetchCategories]);
 
   const onFormSubmit = async (data: any) => {
+    // Extract thumbnail images from product colors
+    const thumbnailImages: File[] = productColors
+      .filter(color => color.isThumbnail)
+      .flatMap(color => [color.images.a, color.images.b])
+      .filter((img): img is File => img !== null);
+    
+    console.log('=== ENHANCED FORM SUBMIT DEBUG ===');
+    console.log('productColors:', productColors);
+    console.log('thumbnailImages:', thumbnailImages);
+    console.log('productDetail:', productDetail);
+    
     await submitForm(
       data,
       product,
-      [],
-      [],
+      thumbnailImages,
+      productColors,
       productDetail,
       setSubmitting,
       onSuccess
