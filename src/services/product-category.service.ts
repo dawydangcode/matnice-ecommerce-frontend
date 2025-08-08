@@ -35,6 +35,13 @@ class ProductCategoryService {
     return response;
   }
 
+  async getCategoriesWithDetailsByProduct(productId: number): Promise<any[]> {
+    const response = await apiService.get<any[]>(
+      `${this.baseUrl}/product/${productId}/categories/details`
+    );
+    return response;
+  }
+
   async getProductsByCategory(categoryId: number): Promise<number[]> {
     const response = await apiService.get<number[]>(
       `${this.baseUrl}/category/${categoryId}/products`

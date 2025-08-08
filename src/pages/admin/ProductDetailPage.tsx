@@ -15,6 +15,7 @@ import { ProductImageModel } from '../../types/product-image.types';
 import { productColorService } from '../../services/product-color.service';
 import { productColorImageService } from '../../services/product-color-image.service';
 import toast from 'react-hot-toast';
+import { apiService } from '../../services/api.service';
 
 interface ProductDetailPageProps {
   product: Product;
@@ -96,12 +97,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         setCategories(product.categories);
       } else {
         // Load categories from new endpoint
-        const baseURL = process.env.REACT_APP_API_URL || "http://localhost:3001";
-        const response = await fetch(`${baseURL}/api/v1/product-category/product/${product.productId}/categories/details`);
-        if (response.ok) {
-          const categoriesData = await response.json();
+        try {
+          const categoriesData = await apiService.get(`/api/v1/product-category/product/${product.productId}/categories/details`) as any;
           setCategories(categoriesData);
-        } else {
+        } catch (error) {
+          console.error('Failed to load categories:', error);
           setCategories([]);
         }
       }

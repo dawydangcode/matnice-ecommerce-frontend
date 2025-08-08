@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useProductStore } from '../../stores/product.store';
 import { Product, ProductType, ProductGenderType } from '../../types/product.types';
+import { productCategoryService } from '../../services/product-category.service';
 import toast from 'react-hot-toast';
 
 interface ProductListPageProps {
@@ -42,6 +43,8 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
   const [selectedGender, setSelectedGender] = useState<ProductGenderType | undefined>();
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'compact' | 'detailed'>('detailed');
+  const [productCategories, setProductCategories] = useState<Record<number, any[]>>({});
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   useEffect(() => {
     console.log('ProductListPage - Initial data fetch');
@@ -56,6 +59,38 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
     console.log('ProductListPage - isLoading:', isLoading);
     console.log('ProductListPage - error:', error);
   }, [products, isLoading, error]);
+
+  // Load categories for each product (optimized)
+  useEffect(() => {
+    const loadProductCategories = async () => {
+      if (products.length > 0) {
+        setLoadingCategories(true);
+        const categoriesMap: Record<number, any[]> = {};
+        
+        // Load categories for all products in parallel
+        const categoryPromises = products.map(async (product) => {
+          try {
+            const categories = await productCategoryService.getCategoriesWithDetailsByProduct(product.productId);
+            return { productId: product.productId, categories };
+          } catch (error) {
+            console.error(`Failed to load categories for product ${product.productId}:`, error);
+            return { productId: product.productId, categories: [] };
+          }
+        });
+
+        const results = await Promise.all(categoryPromises);
+        
+        results.forEach(({ productId, categories }) => {
+          categoriesMap[productId] = categories;
+        });
+        
+        setProductCategories(categoriesMap);
+        setLoadingCategories(false);
+      }
+    };
+
+    loadProductCategories();
+  }, [products]);
 
   useEffect(() => {
     if (error) {
@@ -452,7 +487,24 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
                             <span className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
                               {getProductTypeLabel(product.productType)}
                             </span>
-                            {product.categories && product.categories.length > 0 ? (
+                            {loadingCategories ? (
+                              <div className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-500 rounded-full">
+                                Đang tải...
+                              </div>
+                            ) : productCategories[product.productId] && productCategories[product.productId].length > 0 ? (
+                              <div className="space-y-1">
+                                {productCategories[product.productId].slice(0, 2).map((category, index) => (
+                                  <div key={index} className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full mr-1">
+                                    {category.name}
+                                  </div>
+                                ))}
+                                {productCategories[product.productId].length > 2 && (
+                                  <div className="text-xs text-gray-500">
+                                    +{productCategories[product.productId].length - 2} khác
+                                  </div>
+                                )}
+                              </div>
+                            ) : product.categories && product.categories.length > 0 ? (
                               <div className="space-y-1">
                                 {product.categories.slice(0, 2).map((category) => (
                                   <div key={category.id} className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full mr-1">
