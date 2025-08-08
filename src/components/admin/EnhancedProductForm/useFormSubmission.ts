@@ -142,8 +142,8 @@ export const useFormSubmission = () => {
         }
       }
 
-      // Update product categories if we have multiple categories
-      if (categoryIds.length > 1 && productId) {
+      // Update product categories
+      if (categoryIds.length > 0 && productId) {
         console.log('=== UPDATING CATEGORIES PHASE ===');
         console.log(
           'Updating categories for product:',

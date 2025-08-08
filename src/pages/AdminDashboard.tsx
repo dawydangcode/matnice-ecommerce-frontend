@@ -28,7 +28,7 @@ import { useCategoryStore } from '../stores/category.store';
 import { useLensStore } from '../stores/lens.store';
 import ProductListPage from './admin/ProductListPage';
 import ProductDetailPage from './admin/ProductDetailPage';
-import ProductFormPage from './admin/ProductFormPage';
+import ProductEditPage from './admin/ProductEditPage';
 import EnhancedProductForm from '../components/admin/EnhancedProductForm';
 import BrandListPage from './admin/BrandListPage';
 import CategoryListPage from './admin/CategoryListPage';
@@ -49,7 +49,7 @@ import { Brand } from '../types/brand.types';
 import { Category } from '../types/category.types';
 import { Lens, LensQuality } from '../types/lens.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-images' | 'product-form' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form' | 'lens-thickness' | 'lens-tints' | 'lens-upgrades' | 'lens-details';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-images' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form' | 'lens-thickness' | 'lens-tints' | 'lens-upgrades' | 'lens-details';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -72,7 +72,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
-    setCurrentView('product-form');
+    setCurrentView('product-edit');
   };
 
   const handleViewProductDetail = (product: Product) => {
@@ -89,7 +89,7 @@ const AdminDashboard: React.FC = () => {
     if (viewingProduct) {
       setEditingProduct(viewingProduct);
       setViewingProduct(null);
-      setCurrentView('product-form');
+      setCurrentView('product-edit');
     }
   };
 
@@ -103,7 +103,12 @@ const AdminDashboard: React.FC = () => {
   //   setCurrentView('enhanced-product-form');
   // };
 
-  const handleProductFormCancel = () => {
+  const handleProductEditCancel = () => {
+    setEditingProduct(null);
+    setCurrentView('products');
+  };
+
+  const handleProductEditSuccess = () => {
     setEditingProduct(null);
     setCurrentView('products');
   };
@@ -111,21 +116,6 @@ const AdminDashboard: React.FC = () => {
   const handleEnhancedProductFormCancel = () => {
     setEditingProduct(null);
     setCurrentView('products');
-  };
-
-  const handleProductFormSuccess = async () => {
-    console.log('=== handleProductFormSuccess called ===');
-    setEditingProduct(null);
-    setCurrentView('products');
-    
-    // Refresh products list to show the new product
-    try {
-      console.log('Refreshing products list...');
-      await fetchProducts();
-      console.log('Products list refreshed successfully');
-    } catch (error) {
-      console.error('Error refreshing products list:', error);
-    }
   };
 
   const handleEnhancedProductFormSuccess = async () => {
@@ -329,7 +319,7 @@ const AdminDashboard: React.FC = () => {
               
               // Check if current view matches this item or its children
               const isActive = currentView === item.id || 
-                             (currentView === 'product-form' && item.id === 'products') ||
+                             (currentView === 'product-edit' && item.id === 'products') ||
                              (currentView === 'enhanced-product-form' && item.id === 'products') ||
                              (currentView === 'product-list' && item.id === 'products') ||
                              (currentView === 'product-images' && item.id === 'products') ||
@@ -341,7 +331,7 @@ const AdminDashboard: React.FC = () => {
               const isChildActive = hasChildren && item.children?.some(child => 
                 currentView === child.id || 
                 (currentView === 'lens-quality-form' && child.id === 'lens-quality') ||
-                (currentView === 'product-form' && child.id === 'product-list') ||
+                (currentView === 'product-edit' && child.id === 'product-list') ||
                 (currentView === 'enhanced-product-form' && child.id === 'product-list')
               );
               
@@ -390,7 +380,7 @@ const AdminDashboard: React.FC = () => {
                         const ChildIcon = child.icon;
                         const isChildItemActive = currentView === child.id ||
                                                 (currentView === 'lens-quality-form' && child.id === 'lens-quality') ||
-                                                (currentView === 'product-form' && child.id === 'product-list') ||
+                                                (currentView === 'product-edit' && child.id === 'product-list') ||
                                                 (currentView === 'enhanced-product-form' && child.id === 'product-list');
                         
                         return (
@@ -456,7 +446,7 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'products' && 'Quản lý sản phẩm'}
                 {currentView === 'product-list' && 'Danh sách sản phẩm'}
                 {currentView === 'product-images' && 'Quản lý hình ảnh sản phẩm'}
-                {currentView === 'product-form' && (editingProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm')}
+                {currentView === 'product-edit' && 'Chỉnh sửa sản phẩm'}
                 {currentView === 'brands' && 'Quản lý thương hiệu'}
                 {currentView === 'brand-form' && 'Thêm/Sửa thương hiệu'}
                 {currentView === 'categories' && 'Quản lý danh mục'}
@@ -538,11 +528,11 @@ const AdminDashboard: React.FC = () => {
             />
           )}
           {currentView === 'product-images' && <ImageManagementShowcase />}
-          {currentView === 'product-form' && (
-            <ProductFormPage
+          {currentView === 'product-edit' && editingProduct && (
+            <ProductEditPage
               product={editingProduct}
-              onCancel={handleProductFormCancel}
-              onSuccess={handleProductFormSuccess}
+              onBack={handleProductEditCancel}
+              onSuccess={handleProductEditSuccess}
             />
           )}
           {currentView === 'brands' && (

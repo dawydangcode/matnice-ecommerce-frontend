@@ -36,6 +36,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImages, setSelectedImages] = useState<ProductImageModel[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
   const loadColorImages = useCallback(async (colorId: number) => {
     try {
@@ -86,10 +88,36 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     }
   }, [product.productDetail]);
 
+  const loadCategories = useCallback(async () => {
+    try {
+      setIsLoadingCategories(true);
+      // Use product.categories if available (from new API), otherwise load separately
+      if (product.categories && product.categories.length > 0) {
+        setCategories(product.categories);
+      } else {
+        // Load categories from new endpoint
+        const baseURL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+        const response = await fetch(`${baseURL}/api/v1/product-category/product/${product.productId}/categories/details`);
+        if (response.ok) {
+          const categoriesData = await response.json();
+          setCategories(categoriesData);
+        } else {
+          setCategories([]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      setCategories([]);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  }, [product.productId, product.categories]);
+
   useEffect(() => {
     loadProductColors();
     loadProductDetail();
-  }, [loadProductColors, loadProductDetail]);
+    loadCategories();
+  }, [loadProductColors, loadProductDetail, loadCategories]);
 
   useEffect(() => {
     if (productColors.length > 0 && !selectedColorId) {
@@ -299,8 +327,10 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-3">Danh mục</h3>
             <div className="flex flex-wrap gap-2">
-              {product.categories && product.categories.length > 0 ? (
-                product.categories.map((category) => (
+              {isLoadingCategories ? (
+                <span className="text-gray-500 text-sm">Đang tải...</span>
+              ) : categories && categories.length > 0 ? (
+                categories.map((category) => (
                   <span key={category.id} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
                     {category.name}
                   </span>
