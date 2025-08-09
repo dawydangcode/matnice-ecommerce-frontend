@@ -7,7 +7,6 @@ import {
   Tag,
   Palette,
   Settings,
-  Plus,
   X
 } from 'lucide-react';
 import { Product, ProductType, ProductGenderType, ProductDetail as ProductDetailType } from '../../types/product.types';
@@ -42,7 +41,6 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [selectedImages, setSelectedImages] = useState<ProductImageModel[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const [lensThicknessList, setLensThicknessList] = useState<LensThickness[]>([]);
   const [selectedLensThickness, setSelectedLensThickness] = useState<LensThickness[]>([]);
 
   const loadColorImages = useCallback(async (colorId: number) => {
@@ -126,7 +124,6 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       if (compatibleThicknessIds.length > 0) {
         // Load all lens thickness
         const allLensThickness = await lensThicknessService.getLensThicknessList();
-        setLensThicknessList(allLensThickness);
         
         // Filter selected lens thickness based on compatible IDs
         const selectedThickness = allLensThickness.filter(lt => 
@@ -134,12 +131,10 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         );
         setSelectedLensThickness(selectedThickness);
       } else {
-        setLensThicknessList([]);
         setSelectedLensThickness([]);
       }
     } catch (error) {
       console.error('Failed to load lens thickness:', error);
-      setLensThicknessList([]);
       setSelectedLensThickness([]);
     }
   }, [product.productId]);
@@ -509,19 +504,10 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
             {/* Color Variants Section */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="flex items-center text-lg font-medium text-gray-900">
-                  <Palette className="w-5 h-5 mr-2" />
-                  Màu sắc sản phẩm ({productColors.length} màu)
-                </h3>
-                <button
-                  onClick={onEdit}
-                  className="flex items-center space-x-2 text-sm px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Thêm màu</span>
-                </button>
-              </div>
+              <h3 className="flex items-center text-lg font-medium text-gray-900 mb-4">
+                <Palette className="w-5 h-5 mr-2" />
+                Màu sắc sản phẩm ({productColors.length} màu)
+              </h3>
 
               {isLoadingColors ? (
                 <div className="flex items-center justify-center py-8">

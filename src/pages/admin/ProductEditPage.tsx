@@ -725,10 +725,27 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
 
           {/* Product Colors and Images */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="flex items-center text-lg font-medium text-gray-900 mb-4">
-              <Palette className="w-5 h-5 mr-2" />
-              Màu sắc và hình ảnh
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="flex items-center text-lg font-medium text-gray-900">
+                <Palette className="w-5 h-5 mr-2" />
+                Màu sắc và hình ảnh
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  // Chuyển đến form tạo màu mới
+                  // TODO: Implement navigation to color creation form
+                  console.log('Navigating to add color form...');
+                  toast('Tính năng thêm màu đang được phát triển', {
+                    icon: 'ℹ️',
+                  });
+                }}
+                className="flex items-center space-x-2 text-sm px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Thêm màu</span>
+              </button>
+            </div>
 
             {isLoadingColors ? (
               <div className="text-center py-8">
