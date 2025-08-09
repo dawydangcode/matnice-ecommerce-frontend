@@ -559,42 +559,46 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
                       {/* Color Images */}
                       <div className="grid grid-cols-5 gap-2">
-                        {colorImages[color.id]?.slice(0, 5).map((image, index) => (
-                          <div
-                            key={image.id}
-                            className="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition group"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleImageClick(colorImages[color.id] || [], index);
-                            }}
-                          >
-                            <img
-                              src={image.imageUrl}
-                              alt={`${color.colorName} ${index + 1}`}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                          </div>
-                        )) || Array.from({ length: 5 }, (_, index) => (
-                          <div
-                            key={`placeholder-${color.id}-${index}`}
-                            className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center"
-                          >
-                            <Package className="w-6 h-6 text-gray-400" />
-                          </div>
-                        ))}
+                        {/* Show existing images */}
+                        {Array.from({ length: 5 }, (_, index) => {
+                          const image = colorImages[color.id]?.[index];
+                          return (
+                            <div
+                              key={index}
+                              className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative group"
+                            >
+                              {image ? (
+                                <div 
+                                  className="w-full h-full cursor-pointer hover:opacity-80 transition"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleImageClick(colorImages[color.id] || [], index);
+                                  }}
+                                >
+                                  <img
+                                    src={image.imageUrl}
+                                    alt={`${color.colorName} ${String.fromCharCode(65 + index)}`}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center p-2 border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-400 transition">
+                                  <Package className="w-6 h-6 text-gray-400 mb-1" />
+                                  <span className="text-xs font-medium text-gray-500">
+                                    {String.fromCharCode(65 + index)}
+                                  </span>
+                                  <span className="text-xs text-gray-400 mt-1 text-center">
+                                    Nhấp để tải lên
+                                  </span>
+                                  <span className="text-xs text-gray-400 text-center">
+                                    PNG, JPG (5MB)
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-
-                      {colorImages[color.id]?.length > 5 && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleImageClick(colorImages[color.id] || [], 0);
-                          }}
-                          className="mt-2 text-sm text-blue-600 hover:text-blue-800 transition"
-                        >
-                          Xem tất cả {colorImages[color.id]?.length} hình ảnh
-                        </button>
-                      )}
                     </div>
                   ))}
                 </div>

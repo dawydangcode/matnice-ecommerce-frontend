@@ -22,6 +22,7 @@ import { Category as ProductCategory } from '../../types/product.types';
 import { LensThickness, lensThicknessService } from '../../services/lens-thickness.service';
 import { productThicknessCompatibilityService } from '../../services/product-thickness-compatibility.service';
 import { useProductStore } from '../../stores/product.store';
+import AddColorModal from '../../components/admin/AddColorModal';
 import toast from 'react-hot-toast';
 
 interface ProductEditPageProps {
@@ -79,6 +80,7 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
 
   // Category modal state
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showAddColorModal, setShowAddColorModal] = useState(false);
   const [isLoadingAllCategories, setIsLoadingAllCategories] = useState(false);
   const [addingCategoryId, setAddingCategoryId] = useState<number | null>(null);
 
@@ -733,12 +735,7 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  // Chuyển đến form tạo màu mới
-                  // TODO: Implement navigation to color creation form
-                  console.log('Navigating to add color form...');
-                  toast('Tính năng thêm màu đang được phát triển', {
-                    icon: 'ℹ️',
-                  });
+                  setShowAddColorModal(true);
                 }}
                 className="flex items-center space-x-2 text-sm px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
               >
@@ -1177,6 +1174,16 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
           </div>
         </div>
       )}
+
+      {/* Add Color Modal */}
+      <AddColorModal
+        isOpen={showAddColorModal}
+        onClose={() => setShowAddColorModal(false)}
+        productId={product.productId}
+        onSuccess={() => {
+          loadProductColors();
+        }}
+      />
     </div>
   );
 };
