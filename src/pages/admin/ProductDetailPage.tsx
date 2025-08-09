@@ -12,6 +12,7 @@ import {
 import { Product, ProductType, ProductGenderType, ProductDetail as ProductDetailType } from '../../types/product.types';
 import { ProductColor } from '../../services/product-color.service';
 import { ProductImageModel } from '../../types/product-image.types';
+import { LensThickness, lensThicknessService } from '../../services/lens-thickness.service';
 import { productColorService } from '../../services/product-color.service';
 import { productColorImageService } from '../../services/product-color-image.service';
 import toast from 'react-hot-toast';
@@ -39,6 +40,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [selectedImages, setSelectedImages] = useState<ProductImageModel[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [lensThicknessList, setLensThicknessList] = useState<LensThickness[]>([]);
+  const [selectedLensThickness, setSelectedLensThickness] = useState<LensThickness[]>([]);
 
   const loadColorImages = useCallback(async (colorId: number) => {
     try {
@@ -113,11 +116,30 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     }
   }, [product.productId, product.categories]);
 
+  const loadLensThickness = useCallback(async () => {
+    try {
+      // Load all lens thickness
+      const allLensThickness = await lensThicknessService.getLensThicknessList();
+      setLensThicknessList(allLensThickness);
+      
+      // Filter selected lens thickness based on product detail
+      if (product.productDetail?.lensThicknessIds && product.productDetail.lensThicknessIds.length > 0) {
+        const selectedThickness = allLensThickness.filter(lt => 
+          product.productDetail?.lensThicknessIds?.includes(lt.id)
+        );
+        setSelectedLensThickness(selectedThickness);
+      }
+    } catch (error) {
+      console.error('Failed to load lens thickness:', error);
+    }
+  }, [product.productDetail?.lensThicknessIds]);
+
   useEffect(() => {
     loadProductColors();
     loadProductDetail();
     loadCategories();
-  }, [loadProductColors, loadProductDetail, loadCategories]);
+    loadLensThickness();
+  }, [loadProductColors, loadProductDetail, loadCategories, loadLensThickness]);
 
   useEffect(() => {
     if (productColors.length > 0 && !selectedColorId) {
@@ -435,6 +457,41 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có thông số kỹ thuật</h3>
                   <p className="mt-1 text-sm text-gray-500">
                     Sản phẩm này chưa có thông số kỹ thuật chi tiết.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Lens Thickness Section */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h3 className="flex items-center text-lg font-medium text-gray-900 mb-4">
+                <Settings className="w-5 h-5 mr-2" />
+                Độ dày lens tương thích
+              </h3>
+
+              {selectedLensThickness.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {selectedLensThickness.map((lensThickness) => (
+                    <div key={lensThickness.id} className="p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-gray-900">{lensThickness.name}</h4>
+                        <span className="text-sm text-blue-600 font-medium">
+                          Index {lensThickness.indexValue}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{lensThickness.description}</p>
+                      <div className="text-lg font-semibold text-green-600">
+                        {lensThickness.price.toLocaleString('vi-VN')}đ
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Settings className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có thông tin độ dày lens</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Sản phẩm này chưa có thông tin độ dày lens tương thích.
                   </p>
                 </div>
               )}

@@ -65,6 +65,9 @@ export const useEnhancedProductForm = (product?: Product | null) => {
       gender: product?.gender || ProductGenderType.UNISEX,
       price: product?.price || 0,
       isSustainable: product?.isSustainable || false,
+      lensThicknessIds:
+        product?.productDetail?.lensThicknessIds?.map((id) => id.toString()) ||
+        [],
     },
   });
 
@@ -100,6 +103,9 @@ export const useEnhancedProductForm = (product?: Product | null) => {
     updateProductDetail,
     handleCategoryChange: (categoryIds: string[]) => {
       form.setValue('categoryIds', categoryIds);
+    },
+    handleLensThicknessChange: (lensThicknessIds: string[]) => {
+      form.setValue('lensThicknessIds', lensThicknessIds);
     },
     handleProductColorsChange: setProductColors,
     handleStockChange: (colorId: string, stock: number) => {

@@ -34,6 +34,7 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
     form,
     updateProductDetail,
     handleCategoryChange,
+    handleLensThicknessChange,
     handleProductColorsChange,
     handleStockChange,
   } = useEnhancedProductForm(product);
@@ -249,6 +250,7 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
             setValue={form.setValue}
             watch={form.watch}
             handleCategoryChange={handleCategoryChange}
+            handleLensThicknessChange={handleLensThicknessChange}
           />
         );
       case 'detail':

@@ -128,6 +128,7 @@ export interface ProductDetail {
   springHinges: boolean;
   weight: number;
   multifocal: boolean;
+  lensThicknessIds?: number[]; // Array of lens thickness IDs
   createdAt: string;
   updatedAt: string;
 }
@@ -147,6 +148,7 @@ export interface CreateProductDetailRequest {
   style: FrameStyleType;
   weight: number;
   multifocal: boolean;
+  lensThicknessIds?: number[]; // Array of lens thickness IDs
 }
 
 // Request/Response types

@@ -85,6 +85,7 @@ const ColorsTab: React.FC<ColorsTabProps> = ({
                 className="w-full h-full object-cover rounded-lg"
               />
               <button
+                type="button"
                 onClick={() => updateColorImage(colorIndex, imageOrder, null)}
                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
               >
@@ -119,6 +120,7 @@ const ColorsTab: React.FC<ColorsTabProps> = ({
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium text-gray-900">Màu sắc và hình ảnh</h3>
         <button
+          type="button"
           onClick={addProductColor}
           className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
         >
@@ -150,6 +152,7 @@ const ColorsTab: React.FC<ColorsTabProps> = ({
             </div>
             {productColors.length > 1 && (
               <button
+                type="button"
                 onClick={() => removeProductColor(colorIndex)}
                 className="text-red-600 hover:text-red-800 transition"
               >

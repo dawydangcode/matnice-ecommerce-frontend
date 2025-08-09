@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { UseFormRegister, FieldErrors, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 import { ProductFormData } from '../types';
 import { ProductType, ProductGenderType } from '../../../../types/product.types';
 import { Brand } from '../../../../types/brand.types';
 import { Category } from '../../../../types/category.types';
+import { LensThickness, lensThicknessService } from '../../../../services/lens-thickness.service';
 import SearchableSelect from '../components/SearchableSelect';
+import toast from 'react-hot-toast';
 
 interface BasicInfoTabProps {
   register: UseFormRegister<ProductFormData>;
@@ -14,6 +16,7 @@ interface BasicInfoTabProps {
   setValue: UseFormSetValue<ProductFormData>;
   watch: UseFormWatch<ProductFormData>;
   handleCategoryChange: (categoryIds: string[]) => void;
+  handleLensThicknessChange: (lensThicknessIds: string[]) => void;
 }
 
 const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
@@ -23,9 +26,30 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   categories,
   setValue,
   watch,
-  handleCategoryChange
+  handleCategoryChange,
+  handleLensThicknessChange
 }) => {
   const watchedValues = watch();
+  const [lensThicknessList, setLensThicknessList] = useState<LensThickness[]>([]);
+  const [isLoadingLensThickness, setIsLoadingLensThickness] = useState(false);
+
+  // Load lens thickness list
+  useEffect(() => {
+    const loadLensThickness = async () => {
+      try {
+        setIsLoadingLensThickness(true);
+        const list = await lensThicknessService.getLensThicknessList();
+        setLensThicknessList(list);
+      } catch (error) {
+        console.error('Failed to load lens thickness:', error);
+        toast.error('Không thể tải danh sách độ dày lens');
+      } finally {
+        setIsLoadingLensThickness(false);
+      }
+    };
+
+    loadLensThickness();
+  }, []);
   
   // Prepare brand options for SearchableSelect
   const brandOptions = brands.map(brand => ({
@@ -127,6 +151,47 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           </div>
           {errors.categoryIds && (
             <p className="mt-1 text-sm text-red-600">{errors.categoryIds.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Độ dày lens
+          </label>
+          <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2 space-y-2">
+            {isLoadingLensThickness ? (
+              <div className="text-sm text-gray-500">Đang tải...</div>
+            ) : lensThicknessList.length === 0 ? (
+              <div className="text-sm text-gray-500">Không có độ dày lens nào</div>
+            ) : (
+              lensThicknessList.map((lensThickness) => {
+                const selectedLensThickness = watchedValues.lensThicknessIds || [];
+                const isChecked = selectedLensThickness.includes(lensThickness.id.toString());
+                
+                return (
+                  <label key={lensThickness.id} className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={(e) => {
+                        const selectedLensThickness = watchedValues.lensThicknessIds || [];
+                        const newLensThickness = e.target.checked
+                          ? [...selectedLensThickness, lensThickness.id.toString()]
+                          : selectedLensThickness.filter((id: string) => id !== lensThickness.id.toString());
+                        handleLensThicknessChange(newLensThickness);
+                      }}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">
+                      {lensThickness.name} - Index {lensThickness.indexValue} - {lensThickness.price.toLocaleString('vi-VN')}đ
+                    </span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+          {errors.lensThicknessIds && (
+            <p className="mt-1 text-sm text-red-600">{errors.lensThicknessIds.message}</p>
           )}
         </div>
 

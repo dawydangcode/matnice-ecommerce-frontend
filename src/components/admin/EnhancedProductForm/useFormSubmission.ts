@@ -208,6 +208,8 @@ export const useFormSubmission = () => {
               springHinges: productDetail.springHinges || false,
               weight: productDetail.weight || 0,
               multifocal: productDetail.multifocal || false,
+              lensThicknessIds:
+                data.lensThicknessIds?.map((id) => parseInt(id)) || [],
             };
 
             console.log(

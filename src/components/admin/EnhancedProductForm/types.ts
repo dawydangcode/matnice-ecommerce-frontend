@@ -15,6 +15,7 @@ export const productSchema = z.object({
   gender: z.nativeEnum(ProductGenderType),
   price: z.number().min(0, 'Giá phải lớn hơn 0'),
   isSustainable: z.boolean(),
+  lensThicknessIds: z.array(z.string()).optional(),
 });
 
 export type ProductFormData = z.infer<typeof productSchema>;

@@ -7,7 +7,8 @@ import {
   Settings,
   Upload,
   Trash2,
-  X
+  X,
+  Plus
 } from 'lucide-react';
 import { Product, ProductType, ProductGenderType, ProductDetail as ProductDetailType } from '../../types/product.types';
 import { ProductImageModel } from '../../types/product-image.types';
@@ -16,6 +17,9 @@ import { productColorService } from '../../services/product-color.service';
 import { productColorImageService } from '../../services/product-color-image.service';
 import { productDetailService } from '../../services/product-detail.service';
 import { apiService } from '../../services/api.service';
+import { Category } from '../../types/category.types';
+import { Category as ProductCategory } from '../../types/product.types';
+import { LensThickness, lensThicknessService } from '../../services/lens-thickness.service';
 import { useProductStore } from '../../stores/product.store';
 import toast from 'react-hot-toast';
 
@@ -59,15 +63,23 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
   const [productColors, setProductColors] = useState<ProductColor[]>([]);
   const [productDetail, setProductDetail] = useState<ProductDetailType | null>(null);
   const [editableProductDetail, setEditableProductDetail] = useState<ProductDetailType | null>(null);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
-  const [allCategories, setAllCategories] = useState<any[]>([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [lensThicknessList, setLensThicknessList] = useState<LensThickness[]>([]);
+  const [selectedLensThicknessIds, setSelectedLensThicknessIds] = useState<number[]>([]);
   const [colorImages, setColorImages] = useState<{ [colorId: number]: ProductImageModel[] }>({});
   const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
   const [isLoadingColors, setIsLoadingColors] = useState(true);
   const [isLoadingDetail, setIsLoadingDetail] = useState(true);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingLensThickness, setIsLoadingLensThickness] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Category modal state
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [isLoadingAllCategories, setIsLoadingAllCategories] = useState(false);
+  const [addingCategoryId, setAddingCategoryId] = useState<number | null>(null);
 
   // New images to upload
   const [newImages, setNewImages] = useState<{ [colorId: number]: File[] }>({});
@@ -133,35 +145,140 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
     try {
       setIsLoadingCategories(true);
       
-      // Load product categories
+      // Load product categories (categories assigned to this product)
       if (product.categories && product.categories.length > 0) {
-        setCategories(product.categories);
+        // Convert ProductCategory to Category format
+        const convertedCategories: Category[] = product.categories.map((cat: ProductCategory) => ({
+          id: cat.id,
+          name: cat.name,
+          description: cat.description,
+          createdAt: cat.createdAt,
+          updatedAt: cat.updatedAt,
+          createdBy: 0, // Default value since ProductCategory doesn't have this
+          updatedBy: 0, // Default value since ProductCategory doesn't have this
+        }));
+        setCategories(convertedCategories);
         setSelectedCategoryIds(product.categories.map(cat => cat.id));
       } else {
-        const response = await apiService.get(`/api/v1/product-category/product/${product.productId}/categories/details`) as any;
-        const categoriesData = response.data || [];
-        setCategories(categoriesData);
-        setSelectedCategoryIds(categoriesData.map((cat: any) => cat.id));
+        try {
+          const categoriesData = await apiService.get<Category[]>(`/api/v1/product-category/product/${product.productId}/categories/details`);
+          setCategories(categoriesData);
+          setSelectedCategoryIds(categoriesData.map((cat: Category) => cat.id));
+        } catch (error) {
+          console.error('Failed to load product categories:', error);
+          setCategories([]);
+          setSelectedCategoryIds([]);
+        }
       }
-
-      // Load all categories for selection
-      const allCategoriesResponse = await apiService.get('/api/v1/category/list') as any;
-      setAllCategories(allCategoriesResponse.data || []);
     } catch (error) {
       console.error('Failed to load categories:', error);
       setCategories([]);
-      setAllCategories([]);
     } finally {
       setIsLoadingCategories(false);
     }
   }, [product.productId, product.categories]);
+
+  const loadLensThickness = useCallback(async () => {
+    try {
+      setIsLoadingLensThickness(true);
+      const lensThickness = await lensThicknessService.getLensThicknessList();
+      setLensThicknessList(lensThickness);
+      
+      // Set selected lens thickness from product detail
+      if (product.productDetail?.lensThicknessIds) {
+        setSelectedLensThicknessIds(product.productDetail.lensThicknessIds);
+      }
+    } catch (error) {
+      console.error('Failed to load lens thickness:', error);
+      toast.error('Không thể tải danh sách độ dày lens');
+    } finally {
+      setIsLoadingLensThickness(false);
+    }
+  }, [product.productDetail?.lensThicknessIds]);
+
+  const loadAllCategories = useCallback(async () => {
+    try {
+      setIsLoadingAllCategories(true);
+      console.log('Loading all categories...');
+      
+      // Try different API endpoints that might work
+      let data;
+      try {
+        // First try the category list endpoint
+        data = await apiService.get<{ items?: Category[] } | Category[]>(
+          '/api/v1/category/list',
+          { page: 1, limit: 100 }
+        );
+        console.log('Categories API response:', data);
+      } catch (error) {
+        console.log('Category list failed, trying alternative endpoint');
+        // If that fails, try without pagination
+        data = await apiService.get<Category[]>('/api/v1/category/list');
+        console.log('Categories alternative API response:', data);
+      }
+      
+      // Handle different response formats
+      let list: Category[] = [];
+      if (Array.isArray(data)) {
+        list = data;
+      } else if (data && typeof data === 'object') {
+        // Check for common pagination formats
+        if ('items' in data && Array.isArray(data.items)) {
+          list = data.items;
+        } else if ('data' in data && Array.isArray((data as any).data)) {
+          list = (data as any).data;
+        } else if ('categories' in data && Array.isArray((data as any).categories)) {
+          list = (data as any).categories;
+        }
+      }
+      
+      console.log('Processed categories list:', list);
+      setAllCategories(list);
+    } catch (error) {
+      console.error('Failed to load all categories:', error);
+      toast.error('Không thể tải danh mục');
+      setAllCategories([]);
+    } finally {
+      setIsLoadingAllCategories(false);
+    }
+  }, []);
+
+  const handleAddCategory = useCallback(async (categoryId: number) => {
+    try {
+      setAddingCategoryId(categoryId);
+      await apiService.post(`/api/v1/product-category/create`, { 
+        productId: product.productId,
+        categoryId: categoryId 
+      });
+      toast.success('Thêm danh mục thành công');
+      await loadCategories();
+      setShowCategoryModal(false);
+    } catch (error: any) {
+      console.error('Add category failed:', error);
+      toast.error(error?.message || 'Thêm danh mục thất bại');
+    } finally {
+      setAddingCategoryId(null);
+    }
+  }, [product.productId, loadCategories]);
+
+  const handleRemoveCategory = useCallback(async (categoryId: number) => {
+    try {
+      await apiService.delete(`/api/v1/product-category/product/${product.productId}/category/${categoryId}`);
+      toast.success('Xóa danh mục thành công');
+      await loadCategories();
+    } catch (error: any) {
+      console.error('Remove category failed:', error);
+      toast.error(error?.message || 'Xóa danh mục thất bại');
+    }
+  }, [product.productId, loadCategories]);
 
   useEffect(() => {
     fetchBrands();
     loadProductColors();
     loadProductDetail();
     loadCategories();
-  }, [fetchBrands, loadProductColors, loadProductDetail, loadCategories]);
+    loadLensThickness();
+  }, [fetchBrands, loadProductColors, loadProductDetail, loadCategories, loadLensThickness]);
 
   const handleFormChange = (field: keyof EditFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -291,6 +408,7 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
             springHinges: editableProductDetail.springHinges,
             weight: editableProductDetail.weight,
             multifocal: editableProductDetail.multifocal,
+            lensThicknessIds: selectedLensThicknessIds,
           };
           
           await productDetailService.updateProductDetail(product.productDetail.id, updateData);
@@ -536,32 +654,50 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
 
           {/* Categories */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Danh mục</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-medium text-gray-900">Danh mục</h3>
+              <button
+                onClick={() => { 
+                  console.log('Opening category modal...');
+                  setShowCategoryModal(true); 
+                  loadAllCategories(); 
+                }}
+                className="flex items-center space-x-2 text-sm px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Thêm danh mục</span>
+              </button>
+            </div>
+            
             {isLoadingCategories ? (
               <span className="text-gray-500 text-sm">Đang tải...</span>
             ) : (
               <div className="space-y-3">
-                <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-md p-3">
-                  {allCategories.map((category) => (
-                    <label key={category.id} className="flex items-center space-x-2 mb-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategoryIds.includes(category.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedCategoryIds(prev => [...prev, category.id]);
-                          } else {
-                            setSelectedCategoryIds(prev => prev.filter(id => id !== category.id));
-                          }
-                        }}
-                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-700">{category.name}</span>
-                    </label>
-                  ))}
+                {/* Display current product categories */}
+                <div className="flex flex-wrap gap-2">
+                  {categories.length > 0 ? (
+                    categories.map((category) => (
+                      <div 
+                        key={category.id} 
+                        className="group relative px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full hover:bg-blue-200 transition-colors"
+                      >
+                        <span>{category.name}</span>
+                        <button
+                          onClick={() => handleRemoveCategory(category.id)}
+                          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs hover:bg-red-600"
+                          title="Xóa danh mục"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-gray-500 text-sm">Chưa có danh mục nào</span>
+                  )}
                 </div>
+                
                 <div className="text-sm text-gray-500">
-                  Đã chọn: {selectedCategoryIds.length} danh mục
+                  Tổng: {categories.length} danh mục
                 </div>
               </div>
             )}
@@ -581,27 +717,27 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Color Selection */}
-                <div className="flex flex-wrap gap-2">
-                  {productColors.map((color) => (
-                    <button
-                      key={color.id}
-                      onClick={() => setSelectedColorId(color.id)}
-                      className={`px-4 py-2 rounded-lg border transition ${
-                        selectedColorId === color.id
-                          ? 'bg-blue-100 border-blue-500 text-blue-700'
-                          : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      {color.colorName}
-                      <span className="ml-2 text-xs text-gray-500">
-                        ({color.stock} sản phẩm)
-                      </span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Images for Selected Color */}
+                    {/* Color Selection */}
+                    <div className="flex flex-wrap gap-2">
+                      {productColors.map((color) => (
+                        <button
+                          key={color.id}
+                          onClick={() => setSelectedColorId(color.id)}
+                          className={`px-4 py-2 rounded-lg border transition ${
+                            selectedColorId === color.id
+                              ? 'bg-blue-100 border-blue-500 text-blue-700'
+                              : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="text-left">
+                            <div className="font-medium">{color.colorName}</div>
+                            <div className="text-xs text-gray-500">
+                              Mã: {color.productNumber} | {color.stock} sản phẩm
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>                {/* Images for Selected Color */}
                 {selectedColorId && (
                   <div className="border-t pt-6">
                     <h4 className="text-md font-medium text-gray-900 mb-4">
@@ -872,19 +1008,44 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
                     step="0.1"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Số sản phẩm
-                  </label>
-                  <input
-                    type="number"
-                    value={editableProductDetail.productNumber || ''}
-                    onChange={(e) => handleProductDetailChange('productNumber', parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Mã số sản phẩm"
-                  />
-                </div>
+              {/* Lens Thickness Section */}
+              <div className="mt-6">
+                <h4 className="text-md font-medium text-gray-900 mb-3">Độ dày lens</h4>
+                {isLoadingLensThickness ? (
+                  <div className="text-sm text-gray-500">Đang tải...</div>
+                ) : (
+                  <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
+                    {lensThicknessList.length === 0 ? (
+                      <div className="text-sm text-gray-500">Không có độ dày lens nào</div>
+                    ) : (
+                      lensThicknessList.map((lensThickness) => {
+                        const isChecked = selectedLensThicknessIds.includes(lensThickness.id);
+                        
+                        return (
+                          <label key={lensThickness.id} className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedLensThicknessIds(prev => [...prev, lensThickness.id]);
+                                } else {
+                                  setSelectedLensThicknessIds(prev => prev.filter(id => id !== lensThickness.id));
+                                }
+                              }}
+                              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-700">
+                              {lensThickness.name} - Index {lensThickness.indexValue} - {lensThickness.price.toLocaleString('vi-VN')}đ
+                            </span>
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Feature Checkboxes */}
@@ -915,6 +1076,70 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
           )}
         </div>
       </div>
+
+      {/* Category Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h4 className="font-semibold">Thêm danh mục cho sản phẩm</h4>
+              <button 
+                onClick={() => setShowCategoryModal(false)} 
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto">
+              {isLoadingAllCategories ? (
+                <div className="text-sm text-gray-500">Đang tải danh mục...</div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-400 mb-2">
+                    Debug: Tổng danh mục: {allCategories.length}, Danh mục hiện tại: {categories.length}
+                  </div>
+                  {allCategories.length === 0 ? (
+                    <div className="text-sm text-red-500">
+                      Không tải được danh mục từ API. Kiểm tra console để xem lỗi.
+                    </div>
+                  ) : (
+                    <>
+                      {allCategories
+                        .filter((c) => !categories.some(pc => pc.id === c.id))
+                        .map((cat: Category) => (
+                          <div key={cat.id} className="flex items-center justify-between p-2 border rounded">
+                            <div>
+                              <p className="font-medium text-sm">{cat.name}</p>
+                              {cat.description && <p className="text-xs text-gray-500">{cat.description}</p>}
+                            </div>
+                            <button
+                              disabled={addingCategoryId === cat.id}
+                              onClick={() => handleAddCategory(cat.id)}
+                              className="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                            >
+                              {addingCategoryId === cat.id ? 'Đang thêm...' : 'Thêm'}
+                            </button>
+                          </div>
+                        ))}
+                      {allCategories.filter((c) => !categories.some(pc => pc.id === c.id)).length === 0 && (
+                        <div className="text-xs text-gray-500">Không còn danh mục nào để thêm.</div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t flex justify-end">
+              <button
+                onClick={() => setShowCategoryModal(false)}
+                className="px-4 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
