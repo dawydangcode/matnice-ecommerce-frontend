@@ -20,6 +20,7 @@ import { apiService } from '../../services/api.service';
 import { Category } from '../../types/category.types';
 import { Category as ProductCategory } from '../../types/product.types';
 import { LensThickness, lensThicknessService } from '../../services/lens-thickness.service';
+import { productThicknessCompatibilityService } from '../../services/product-thickness-compatibility.service';
 import { useProductStore } from '../../stores/product.store';
 import toast from 'react-hot-toast';
 
@@ -181,12 +182,18 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
   const loadLensThickness = useCallback(async () => {
     try {
       setIsLoadingLensThickness(true);
+      
+      // Load all lens thickness
       const lensThickness = await lensThicknessService.getLensThicknessList();
       setLensThicknessList(lensThickness);
       
-      // Set selected lens thickness from product detail
-      if (product.productDetail?.lensThicknessIds) {
-        setSelectedLensThicknessIds(product.productDetail.lensThicknessIds);
+      // Load compatible lens thickness IDs for this product
+      try {
+        const compatibleThicknessIds = await productThicknessCompatibilityService.getCompatibleThicknessIds(product.productId);
+        setSelectedLensThicknessIds(compatibleThicknessIds);
+      } catch (error) {
+        console.log('No existing lens thickness compatibility found, starting with empty selection');
+        setSelectedLensThicknessIds([]);
       }
     } catch (error) {
       console.error('Failed to load lens thickness:', error);
@@ -194,7 +201,7 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
     } finally {
       setIsLoadingLensThickness(false);
     }
-  }, [product.productDetail?.lensThicknessIds]);
+  }, [product.productId]);
 
   const loadAllCategories = useCallback(async () => {
     try {
@@ -408,7 +415,6 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
             springHinges: editableProductDetail.springHinges,
             weight: editableProductDetail.weight,
             multifocal: editableProductDetail.multifocal,
-            lensThicknessIds: selectedLensThicknessIds,
           };
           
           await productDetailService.updateProductDetail(product.productDetail.id, updateData);
@@ -416,6 +422,20 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
         } catch (error) {
           console.error('Failed to update product detail:', error);
           toast.error('Có lỗi khi cập nhật thông số kỹ thuật');
+        }
+      }
+
+      // Update lens thickness compatibility
+      if (selectedLensThicknessIds.length >= 0) {
+        try {
+          await productThicknessCompatibilityService.updateProductCompatibilities(
+            product.productId,
+            selectedLensThicknessIds
+          );
+          toast.success('Cập nhật độ dày lens thành công');
+        } catch (error) {
+          console.error('Failed to update lens thickness compatibility:', error);
+          toast.error('Có lỗi khi cập nhật độ dày lens');
         }
       }
 

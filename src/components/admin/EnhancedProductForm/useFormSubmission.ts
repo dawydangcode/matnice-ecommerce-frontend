@@ -6,6 +6,7 @@ import {
 } from '../../../types/product.types';
 import { useProductStore } from '../../../stores/product.store';
 import { productCategoryService } from '../../../services/product-category.service';
+import { productThicknessCompatibilityService } from '../../../services/product-thickness-compatibility.service';
 import {
   productColorService,
   CreateProductColorRequest,
@@ -161,6 +162,35 @@ export const useFormSubmission = () => {
         } catch (error) {
           console.error('Error updating product categories:', error);
           toast.error('Có lỗi khi cập nhật danh mục sản phẩm');
+        }
+      }
+
+      // Update lens thickness compatibility
+      if (
+        data.lensThicknessIds &&
+        data.lensThicknessIds.length > 0 &&
+        productId
+      ) {
+        console.log('=== UPDATING LENS THICKNESS COMPATIBILITY PHASE ===');
+        const lensThicknessIds = data.lensThicknessIds.map((id) =>
+          parseInt(id),
+        );
+        console.log(
+          'Updating lens thickness compatibility for product:',
+          productId,
+          'Lens thickness IDs:',
+          lensThicknessIds,
+        );
+        try {
+          await productThicknessCompatibilityService.updateProductCompatibilities(
+            productId,
+            lensThicknessIds,
+          );
+          console.log('Lens thickness compatibility updated successfully');
+          toast.success('Cập nhật độ dày lens thành công!');
+        } catch (error) {
+          console.error('Error updating lens thickness compatibility:', error);
+          toast.error('Có lỗi khi cập nhật độ dày lens');
         }
       }
 

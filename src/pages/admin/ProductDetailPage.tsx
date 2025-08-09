@@ -7,12 +7,14 @@ import {
   Tag,
   Palette,
   Settings,
+  Plus,
   X
 } from 'lucide-react';
 import { Product, ProductType, ProductGenderType, ProductDetail as ProductDetailType } from '../../types/product.types';
 import { ProductColor } from '../../services/product-color.service';
 import { ProductImageModel } from '../../types/product-image.types';
 import { LensThickness, lensThicknessService } from '../../services/lens-thickness.service';
+import { productThicknessCompatibilityService } from '../../services/product-thickness-compatibility.service';
 import { productColorService } from '../../services/product-color.service';
 import { productColorImageService } from '../../services/product-color-image.service';
 import toast from 'react-hot-toast';
@@ -118,21 +120,29 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   const loadLensThickness = useCallback(async () => {
     try {
-      // Load all lens thickness
-      const allLensThickness = await lensThicknessService.getLensThicknessList();
-      setLensThicknessList(allLensThickness);
+      // Load compatible lens thickness IDs for this product
+      const compatibleThicknessIds = await productThicknessCompatibilityService.getCompatibleThicknessIds(product.productId);
       
-      // Filter selected lens thickness based on product detail
-      if (product.productDetail?.lensThicknessIds && product.productDetail.lensThicknessIds.length > 0) {
+      if (compatibleThicknessIds.length > 0) {
+        // Load all lens thickness
+        const allLensThickness = await lensThicknessService.getLensThicknessList();
+        setLensThicknessList(allLensThickness);
+        
+        // Filter selected lens thickness based on compatible IDs
         const selectedThickness = allLensThickness.filter(lt => 
-          product.productDetail?.lensThicknessIds?.includes(lt.id)
+          compatibleThicknessIds.includes(lt.id)
         );
         setSelectedLensThickness(selectedThickness);
+      } else {
+        setLensThicknessList([]);
+        setSelectedLensThickness([]);
       }
     } catch (error) {
       console.error('Failed to load lens thickness:', error);
+      setLensThicknessList([]);
+      setSelectedLensThickness([]);
     }
-  }, [product.productDetail?.lensThicknessIds]);
+  }, [product.productId]);
 
   useEffect(() => {
     loadProductColors();
@@ -499,10 +509,19 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
             {/* Color Variants Section */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="flex items-center text-lg font-medium text-gray-900 mb-4">
-                <Palette className="w-5 h-5 mr-2" />
-                Màu sắc sản phẩm ({productColors.length} màu)
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="flex items-center text-lg font-medium text-gray-900">
+                  <Palette className="w-5 h-5 mr-2" />
+                  Màu sắc sản phẩm ({productColors.length} màu)
+                </h3>
+                <button
+                  onClick={onEdit}
+                  className="flex items-center space-x-2 text-sm px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Thêm màu</span>
+                </button>
+              </div>
 
               {isLoadingColors ? (
                 <div className="flex items-center justify-center py-8">
