@@ -120,8 +120,14 @@ export const useFormSubmission = () => {
 
       if (product) {
         console.log('Updating existing product:', product.productId);
+
+        // Validate existing product ID
+        if (!product.productId || isNaN(Number(product.productId))) {
+          throw new Error('Invalid existing product ID: ' + product.productId);
+        }
+
         await updateProduct(product.productId, productData);
-        productId = product.productId;
+        productId = Number(product.productId);
         console.log('Product updated successfully');
         toast.success('Cập nhật sản phẩm thành công!');
       } else {
@@ -132,8 +138,8 @@ export const useFormSubmission = () => {
           productId = createdProduct?.productId || 0;
           console.log('New product ID:', productId);
 
-          if (!productId) {
-            throw new Error('Product ID not returned from createProduct');
+          if (!productId || isNaN(productId)) {
+            throw new Error('Invalid product ID returned from createProduct');
           }
 
           toast.success('Tạo sản phẩm thành công!');
@@ -141,6 +147,11 @@ export const useFormSubmission = () => {
           console.error('Product creation failed:', createError);
           throw createError;
         }
+      }
+
+      // Validate productId before proceeding
+      if (!productId || isNaN(productId)) {
+        throw new Error('Invalid product ID: ' + productId);
       }
 
       // Update product categories
@@ -154,7 +165,7 @@ export const useFormSubmission = () => {
         );
         try {
           await productCategoryService.updateProductCategories(
-            productId,
+            Number(productId),
             categoryIds,
           );
           console.log('Categories updated successfully');
@@ -183,7 +194,7 @@ export const useFormSubmission = () => {
         );
         try {
           await productThicknessCompatibilityService.updateProductCompatibilities(
-            productId,
+            Number(productId),
             lensThicknessIds,
           );
           console.log('Lens thickness compatibility updated successfully');
@@ -208,9 +219,9 @@ export const useFormSubmission = () => {
           );
           try {
             const color = await productColorService.createProductColor(
-              productId,
+              Number(productId),
               {
-                productId: productId,
+                productId: Number(productId),
                 productVariantName:
                   colorData.productVariantName || colorData.colorName.trim(),
                 productNumber: colorData.productNumber.trim(),
@@ -223,7 +234,7 @@ export const useFormSubmission = () => {
 
             // Create product detail for this color
             const detailData = {
-              productId: productId,
+              productId: Number(productId),
               bridgeWidth: productDetail.bridgeWidth || 0,
               frameWidth: productDetail.frameWidth || 0,
               lensHeight: productDetail.lensHeight || 0,
@@ -265,7 +276,7 @@ export const useFormSubmission = () => {
                   );
                   const uploadedImage =
                     await productColorImageService.uploadProductColorImage({
-                      productId: productId,
+                      productId: Number(productId),
                       colorId: color.id,
                       productNumber: colorData.productNumber.trim(),
                       imageOrder: imageOrder,
