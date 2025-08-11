@@ -65,6 +65,8 @@ export const useEnhancedProductForm = (product?: Product | null) => {
       gender: product?.gender || ProductGenderType.UNISEX,
       price: product?.price || 0,
       isSustainable: product?.isSustainable || false,
+      isNew: product?.isNew || false,
+      isBoutique: product?.isBoutique || false,
       lensThicknessIds:
         product?.productDetail?.lensThicknessIds?.map((id) => id.toString()) ||
         [],

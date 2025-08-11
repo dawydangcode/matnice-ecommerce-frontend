@@ -110,6 +110,8 @@ export const useFormSubmission = () => {
         brandId: parseInt(data.brandId),
         description: data.description || undefined,
         isSustainable: data.isSustainable || false,
+        isNew: data.isNew || false,
+        isBoutique: data.isBoutique || false,
         imageUrls,
       };
 

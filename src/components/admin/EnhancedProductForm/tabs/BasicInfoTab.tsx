@@ -32,6 +32,18 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   const watchedValues = watch();
   const [lensThicknessList, setLensThicknessList] = useState<LensThickness[]>([]);
   const [isLoadingLensThickness, setIsLoadingLensThickness] = useState(false);
+  const [newExpirationDate, setNewExpirationDate] = useState<Date | null>(null);
+
+  // Calculate expiration date when isNew changes
+  useEffect(() => {
+    if (watchedValues.isNew) {
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 30);
+      setNewExpirationDate(expirationDate);
+    } else {
+      setNewExpirationDate(null);
+    }
+  }, [watchedValues.isNew]);
 
   // Load lens thickness list
   useEffect(() => {
@@ -218,6 +230,44 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           />
           <label className="ml-2 block text-sm text-gray-700">
             Sản phẩm bền vững
+          </label>
+        </div>
+
+        <div className="flex items-center">
+          <input
+            {...register('isNew')}
+            type="checkbox"
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <label className="ml-2 block text-sm text-gray-700">
+            Sản phẩm mới
+          </label>
+        </div>
+
+        {watchedValues.isNew && newExpirationDate && (
+          <div className="ml-6 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-700">
+              <strong>Thông báo:</strong> Sản phẩm sẽ tự động hết hạn "mới" sau 30 ngày
+            </p>
+            <p className="text-xs text-blue-600 mt-1">
+              Ngày hết hạn: {newExpirationDate.toLocaleDateString('vi-VN', {
+                weekday: 'long',
+                year: 'numeric', 
+                month: 'long',
+                day: 'numeric'
+              })}
+            </p>
+          </div>
+        )}
+
+        <div className="flex items-center">
+          <input
+            {...register('isBoutique')}
+            type="checkbox"
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <label className="ml-2 block text-sm text-gray-700">
+            Sản phẩm boutique
           </label>
         </div>
       </div>

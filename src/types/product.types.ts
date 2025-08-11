@@ -10,6 +10,9 @@ export interface Product {
   description?: string;
   stock: number;
   isSustainable: boolean;
+  isNew?: boolean;
+  isBoutique?: boolean;
+  newUntil?: string;
   createdAt: string;
   updatedAt: string;
   // Additional product properties
@@ -162,6 +165,8 @@ export interface CreateProductRequest {
   stock: number;
   description?: string;
   isSustainable?: boolean;
+  isNew?: boolean;
+  isBoutique?: boolean;
   imageUrls?: string[];
   // Product detail included in creation
   productDetail?: CreateProductDetailRequest;
@@ -198,5 +203,7 @@ export interface ProductFormData {
   stock: number;
   description: string;
   isSustainable: boolean;
+  isNew: boolean;
+  isBoutique: boolean;
   images: File[];
 }
