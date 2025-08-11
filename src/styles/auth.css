@@ -1,0 +1,18 @@
+.auth-background {
+  background-image: url('../assets/login-background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.auth-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-right: 80px;
+}
+
+.auth-form-wrapper {
+  width: 100%;
+  max-width: 450px;
+}

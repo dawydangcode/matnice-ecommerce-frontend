@@ -45,6 +45,12 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   const loadColorImages = useCallback(async (colorId: number) => {
     try {
+      // Validation productId
+      if (!product?.productId || isNaN(Number(product.productId))) {
+        console.error('Invalid productId in loadColorImages:', product?.productId);
+        return;
+      }
+      
       const images = await productColorImageService.getProductColorImages(product.productId, colorId);
       setColorImages(prev => ({
         ...prev,
@@ -57,6 +63,12 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   const loadProductColors = useCallback(async () => {
     try {
+      // Validation productId
+      if (!product?.productId || isNaN(Number(product.productId))) {
+        console.error('Invalid productId in loadProductColors:', product?.productId);
+        return;
+      }
+      
       setIsLoadingColors(true);
       const colors = await productColorService.getProductColors(product.productId);
       setProductColors(colors);

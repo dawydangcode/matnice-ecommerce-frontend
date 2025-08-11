@@ -42,7 +42,7 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
   const [selectedType, setSelectedType] = useState<ProductType | undefined>();
   const [selectedGender, setSelectedGender] = useState<ProductGenderType | undefined>();
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<'compact' | 'detailed'>('detailed');
+  const [viewMode, setViewMode] = useState<'compact' | 'detailed'>('compact');
   const [productCategories, setProductCategories] = useState<Record<number, any[]>>({});
   const [loadingCategories, setLoadingCategories] = useState(false);
 
@@ -70,11 +70,17 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
         // Load categories for all products in parallel
         const categoryPromises = products.map(async (product) => {
           try {
+            // Kiểm tra productId có hợp lệ không
+            if (!product?.productId || isNaN(Number(product.productId))) {
+              console.error('Invalid productId for product:', product);
+              return { productId: product?.productId || 0, categories: [] };
+            }
+            
             const categories = await productCategoryService.getCategoriesWithDetailsByProduct(product.productId);
             return { productId: product.productId, categories };
           } catch (error) {
             console.error(`Failed to load categories for product ${product.productId}:`, error);
-            return { productId: product.productId, categories: [] };
+            return { productId: product.productId || 0, categories: [] };
           }
         });
 

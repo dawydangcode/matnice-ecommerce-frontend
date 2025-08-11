@@ -7,6 +7,8 @@ import { useAuthStore } from './stores/auth.store';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import HomePage from './pages/HomePage';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -25,13 +27,34 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 // Public Route Component (redirect if already logged in)
 const PublicRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isLoggedIn } = useAuthStore();
+  const { isLoggedIn, user } = useAuthStore();
   
   if (isLoggedIn) {
-    return <Navigate to="/dashboard" replace />;
+    // Redirect based on user role
+    if (user?.role?.name === 'admin' || user?.role?.type === 'admin') {
+      return <Navigate to="/admin" replace />;
+    } else {
+      return <Navigate to="/" replace />;
+    }
   }
   
   return <>{children}</>;
+};
+
+// Role-based redirect component
+const RoleBasedRedirect: React.FC = () => {
+  const { user, isLoggedIn } = useAuthStore();
+  
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Redirect based on user role
+  if (user?.role?.name === 'admin' || user?.role?.type === 'admin') {
+    return <Navigate to="/admin" replace />;
+  } else {
+    return <Navigate to="/" replace />;
+  }
 };
 
 function App() {
@@ -93,6 +116,14 @@ function App() {
 
           {/* Protected Routes */}
           <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
@@ -101,8 +132,25 @@ function App() {
             }
           />
 
-          {/* Default Routes */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Public/User Routes */}
+          <Route
+            path="/"
+            element={<HomePage />}
+          />
+
+          {/* Default Routes - Redirect based on role */}
+          <Route 
+            path="/home" 
+            element={
+              <Navigate to="/" replace />
+            } 
+          />
+          
+          {/* Role-based redirect route */}
+          <Route 
+            path="/redirect" 
+            element={<RoleBasedRedirect />} 
+          />
           
           {/* 404 Route */}
           <Route
@@ -113,10 +161,10 @@ function App() {
                   <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
                   <p className="text-xl text-gray-600 mb-8">Page not found</p>
                   <a
-                    href="/dashboard"
+                    href="/"
                     className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                   >
-                    Go to Dashboard
+                    Go to Home
                   </a>
                 </div>
               </div>

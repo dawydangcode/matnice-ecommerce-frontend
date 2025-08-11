@@ -34,6 +34,11 @@ export class ProductThicknessCompatibilityService {
   }
 
   async getCompatibleThicknessIds(productId: number): Promise<number[]> {
+    // Validation productId
+    if (!productId || isNaN(Number(productId)) || productId <= 0) {
+      throw new Error(`Invalid productId: ${productId}`);
+    }
+
     try {
       const response = await apiService.get<number[]>(
         `/api/v1/product-thickness-compatibility/product/${productId}/thickness-ids`,

@@ -1,4 +1,4 @@
-import { apiService } from "./api.service";
+import { apiService } from './api.service';
 
 export interface UpdateProductCategoriesDto {
   categoryIds: number[];
@@ -15,60 +15,79 @@ export interface ProductCategoryModel {
 }
 
 class ProductCategoryService {
-  private baseUrl = "/api/v1/product-category";
+  private baseUrl = '/api/v1/product-category';
 
   async updateProductCategories(
     productId: number,
-    categoryIds: number[]
+    categoryIds: number[],
   ): Promise<ProductCategoryModel[]> {
+    // Validation productId
+    if (!productId || isNaN(Number(productId)) || productId <= 0) {
+      throw new Error(`Invalid productId: ${productId}`);
+    }
+
     const response = await apiService.put<ProductCategoryModel[]>(
       `${this.baseUrl}/product/${productId}/categories`,
-      { categoryIds }
+      { categoryIds },
     );
     return response;
   }
 
   async getCategoriesByProduct(productId: number): Promise<number[]> {
+    // Validation productId
+    if (!productId || isNaN(Number(productId)) || productId <= 0) {
+      throw new Error(`Invalid productId: ${productId}`);
+    }
+
     const response = await apiService.get<number[]>(
-      `${this.baseUrl}/product/${productId}/categories`
+      `${this.baseUrl}/product/${productId}/categories`,
     );
     return response;
   }
 
   async getCategoriesWithDetailsByProduct(productId: number): Promise<any[]> {
+    // Validation productId
+    if (!productId || isNaN(Number(productId)) || productId <= 0) {
+      console.error(
+        'Invalid productId provided to getCategoriesWithDetailsByProduct:',
+        productId,
+      );
+      throw new Error(`Invalid productId: ${productId}`);
+    }
+
     const response = await apiService.get<any[]>(
-      `${this.baseUrl}/product/${productId}/categories/details`
+      `${this.baseUrl}/product/${productId}/categories/details`,
     );
     return response;
   }
 
   async getProductsByCategory(categoryId: number): Promise<number[]> {
     const response = await apiService.get<number[]>(
-      `${this.baseUrl}/category/${categoryId}/products`
+      `${this.baseUrl}/category/${categoryId}/products`,
     );
     return response;
   }
 
   async createProductCategory(
     productId: number,
-    categoryId: number
+    categoryId: number,
   ): Promise<ProductCategoryModel> {
     const response = await apiService.post<ProductCategoryModel>(
       `${this.baseUrl}/create`,
       {
         productId,
         categoryId,
-      }
+      },
     );
     return response;
   }
 
   async deleteProductCategory(
     productId: number,
-    categoryId: number
+    categoryId: number,
   ): Promise<boolean> {
     const response = await apiService.delete<boolean>(
-      `${this.baseUrl}/product/${productId}/category/${categoryId}`
+      `${this.baseUrl}/product/${productId}/category/${categoryId}`,
     );
     return response;
   }

@@ -67,15 +67,11 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
   const passwordStrength = getPasswordStrength(password || '');
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-white rounded-2xl shadow-xl p-8">
+    <div className="w-full">
+      <div className="bg-white rounded-2xl shadow-2xl p-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-            <UserPlus className="w-8 h-8 text-primary-600" />
-          </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
-          <p className="text-gray-600">Join Matnice and discover amazing eyewear</p>
         </div>
 
         {/* Error Display */}
@@ -236,7 +232,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
             {isLoading ? (
               <>

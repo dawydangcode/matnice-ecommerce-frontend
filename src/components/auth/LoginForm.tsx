@@ -44,7 +44,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         if (user?.role?.name === 'admin' || user?.role?.type === 'admin') {
           navigate('/admin');
         } else {
-          navigate('/dashboard');
+          navigate('/');  // Redirect users to HomePage instead of dashboard
         }
       }
     } catch (error: any) {
@@ -53,13 +53,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-white rounded-2xl shadow-xl p-8">
+    <div className="w-full pt-8 pb-16">
+      <div className="bg-white rounded-2xl shadow-2xl p-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-            <LogIn className="w-8 h-8 text-primary-600" />
-          </div>
+        <div className="text-center mb-8">  
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
           <p className="text-gray-600">Sign in to your Matnice account</p>
         </div>
@@ -137,7 +134,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
             {isLoading ? (
               <>

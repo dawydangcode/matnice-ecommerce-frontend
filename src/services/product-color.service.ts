@@ -38,6 +38,11 @@ class ProductColorService {
 
   // Get all colors for a product
   async getProductColors(productId: number): Promise<ProductColor[]> {
+    // Validation productId
+    if (!productId || isNaN(Number(productId)) || productId <= 0) {
+      throw new Error(`Invalid productId: ${productId}`);
+    }
+
     try {
       const response = await apiService.get<ProductColor[]>(
         `${this.baseUrl}/product-color/${productId}/product`,
