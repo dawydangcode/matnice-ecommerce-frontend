@@ -540,8 +540,8 @@ const HomePage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative h-[700px] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="max-w-7xl mx-auto px-4 h-full">
+      <section className="relative h-[600px] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="max-w-7xl mx-auto px-4 h-[550px]">
           <div className="flex items-center h-full">
             <div className="w-1/2 space-y-8">
               <div>
