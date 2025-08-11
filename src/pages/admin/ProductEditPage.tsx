@@ -779,6 +779,44 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
             )}
           </div>
 
+          {/* Lens Thickness Section */}
+              <div className="mt-6">
+                <h4 className="text-md font-medium text-gray-900 mb-3">Độ dày lens</h4>
+                {isLoadingLensThickness ? (
+                  <div className="text-sm text-gray-500">Đang tải...</div>
+                ) : (
+                  <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
+                    {lensThicknessList.length === 0 ? (
+                      <div className="text-sm text-gray-500">Không có độ dày lens nào</div>
+                    ) : (
+                      lensThicknessList.map((lensThickness) => {
+                        const isChecked = selectedLensThicknessIds.includes(lensThickness.id);
+                        
+                        return (
+                          <label key={lensThickness.id} className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedLensThicknessIds(prev => [...prev, lensThickness.id]);
+                                } else {
+                                  setSelectedLensThicknessIds(prev => prev.filter(id => id !== lensThickness.id));
+                                }
+                              }}
+                              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-700">
+                              {lensThickness.name} - Index {lensThickness.indexValue} - {lensThickness.price.toLocaleString('vi-VN')}đ
+                            </span>
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
+
           {/* Product Colors and Images */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center justify-between mb-4">
@@ -1096,44 +1134,6 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
                     step="0.1"
                   />
                 </div>
-              </div>
-
-              {/* Lens Thickness Section */}
-              <div className="mt-6">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Độ dày lens</h4>
-                {isLoadingLensThickness ? (
-                  <div className="text-sm text-gray-500">Đang tải...</div>
-                ) : (
-                  <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
-                    {lensThicknessList.length === 0 ? (
-                      <div className="text-sm text-gray-500">Không có độ dày lens nào</div>
-                    ) : (
-                      lensThicknessList.map((lensThickness) => {
-                        const isChecked = selectedLensThicknessIds.includes(lensThickness.id);
-                        
-                        return (
-                          <label key={lensThickness.id} className="flex items-center space-x-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedLensThicknessIds(prev => [...prev, lensThickness.id]);
-                                } else {
-                                  setSelectedLensThicknessIds(prev => prev.filter(id => id !== lensThickness.id));
-                                }
-                              }}
-                              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                            />
-                            <span className="text-sm text-gray-700">
-                              {lensThickness.name} - Index {lensThickness.indexValue} - {lensThickness.price.toLocaleString('vi-VN')}đ
-                            </span>
-                          </label>
-                        );
-                      })
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Feature Checkboxes */}
