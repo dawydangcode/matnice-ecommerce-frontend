@@ -288,7 +288,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 <p className="text-3xl font-bold text-blue-600 mt-2">{formatPrice(product.price)}</p>
               </div>
 
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center flex-wrap gap-2">
                 <span className={`inline-flex px-3 py-1 text-sm rounded-full ${
                   product.stock > 0 
                     ? 'bg-green-100 text-green-800' 
@@ -301,7 +301,34 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     🌱 Thân thiện môi trường
                   </span>
                 )}
+                {product.isNew && (
+                  <span className="inline-flex px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">
+                    ✨ Sản phẩm mới
+                  </span>
+                )}
+                {product.isBoutique && (
+                  <span className="inline-flex px-3 py-1 text-sm bg-purple-100 text-purple-800 rounded-full">
+                    💎 Boutique
+                  </span>
+                )}
               </div>
+
+              {/* Thông báo hết hạn sản phẩm mới */}
+              {product.isNew && product.newUntil && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-700">
+                    <strong>Thông báo:</strong> Sản phẩm sẽ tự động hết hạn "mới" vào ngày{' '}
+                    <span className="font-medium">
+                      {new Date(product.newUntil).toLocaleDateString('vi-VN', {
+                        weekday: 'long',
+                        year: 'numeric', 
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                  </p>
+                </div>
+              )}
 
               {product.description && (
                 <div>
@@ -332,6 +359,12 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   <span className="text-gray-500">Giới tính:</span>
                   <span className="ml-2 font-medium">{getGenderLabel(product.gender)}</span>
                 </div>
+                <div>
+                  <span className="text-gray-500">Sản phẩm mới:</span>
+                  <span className={`ml-2 font-medium ${product.isNew ? 'text-blue-600' : 'text-gray-600'}`}>
+                    {product.isNew ? 'Có' : 'Không'}
+                  </span>
+                </div>
               </div>
               <div className="space-y-3">
                 <div>
@@ -346,8 +379,33 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   <span className="text-gray-500">Tổng màu sắc:</span>
                   <span className="ml-2 font-medium">{productColors.length} màu</span>
                 </div>
+                <div>
+                  <span className="text-gray-500">Sản phẩm boutique:</span>
+                  <span className={`ml-2 font-medium ${product.isBoutique ? 'text-purple-600' : 'text-gray-600'}`}>
+                    {product.isBoutique ? 'Có' : 'Không'}
+                  </span>
+                </div>
               </div>
             </div>
+
+            {/* Thông tin ngày hết hạn */}
+            {product.isNew && product.newUntil && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="text-sm">
+                  <span className="text-gray-500">Ngày hết hạn "mới":</span>
+                  <span className="ml-2 font-medium text-blue-600">
+                    {new Date(product.newUntil).toLocaleDateString('vi-VN', {
+                      year: 'numeric', 
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                  <span className="ml-2 text-xs text-gray-500">
+                    (Tự động chuyển thành không mới)
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Categories */}

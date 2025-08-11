@@ -36,6 +36,8 @@ interface EditFormData {
   price: number;
   description: string;
   isSustainable: boolean;
+  isNew: boolean;
+  isBoutique: boolean;
   productType: ProductType;
   gender: ProductGenderType;
   brandId: number;
@@ -57,6 +59,8 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
     price: product.price,
     description: product.description || '',
     isSustainable: product.isSustainable || false,
+    isNew: product.isNew || false,
+    isBoutique: product.isBoutique || false,
     productType: product.productType,
     gender: product.gender,
     brandId: product.brand?.id || 0,
@@ -375,6 +379,8 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
         price: formData.price,
         description: formData.description,
         isSustainable: formData.isSustainable,
+        isNew: formData.isNew,
+        isBoutique: formData.isBoutique,
         productType: formData.productType,
         gender: formData.gender,
         brandId: formData.brandId,
@@ -661,7 +667,7 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
               />
             </div>
 
-            <div className="mt-6">
+            <div className="mt-6 space-y-3">
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -670,6 +676,42 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
                   className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Sản phẩm bền vững</span>
+              </label>
+
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.isNew}
+                  onChange={(e) => handleFormChange('isNew', e.target.checked)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">Sản phẩm mới</span>
+              </label>
+
+              {formData.isNew && product.newUntil && (
+                <div className="ml-6 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-700">
+                    <strong>Thông báo:</strong> Sản phẩm sẽ tự động hết hạn "mới" sau 30 ngày
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Ngày hết hạn: {new Date(product.newUntil).toLocaleDateString('vi-VN', {
+                      weekday: 'long',
+                      year: 'numeric', 
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              )}
+
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.isBoutique}
+                  onChange={(e) => handleFormChange('isBoutique', e.target.checked)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">Sản phẩm boutique</span>
               </label>
             </div>
           </div>
