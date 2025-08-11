@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, ShoppingCart, Heart, User, ChevronRight, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { Link } from 'react-router-dom';
+import VirtualTryOnImage from '../assets/Virtual-Eyewear-Try-On.jpg';
 
 const HomePage: React.FC = () => {
   const { isLoggedIn, user, logout } = useAuthStore();
@@ -155,7 +156,7 @@ const HomePage: React.FC = () => {
                   }`}
                 >
                   <span>GLASSES</span>
-                  <ChevronDown className="w-4 h-4" />
+                   
                 </Link>
               </div>
 
@@ -174,7 +175,7 @@ const HomePage: React.FC = () => {
                   }`}
                 >
                   <span>SUNGLASSES</span>
-                  <ChevronDown className="w-4 h-4" />
+                   
                 </Link>
               </div>
 
@@ -193,7 +194,7 @@ const HomePage: React.FC = () => {
                   }`}
                 >
                   <span>BRANDS</span>
-                  <ChevronDown className="w-4 h-4" />
+                   
                 </Link>
               </div>
 
@@ -212,7 +213,7 @@ const HomePage: React.FC = () => {
                   }`}
                 >
                   <span>BOUTIQUE</span>
-                  <ChevronDown className="w-4 h-4" />
+                   
                 </Link>
               </div>
 
@@ -231,7 +232,7 @@ const HomePage: React.FC = () => {
                   }`}
                 >
                   <span>AI</span>
-                  <ChevronDown className="w-4 h-4" />
+                   
                 </Link>
               </div>
 
@@ -590,18 +591,12 @@ const HomePage: React.FC = () => {
             
             <div className="w-1/2 flex justify-center">
               <div className="relative">
-                <div className="w-96 h-96 bg-white rounded-full shadow-2xl flex items-center justify-center">
                   <img 
-                    src="https://cdn.prod.website-files.com/614c82ed388d53640613982e/635bcc2d96817846e4852f51_634fd79657515cf1330c7103_63207867a3bbeed46b755d80_guide-to-face-recognition.png" 
+                    src={VirtualTryOnImage}
                     alt="Premium Glasses"
-                    className="w-80 h-64 object-contain"
+                    className="w-130 h-100 object-contain rounded-3xl shadow-lg transform transition-transform duration-300 hover:scale-105"
                   />
                 </div>
-                {/* Floating elements */}
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-500 rounded-full opacity-80"></div>
-                <div className="absolute -bottom-6 -left-6 w-12 h-12 bg-purple-500 rounded-full opacity-60"></div>
-                <div className="absolute top-20 -left-8 w-8 h-8 bg-yellow-400 rounded-full opacity-70"></div>
-              </div>
             </div>
           </div>
         </div>

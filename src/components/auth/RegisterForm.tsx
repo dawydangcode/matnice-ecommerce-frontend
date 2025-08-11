@@ -68,10 +68,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-2xl shadow-2xl p-8">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-8 p-6">
         {/* Header */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+          <h2 className="text-3xl md:text-3xl text-2xl font-bold text-gray-900 mb-2">Create Account</h2>
         </div>
 
         {/* Error Display */}

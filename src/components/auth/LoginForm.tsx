@@ -53,12 +53,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="w-full pt-8 pb-16">
-      <div className="bg-white rounded-2xl shadow-2xl p-8">
+    <div className="w-full pt-8 pb-16 md:pt-8 md:pb-16">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-8 p-6">
         {/* Header */}
         <div className="text-center mb-8">  
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-          <p className="text-gray-600">Sign in to your Matnice account</p>
+          <h2 className="text-3xl md:text-3xl text-2xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+          <p className="text-gray-600 text-sm md:text-base">Sign in to your Matnice account</p>
         </div>
 
         {/* Error Display */}

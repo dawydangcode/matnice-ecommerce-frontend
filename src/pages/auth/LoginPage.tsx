@@ -8,7 +8,7 @@ const LoginPage: React.FC = () => {
       {/* Header with Logo */}
       <header className="bg-white shadow-sm py-4">
         <div className="max-w-7xl mx-auto px-4 flex justify-center">
-          <div className="bg-black text-white px-6 py-3 font-bold text-2xl">
+          <div className="bg-black text-white px-6 py-3 font-bold text-2xl md:text-2xl text-xl">
             MATNICE EYEWEAR
           </div>
         </div>
@@ -16,7 +16,7 @@ const LoginPage: React.FC = () => {
 
       {/* Main Content with Background */}
       <div className="flex-1 auth-background">
-        <div className="w-full h-full auth-container">
+        <div className="w-full h-full auth-container min-h-full">
           <div className="auth-form-wrapper">
             <LoginForm />
           </div>

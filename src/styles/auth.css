@@ -16,3 +16,21 @@
   width: 100%;
   max-width: 450px;
 }
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .auth-background {
+    background-image: none;
+    background-color: #f9fafb;
+  }
+  
+  .auth-container {
+    justify-content: center;
+    padding: 20px;
+    padding-right: 20px;
+  }
+  
+  .auth-form-wrapper {
+    max-width: 100%;
+  }
+}
