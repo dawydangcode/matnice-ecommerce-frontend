@@ -10,6 +10,7 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import HomePage from './pages/HomePage';
+import ProductsPage from './pages/ProductsPage';
 import AdminDashboard from './pages/AdminDashboard';
 
 // Protected Route Component for Admin
@@ -138,6 +139,11 @@ function App() {
 
           {/* Home Page - accessible by everyone */}
           <Route path="/" element={<HomePage />} />
+
+          {/* Products Pages - accessible by everyone */}
+          <Route path="/glasses" element={<ProductsPage />} />
+          <Route path="/sunglasses" element={<ProductsPage />} />
+          <Route path="/products" element={<ProductsPage />} />
 
           {/* Admin Routes */}
           <Route
