@@ -139,7 +139,7 @@ const HomePage: React.FC = () => {
         {/* Navigation Section */}
         <nav className="bg-gray-50 border-t relative">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="flex justify-center space-x-12 py-4">
+            <div className="flex justify-center space-x-8 py-3">
               
               {/* Glasses Dropdown */}
               <div 
@@ -149,7 +149,7 @@ const HomePage: React.FC = () => {
               >
                 <Link 
                   to="/glasses"
-                  className={`flex items-center space-x-1 font-medium text-lg transition-all duration-200 py-2 px-4 border-b-2 ${
+                  className={`flex items-center space-x-1 font-medium text-base transition-all duration-200 py-2 px-4 border-b-2 ${
                     activeDropdown === 'glasses' 
                       ? 'text-gray-900 border-black font-bold' 
                       : 'text-gray-700 hover:text-gray-900 hover:font-bold border-transparent hover:border-gray-300'
@@ -168,7 +168,7 @@ const HomePage: React.FC = () => {
               >
                 <Link 
                   to="/sunglasses"
-                  className={`flex items-center space-x-1 font-medium text-lg transition-all duration-200 py-2 px-4 border-b-2 ${
+                  className={`flex items-center space-x-1 font-medium text-base transition-all duration-200 py-2 px-4 border-b-2 ${
                     activeDropdown === 'sunglasses' 
                       ? 'text-gray-900 border-black font-bold' 
                       : 'text-gray-700 hover:text-gray-900 hover:font-bold border-transparent hover:border-gray-300'
@@ -187,7 +187,7 @@ const HomePage: React.FC = () => {
               >
                 <Link 
                   to="/brands"
-                  className={`flex items-center space-x-1 font-medium text-lg transition-all duration-200 py-2 px-4 border-b-2 ${
+                  className={`flex items-center space-x-1 font-medium text-base transition-all duration-200 py-2 px-4 border-b-2 ${
                     activeDropdown === 'brands' 
                       ? 'text-gray-900 border-black font-bold' 
                       : 'text-gray-700 hover:text-gray-900 hover:font-bold border-transparent hover:border-gray-300'
@@ -206,7 +206,7 @@ const HomePage: React.FC = () => {
               >
                 <Link 
                   to="/boutique"
-                  className={`flex items-center space-x-1 font-medium text-lg transition-all duration-200 py-2 px-4 border-b-2 ${
+                  className={`flex items-center space-x-1 font-medium text-base transition-all duration-200 py-2 px-4 border-b-2 ${
                     activeDropdown === 'boutique' 
                       ? 'text-gray-900 border-black font-bold' 
                       : 'text-gray-700 hover:text-gray-900 hover:font-bold border-transparent hover:border-gray-300'
@@ -225,7 +225,7 @@ const HomePage: React.FC = () => {
               >
                 <Link 
                   to="/ai"
-                  className={`flex items-center space-x-1 font-medium text-lg transition-all duration-200 py-2 px-4 border-b-2 ${
+                  className={`flex items-center space-x-1 font-medium text-base transition-all duration-200 py-2 px-4 border-b-2 ${
                     activeDropdown === 'ai' 
                       ? 'text-red-700 border-red-600 font-bold' 
                       : 'text-red-600 hover:text-red-700 hover:font-bold border-transparent hover:border-red-400'
