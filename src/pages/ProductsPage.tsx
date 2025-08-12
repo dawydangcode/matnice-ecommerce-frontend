@@ -2,6 +2,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Heart, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ProductCard } from '../types/product-card.types';
+import { 
+  FrameType, 
+  FrameShapeType, 
+  FrameMaterialType, 
+  FrameBridgeDesignType, 
+  FrameStyleType,
+  ProductGenderType 
+} from '../types/product.types';
+import { BrandData, brandService } from '../services/brand.service';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import GlassesHeroContent from '../components/category/GlassesHeroContent';
@@ -23,9 +32,42 @@ const ProductsPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(12);
 
+  // Filter states
+  const [brands, setBrands] = useState<BrandData[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
+  const [selectedGenders, setSelectedGenders] = useState<ProductGenderType[]>([]);
+  const [selectedFrameTypes, setSelectedFrameTypes] = useState<FrameType[]>([]);
+  const [selectedFrameShapes, setSelectedFrameShapes] = useState<FrameShapeType[]>([]);
+  const [selectedFrameMaterials, setSelectedFrameMaterials] = useState<FrameMaterialType[]>([]);
+  const [selectedBridgeDesigns, setSelectedBridgeDesigns] = useState<FrameBridgeDesignType[]>([]);
+  const [selectedStyles, setSelectedStyles] = useState<FrameStyleType[]>([]);
+  const [brandSearchTerm, setBrandSearchTerm] = useState('');
+
   // Create stable dependencies for useEffect
   const minPrice = useMemo(() => priceRange[0], [priceRange]);
   const maxPrice = useMemo(() => priceRange[1], [priceRange]);
+
+  // Fetch brands for filter on component mount
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const brandsData = await brandService.getBrandsForFilter();
+        setBrands(brandsData);
+      } catch (error) {
+        console.error('Error fetching brands:', error);
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
+  // Filter brands based on search term
+  const filteredBrands = useMemo(() => {
+    if (!brandSearchTerm) return brands;
+    return brands.filter(brand => 
+      brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase())
+    );
+  }, [brands, brandSearchTerm]);
 
   // Fetch products on component mount and when filters change
   useEffect(() => {
@@ -83,6 +125,14 @@ const ProductsPage: React.FC = () => {
   const clearAllFilters = () => {
     setPriceRange([0, 1000000]);
     setCurrentPage(1);
+    setSelectedBrands([]);
+    setSelectedGenders([]);
+    setSelectedFrameTypes([]);
+    setSelectedFrameShapes([]);
+    setSelectedFrameMaterials([]);
+    setSelectedBridgeDesigns([]);
+    setSelectedStyles([]);
+    setBrandSearchTerm('');
   };
 
   return (
@@ -141,14 +191,27 @@ const ProductsPage: React.FC = () => {
                 {/* Glasses For */}
                 <FilterSection title="GLASSES FOR">
                   <div className="space-y-3">
-                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                      <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                      <span className="ml-3 text-sm text-gray-700">Women</span>
-                    </label>
-                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                      <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                      <span className="ml-3 text-sm text-gray-700">Men</span>
-                    </label>
+                    {Object.values(ProductGenderType).map((gender) => (
+                      <label key={gender} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          checked={selectedGenders.includes(gender)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedGenders([...selectedGenders, gender]);
+                            } else {
+                              setSelectedGenders(selectedGenders.filter(g => g !== gender));
+                            }
+                          }}
+                        />
+                        <span className="ml-3 text-sm text-gray-700 capitalize">
+                          {gender === ProductGenderType.MALE ? 'Men' : 
+                           gender === ProductGenderType.FEMALE ? 'Women' : 
+                           'Unisex'}
+                        </span>
+                      </label>
+                    ))}
                   </div>
                 </FilterSection>
 
@@ -213,19 +276,123 @@ const ProductsPage: React.FC = () => {
                 {/* Shape */}
                 <FilterSection title="SHAPE">
                   <div className="grid grid-cols-1 gap-2">
-                    {[
-                      { name: 'Round', icon: '◯' },
-                      { name: 'Square', icon: '⬜' },
-                      { name: 'Rectangle', icon: '▭' },
-                      { name: 'Browline', icon: '👓' },
-                      { name: 'Butterfly / Cat Eye', icon: '🦋' },
-                      { name: 'Aviator', icon: '✈️' },
-                      { name: 'Narrow', icon: '▬' },
-                      { name: 'Oval', icon: '⭕' }
-                    ].map((shape) => (
-                      <label key={shape.name} className="flex items-center space-x-2 text-xs hover:bg-gray-50 p-2 rounded cursor-pointer">
-                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                        <span className="text-xs text-blue-600 font-medium">{shape.name}</span>
+                    {Object.values(FrameShapeType).map((shape) => (
+                      <label key={shape} className="flex items-center space-x-2 text-xs hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          checked={selectedFrameShapes.includes(shape)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedFrameShapes([...selectedFrameShapes, shape]);
+                            } else {
+                              setSelectedFrameShapes(selectedFrameShapes.filter(s => s !== shape));
+                            }
+                          }}
+                        />
+                        <span className="text-xs text-blue-600 font-medium capitalize">
+                          {shape.replace('_', ' ')}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
+
+                {/* Frame Type */}
+                <FilterSection title="FRAME TYPE">
+                  <div className="space-y-2">
+                    {Object.values(FrameType).map((frameType) => (
+                      <label key={frameType} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          checked={selectedFrameTypes.includes(frameType)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedFrameTypes([...selectedFrameTypes, frameType]);
+                            } else {
+                              setSelectedFrameTypes(selectedFrameTypes.filter(ft => ft !== frameType));
+                            }
+                          }}
+                        />
+                        <span className="ml-3 text-sm text-gray-700 capitalize">
+                          {frameType.replace(/_/g, ' ')}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
+
+                {/* Frame Material */}
+                <FilterSection title="FRAME MATERIAL">
+                  <div className="space-y-2">
+                    {Object.values(FrameMaterialType).map((material) => (
+                      <label key={material} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          checked={selectedFrameMaterials.includes(material)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedFrameMaterials([...selectedFrameMaterials, material]);
+                            } else {
+                              setSelectedFrameMaterials(selectedFrameMaterials.filter(m => m !== material));
+                            }
+                          }}
+                        />
+                        <span className="ml-3 text-sm text-gray-700 capitalize">
+                          {material}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
+
+                {/* Bridge Design */}
+                <FilterSection title="BRIDGE DESIGN">
+                  <div className="space-y-2">
+                    {Object.values(FrameBridgeDesignType).map((bridgeDesign) => (
+                      <label key={bridgeDesign} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          checked={selectedBridgeDesigns.includes(bridgeDesign)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedBridgeDesigns([...selectedBridgeDesigns, bridgeDesign]);
+                            } else {
+                              setSelectedBridgeDesigns(selectedBridgeDesigns.filter(bd => bd !== bridgeDesign));
+                            }
+                          }}
+                        />
+                        <span className="ml-3 text-sm text-gray-700 capitalize">
+                          {bridgeDesign.replace(/_/g, ' ')}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
+
+                {/* Style */}
+                <FilterSection title="STYLE">
+                  <div className="space-y-2">
+                    {Object.values(FrameStyleType).map((style) => (
+                      <label key={style} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          checked={selectedStyles.includes(style)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedStyles([...selectedStyles, style]);
+                            } else {
+                              setSelectedStyles(selectedStyles.filter(s => s !== style));
+                            }
+                          }}
+                        />
+                        <span className="ml-3 text-sm text-gray-700 capitalize">
+                          {style}
+                        </span>
                       </label>
                     ))}
                   </div>
@@ -239,14 +406,27 @@ const ProductsPage: React.FC = () => {
                       <input 
                         type="text" 
                         placeholder="Search brands..."
+                        value={brandSearchTerm}
+                        onChange={(e) => setBrandSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
                     <div className="space-y-1 max-h-40 overflow-y-auto">
-                      {['Ray-Ban', 'Gucci', 'Prada', 'Mister Spex Collection', 'Oakley', 'Tom Ford'].map((brand) => (
-                        <label key={brand} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
-                          <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                          <span className="ml-3 text-sm text-gray-700">{brand}</span>
+                      {filteredBrands.map((brand) => (
+                        <label key={brand.id} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            checked={selectedBrands.includes(brand.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedBrands([...selectedBrands, brand.id]);
+                              } else {
+                                setSelectedBrands(selectedBrands.filter(id => id !== brand.id));
+                              }
+                            }}
+                          />
+                          <span className="ml-3 text-sm text-gray-700">{brand.name}</span>
                         </label>
                       ))}
                     </div>

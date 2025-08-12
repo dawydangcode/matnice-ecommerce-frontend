@@ -1,4 +1,4 @@
-import { apiService } from "./api.service";
+import { apiService } from './api.service';
 
 // Updated interfaces to match backend API
 export interface BrandData {
@@ -32,7 +32,7 @@ export interface BrandListParams {
 export const brandService = {
   // Get all brands with pagination
   getBrands: async (params: BrandListParams) => {
-    console.log("Fetching brands with params:", params);
+    console.log('Fetching brands with params:', params);
 
     // Build query parameters correctly for backend validation
     const queryParams = new URLSearchParams();
@@ -41,12 +41,12 @@ export const brandService = {
     const page = Math.max(1, params.page || 1);
     const limit = Math.max(1, params.limit || 10);
 
-    queryParams.append("page", page.toString());
-    queryParams.append("limit", limit.toString());
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
 
     // Only add q if it's a non-empty string
-    if (params.q && typeof params.q === "string" && params.q.trim()) {
-      queryParams.append("q", params.q.trim());
+    if (params.q && typeof params.q === 'string' && params.q.trim()) {
+      queryParams.append('q', params.q.trim());
     }
 
     const endpoint = `/api/v1/brand/list?${queryParams.toString()}`;
@@ -60,7 +60,7 @@ export const brandService = {
       const status = error.response?.status;
       const message = error.response?.data?.message || error.message;
       console.log(
-        `❌ Failed: ${endpoint} - Status: ${status}, Message: ${message}`
+        `❌ Failed: ${endpoint} - Status: ${status}, Message: ${message}`,
       );
 
       // Log detailed error for debugging
@@ -79,22 +79,29 @@ export const brandService = {
 
   // Create brand
   createBrand: async (data: CreateBrandData): Promise<BrandData> => {
-    return await apiService.post<BrandData>("/api/v1/brand/create", data);
+    return await apiService.post<BrandData>('/api/v1/brand/create', data);
   },
 
   // Update brand
   updateBrand: async (
     brandId: number,
-    data: UpdateBrandData
+    data: UpdateBrandData,
   ): Promise<BrandData> => {
     return await apiService.put<BrandData>(
       `/api/v1/brand/${brandId}/update`,
-      data
+      data,
     );
   },
 
   // Delete brand
   deleteBrand: async (brandId: number): Promise<boolean> => {
     return await apiService.delete<boolean>(`/api/v1/brand/${brandId}/delete`);
+  },
+
+  // Get brands for filter (no pagination)
+  getBrandsForFilter: async (): Promise<BrandData[]> => {
+    return await apiService.get<BrandData[]>(
+      '/api/v1/brand/getBrandsForFilter',
+    );
   },
 };
