@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ProductCard } from '../types/product-card.types';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import GlassesHeroContent from '../components/category/GlassesHeroContent';
 import ProductListHeader from '../components/ProductListHeader';
+import FilterSection from '../components/FilterSection';
 import productCardService from '../services/product-card.service';
 import { formatVND } from '../utils/currency';
 import '../styles/product-page.css';
@@ -111,104 +112,166 @@ const ProductsPage: React.FC = () => {
           <div className="flex flex-col lg:flex-row gap-6">
             
             {/* Left Sidebar - Filters */}
-            <div className="w-full lg:w-1/5 space-y-6">
-
-              {/* Gender Filter */}
-              <div>
-                <h4 className="font-medium text-gray-900 mb-3">Gender</h4>
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                    <span className="ml-2 text-sm text-gray-700">Women</span>
-                    <span className="ml-auto text-xs text-gray-500">(587)</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                    <span className="ml-2 text-sm text-gray-700">Men</span>
-                    <span className="ml-auto text-xs text-gray-500">(498)</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                    <span className="ml-2 text-sm text-gray-700">Unisex</span>
-                    <span className="ml-auto text-xs text-gray-500">(311)</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Price Range */}
-              <div>
-                <h4 className="font-medium text-gray-900 mb-3">Price Range</h4>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <input 
-                      type="number" 
-                      placeholder="Min" 
-                      className="w-20 px-3 py-2 border border-gray-300 rounded text-sm"
-                      value={priceRange[0]}
-                      onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-                    />
-                    <span className="text-gray-500">-</span>
-                    <input 
-                      type="number" 
-                      placeholder="Max"
-                      className="w-20 px-3 py-2 border border-gray-300 rounded text-sm"
-                      value={priceRange[1]}
-                      onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                    />
+            <div className="w-full lg:w-1/5">
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-1">
+                
+                {/* Recommendations Section */}
+                <FilterSection title="RECOMMENDATIONS FOR YOU">
+                  <div className="space-y-3">
+                    <label className="flex items-start space-x-3">
+                      <input type="checkbox" className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                      <span className="text-sm text-gray-700">Your recommended glasses width</span>
+                    </label>
+                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                      <div className="flex items-start space-x-2">
+                        <div className="w-4 h-4 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mt-1 text-xs font-medium">
+                          i
+                        </div>
+                        <div className="text-xs text-blue-700">
+                          Do you already own a pair of our glasses? Log in now and filter glasses in your size.
+                        </div>
+                      </div>
+                      <button className="w-full mt-3 py-2 bg-white border border-blue-200 rounded-lg text-sm text-blue-600 hover:bg-blue-50 transition-colors">
+                        Log in now
+                      </button>
+                    </div>
                   </div>
-                  <div className="px-2">
-                    <input
-                      type="range"
-                      min="0"
-                      max="1000000"
-                      step="10000"
-                      value={priceRange[1]}
-                      onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                      className="w-full"
-                    />
+                </FilterSection>
+
+                {/* Glasses For */}
+                <FilterSection title="GLASSES FOR">
+                  <div className="space-y-3">
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                      <span className="ml-3 text-sm text-gray-700">Women</span>
+                    </label>
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                      <span className="ml-3 text-sm text-gray-700">Men</span>
+                    </label>
                   </div>
-                </div>
-              </div>
+                </FilterSection>
 
-              {/* Frame Shape */}
-              <div>
-                <h4 className="font-medium text-gray-900 mb-3">Frame Shape</h4>
-                <div className="space-y-2">
-                  {['Rectangle', 'Round', 'Square', 'Cat-eye', 'Aviator', 'Browline'].map((shape) => (
-                    <label key={shape} className="flex items-center">
-                      <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                      <span className="ml-2 text-sm text-gray-700">{shape}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+                {/* Glasses Width */}
+                <FilterSection title="GLASSES WIDTH">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                      <label className="flex items-center cursor-pointer">
+                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                        <span className="ml-3 text-sm text-gray-700">Small</span>
+                      </label>
+                      <div className="w-6 h-3 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                      <label className="flex items-center cursor-pointer">
+                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                        <span className="ml-3 text-sm text-gray-700">Medium</span>
+                      </label>
+                      <div className="w-8 h-3 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                      <label className="flex items-center cursor-pointer">
+                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                        <span className="ml-3 text-sm text-gray-700">Large</span>
+                      </label>
+                      <div className="w-10 h-3 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <button className="w-full py-3 mt-4 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2">
+                      <span className="text-base">📏</span>
+                      <span>Determine glasses size</span>
+                    </button>
+                  </div>
+                </FilterSection>
 
-              {/* Frame Material */}
-              <div>
-                <h4 className="font-medium text-gray-900 mb-3">Frame Material</h4>
-                <div className="space-y-2">
-                  {['Plastic/Acetate', 'Metal', 'Mixed Materials', 'Titanium'].map((material) => (
-                    <label key={material} className="flex items-center">
-                      <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                      <span className="ml-2 text-sm text-gray-700">{material}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+                {/* Glass Width Range */}
+                <FilterSection title="GLASS WIDTH">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <input 
+                        type="number" 
+                        placeholder="20 mm" 
+                        className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <span className="text-gray-400">—</span>
+                      <input 
+                        type="number" 
+                        placeholder="62 mm" 
+                        className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div className="px-1">
+                      <input
+                        type="range"
+                        min="20"
+                        max="62"
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </FilterSection>
 
-              {/* Brand Filter */}
-              <div>
-                <h4 className="font-medium text-gray-900 mb-3">Brand</h4>
-                <div className="space-y-2">
-                  {['Ray-Ban', 'Tom Ford', 'Saint Laurent', 'Prada', 'Gucci', 'Oakley'].map((brand) => (
-                    <label key={brand} className="flex items-center">
-                      <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                      <span className="ml-2 text-sm text-gray-700">{brand}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+                {/* Shape */}
+                <FilterSection title="SHAPE">
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      { name: 'Round', icon: '◯' },
+                      { name: 'Square', icon: '⬜' },
+                      { name: 'Rectangle', icon: '▭' },
+                      { name: 'Browline', icon: '👓' },
+                      { name: 'Butterfly / Cat Eye', icon: '🦋' },
+                      { name: 'Aviator', icon: '✈️' },
+                      { name: 'Narrow', icon: '▬' },
+                      { name: 'Oval', icon: '⭕' }
+                    ].map((shape) => (
+                      <label key={shape.name} className="flex items-center space-x-2 text-xs hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                        <span className="text-xs text-blue-600 font-medium">{shape.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
 
+                {/* Brand */}
+                <FilterSection title="BRAND">
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input 
+                        type="text" 
+                        placeholder="Search brands..."
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {['Ray-Ban', 'Gucci', 'Prada', 'Mister Spex Collection', 'Oakley', 'Tom Ford'].map((brand) => (
+                        <label key={brand} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                          <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                          <span className="ml-3 text-sm text-gray-700">{brand}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </FilterSection>
+
+                {/* Price */}
+                <FilterSection title="PRICE">
+                  <div className="space-y-1">
+                    {[
+                      '< 50 $',
+                      '50 $ to 100 $', 
+                      '100 $ to 150 $',
+                      '150 $ to 200 $',
+                      '> 200 $'
+                    ].map((price) => (
+                      <label key={price} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                        <span className="ml-3 text-sm text-blue-600 font-medium">{price}</span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
+
+              </div>
             </div>
 
             {/* Right Content - Products Grid */}
