@@ -33,6 +33,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   const [lensThicknessList, setLensThicknessList] = useState<LensThickness[]>([]);
   const [isLoadingLensThickness, setIsLoadingLensThickness] = useState(false);
   const [newExpirationDate, setNewExpirationDate] = useState<Date | null>(null);
+  const [brandSearchTerm, setBrandSearchTerm] = useState('');
 
   // Calculate expiration date when isNew changes
   useEffect(() => {
@@ -63,11 +64,20 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
     loadLensThickness();
   }, []);
   
-  // Prepare brand options for SearchableSelect
-  const brandOptions = brands.map(brand => ({
-    value: brand.id.toString(),
-    label: brand.name
-  }));
+  // Prepare brand options for SearchableSelect - filter based on search term
+  const brandOptions = brands
+    .filter(brand => 
+      brandSearchTerm === '' || 
+      brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase())
+    )
+    .map(brand => ({
+      value: brand.id.toString(),
+      label: brand.name
+    }));
+
+  console.log('Available brands:', brands.map(b => b.name)); // Debug log
+  console.log('Brand search term:', brandSearchTerm); // Debug log
+  console.log('Filtered brand options:', brandOptions); // Debug log
 
   return (
     <div className="space-y-6">
@@ -128,7 +138,9 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
             options={brandOptions}
             value={watchedValues.brandId || ''}
             onChange={(value) => setValue('brandId', value)}
+            onSearchChange={setBrandSearchTerm}
             placeholder="Chọn thương hiệu"
+            searchPlaceholder="Tìm kiếm thương hiệu..."
             error={errors.brandId?.message}
           />
         </div>

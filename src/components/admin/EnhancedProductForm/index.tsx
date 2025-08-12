@@ -205,7 +205,8 @@ const EnhancedProductForm: React.FC<EnhancedProductFormProps> = ({
   };
 
   useEffect(() => {
-    fetchBrands();
+    // Load all brands for dropdown (no pagination limit)
+    fetchBrands({ limit: 1000 }); // Large limit to get all brands
     fetchCategories();
   }, [fetchBrands, fetchCategories]);
 

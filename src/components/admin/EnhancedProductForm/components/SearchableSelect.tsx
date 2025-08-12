@@ -10,7 +10,9 @@ interface SearchableSelectProps {
   options: Option[];
   value: string;
   onChange: (value: string) => void;
+  onSearchChange?: (searchTerm: string) => void;
   placeholder?: string;
+  searchPlaceholder?: string;
   className?: string;
   error?: string;
 }
@@ -19,7 +21,9 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   options,
   value,
   onChange,
+  onSearchChange,
   placeholder = "Chọn...",
+  searchPlaceholder = "Tìm kiếm...",
   className = "",
   error
 }) => {
@@ -56,6 +60,13 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  // Call onSearchChange when search term changes
+  useEffect(() => {
+    if (onSearchChange) {
+      onSearchChange(searchTerm);
+    }
+  }, [searchTerm, onSearchChange]);
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
@@ -96,7 +107,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Tìm kiếm..."
+                placeholder={searchPlaceholder}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

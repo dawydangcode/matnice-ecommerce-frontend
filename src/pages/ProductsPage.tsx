@@ -328,8 +328,8 @@ const ProductsPage: React.FC = () => {
                         {/* Product Info */}
                         <div className="space-y-3">
                           <div>
-                            <h3 className="font-bold text-gray-900 text-md">{product.brandName}</h3>
-                            <p className="text-gray-600 text-sm mt-1">{product.displayName}</p>
+                            <h3 className="font-bold text-gray-900 text-secondary">{product.brandName}</h3>
+                            <p className="text-sm font-light text-secondary">{product.displayName}</p>
                           </div>
                           
                           {product.totalVariants > 1 && (
@@ -337,7 +337,7 @@ const ProductsPage: React.FC = () => {
                           )}
                           
                           <div className="space-y-1">
-                            <p className="text-xs text-gray-500 uppercase tracking-wide">Frame price without lenses</p>
+                            <p className="grow text-sm font-light text-secondary">Frame price without lenses</p>
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-xl text-gray-900">
                                 {formatVND(product.price)}
