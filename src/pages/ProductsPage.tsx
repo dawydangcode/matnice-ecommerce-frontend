@@ -16,9 +16,13 @@ import Navigation from '../components/Navigation';
 import GlassesHeroContent from '../components/category/GlassesHeroContent';
 import ProductListHeader from '../components/ProductListHeader';
 import FilterSection from '../components/FilterSection';
+import GlassWidthSmall from '../components/icons/GlassWidthSmall';
+import GlassWidthMedium from '../components/icons/GlassWidthMedium';
+import GlassWidthLarge from '../components/icons/GlassWidthLarge';
 import productCardService from '../services/product-card.service';
 import { formatVND } from '../utils/currency';
 import '../styles/product-page.css';
+import '../styles/filter-section.css';
 
 const ProductsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -163,25 +167,25 @@ const ProductsPage: React.FC = () => {
             
             {/* Left Sidebar - Filters */}
             <div className="w-full lg:w-1/5">
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-1">
+              <div className="bg-white rounded-lg shadow-sm p-2 space-y-1">
                 
                 {/* Recommendations Section */}
                 <FilterSection title="RECOMMENDATIONS FOR YOU">
                   <div className="space-y-3">
                     <label className="flex items-start space-x-3">
-                      <input type="checkbox" className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                      <input type="checkbox" className="mt-1 filter-checkbox" />
                       <span className="text-sm text-gray-700">Your recommended glasses width</span>
                     </label>
-                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                    <div className="bg-gray-200 p-3 rounded-lg border border-gray-100">
                       <div className="flex items-start space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mt-1 text-xs font-medium">
+                        <div className="w-4 h-4 rounded-full bg-gray-100 text-black-600 flex items-center justify-center mt-1 text-xs font-medium">
                           i
                         </div>
-                        <div className="text-xs text-blue-700">
+                        <div className="text-[14px] text-black-700">
                           Do you already own a pair of our glasses? Log in now and filter glasses in your size.
                         </div>
                       </div>
-                      <button className="w-full mt-3 py-2 bg-white border border-blue-200 rounded-lg text-sm text-blue-600 hover:bg-blue-50 transition-colors">
+                      <button className="w-full mt-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-black-600 hover:bg-gray-50 transition-colors">
                         Log in now
                       </button>
                     </div>
@@ -195,7 +199,7 @@ const ProductsPage: React.FC = () => {
                       <label key={gender} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
                         <input 
                           type="checkbox" 
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="filter-checkbox"
                           checked={selectedGenders.includes(gender)}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -205,7 +209,7 @@ const ProductsPage: React.FC = () => {
                             }
                           }}
                         />
-                        <span className="ml-3 text-sm text-gray-700 capitalize">
+                        <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
                           {gender === ProductGenderType.MALE ? 'Men' : 
                            gender === ProductGenderType.FEMALE ? 'Women' : 
                            'Unisex'}
@@ -220,24 +224,24 @@ const ProductsPage: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
                       <label className="flex items-center cursor-pointer">
-                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                        <span className="ml-3 text-sm text-gray-700">Small</span>
+                        <input type="checkbox" className="filter-checkbox" />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">Small</span>
                       </label>
-                      <div className="w-6 h-3 bg-gray-300 rounded-full"></div>
+                      <GlassWidthSmall className="text-gray-400" size={20} />
                     </div>
                     <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
                       <label className="flex items-center cursor-pointer">
-                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                        <span className="ml-3 text-sm text-gray-700">Medium</span>
+                        <input type="checkbox" className="filter-checkbox" />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">Medium</span>
                       </label>
-                      <div className="w-8 h-3 bg-gray-300 rounded-full"></div>
+                      <GlassWidthMedium className="text-gray-400" size={24} />
                     </div>
                     <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
                       <label className="flex items-center cursor-pointer">
-                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                        <span className="ml-3 text-sm text-gray-700">Large</span>
+                        <input type="checkbox" className="filter-checkbox" />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">Large</span>
                       </label>
-                      <div className="w-10 h-3 bg-gray-300 rounded-full"></div>
+                      <GlassWidthLarge className="text-gray-400" size={28} />
                     </div>
                     <button className="w-full py-3 mt-4 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2">
                       <span className="text-base">📏</span>
@@ -253,13 +257,13 @@ const ProductsPage: React.FC = () => {
                       <input 
                         type="number" 
                         placeholder="20 mm" 
-                        className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       />
                       <span className="text-gray-400">—</span>
                       <input 
                         type="number" 
                         placeholder="62 mm" 
-                        className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       />
                     </div>
                     <div className="px-1">
@@ -280,7 +284,7 @@ const ProductsPage: React.FC = () => {
                       <label key={shape} className="flex items-center space-x-2 text-xs hover:bg-gray-50 p-2 rounded cursor-pointer">
                         <input 
                           type="checkbox" 
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="filter-checkbox"
                           checked={selectedFrameShapes.includes(shape)}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -290,7 +294,7 @@ const ProductsPage: React.FC = () => {
                             }
                           }}
                         />
-                        <span className="text-xs text-blue-600 font-medium capitalize">
+                        <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
                           {shape.replace('_', ' ')}
                         </span>
                       </label>
@@ -305,7 +309,7 @@ const ProductsPage: React.FC = () => {
                       <label key={frameType} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
                         <input 
                           type="checkbox" 
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="filter-checkbox "
                           checked={selectedFrameTypes.includes(frameType)}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -315,7 +319,7 @@ const ProductsPage: React.FC = () => {
                             }
                           }}
                         />
-                        <span className="ml-3 text-sm text-gray-700 capitalize">
+                        <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
                           {frameType.replace(/_/g, ' ')}
                         </span>
                       </label>
@@ -330,7 +334,7 @@ const ProductsPage: React.FC = () => {
                       <label key={material} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
                         <input 
                           type="checkbox" 
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="filter-checkbox"
                           checked={selectedFrameMaterials.includes(material)}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -340,7 +344,7 @@ const ProductsPage: React.FC = () => {
                             }
                           }}
                         />
-                        <span className="ml-3 text-sm text-gray-700 capitalize">
+                        <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
                           {material}
                         </span>
                       </label>
@@ -355,7 +359,7 @@ const ProductsPage: React.FC = () => {
                       <label key={bridgeDesign} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
                         <input 
                           type="checkbox" 
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="filter-checkbox"
                           checked={selectedBridgeDesigns.includes(bridgeDesign)}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -365,7 +369,7 @@ const ProductsPage: React.FC = () => {
                             }
                           }}
                         />
-                        <span className="ml-3 text-sm text-gray-700 capitalize">
+                        <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
                           {bridgeDesign.replace(/_/g, ' ')}
                         </span>
                       </label>
@@ -380,7 +384,7 @@ const ProductsPage: React.FC = () => {
                       <label key={style} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
                         <input 
                           type="checkbox" 
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="filter-checkbox"
                           checked={selectedStyles.includes(style)}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -390,7 +394,7 @@ const ProductsPage: React.FC = () => {
                             }
                           }}
                         />
-                        <span className="ml-3 text-sm text-gray-700 capitalize">
+                        <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
                           {style}
                         </span>
                       </label>
@@ -408,7 +412,7 @@ const ProductsPage: React.FC = () => {
                         placeholder="Search brands..."
                         value={brandSearchTerm}
                         onChange={(e) => setBrandSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       />
                     </div>
                     <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -416,7 +420,7 @@ const ProductsPage: React.FC = () => {
                         <label key={brand.id} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
                           <input 
                             type="checkbox" 
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="filter-checkbox"
                             checked={selectedBrands.includes(brand.id)}
                             onChange={(e) => {
                               if (e.target.checked) {
@@ -426,7 +430,7 @@ const ProductsPage: React.FC = () => {
                               }
                             }}
                           />
-                          <span className="ml-3 text-sm text-gray-700">{brand.name}</span>
+                          <span className="ml-3 mt-3 text-sm text-gray-700">{brand.name}</span>
                         </label>
                       ))}
                     </div>
@@ -444,8 +448,8 @@ const ProductsPage: React.FC = () => {
                       '> 200 $'
                     ].map((price) => (
                       <label key={price} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
-                        <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                        <span className="ml-3 text-sm text-blue-600 font-medium">{price}</span>
+                        <input type="checkbox" className="filter-checkbox" />
+                        <span className="ml-3 text-sm text-gray-600 font-medium">{price}</span>
                       </label>
                     ))}
                   </div>
@@ -459,7 +463,7 @@ const ProductsPage: React.FC = () => {
               
               {loading ? (
                 <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black-600"></div>
                 </div>
               ) : products.length === 0 ? (
                 <div className="flex flex-col justify-center items-center h-64 text-center">
@@ -472,7 +476,7 @@ const ProductsPage: React.FC = () => {
                   <p className="text-gray-500 mb-4">Try adjusting your filters or search terms</p>
                   <button 
                     onClick={clearAllFilters}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    className="bg-black-600 text-white px-4 py-2 rounded-md hover:bg-black-700 transition-colors"
                   >
                     Clear All Filters
                   </button>
@@ -565,7 +569,7 @@ const ProductsPage: React.FC = () => {
                               onClick={() => setCurrentPage(pageNum)}
                               className={`px-3 py-2 rounded-md ${
                                 currentPage === pageNum
-                                  ? 'bg-blue-600 text-white'
+                                  ? 'bg-black-600 text-white'
                                   : 'border border-gray-300 hover:bg-gray-50'
                               }`}
                             >

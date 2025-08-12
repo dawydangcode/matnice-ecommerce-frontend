@@ -29,7 +29,7 @@ const ProductListHeader: React.FC<ProductListHeaderProps> = ({
               {onClearAll && (
                 <button 
                   onClick={onClearAll}
-                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                  className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
                 >
                   Clear all
                 </button>
