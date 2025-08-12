@@ -2,3 +2,11 @@
     --tw-text-opacity: 1;
     color: rgb(110 110 110 / var(--tw-text-opacity, 1));
 }
+
+.sustainable-badge {
+    background-color: #E5EFE4; /* Emerald 500 */
+    color: #53A567;
+    padding: 0.25rem 0.75rem; /* px-3 py-1 */
+    font-size: 0.75rem; /* text-xs */
+    font-weight: 500; /* font-medium */
+}

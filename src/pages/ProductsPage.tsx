@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ProductCard } from '../types/product-card.types';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
+import GlassesHeroContent from '../components/category/GlassesHeroContent';
 import productCardService from '../services/product-card.service';
 import { formatVND } from '../utils/currency';
 import '../styles/product-page.css';
@@ -90,11 +91,14 @@ const ProductsPage: React.FC = () => {
         <Navigation />
       </header>
 
-      {/* Breadcrumb & Hero Section */}
-      <section className="bg-gray-50 py-8">
+      {/* Hero Content */}
+      <GlassesHeroContent />
+
+      {/* Breadcrumb & Controls Section */}
+      <section className="bg-gray-50 py-6">
         <div className="max-w-7xl mx-auto px-4">
           {/* Breadcrumb */}
-          <nav className="text-sm mb-6">
+          <nav className="text-sm mb-4">
             <ol className="flex items-center space-x-2">
               <li><Link to="/" className="text-gray-500 hover:text-gray-700">Home</Link></li>
               <li><ChevronRight className="w-4 h-4 text-gray-400" /></li>
@@ -103,9 +107,8 @@ const ProductsPage: React.FC = () => {
           </nav>
 
           {/* Page Title & Controls */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Glasses</h1>
               <p className="text-gray-600">{total} Results</p>
             </div>
             
@@ -144,11 +147,11 @@ const ProductsPage: React.FC = () => {
 
       {/* Main Content Area */}
       <section className="py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col lg:flex-row gap-8">
+        <div className="max-w-full mx-auto px-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             
             {/* Left Sidebar - Filters */}
-            <div className="w-full lg:w-1/4 space-y-6">\
+            <div className="w-full lg:w-1/5 space-y-6">
               
               {/* Filter Header */}
               <div className="flex items-center justify-between">
@@ -260,7 +263,7 @@ const ProductsPage: React.FC = () => {
             </div>
 
             {/* Right Content - Products Grid */}
-            <div className="w-full lg:w-3/4">
+            <div className="w-full lg:w-4/5">
               
               {loading ? (
                 <div className="flex justify-center items-center h-64">
@@ -284,31 +287,31 @@ const ProductsPage: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                     {products.map((product) => (
-                      <div key={product.id} className="group cursor-pointer bg-gray-50">
-                        <div className="relative rounded-lg p-8 mb-6 overflow-hidden aspect-square flex items-center justify-center">
+                      <div key={product.id} className="group cursor-pointer bg-gray-50 p-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div className="relative rounded-lg mb-6 overflow-hidden h-96 flex items-center justify-center">
                           {/* Badges */}
-                          <div className="absolute top-4 left-4 flex flex-col space-y-2 z-10">
-                            {product.isNew && (
-                              <div className="bg-green-500 text-white px-3 py-1 text-xs font-medium rounded">
+                          <div className="absolute top-4 left-4 flex flex-row space-x-2 z-10">
+                            {!!product.isNew && (
+                              <div className="bg-white text-green-700 px-3 py-1 text-xs font-medium">
                                 New
                               </div>
                             )}
-                            {product.isBoutique && (
-                              <div className="bg-gray-800 text-white px-3 py-1 text-xs font-medium rounded">
+                            {!!product.isBoutique && (
+                              <div className="bg-gray-800 text-white px-3 py-1 text-xs font-medium">
                                 Boutique
                               </div>
                             )}
-                            {product.isSustainable && (
-                              <div className="bg-emerald-500 text-white px-3 py-1 text-xs font-medium rounded">
+                            {!!product.isSustainable && (
+                              <div className="sustainable-badge px-3 py-1 text-xs font-medium">
                                 Sustainable
                               </div>
                             )}
                           </div>
                           
                           {/* Heart Icon */}
-                          <div className="absolute top-4 right-4 z-10">
+                          <div className="absolute top- right-4 z-10">
                             <div className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm hover:shadow-md transition-shadow">
                               <Heart className="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" />
                             </div>
@@ -316,30 +319,30 @@ const ProductsPage: React.FC = () => {
                           
                           {/* Product Image - using thumbnail from backend */}
                           <img 
-                            src={product.thumbnailUrl || "/api/placeholder/300/300"}
+                            src={product.thumbnailUrl || "/api/placeholder/400/320"}
                             alt={`${product.brandName} ${product.displayName}`}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-full max-w-[350px] max-h-[350px] object-contain group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
-                              e.currentTarget.src = "/api/placeholder/300/300";
+                              e.currentTarget.src = "/api/placeholder/400/320";
                             }}
                           />
                         </div>
                         
                         {/* Product Info */}
-                        <div className="space-y-3">
+                        <div className="space-y-4 p-2">
                           <div>
-                            <h3 className="font-bold text-gray-900 text-secondary">{product.brandName}</h3>
-                            <p className="text-sm font-light text-secondary">{product.displayName}</p>
+                            <h3 className="font-bold text-lg text-gray-900 text-secondary">{product.brandName}</h3>
+                            <p className="text-base font-light text-secondary">{product.displayName}</p>
                           </div>
                           
                           {product.totalVariants > 1 && (
-                            <p className="text-xs text-gray-500">{product.totalVariants} variants available</p>
+                            <p className="text-sm text-gray-500">{product.totalVariants} variants available</p>
                           )}
                           
-                          <div className="space-y-1">
-                            <p className="grow text-sm font-light text-secondary">Frame price without lenses</p>
+                          <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="font-bold text-xl text-gray-900">
+                              <p className="text-sm font-light text-secondary">Frame price without lenses</p>
+                              <span className="text-right text-base font-bold text-primary">
                                 {formatVND(product.price)}
                               </span>
                             </div>
