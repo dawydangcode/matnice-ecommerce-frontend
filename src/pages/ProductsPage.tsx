@@ -97,15 +97,6 @@ const ProductsPage: React.FC = () => {
       {/* Breadcrumb & Controls Section */}
       <section className="bg-gray-50 py-6">
         <div className="max-w-7xl mx-auto px-4">
-          {/* Breadcrumb */}
-          <nav className="text-sm mb-4">
-            <ol className="flex items-center space-x-2">
-              <li><Link to="/" className="text-gray-500 hover:text-gray-700">Home</Link></li>
-              <li><ChevronRight className="w-4 h-4 text-gray-400" /></li>
-              <li className="text-gray-900 font-medium">Glasses</li>
-            </ol>
-          </nav>
-
           {/* Page Title & Controls */}
           <div className="flex items-center justify-between">
             <div>

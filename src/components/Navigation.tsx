@@ -57,8 +57,7 @@ const Navigation: React.FC = () => {
               }`}
             >
               <span>GLASSES</span>
-              <ChevronDown className="w-4 h-4" />
-            </Link>
+             </Link>
           </div>
 
           {/* Sunglasses Dropdown */}
@@ -76,8 +75,7 @@ const Navigation: React.FC = () => {
               }`}
             >
               <span>SUNGLASSES</span>
-              <ChevronDown className="w-4 h-4" />
-            </Link>
+             </Link>
           </div>
 
           {/* Brands Dropdown */}
@@ -95,8 +93,7 @@ const Navigation: React.FC = () => {
               }`}
             >
               <span>BRANDS</span>
-              <ChevronDown className="w-4 h-4" />
-            </Link>
+             </Link>
           </div>
 
           {/* Boutique Dropdown */}
@@ -114,8 +111,7 @@ const Navigation: React.FC = () => {
               }`}
             >
               <span>BOUTIQUE</span>
-              <ChevronDown className="w-4 h-4" />
-            </Link>
+             </Link>
           </div>
 
           {/* AI Dropdown */}
@@ -133,8 +129,7 @@ const Navigation: React.FC = () => {
               }`}
             >
               <span>AI</span>
-              <ChevronDown className="w-4 h-4" />
-            </Link>
+             </Link>
           </div>
 
         </div>
