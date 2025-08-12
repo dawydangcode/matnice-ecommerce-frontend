@@ -1,34 +1,68 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronRight, Grid, List, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Product } from '../types/product.types';
+import { ProductCard } from '../types/product-card.types';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
-import { productService } from '../services/product.service';
+import productCardService from '../services/product-card.service';
 import { formatVND } from '../utils/currency';
+import '../styles/product-page.css';
 
 const ProductsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState('popularity');
+  const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState([0, 1000000]);
   
-  // Products state
-  const [products, setProducts] = useState<Product[]>([]);
+  // Products state - using ProductCard instead of Product
+  const [products, setProducts] = useState<ProductCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(12);
+
+  // Create stable dependencies for useEffect
+  const minPrice = useMemo(() => priceRange[0], [priceRange]);
+  const maxPrice = useMemo(() => priceRange[1], [priceRange]);
 
   // Fetch products on component mount and when filters change
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await productService.getProducts({
+        
+        // Map sort options to backend API format
+        let backendSortBy: 'price' | 'name' | 'newest' = 'newest';
+        let sortOrder: 'ASC' | 'DESC' = 'DESC';
+        
+        switch (sortBy) {
+          case 'price-low':
+            backendSortBy = 'price';
+            sortOrder = 'ASC';
+            break;
+          case 'price-high':
+            backendSortBy = 'price';
+            sortOrder = 'DESC';
+            break;
+          case 'name':
+            backendSortBy = 'name';
+            sortOrder = 'ASC';
+            break;
+          case 'newest':
+          default:
+            backendSortBy = 'newest';
+            sortOrder = 'DESC';
+            break;
+        }
+        
+        const response = await productCardService.getProductCards({
           page: currentPage,
           limit: pageSize,
+          minPrice: minPrice > 0 ? minPrice : undefined,
+          maxPrice: maxPrice < 1000000 ? maxPrice : undefined,
+          sortBy: backendSortBy,
+          sortOrder: sortOrder
         });
-        setProducts(response.products || []);
+        setProducts(response.data || []);
         setTotal(response.total || 0);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -40,7 +74,7 @@ const ProductsPage: React.FC = () => {
     };
 
     fetchData();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, minPrice, maxPrice, sortBy]);
 
   // Clear all filters
   const clearAllFilters = () => {
@@ -98,10 +132,9 @@ const ProductsPage: React.FC = () => {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="popularity">Sort by Popularity</option>
+                <option value="newest">Newest First</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
-                <option value="newest">Newest First</option>
                 <option value="name">Name: A to Z</option>
               </select>
             </div>
@@ -251,45 +284,65 @@ const ProductsPage: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {products.map((product: any) => (
-                      <div key={product.id || product.productId} className="group cursor-pointer">
-                        <div className="relative bg-gray-100 rounded-2xl p-6 mb-4 overflow-hidden">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {products.map((product) => (
+                      <div key={product.id} className="group cursor-pointer bg-gray-50">
+                        <div className="relative rounded-lg p-8 mb-6 overflow-hidden aspect-square flex items-center justify-center">
                           {/* Badges */}
-                          <div className="absolute top-4 left-4 flex flex-col space-y-2">
+                          <div className="absolute top-4 left-4 flex flex-col space-y-2 z-10">
                             {product.isNew && (
-                              <div className="bg-green-500 text-white px-3 py-1 text-xs rounded">
+                              <div className="bg-green-500 text-white px-3 py-1 text-xs font-medium rounded">
                                 New
                               </div>
                             )}
                             {product.isBoutique && (
-                              <div className="bg-gray-800 text-white px-3 py-1 text-xs rounded">
+                              <div className="bg-gray-800 text-white px-3 py-1 text-xs font-medium rounded">
                                 Boutique
+                              </div>
+                            )}
+                            {product.isSustainable && (
+                              <div className="bg-emerald-500 text-white px-3 py-1 text-xs font-medium rounded">
+                                Sustainable
                               </div>
                             )}
                           </div>
                           
                           {/* Heart Icon */}
-                          <div className="absolute top-4 right-4">
-                            <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
+                          <div className="absolute top-4 right-4 z-10">
+                            <div className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm hover:shadow-md transition-shadow">
+                              <Heart className="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" />
+                            </div>
                           </div>
                           
-                          {/* Product Image */}
+                          {/* Product Image - using thumbnail from backend */}
                           <img 
-                            src={product.image || "/api/placeholder/250/200"}
-                            alt={`${product.brand?.brandName || product.brandName || 'Product'} ${product.productName || product.name || ''}`}
-                            className="w-full h-40 object-contain group-hover:scale-105 transition-transform duration-300"
+                            src={product.thumbnailUrl || "/api/placeholder/300/300"}
+                            alt={`${product.brandName} ${product.displayName}`}
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              e.currentTarget.src = "/api/placeholder/300/300";
+                            }}
                           />
                         </div>
                         
                         {/* Product Info */}
-                        <div className="space-y-2">
-                          <h3 className="font-semibold text-gray-800">{product.brand?.brandName || product.brandName || 'Unknown Brand'}</h3>
-                          <p className="text-gray-600 text-sm">{product.productName || product.name || 'Product Name'}</p>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-bold text-lg">
-                              {formatVND(product.price || 0)}
-                            </span>
+                        <div className="space-y-3">
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-md">{product.brandName}</h3>
+                            <p className="text-gray-600 text-sm mt-1">{product.displayName}</p>
+                          </div>
+                          
+                          {product.totalVariants > 1 && (
+                            <p className="text-xs text-gray-500">{product.totalVariants} variants available</p>
+                          )}
+                          
+                          <div className="space-y-1">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Frame price without lenses</p>
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-xl text-gray-900">
+                                {formatVND(product.price)}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>

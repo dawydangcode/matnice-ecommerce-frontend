@@ -1,0 +1,4 @@
+.text-secondary {
+    --tw-text-opacity: 1;
+    color: rgb(110 110 110 / var(--tw-text-opacity, 1));
+}
