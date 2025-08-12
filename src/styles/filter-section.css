@@ -14,7 +14,7 @@
 }
 
 .filter-checkbox:checked {
-    background-color: #363434; /* Green */
+    background-color: #363434;
     border-color: #363434;
 }
 
@@ -29,7 +29,7 @@
     padding: 0;
     border: 0;
     font-size: 100%;
-    font: inherit;
+    font: bold;
     font-family: Roboto, Arial, sans-serif;
     vertical-align: baseline;
 }

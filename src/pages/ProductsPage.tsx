@@ -227,21 +227,21 @@ const ProductsPage: React.FC = () => {
                         <input type="checkbox" className="filter-checkbox" />
                         <span className="ml-3 mt-3 text-sm text-gray-700">Small</span>
                       </label>
-                      <GlassWidthSmall className="text-gray-400" size={20} />
+                      <GlassWidthSmall className="text-black-400" size={40} />
                     </div>
                     <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
                       <label className="flex items-center cursor-pointer">
                         <input type="checkbox" className="filter-checkbox" />
                         <span className="ml-3 mt-3 text-sm text-gray-700">Medium</span>
                       </label>
-                      <GlassWidthMedium className="text-gray-400" size={24} />
+                      <GlassWidthMedium className="text-black-400" size={40} />
                     </div>
                     <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
                       <label className="flex items-center cursor-pointer">
                         <input type="checkbox" className="filter-checkbox" />
                         <span className="ml-3 mt-3 text-sm text-gray-700">Large</span>
                       </label>
-                      <GlassWidthLarge className="text-gray-400" size={28} />
+                      <GlassWidthLarge className="text-black-400" size={40} />
                     </div>
                     <button className="w-full py-3 mt-4 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2">
                       <span className="text-base">📏</span>
