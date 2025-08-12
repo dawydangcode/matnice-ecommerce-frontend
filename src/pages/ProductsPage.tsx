@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronRight, Grid, List, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ProductCard } from '../types/product-card.types';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import GlassesHeroContent from '../components/category/GlassesHeroContent';
+import ProductListHeader from '../components/ProductListHeader';
 import productCardService from '../services/product-card.service';
 import { formatVND } from '../utils/currency';
 import '../styles/product-page.css';
@@ -94,47 +95,15 @@ const ProductsPage: React.FC = () => {
       {/* Hero Content */}
       <GlassesHeroContent />
 
-      {/* Breadcrumb & Controls Section */}
-      <section className="bg-gray-50 py-6">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Page Title & Controls */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600">{total} Results</p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              {/* View Mode Toggle */}
-              <div className="flex items-center border rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded ${viewMode === 'grid' ? 'bg-gray-100' : ''}`}
-                >
-                  <Grid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded ${viewMode === 'list' ? 'bg-gray-100' : ''}`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Sort Dropdown */}
-              <select 
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="newest">Newest First</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="name">Name: A to Z</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Product List Header */}
+      <ProductListHeader
+        total={total}
+        viewMode={viewMode}
+        sortBy={sortBy}
+        onViewModeChange={setViewMode}
+        onSortChange={setSortBy}
+        onClearAll={clearAllFilters}
+      />
 
       {/* Main Content Area */}
       <section className="py-8">
@@ -143,17 +112,6 @@ const ProductsPage: React.FC = () => {
             
             {/* Left Sidebar - Filters */}
             <div className="w-full lg:w-1/5 space-y-6">
-              
-              {/* Filter Header */}
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-                <button 
-                  onClick={clearAllFilters}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Clear all
-                </button>
-              </div>
 
               {/* Gender Filter */}
               <div>
@@ -302,7 +260,7 @@ const ProductsPage: React.FC = () => {
                           </div>
                           
                           {/* Heart Icon */}
-                          <div className="absolute top- right-4 z-10">
+                          <div className="absolute top-2 right-4 z-10">
                             <div className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm hover:shadow-md transition-shadow">
                               <Heart className="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" />
                             </div>
