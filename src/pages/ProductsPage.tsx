@@ -30,6 +30,9 @@ import ShapeButterflyIcon from '../components/icons/Shape/Butterfly';
 import ShapeAviatorIcon from '../components/icons/Shape/Aviator';
 import ShapeNarrowIcon from '../components/icons/Shape/Narrow';
 import ShapeOvalIcon from '../components/icons/Shape/Oval';
+import FullRimIcon from '../components/icons/FrameType/FullRim';
+import HalfRimIcon from '../components/icons/FrameType/HalfRim';
+import RimlessIcon from '../components/icons/FrameType/RimLess';
 import productCardService from '../services/product-card.service';
 import { formatVND } from '../utils/currency';
 import '../styles/product-page.css';
@@ -74,6 +77,13 @@ const shapeIcons: Record<FrameShapeType, React.ReactNode> = {
   [FrameShapeType.NARROW]: <ShapeNarrowIcon size={40}/>,
   [FrameShapeType.OVAL]: <ShapeOvalIcon size={40}/>,
 };
+
+const frameTypes: Record<FrameType, React.ReactNode> = {
+  [FrameType.FULL_RIM]: <FullRimIcon size={40} />,
+  [FrameType.HALF_RIM]: <HalfRimIcon size={40} />,
+  [FrameType.RIMLESS]: <RimlessIcon size={40} />,
+};
+
   // Fetch brands for filter on component mount
   useEffect(() => {
     const fetchBrands = async () => {
@@ -377,6 +387,9 @@ const shapeIcons: Record<FrameShapeType, React.ReactNode> = {
                         <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
                           {frameType.replace(/_/g, ' ')}
                         </span>
+                        <div className="ml-3 mt-3 text-black-400">
+                          {frameTypes[frameType]}
+                        </div>
                       </label>
                     ))}
                   </div>

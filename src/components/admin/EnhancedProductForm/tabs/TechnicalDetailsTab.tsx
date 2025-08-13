@@ -131,7 +131,6 @@ const TechnicalDetailsTab: React.FC<TechnicalDetailsTabProps> = ({
           >
             <option value={FrameType.FULL_RIM}>Gọng đầy</option>
             <option value={FrameType.HALF_RIM}>Gọng nửa</option>
-            <option value={FrameType.NO_RIM}>Không gọng</option>
             <option value={FrameType.RIMLESS}>Rimless</option>
           </select>
         </div>

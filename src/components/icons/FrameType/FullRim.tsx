@@ -17,13 +17,6 @@ const FullRim: React.FC<FullRimProps> = ({ className = "", size = 20 }) => (
   >
     <path
     stroke="currentColor"
-    strokeWidth={1}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    d="M37.182 17.233c-.926-3.733-5.556-3.733-7.408-3.733-5.557 0-7.41 1.867-7.41 4.667s3.744 9.333 9.3 9.333 6.444-6.533 5.518-10.267Zm-34.364 0C3.744 13.5 8.374 13.5 10.226 13.5c5.557 0 7.41 1.867 7.41 4.667s-3.744 9.333-9.3 9.333-6.445-6.533-5.518-10.267Z"
-    />
-    <path
-    stroke="currentColor"
     strokeWidth={2.5}
     strokeLinecap="round"
     strokeLinejoin="round"
