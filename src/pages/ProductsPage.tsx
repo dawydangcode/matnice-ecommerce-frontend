@@ -69,7 +69,7 @@ const shapeIcons: Record<FrameShapeType, React.ReactNode> = {
   [FrameShapeType.SQUARE]: <ShapeSquareIcon size={40}/>,
   [FrameShapeType.RECTANGLE]: <ShapeRectangleIcon size={40}/>,
   [FrameShapeType.BROWLINE]: <ShapeBrowlineIcon size={40}/>,
-  [FrameShapeType.BUTTERFLY]: <ShapeButterflyIcon />,
+  [FrameShapeType.BUTTERFLY]: <ShapeButterflyIcon size={40}/>,
   [FrameShapeType.AVIATOR]: <ShapeAviatorIcon size={40}/>,
   [FrameShapeType.NARROW]: <ShapeNarrowIcon size={40}/>,
   [FrameShapeType.OVAL]: <ShapeOvalIcon size={40}/>,

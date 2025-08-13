@@ -110,7 +110,13 @@ export enum FrameStyleType {
   EXTRAVAGANT = 'extravagant',
   SPORTY = 'sporty',
 }
-
+export enum FaceShapeType {
+  ROUND = 'round',
+  SQUARE = 'square',
+  OVAL = 'oval',
+  HEART = 'heart',
+  DIAMOND = 'diamond',
+}
 // Product Detail interface
 export interface ProductDetail {
   id: number;
