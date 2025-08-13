@@ -16,9 +16,12 @@ import Navigation from '../components/Navigation';
 import GlassesHeroContent from '../components/category/GlassesHeroContent';
 import ProductListHeader from '../components/ProductListHeader';
 import FilterSection from '../components/FilterSection';
-import GlassWidthSmall from '../components/icons/GlassWidthSmall';
-import GlassWidthMedium from '../components/icons/GlassWidthMedium';
-import GlassWidthLarge from '../components/icons/GlassWidthLarge';
+import GlassWidthSmall from '../components/icons/filter-section/GlassWidthSmall';
+import GlassWidthMedium from '../components/icons/filter-section/GlassWidthMedium';
+import GlassWidthLarge from '../components/icons/filter-section/GlassWidthLarge';
+import NoseBridgeSmall from '../components/icons/filter-section/NoseBridgeSmall';
+import NoseBridgeMedium from '../components/icons/filter-section/NoseBridgeMedium';
+import NoseBridgeLarge from '../components/icons/filter-section/NoseBridgeLarge';
 import productCardService from '../services/product-card.service';
 import { formatVND } from '../utils/currency';
 import '../styles/product-page.css';
@@ -299,6 +302,33 @@ const ProductsPage: React.FC = () => {
                         </span>
                       </label>
                     ))}
+                  </div>
+                </FilterSection>
+
+                {/* Nose Bridge */}
+                <FilterSection title="NOSE BRIDGE">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                      <label className="flex items-center cursor-pointer">
+                        <input type="checkbox" className="filter-checkbox" />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">Rather narrow</span>
+                      </label>
+                      <NoseBridgeSmall className="text-black-400 ml-3 mt-3" size={40} />
+                    </div>
+                    <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                      <label className="flex items-center cursor-pointer">
+                        <input type="checkbox" className="filter-checkbox" />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">Rather medium</span>
+                      </label>
+                      <NoseBridgeMedium className="text-black-400 ml-3 mt-3" size={40} />
+                    </div>
+                    <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                      <label className="flex items-center cursor-pointer">
+                        <input type="checkbox" className="filter-checkbox" />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">Rather wide</span>
+                      </label>
+                      <NoseBridgeLarge className="text-black-400 ml-3 mt-3" size={40} />
+                    </div>
                   </div>
                 </FilterSection>
 
