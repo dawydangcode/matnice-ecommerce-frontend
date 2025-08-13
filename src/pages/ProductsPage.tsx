@@ -33,6 +33,9 @@ import ShapeOvalIcon from '../components/icons/Shape/Oval';
 import FullRimIcon from '../components/icons/FrameType/FullRim';
 import HalfRimIcon from '../components/icons/FrameType/HalfRim';
 import RimlessIcon from '../components/icons/FrameType/RimLess';
+import KeyHoleIcon from '../components/icons/BridgeDesign/KeyHole';
+import WithNosePadsIcon from '../components/icons/BridgeDesign/WithNosePads';
+import WithoutNosePadsIcon from '../components/icons/BridgeDesign/WithoutNosePads';
 import productCardService from '../services/product-card.service';
 import { formatVND } from '../utils/currency';
 import '../styles/product-page.css';
@@ -82,6 +85,12 @@ const frameTypes: Record<FrameType, React.ReactNode> = {
   [FrameType.FULL_RIM]: <FullRimIcon size={40} />,
   [FrameType.HALF_RIM]: <HalfRimIcon size={40} />,
   [FrameType.RIMLESS]: <RimlessIcon size={40} />,
+};
+
+const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
+  [FrameBridgeDesignType.WITH_KEYHOLE_BRIDGE]: <KeyHoleIcon size={40} />,
+  [FrameBridgeDesignType.WITH_NOSE_PADS]: <WithNosePadsIcon size={40} />,
+  [FrameBridgeDesignType.WITHOUT_NOSE_PADS]: <WithoutNosePadsIcon size={40} />,
 };
 
   // Fetch brands for filter on component mount
@@ -426,22 +435,27 @@ const frameTypes: Record<FrameType, React.ReactNode> = {
                 <FilterSection title="BRIDGE DESIGN">
                   <div className="space-y-2">
                     {Object.values(FrameBridgeDesignType).map((bridgeDesign) => (
-                      <label key={bridgeDesign} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          className="filter-checkbox"
-                          checked={selectedBridgeDesigns.includes(bridgeDesign)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedBridgeDesigns([...selectedBridgeDesigns, bridgeDesign]);
-                            } else {
-                              setSelectedBridgeDesigns(selectedBridgeDesigns.filter(bd => bd !== bridgeDesign));
-                            }
-                          }}
-                        />
-                        <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
-                          {bridgeDesign.replace(/_/g, ' ')}
-                        </span>
+                      <label key={bridgeDesign} className="flex items-center justify-between hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            className="filter-checkbox"
+                            checked={selectedBridgeDesigns.includes(bridgeDesign)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedBridgeDesigns([...selectedBridgeDesigns, bridgeDesign]);
+                              } else {
+                                setSelectedBridgeDesigns(selectedBridgeDesigns.filter(bd => bd !== bridgeDesign));
+                              }
+                            }}
+                          />
+                          <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
+                            {bridgeDesign.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                        <div className="ml-3 mt-3 text-black-400">
+                          {bridgeDesigns[bridgeDesign]}
+                        </div>
                       </label>
                     ))}
                   </div>
