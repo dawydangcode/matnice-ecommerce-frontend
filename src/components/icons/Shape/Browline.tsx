@@ -5,7 +5,7 @@ interface ShapeBrowlineProps {
   size?: number;
 }
 
-const ShapeBrowlineAviator: React.FC<ShapeBrowlineProps> = ({ className = "", size = 20 }) => (
+const ShapeBrowline: React.FC<ShapeBrowlineProps> = ({ className = "", size = 20 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -30,4 +30,4 @@ const ShapeBrowlineAviator: React.FC<ShapeBrowlineProps> = ({ className = "", si
   </svg>
 );
 
-export default ShapeBrowlineAviator;
+export default ShapeBrowline;

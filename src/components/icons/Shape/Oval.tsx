@@ -1,11 +1,11 @@
 import React from 'react';
 
-interface ShapeProps {
+interface ShapeOvalProps {
   className?: string;
   size?: number;
 }
 
-const ShapeAviator: React.FC<ShapeProps> = ({ className = "", size = 20 }) => (
+const ShapeOval: React.FC<ShapeOvalProps> = ({ className = "", size = 20 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -34,4 +34,4 @@ const ShapeAviator: React.FC<ShapeProps> = ({ className = "", size = 20 }) => (
   </svg>
 );
 
-export default ShapeAviator;
+export default ShapeOval;

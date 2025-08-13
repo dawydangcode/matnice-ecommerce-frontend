@@ -5,7 +5,7 @@ interface ShapeSquareProps {
   size?: number;
 }
 
-const ShapeSquareAviator: React.FC<ShapeSquareProps> = ({ className = "", size = 20 }) => (
+const ShapeSquare: React.FC<ShapeSquareProps> = ({ className = "", size = 20 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -39,4 +39,4 @@ const ShapeSquareAviator: React.FC<ShapeSquareProps> = ({ className = "", size =
   </svg>
 );
 
-export default ShapeSquareAviator;
+export default ShapeSquare;

@@ -5,7 +5,7 @@ interface ShapeNarrowProps {
   size?: number;
 }
 
-const ShapeNarrowAviator: React.FC<ShapeNarrowProps> = ({ className = "", size = 20 }) => (
+const ShapeNarrow: React.FC<ShapeNarrowProps> = ({ className = "", size = 20 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -25,4 +25,4 @@ const ShapeNarrowAviator: React.FC<ShapeNarrowProps> = ({ className = "", size =
   </svg>
 );
 
-export default ShapeNarrowAviator;
+export default ShapeNarrow;

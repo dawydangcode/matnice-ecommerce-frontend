@@ -5,7 +5,7 @@ interface ShapeButterflyProps {
   size?: number;
 }
 
-const ShapeButterflyAviator: React.FC<ShapeButterflyProps> = ({ className = "", size = 20 }) => (
+const ShapeButterfly: React.FC<ShapeButterflyProps> = ({ className = "", size = 20 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -25,4 +25,4 @@ const ShapeButterflyAviator: React.FC<ShapeButterflyProps> = ({ className = "", 
   </svg>
 );
 
-export default ShapeButterflyAviator;
+export default ShapeButterfly;
