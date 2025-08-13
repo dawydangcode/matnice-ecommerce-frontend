@@ -16,12 +16,20 @@ import Navigation from '../components/Navigation';
 import GlassesHeroContent from '../components/category/GlassesHeroContent';
 import ProductListHeader from '../components/ProductListHeader';
 import FilterSection from '../components/FilterSection';
-import GlassWidthSmall from '../components/icons/filter-section/GlassWidthSmall';
-import GlassWidthMedium from '../components/icons/filter-section/GlassWidthMedium';
-import GlassWidthLarge from '../components/icons/filter-section/GlassWidthLarge';
-import NoseBridgeSmall from '../components/icons/filter-section/NoseBridgeSmall';
-import NoseBridgeMedium from '../components/icons/filter-section/NoseBridgeMedium';
-import NoseBridgeLarge from '../components/icons/filter-section/NoseBridgeLarge';
+import GlassWidthSmall from '../components/icons/GlassWidth/GlassWidthSmall';
+import GlassWidthMedium from '../components/icons/GlassWidth/GlassWidthMedium';
+import GlassWidthLarge from '../components/icons/GlassWidth/GlassWidthLarge';
+import NoseBridgeSmall from '../components/icons/NoseBridge/NoseBridgeSmall';
+import NoseBridgeMedium from '../components/icons/NoseBridge/NoseBridgeMedium';
+import NoseBridgeLarge from '../components/icons/NoseBridge/NoseBridgeLarge';
+import ShapeRoundIcon from '../components/icons/Shape/Round';
+import ShapeSquareIcon from '../components/icons/Shape/Square';
+import ShapeRectangleIcon from '../components/icons/Shape/Rectangle';
+import ShapeBrowlineIcon from '../components/icons/Shape/Browline';
+import ShapeButterflyIcon from '../components/icons/Shape/Butterfly';
+import ShapeAviatorIcon from '../components/icons/Shape/Aviator';
+import ShapeNarrowIcon from '../components/icons/Shape/Narrow';
+import ShapeOvalIcon from '../components/icons/Shape/Oval';
 import productCardService from '../services/product-card.service';
 import { formatVND } from '../utils/currency';
 import '../styles/product-page.css';
@@ -54,6 +62,18 @@ const ProductsPage: React.FC = () => {
   const minPrice = useMemo(() => priceRange[0], [priceRange]);
   const maxPrice = useMemo(() => priceRange[1], [priceRange]);
 
+  
+
+const shapeIcons: Record<FrameShapeType, React.ReactNode> = {
+  [FrameShapeType.ROUND]: <ShapeRoundIcon />,
+  [FrameShapeType.SQUARE]: <ShapeSquareIcon />,
+  [FrameShapeType.RECTANGLE]: <ShapeRectangleIcon />,
+  [FrameShapeType.BROWLINE]: <ShapeBrowlineIcon />,
+  [FrameShapeType.BUTTERFLY]: <ShapeButterflyIcon />,
+  [FrameShapeType.AVIATOR]: <ShapeAviatorIcon />,
+  [FrameShapeType.NARROW]: <ShapeNarrowIcon />,
+  [FrameShapeType.OVAL]: <ShapeOvalIcon />,
+};
   // Fetch brands for filter on component mount
   useEffect(() => {
     const fetchBrands = async () => {
@@ -284,22 +304,27 @@ const ProductsPage: React.FC = () => {
                 <FilterSection title="SHAPE">
                   <div className="grid grid-cols-1 gap-2">
                     {Object.values(FrameShapeType).map((shape) => (
-                      <label key={shape} className="flex items-center space-x-2 text-xs hover:bg-gray-50 p-2 rounded cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          className="filter-checkbox"
-                          checked={selectedFrameShapes.includes(shape)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedFrameShapes([...selectedFrameShapes, shape]);
-                            } else {
-                              setSelectedFrameShapes(selectedFrameShapes.filter(s => s !== shape));
-                            }
-                          }}
-                        />
-                        <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
-                          {shape.replace('_', ' ')}
-                        </span>
+                      <label key={shape} className="flex items-center justify-between text-xs hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            className="filter-checkbox"
+                            checked={selectedFrameShapes.includes(shape)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedFrameShapes([...selectedFrameShapes, shape]);
+                              } else {
+                                setSelectedFrameShapes(selectedFrameShapes.filter(s => s !== shape));
+                              }
+                            }}
+                          />
+                          <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
+                            {shape.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <div className="ml-3">
+                          {shapeIcons[shape]}
+                        </div>
                       </label>
                     ))}
                   </div>
