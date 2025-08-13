@@ -65,14 +65,14 @@ const ProductsPage: React.FC = () => {
   
 
 const shapeIcons: Record<FrameShapeType, React.ReactNode> = {
-  [FrameShapeType.ROUND]: <ShapeRoundIcon />,
-  [FrameShapeType.SQUARE]: <ShapeSquareIcon />,
-  [FrameShapeType.RECTANGLE]: <ShapeRectangleIcon />,
-  [FrameShapeType.BROWLINE]: <ShapeBrowlineIcon />,
+  [FrameShapeType.ROUND]: <ShapeRoundIcon size={40}/>,
+  [FrameShapeType.SQUARE]: <ShapeSquareIcon size={40}/>,
+  [FrameShapeType.RECTANGLE]: <ShapeRectangleIcon size={40}/>,
+  [FrameShapeType.BROWLINE]: <ShapeBrowlineIcon size={40}/>,
   [FrameShapeType.BUTTERFLY]: <ShapeButterflyIcon />,
-  [FrameShapeType.AVIATOR]: <ShapeAviatorIcon />,
-  [FrameShapeType.NARROW]: <ShapeNarrowIcon />,
-  [FrameShapeType.OVAL]: <ShapeOvalIcon />,
+  [FrameShapeType.AVIATOR]: <ShapeAviatorIcon size={40}/>,
+  [FrameShapeType.NARROW]: <ShapeNarrowIcon size={40}/>,
+  [FrameShapeType.OVAL]: <ShapeOvalIcon size={40}/>,
 };
   // Fetch brands for filter on component mount
   useEffect(() => {
@@ -322,7 +322,7 @@ const shapeIcons: Record<FrameShapeType, React.ReactNode> = {
                             {shape.replace('_', ' ')}
                           </span>
                         </div>
-                        <div className="ml-3">
+                        <div className="ml-3 mt-3 text-black-400">
                           {shapeIcons[shape]}
                         </div>
                       </label>
