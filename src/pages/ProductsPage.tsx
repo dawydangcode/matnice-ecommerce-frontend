@@ -371,22 +371,24 @@ const frameTypes: Record<FrameType, React.ReactNode> = {
                 <FilterSection title="FRAME TYPE">
                   <div className="space-y-2">
                     {Object.values(FrameType).map((frameType) => (
-                      <label key={frameType} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          className="filter-checkbox "
-                          checked={selectedFrameTypes.includes(frameType)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedFrameTypes([...selectedFrameTypes, frameType]);
-                            } else {
-                              setSelectedFrameTypes(selectedFrameTypes.filter(ft => ft !== frameType));
-                            }
-                          }}
-                        />
-                        <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
-                          {frameType.replace(/_/g, ' ')}
-                        </span>
+                      <label key={frameType} className="flex items-center justify-between hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            className="filter-checkbox "
+                            checked={selectedFrameTypes.includes(frameType)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedFrameTypes([...selectedFrameTypes, frameType]);
+                              } else {
+                                setSelectedFrameTypes(selectedFrameTypes.filter(ft => ft !== frameType));
+                              }
+                            }}
+                          />
+                          <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
+                            {frameType.replace(/_/g, ' ')}
+                          </span>
+                        </div>
                         <div className="ml-3 mt-3 text-black-400">
                           {frameTypes[frameType]}
                         </div>
