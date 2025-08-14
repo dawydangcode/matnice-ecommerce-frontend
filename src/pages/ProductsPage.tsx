@@ -120,11 +120,11 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Map sort options to backend API format
         let backendSortBy: 'price' | 'name' | 'newest' = 'newest';
         let sortOrder: 'ASC' | 'DESC' = 'DESC';
-        
+
         switch (sortBy) {
           case 'price-low':
             backendSortBy = 'price';
@@ -144,14 +144,21 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
             sortOrder = 'DESC';
             break;
         }
-        
+
         const response = await productCardService.getProductCards({
           page: currentPage,
           limit: pageSize,
           minPrice: minPrice > 0 ? minPrice : undefined,
           maxPrice: maxPrice < 1000000 ? maxPrice : undefined,
           sortBy: backendSortBy,
-          sortOrder: sortOrder
+          sortOrder: sortOrder,
+          brandIds: selectedBrands.length > 0 ? selectedBrands : undefined,
+          gender: selectedGenders.length > 0 ? selectedGenders[0] : undefined,
+          frameType: selectedFrameTypes.length > 0 ? selectedFrameTypes.map(f => f.toLowerCase()) : undefined,
+          frameShape: selectedFrameShapes.length > 0 ? selectedFrameShapes.map(f => f.toLowerCase()) : undefined,
+          frameMaterial: selectedFrameMaterials.length > 0 ? selectedFrameMaterials.map(f => f.toLowerCase()) : undefined,
+          bridgeDesign: selectedBridgeDesigns.length > 0 ? selectedBridgeDesigns.map(f => f.toLowerCase()) : undefined,
+          style: selectedStyles.length > 0 ? selectedStyles.map(f => f.toLowerCase()) : undefined,
         });
         setProducts(response.data || []);
         setTotal(response.total || 0);
@@ -165,7 +172,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     };
 
     fetchData();
-  }, [currentPage, pageSize, minPrice, maxPrice, sortBy]);
+  }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles]);
 
   // Clear all filters
   const clearAllFilters = () => {
@@ -180,6 +187,12 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     setSelectedStyles([]);
     setBrandSearchTerm('');
   };
+
+  // Reset page to 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+    // eslint-disable-next-line
+  }, [selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, priceRange]);
 
   return (
     <div className="min-h-screen bg-white">

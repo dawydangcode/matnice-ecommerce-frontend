@@ -36,4 +36,18 @@ export interface ProductCardQueryParams {
   maxPrice?: number;
   sortBy?: 'price' | 'name' | 'newest';
   sortOrder?: 'ASC' | 'DESC';
+  // Filter productDetail
+  frameType?: string[];
+  frameShape?: string[];
+  frameMaterial?: string[];
+  bridgeDesign?: string[];
+  style?: string[];
+  bridgeWidth?: number | [number, number];
+  frameWidth?: number | [number, number];
+  lensHeight?: number | [number, number];
+  lensWidth?: number | [number, number];
+  templeLength?: number | [number, number];
+  springHinges?: boolean;
+  weight?: number | [number, number];
+  multifocal?: boolean;
 }
