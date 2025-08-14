@@ -63,6 +63,8 @@ const ProductsPage: React.FC = () => {
   const [selectedBridgeDesigns, setSelectedBridgeDesigns] = useState<FrameBridgeDesignType[]>([]);
   const [selectedStyles, setSelectedStyles] = useState<FrameStyleType[]>([]);
   const [brandSearchTerm, setBrandSearchTerm] = useState('');
+  // Glasses Width filter: 'small' | 'medium' | 'large'
+  const [selectedGlassesWidths, setSelectedGlassesWidths] = useState<string[]>([]);
 
   // Create stable dependencies for useEffect
   const minPrice = useMemo(() => priceRange[0], [priceRange]);
@@ -145,6 +147,27 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
             break;
         }
 
+        // Glasses Width filter logic
+        let frameWidth: [number, number] | undefined = undefined;
+        if (selectedGlassesWidths.length > 0) {
+          let min = Infinity, max = -Infinity;
+          if (selectedGlassesWidths.includes('small')) {
+            min = Math.min(min, 0);
+            max = Math.max(max, 129.99);
+          }
+          if (selectedGlassesWidths.includes('medium')) {
+            min = Math.min(min, 130);
+            max = Math.max(max, 140);
+          }
+          if (selectedGlassesWidths.includes('large')) {
+            min = Math.min(min, 140.01);
+            max = Math.max(max, 9999);
+          }
+          if (min !== Infinity && max !== -Infinity) {
+            frameWidth = [min, max];
+          }
+        }
+
         const response = await productCardService.getProductCards({
           page: currentPage,
           limit: pageSize,
@@ -159,6 +182,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
           frameMaterial: selectedFrameMaterials.length > 0 ? selectedFrameMaterials.map(f => f.toLowerCase()) : undefined,
           bridgeDesign: selectedBridgeDesigns.length > 0 ? selectedBridgeDesigns.map(f => f.toLowerCase()) : undefined,
           style: selectedStyles.length > 0 ? selectedStyles.map(f => f.toLowerCase()) : undefined,
+          frameWidth,
         });
         setProducts(response.data || []);
         setTotal(response.total || 0);
@@ -172,7 +196,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     };
 
     fetchData();
-  }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles]);
+  }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, selectedGlassesWidths]);
 
   // Clear all filters
   const clearAllFilters = () => {
@@ -186,13 +210,14 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     setSelectedBridgeDesigns([]);
     setSelectedStyles([]);
     setBrandSearchTerm('');
+    setSelectedGlassesWidths([]);
   };
 
   // Reset page to 1 when filter changes
   useEffect(() => {
     setCurrentPage(1);
     // eslint-disable-next-line
-  }, [selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, priceRange]);
+  }, [selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, priceRange, selectedGlassesWidths]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -279,29 +304,58 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
                       <label className="flex items-center cursor-pointer">
-                        <input type="checkbox" className="filter-checkbox" />
+                        <input
+                          type="checkbox"
+                          className="filter-checkbox"
+                          checked={selectedGlassesWidths.includes('small')}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setSelectedGlassesWidths([...selectedGlassesWidths, 'small']);
+                            } else {
+                              setSelectedGlassesWidths(selectedGlassesWidths.filter(w => w !== 'small'));
+                            }
+                          }}
+                        />
                         <span className="ml-3 mt-3 text-sm text-gray-700">Small</span>
                       </label>
                       <GlassWidthSmall className="text-black-400" size={40} />
                     </div>
                     <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
                       <label className="flex items-center cursor-pointer">
-                        <input type="checkbox" className="filter-checkbox" />
+                        <input
+                          type="checkbox"
+                          className="filter-checkbox"
+                          checked={selectedGlassesWidths.includes('medium')}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setSelectedGlassesWidths([...selectedGlassesWidths, 'medium']);
+                            } else {
+                              setSelectedGlassesWidths(selectedGlassesWidths.filter(w => w !== 'medium'));
+                            }
+                          }}
+                        />
                         <span className="ml-3 mt-3 text-sm text-gray-700">Medium</span>
                       </label>
                       <GlassWidthMedium className="text-black-400" size={40} />
                     </div>
                     <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
                       <label className="flex items-center cursor-pointer">
-                        <input type="checkbox" className="filter-checkbox" />
+                        <input
+                          type="checkbox"
+                          className="filter-checkbox"
+                          checked={selectedGlassesWidths.includes('large')}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setSelectedGlassesWidths([...selectedGlassesWidths, 'large']);
+                            } else {
+                              setSelectedGlassesWidths(selectedGlassesWidths.filter(w => w !== 'large'));
+                            }
+                          }}
+                        />
                         <span className="ml-3 mt-3 text-sm text-gray-700">Large</span>
                       </label>
                       <GlassWidthLarge className="text-black-400" size={40} />
                     </div>
-                    <button className="w-full py-3 mt-4 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2">
-                      <span className="text-base">📏</span>
-                      <span>Determine glasses size</span>
-                    </button>
                   </div>
                 </FilterSection>
 
