@@ -176,7 +176,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
           sortBy: backendSortBy,
           sortOrder: sortOrder,
           brandIds: selectedBrands.length > 0 ? selectedBrands : undefined,
-          gender: selectedGenders.length > 0 ? selectedGenders[0] : undefined,
+          gender: selectedGenders.length > 0 ? selectedGenders : undefined,
           frameType: selectedFrameTypes.length > 0 ? selectedFrameTypes.map(f => f.toLowerCase()) : undefined,
           frameShape: selectedFrameShapes.length > 0 ? selectedFrameShapes.map(f => f.toLowerCase()) : undefined,
           frameMaterial: selectedFrameMaterials.length > 0 ? selectedFrameMaterials.map(f => f.toLowerCase()) : undefined,

@@ -38,7 +38,13 @@ class ProductCardService {
           queryParams.append('categoryIds', id.toString()),
         );
       }
-      if (params.gender) queryParams.append('gender', params.gender);
+      if (params.gender) {
+        if (Array.isArray(params.gender)) {
+          params.gender.forEach((g) => queryParams.append('gender', g));
+        } else {
+          queryParams.append('gender', params.gender);
+        }
+      }
       if (params.minPrice !== undefined)
         queryParams.append('minPrice', params.minPrice.toString());
       if (params.maxPrice !== undefined)

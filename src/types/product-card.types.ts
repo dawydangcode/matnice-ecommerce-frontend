@@ -31,7 +31,7 @@ export interface ProductCardQueryParams {
   productTypeIds?: number[];
   brandIds?: number[];
   categoryIds?: number[];
-  gender?: string;
+  gender?: string | string[];
   minPrice?: number;
   maxPrice?: number;
   sortBy?: 'price' | 'name' | 'newest';
