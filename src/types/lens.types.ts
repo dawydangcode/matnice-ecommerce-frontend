@@ -2,6 +2,7 @@
 export interface Lens {
   id: number;
   name: string;
+  description?: string;
   createdAt: string;
   createdBy: number;
   updatedAt: string;
@@ -12,10 +13,12 @@ export interface Lens {
 
 export interface CreateLensDto {
   name: string;
+  description?: string;
 }
 
 export interface UpdateLensDto {
   name?: string;
+  description?: string;
 }
 
 // Lens Quality Types

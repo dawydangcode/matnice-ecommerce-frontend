@@ -1,0 +1,305 @@
+Tài liệu này cung cấp hướng dẫn chi tiết về cách lựa chọn lens cho người dùng, bao gồm loại kính, giá trị toa thuốc, độ dày lens, chất lượng lens, màu tint, nâng cấp lens, và các ràng buộc liên quan.
+Loại Kính
+Loại kính	Mô tả
+Tròng kính đơn tiêu (Single Vision Lenses)	Sửa chữa cho tầm nhìn gần hoặc xa.
+Tròng kính đa tiêu (Progressive Lenses)	Sửa chữa đồng thời cho tầm nhìn xa và gần.
+Tròng kính văn phòng (Office Lenses)	Sửa chữa cho tầm nhìn trung bình và gần.
+Tròng kính không toa (Non-prescription)	Dùng làm kính râm hoặc phụ kiện thời trang.
+Giá trị Toa Thuốc
+Áp dụng cho: Tròng kính đơn tiêu, Tròng kính đa tiêu, Tròng kính văn phòng.
+•	Sphere (S/SPH): 
+o	Mắt phải (R): ±0.00 dpt (mặc định, nhập giá trị thực tế)
+o	Mắt trái (L): ±0.00 dpt (mặc định, nhập giá trị thực tế)
+•	Cylinder (ZYL/CYL): 
+o	Mắt phải (R): ±0.00 dpt (mặc định, nhập giá trị thực tế)
+o	Mắt trái (L): ±0.00 dpt (mặc định, nhập giá trị thực tế)
+•	Axis (A/ACH): 
+o	Mắt phải (R): 0° (mặc định, nhập giá trị thực tế)
+o	Mắt trái (L): 0° (mặc định, nhập giá trị thực tế)
+•	Add (ADD) (Chỉ cho Progressive và Office Lenses): 
+o	Mắt phải (R): - dpt (nhập giá trị nếu cần)
+o	Mắt trái (L): - dpt (nhập giá trị nếu cần)
+o	Lưu ý: Cung cấp giá trị Add nếu chọn tròng kính đa tiêu hoặc văn phòng.
+•	Pupillary Distance (PD): 
+o	Một giá trị: 63.00 mm (mặc định, làm tròn lên mm gần nhất, chia đều cho mỗi mắt)
+o	Hai giá trị: 
+	Mắt phải (R): 31.50 mm
+	Mắt trái (L): 31.50 mm
+•	Ngày toa thuốc cuối cùng: 
+o	Định dạng: DD/MM/YYYY
+o	Yêu cầu: Toa thuốc phải được cấp trong vòng 2 năm gần nhất.
+Độ dày Lens
+Tên loại	Mô tả	Giá
+Standard Lenses	Độ dày tiêu chuẩn, phù hợp với toa thông thường	Miễn phí
+Thin Lenses	Mỏng và nhẹ hơn 20% so với tiêu chuẩn	Từ £34.95
+Very Thin Lenses	Mỏng và nhẹ hơn 40% so với tiêu chuẩn	Từ £74.95
+Extra Thin Lenses	Mỏng và nhẹ hơn 60% so với tiêu chuẩn	Từ £119.95
+Chất lượng Lens
+•	Classic: 
+o	Giá: Giá tương ứng với độ dày lens
+o	Tùy chọn chất lượng: Cơ bản, thoải mái
+•	SpexPro (Tùy chọn cao cấp, thay thế chi phí chế tạo tùy chỉnh): 
+o	Giá: Cao hơn (khoảng £500,000 VNĐ ≈ £15-20 tùy tỷ giá)
+o	Tùy chọn chất lượng: Cao cấp, tối ưu hóa
+Màu Tint
+Không phải tất cả tùy chọn màu đều khả dụng cho Extra Thin Lenses. Chọn Very Thin Lenses để xem thêm tùy chọn.
+Tên loại	Mô tả	Giá	Màu sắc
+No Tint	Không có màu, dành cho người không muốn tint	Miễn phí	-
+Photochromic Lenses	Thích nghi với điều kiện ánh sáng thay đổi	[Giá]	Danh sách màu (hình ảnh màu và kính)
+Polarised Lenses	Giảm chói từ bề mặt phản chiếu (ví dụ: đường ướt)	[Giá]	-
+Sunglasses Tint	Kính râm với bảo vệ 100% UV	[Giá]	Xám
+Gradient Tint	Màu đậm ở trên, nhạt dần xuống dưới	[Giá]	-
+Filter Tint	Tăng độ tương phản, bảo vệ 100% UV, tint nhẹ	[Giá]	-
+Nâng cấp Lens
+Tên loại	Mô tả	Giá
+Extra Easy-Care Lotus Effect	Lớp phủ chống nước và dầu, hiệu ứng hạt	[Giá]
+Blue Light Filter Technology	Bảo vệ mắt khi dùng màn hình nhiều	[Giá]
+Smart Focus	Hỗ trợ chuyển đổi tầm nhìn gần khi dùng thiết bị số	[Giá]
+Ràng buộc
+1.	Độ dày Lens: 
+o	Với chất lượng Classic: 
+	Standard và Thin Lenses: Photochromic, Polarised, Sunglasses Tint, Gradient Tint, Mirrored, Filter Tint
+	Very Thin Lenses: Photochromic, Polarised, Sunglasses Tint, Gradient Tint, Filter Tint
+	Extra Thin Lenses: Sunglasses Tint, Filter Tint
+o	Không phải tất cả tint khả dụng với Extra Thin Lenses. Loại bỏ tint để xem thêm tùy chọn.
+2.	Progressive và Office Lenses: 
+o	Không hỗ trợ nâng cấp Smart Focus.
+3.	Non-prescription: 
+o	Không nhập giá trị toa thuốc (Prescription Values).
+4.	Single Vision Lenses, Office Lenses, Progressive Lenses: 
+o	Giá trị Sphere (S/SPH): 
+	Mắt phải (R): -9.00 dpt
+	Mắt trái (L): -4.75 dpt
+	Cảnh báo: Chênh lệch đáng kể, kiểm tra lại hoặc liên hệ 0800 472 54 57.
+	Với Sphere > ±6.00 hoặc Cylinder > ±2.00, cần chế tạo tùy chỉnh, thêm £29.95 (không áp dụng nếu chọn Extra Thin hoặc SpexPro).
+o	Giá trị Cylinder (ZYL/CYL): 
+	Mắt phải (R): +3.50 dpt
+	Mắt trái (L): -2.75 dpt
+	Cảnh báo: Dấu khác nhau, kiểm tra lại hoặc gọi 0800 472 54 57.
+	Với Sphere > ±6.00 hoặc Cylinder > ±2.00, chế tạo tùy chỉnh, thêm £59.90 (không áp dụng nếu chọn Extra Thin hoặc SpexPro).
+	Cung cấp giá trị Axis nếu có Cylinder.
+o	Giá trị Axis (A/ACH): 
+	Mắt phải (R): 180°
+	Mắt trái (L): 0°
+o	Ngày toa thuốc: Phải trong vòng 2 năm.
+5.	Độ dày Lens với Prescription: 
+o	Nếu Sphere > ±6.00 hoặc Cylinder > ±2.00, không cho phép Standard Lens Thickness. Chế tạo tùy chỉnh thêm £59.90 (không áp dụng nếu chọn Extra Thin hoặc SpexPro).
+6.	Tùy chọn Tint theo Độ dày Lens: 
+o	Thin Lenses: Photochromic, Polarised, Sunglasses Tint, Gradient Tint, Mirrored, Filter Tint
+o	Very Thin Lenses: Photochromic, Polarised, Sunglasses Tint, Gradient Tint, Filter Tint
+o	Extra Thin Lenses: Sunglasses Tint, Filter Tint
+7.	Tùy chọn Nâng cấp Lens: 
+o	Photochromic, Polarised, Gradient Tint: Hỗ trợ Extra Easy-Care Lotus Effect
+o	Sunglasses Tint: Hỗ trợ Extra Easy-Care Lotus Effect, Smart Focus
+8.	Office Lenses với Extra Thin LensThickness: 
+o	Không hỗ trợ nâng cấp lens và tint.
+
+1. Bảng lens
+
+Mô tả: Lưu thông tin cơ bản về các loại lens (Single Vision, Progressive, Office, Non-prescription).
+Cấu trúc:
+textTable lens {
+  id bigint [pk, increment]
+  name varchar  // Ví dụ: "Single Vision", "Progressive"
+  description varchar
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+2. Bảng lens_detail
+
+Mô tả: Lưu chi tiết toa thuốc và các thuộc tính của lens cho từng đơn hàng hoặc giỏ hàng.
+Cấu trúc (đã có, bổ sung thêm thuộc tính):
+textTable lens_detail {
+  id bigint [pk, increment]
+  lens_id bigint  // Liên kết với lens.id
+  lens_type varchar  // Ví dụ: "Single Vision", "Progressive"
+  lens_thickness_id bigint  // Liên kết với lens_thickness.id
+  lens_quality_id bigint  // Liên kết với lens_quality.id
+  tint_id bigint  // Liên kết với lens_tint.id
+  power_sphere_left decimal(4,2) [default: null]  // Sphere mắt trái
+  power_sphere_right decimal(4,2) [default: null]  // Sphere mắt phải
+  power_cylinder_left decimal(4,2) [default: null]  // Cylinder mắt trái
+  power_cylinder_right decimal(4,2) [default: null]  // Cylinder mắt phải
+  axis_left int [default: null]  // Axis mắt trái
+  axis_right int [default: null]  // Axis mắt phải
+  pd_left decimal(4,1) [default: null]  // PD mắt trái
+  pd_right decimal(4,1) [default: null]  // PD mắt phải
+  add_left decimal(4,2) [default: null]  // Add mắt trái (Progressive/Office)
+  add_right decimal(4,2) [default: null]  // Add mắt phải (Progressive/Office)
+  prescription_date date  // Ngày toa thuốc
+  hasAxisCorrection boolean [default: false]  // Có cần điều chỉnh Axis không
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+3. Bảng lens_thickness
+
+Mô tả: Lưu thông tin độ dày lens (Standard, Thin, Very Thin, Extra Thin).
+Cấu trúc (đã có, giữ nguyên):
+textTable lens_thickness {
+  id bigint [pk, increment]
+  name varchar  // Ví dụ: "Extra Thin"
+  index_value double  // Ví dụ: 1.74
+  price decimal(10, 2)
+  description varchar
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+4. Bảng lens_quality
+
+Mô tả: Lưu thông tin chất lượng lens (Classic, SpexPro).
+Cấu trúc (đã có, giữ nguyên):
+textTable lens_quality {
+  id bigint [pk, increment]
+  name varchar  // Ví dụ: "Classic", "SpexPro"
+  price decimal(10, 2)
+  description varchar
+  uv_protection boolean [default: true]
+  anti_reflective boolean [default: true]
+  hard_coating boolean [default: true]
+  night_day_optimization boolean [default: false]
+  antistatic_coating boolean [default: false]
+  free_form_technology boolean [default: false]
+  transitions_option boolean [default: false]
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+5. Bảng lens_tint
+
+Mô tả: Lưu thông tin màu tint (No Tint, Photochromic, Polarised, v.v.).
+Cấu trúc (đã có, giữ nguyên):
+textTable lens_tint {
+  id bigint [pk, increment]
+  name varchar  // Ví dụ: "Photochromic"
+  price decimal(10, 2)
+  description varchar
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+6. Bảng tint_color
+
+Mô tả: Lưu chi tiết màu sắc của tint (hình ảnh và mã màu).
+Cấu trúc (đã có, giữ nguyên):
+textTable tint_color {
+  id bigint [pk, increment]
+  tint_id bigint
+  name varchar  // Ví dụ: "Grey"
+  image_url varchar
+  color_code varchar  // Ví dụ: "#808080"
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+7. Bảng lens_thickness_tint
+
+Mô tả: Lưu ràng buộc giữa độ dày lens và tint (theo ràng buộc trong tài liệu).
+Cấu trúc:
+textTable lens_thickness_tint {
+  id bigint [pk, increment]
+  lens_thickness_id bigint  // Liên kết với lens_thickness.id
+  tint_id bigint  // Liên kết với lens_tint.id
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+Dữ liệu mẫu (dựa trên ràng buộc):
+
+Standard/Thin: Photochromic, Polarised, Sunglasses Tint, Gradient Tint, Mirrored, Filter Tint
+Very Thin: Photochromic, Polarised, Sunglasses Tint, Gradient Tint, Filter Tint
+Extra Thin: Sunglasses Tint, Filter Tint
+
+
+
+
+
+8. Bảng lens_upgrade
+
+Mô tả: Lưu thông tin nâng cấp lens (Extra Easy-Care, Blue Light Filter, Smart Focus).
+Cấu trúc (đã có, giữ nguyên):
+textTable lens_upgrade {
+  id bigint [pk, increment]
+  upgrade_name varchar
+  description varchar
+  price decimal(10, 2)
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+9. Bảng lens_upgrade_detail
+
+Mô tả: Lưu chi tiết nâng cấp cho từng lens_detail.
+Cấu trúc (đã có, giữ nguyên):
+textTable lens_upgrade_detail {
+  id bigint [pk, increment]
+  lens_detail_id bigint  // Liên kết với lens_detail.id
+  lens_upgrade_id bigint  // Liên kết với lens_upgrade.id
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+Ràng buộc: Không áp dụng Smart Focus cho Progressive/Office (cần kiểm tra logic trong ứng dụng).
+
+
+
+10. Bảng eyeglass_lens
+
+Mô tả: Liên kết giữa product và lens (nếu lens là một phần của sản phẩm).
+Cấu trúc (đã có, giữ nguyên):
+textTable eyeglass_lens {
+  id bigint [pk, increment]
+  product_id bigint  // Liên kết với product.id
+  lens_id bigint  // Liên kết với lens.id
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}

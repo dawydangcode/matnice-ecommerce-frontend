@@ -289,6 +289,7 @@ const AdminDashboard: React.FC = () => {
       label: 'Quản lý Lens', 
       icon: Eye,
       children: [
+        { id: 'lens-management', label: 'Quản lý Loại Lens', icon: Eye },
         { id: 'lens-thickness', label: 'Lens Thickness', icon: Layers },
         { id: 'lens-tints', label: 'Tints & Colors', icon: Palette },
         { id: 'lens-quality', label: 'Lens Quality', icon: Star },
@@ -391,6 +392,8 @@ const AdminDashboard: React.FC = () => {
                                 setCurrentView('product-list');
                               } else if (child.id === 'product-images') {
                                 setCurrentView('product-images');
+                              } else if (child.id === 'lens-management') {
+                                setCurrentView('lens-management');
                               } else if (child.id === 'lens-thickness') {
                                 setCurrentView('lens-thickness');
                               } else if (child.id === 'lens-tints') {

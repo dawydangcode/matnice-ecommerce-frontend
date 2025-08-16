@@ -1,321 +1,358 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Plus, Search, Edit, Trash2, AlertCircle } from 'lucide-react';
+import { LensFormModal, LensType } from '../../components/admin/LensFormModal';
+import { lensService } from '../../services/lens.service';
+import { lensDetailService } from '../../services/lens-detail.service';
+import { Lens, CreateLensDto, UpdateLensDto } from '../../types/lens.types';
 import toast from 'react-hot-toast';
-import { 
-  Eye,
-  Layers,
-  Palette,
-  Package,
-  Grid3X3,
-  Star,
-  Sparkles
-} from 'lucide-react';
-import LensListPage from './LensListPage';
-import LensQualityListPage from './LensQualityListPage';
-import LensForm from '../../components/admin/LensForm';
-import LensQualityForm from '../../components/admin/LensQualityForm';
-import { Lens, LensQuality, CreateLensDto, CreateLensQualityDto } from '../../types/lens.types';
-import { useLensStore } from '../../stores/lens.store';
-
-// Lazy load components to avoid circular imports
-const LensThicknessPage = React.lazy(() => import('./LensThicknessPage'));
-const LensTintPage = React.lazy(() => import('./LensTintPage'));
-const LensUpgradePage = React.lazy(() => import('./LensUpgradePage'));
-const LensDetailPage = React.lazy(() => import('./LensDetailPage'));
-
-interface MenuItem {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  component?: React.ComponentType<any>;
-  description: string;
-  category?: string;
-}
 
 const LensManagementPage: React.FC = () => {
-  const [activeMenuItem, setActiveMenuItem] = useState('lenses.basic');
-  
-  // State for lens CRUD operations
-  const [showLensForm, setShowLensForm] = useState(false);
-  const [editingLens, setEditingLens] = useState<Lens | null>(null);
-  const [showLensQualityForm, setShowLensQualityForm] = useState(false);
-  const [editingLensQuality, setEditingLensQuality] = useState<LensQuality | null>(null);
+  const [lenses, setLenses] = useState<Lens[]>([]);
+  const [filteredLenses, setFilteredLenses] = useState<Lens[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedLens, setSelectedLens] = useState<Lens | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const { createLens, updateLens, createLensQuality, updateLensQuality } = useLensStore();
+  const itemsPerPage = 10;
 
-  // Lens CRUD handlers
-  const handleCreateLens = () => {
-    setEditingLens(null);
-    setShowLensForm(true);
-  };
-
-  const handleEditLens = (lens: Lens) => {
-    setEditingLens(lens);
-    setShowLensForm(true);
-  };
-
-  const handleLensFormSubmit = async (data: CreateLensDto) => {
+  const fetchLenses = useCallback(async () => {
+    setLoading(true);
     try {
-      if (editingLens) {
-        await updateLens(editingLens.id, data);
-        toast.success('Lens updated successfully');
-      } else {
-        await createLens(data);
-        toast.success('Lens created successfully');
-      }
-      setShowLensForm(false);
-      setEditingLens(null);
+      const response = await lensService.getLenses({
+        page: currentPage,
+        limit: itemsPerPage,
+        search: searchTerm || undefined
+      });
+      
+      setLenses(response.data || []);
+      setTotalPages(Math.ceil((response.total || 0) / itemsPerPage));
     } catch (error) {
-      console.error('Error saving lens:', error);
-      toast.error('Error saving lens');
+      console.error('Error fetching lenses:', error);
+      toast.error('Không thể tải danh sách lens');
+      setLenses([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage, searchTerm]);
 
-  const handleLensFormCancel = () => {
-    setShowLensForm(false);
-    setEditingLens(null);
-  };
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchLenses();
+    }, searchTerm ? 500 : 0); // Debounce search
+    
+    return () => clearTimeout(timeoutId);
+  }, [fetchLenses, searchTerm]);
 
-  // Lens Quality CRUD handlers
-  const handleCreateLensQuality = () => {
-    setEditingLensQuality(null);
-    setShowLensQualityForm(true);
-  };
+  useEffect(() => {
+    // Reset to page 1 when search term changes
+    if (searchTerm && currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [searchTerm, currentPage]);
 
-  const handleEditLensQuality = (lensQuality: LensQuality) => {
-    setEditingLensQuality(lensQuality);
-    setShowLensQualityForm(true);
-  };
+  useEffect(() => {
+    // Set filtered lenses to all lenses since filtering is done server-side
+    setFilteredLenses(lenses);
+  }, [lenses]);
 
-  const handleLensQualityFormSubmit = async (data: CreateLensQualityDto) => {
+  const handleCreate = async (lensData: { name: string; description: string; lensType: any; hasAxisCorrection: boolean; isNonPrescription: boolean }) => {
     try {
-      if (editingLensQuality) {
-        await updateLensQuality(editingLensQuality.id, data);
-        toast.success('Lens quality updated successfully');
-      } else {
-        await createLensQuality(data);
-        toast.success('Lens quality created successfully');
+      const createData: CreateLensDto = {
+        name: lensData.name,
+        description: lensData.description
+      };
+
+      const newLens = await lensService.createLens(createData);
+      
+      // Create lens_detail record with lensType and other properties
+      const lensDetailData = {
+        lensId: newLens.id,
+        lensType: lensData.lensType,
+        hasAxisCorrection: lensData.hasAxisCorrection,
+        isNonPrescription: lensData.isNonPrescription
+      };
+
+      console.log('Creating lens_detail with data:', lensDetailData);
+      try {
+        await lensDetailService.createLensDetail(lensDetailData);
+        console.log('LensDetail created successfully');
+      } catch (error) {
+        console.error('Error creating lens_detail:', error);
+        // Continue with success message as the main lens was created
       }
-      setShowLensQualityForm(false);
-      setEditingLensQuality(null);
+
+      toast.success('Tạo lens thành công');
+      setShowCreateModal(false);
+      await fetchLenses(); // Refresh list
     } catch (error) {
-      console.error('Error saving lens quality:', error);
-      toast.error('Error saving lens quality');
+      console.error('Error creating lens:', error);
+      toast.error('Không thể tạo lens');
     }
   };
 
-  const handleLensQualityFormCancel = () => {
-    setShowLensQualityForm(false);
-    setEditingLensQuality(null);
+  const handleEdit = (lens: Lens) => {
+    setSelectedLens(lens);
+    setShowEditModal(true);
   };
 
-  const menuItems: MenuItem[] = [
-    {
-      id: 'lenses.basic',
-      label: 'Basic Lens Types',
-      icon: <Grid3X3 className="w-5 h-5" />,
-      component: LensListPage,
-      description: 'Single Vision, Progressive, Office lenses',
-      category: 'Lens Types'
-    },
-    {
-      id: 'lenses.thickness',
-      label: 'Lens Thickness',
-      icon: <Layers className="w-5 h-5" />,
-      component: LensThicknessPage,
-      description: 'Standard, Thin, Very Thin, Extra Thin options',
-      category: 'Lens Types'
-    },
-    {
-      id: 'lenses.details',
-      label: 'Lens Details & Specs',
-      icon: <Package className="w-5 h-5" />,
-      component: LensDetailPage,
-      description: 'Detailed lens specifications and configurations',
-      category: 'Lens Types'
-    },
-    {
-      id: 'quality.basic',
-      label: 'Quality Options',
-      icon: <Star className="w-5 h-5" />,
-      component: LensQualityListPage,
-      description: 'Classic, SpexPro, Premium quality options',
-      category: 'Quality & Coatings'
-    },
-    {
-      id: 'quality.tints',
-      label: 'Tints & Colors',
-      icon: <Palette className="w-5 h-5" />,
-      component: LensTintPage,
-      description: 'Polarised, Sunglasses, Gradient, etc.',
-      category: 'Quality & Coatings'
-    },
-    {
-      id: 'upgrades.features',
-      label: 'Lens Upgrades',
-      icon: <Sparkles className="w-5 h-5" />,
-      component: LensUpgradePage,
-      description: 'Blue Light Filter, Smart Focus, etc.',
-      category: 'Premium Upgrades'
+  const handleUpdate = async (lensData: { name: string; description: string; hasAxisCorrection: boolean; isNonPrescription: boolean }) => {
+    if (!selectedLens) return;
+    
+    try {
+      const updateData: UpdateLensDto = {
+        name: lensData.name,
+        description: lensData.description
+      };
+
+      await lensService.updateLens(selectedLens.id, updateData);
+      
+      // Update lens_detail record with hasAxisCorrection/isNonPrescription
+      try {
+        // First get existing lens_detail for this lens
+        const lensDetails = await lensDetailService.getLensDetailsByLensId(selectedLens.id);
+        if (lensDetails.length > 0) {
+          // Update the first lens_detail (assuming one per lens)
+          await lensDetailService.updateLensDetail(lensDetails[0].id, {
+            hasAxisCorrection: lensData.hasAxisCorrection,
+            isNonPrescription: lensData.isNonPrescription
+          });
+        }
+      } catch (error) {
+        console.error('Error updating lens_detail:', error);
+        // Continue with success message as the main lens was updated
+      }
+
+      toast.success('Cập nhật lens thành công');
+      setShowEditModal(false);
+      setSelectedLens(null);
+      await fetchLenses(); // Refresh list
+    } catch (error) {
+      console.error('Error updating lens:', error);
+      toast.error('Không thể cập nhật lens');
     }
-  ];
-
-  const getActiveComponent = () => {
-    const activeMenu = menuItems.find(menu => menu.id === activeMenuItem);
-    return activeMenu?.component || LensListPage;
   };
 
-  const getActiveDescription = () => {
-    const activeMenu = menuItems.find(menu => menu.id === activeMenuItem);
-    return activeMenu?.description || 'Manage lens configurations';
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa lens này?')) {
+      return;
+    }
+
+    try {
+      await lensService.deleteLens(id);
+      toast.success('Xóa lens thành công');
+      await fetchLenses(); // Refresh list
+    } catch (error) {
+      console.error('Error deleting lens:', error);
+      toast.error('Không thể xóa lens');
+    }
   };
 
-  const ActiveComponent = getActiveComponent();
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar Menu */}
-      <div className="w-80 bg-white shadow-sm border-r border-gray-200">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Eye className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Lens Management</h1>
-              <p className="text-sm text-gray-600">Manage all lens configurations</p>
-            </div>
+    <div className="p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Quản Lý Loại Lens
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Quản lý các loại lens cơ bản và thuộc tính liên quan
+            </p>
           </div>
-        </div>
-
-        {/* Menu Items */}
-        <div className="p-4 space-y-2">
-          {/* Group by category */}
-          {['Lens Types', 'Quality & Coatings', 'Premium Upgrades'].map((category) => (
-            <div key={category} className="mb-6">
-              {/* Category Header */}
-              <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                {category}
-              </div>
-              
-              {/* Menu Items in Category */}
-              <div className="space-y-1">
-                {menuItems
-                  .filter(item => item.category === category)
-                  .map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveMenuItem(item.id)}
-                      className={`
-                        w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left
-                        ${activeMenuItem === item.id 
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm' 
-                          : 'hover:bg-gray-50 text-gray-700'
-                        }
-                      `}
-                    >
-                      <div className={`
-                        ${activeMenuItem === item.id ? 'text-blue-600' : 'text-gray-500'}
-                      `}>
-                        {item.icon}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-sm font-medium">{item.label}</h4>
-                        <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
-                      </div>
-                    </button>
-                  ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Customer Journey Info */}
-        <div className="p-4 border-t border-gray-200 bg-blue-50">
-          <h3 className="font-medium text-blue-900 mb-2 text-sm">Customer Journey:</h3>
-          <div className="space-y-1 text-xs text-blue-700">
-            <div className="flex items-center gap-2">
-              <span className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">1</span>
-              <span>Lens Type</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">2</span>
-              <span>Prescription</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">3</span>
-              <span>Thickness & Quality</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">4</span>
-              <span>Tint & Upgrades</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1">
-        {/* Content Header */}
-        <div className="bg-white border-b border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {menuItems.find(m => m.id === activeMenuItem)?.label || 'Lens Management'}
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            {getActiveDescription()}
-          </p>
-        </div>
-
-        {/* Tab Content */}
-        <div className="p-6">
-          <React.Suspense 
-            fallback={
-              <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            }
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            {activeMenuItem === 'lenses.basic' && <ActiveComponent onEditLens={handleEditLens} onCreateLens={handleCreateLens} />}
-            {activeMenuItem === 'quality.basic' && <LensQualityListPage onEditLensQuality={handleEditLensQuality} onCreateLensQuality={handleCreateLensQuality} />}
-            {activeMenuItem === 'lenses.thickness' && <LensThicknessPage />}
-            {activeMenuItem === 'quality.tints' && <LensTintPage />}
-            {activeMenuItem === 'upgrades.features' && <LensUpgradePage />}
-            {activeMenuItem === 'lenses.details' && <LensDetailPage />}
-          </React.Suspense>
+            <Plus className="w-4 h-4 mr-2" />
+            Thêm mới
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="flex items-center space-x-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Tìm kiếm theo tên hoặc mô tả..."
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="text-sm text-gray-600">
+            Hiển thị {filteredLenses.length} / {lenses.length} kết quả
+          </div>
         </div>
       </div>
 
-      {/* Lens Form Modal */}
-      {showLensForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
-            <h2 className="text-xl font-bold mb-4">
-              {editingLens ? 'Chỉnh sửa kính' : 'Thêm kính mới'}
-            </h2>
-            <LensForm
-              lens={editingLens}
-              onSubmit={handleLensFormSubmit}
-              onCancel={handleLensFormCancel}
-            />
+      {/* Table */}
+      <div className="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Đang tải...</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    Tên
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    Mô tả
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    Ngày tạo
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    Ngày cập nhật
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Hành động
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredLenses.map((lens) => (
+                  <tr key={lens.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                      <div className="text-sm font-medium text-gray-900">
+                        #{lens.id}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 border-r border-gray-200">
+                      <div className="text-sm font-medium text-gray-900">
+                        {lens.name}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 border-r border-gray-200">
+                      <div className="text-sm text-gray-600 max-w-xs truncate">
+                        {lens.description || '-'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                      <div className="text-sm text-gray-600">
+                        {formatDate(lens.createdAt)}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Bởi: User {lens.createdBy}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-gray-200">
+                      <div className="text-sm text-gray-600">
+                        {formatDate(lens.updatedAt)}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Bởi: User {lens.updatedBy}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEdit(lens)}
+                          className="text-orange-600 hover:text-orange-900 p-1 rounded transition-colors"
+                          title="Sửa"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(lens.id)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded transition-colors"
+                          title="Xóa"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {filteredLenses.length === 0 && !loading && (
+          <div className="text-center py-8">
+            <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-500">
+              {searchTerm ? 'Không tìm thấy kết quả phù hợp' : 'Chưa có lens nào được tạo'}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Trang {currentPage} / {totalPages}
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Trước
+            </button>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Sau
+            </button>
           </div>
         </div>
       )}
 
-      {/* Lens Quality Form Modal */}
-      {showLensQualityForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
-            <h2 className="text-xl font-bold mb-4">
-              {editingLensQuality ? 'Chỉnh sửa chất lượng kính' : 'Thêm chất lượng kính mới'}
-            </h2>
-            <LensQualityForm
-              lensQuality={editingLensQuality}
-              onSubmit={handleLensQualityFormSubmit}
-              onCancel={handleLensQualityFormCancel}
-            />
-          </div>
-        </div>
-      )}
+      {/* Modals */}
+      <LensFormModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreate}
+        mode="create"
+        title="Thêm Lens Mới"
+      />
+
+      <LensFormModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedLens(null);
+        }}
+        onSubmit={handleUpdate}
+        mode="edit"
+        title="Sửa Lens"
+        initialData={selectedLens ? {
+          name: selectedLens.name,
+          description: selectedLens.description || '',
+          lensType: LensType.SINGLE_VISION, // TODO: Get from lens_detail
+          hasAxisCorrection: false, // TODO: Get from lens_detail
+          isNonPrescription: false, // TODO: Get from lens_detail
+        } : undefined}
+      />
     </div>
   );
 };

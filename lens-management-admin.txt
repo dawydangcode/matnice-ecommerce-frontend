@@ -1,0 +1,237 @@
+1. Bảng lens
+
+Mô tả: Lưu thông tin cơ bản về các loại lens (Single Vision, Progressive, Office, Non-prescription).
+Cấu trúc:
+textTable lens {
+  id bigint [pk, increment]
+  name varchar  // Ví dụ: "Single Vision", "Progressive"
+  description varchar
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+2. Bảng lens_detail
+
+Mô tả: Lưu chi tiết toa thuốc và các thuộc tính của lens cho từng đơn hàng hoặc giỏ hàng.
+Cấu trúc (đã có, bổ sung thêm thuộc tính):
+textTable lens_detail {
+  id bigint [pk, increment]
+  lens_id bigint  // Liên kết với lens.id
+  lens_type varchar  // Ví dụ: "Single Vision", "Progressive"
+  lens_thickness_id bigint  // Liên kết với lens_thickness.id
+  lens_quality_id bigint  // Liên kết với lens_quality.id
+  tint_id bigint  // Liên kết với lens_tint.id
+  power_sphere_left decimal(4,2) [default: null]  // Sphere mắt trái
+  power_sphere_right decimal(4,2) [default: null]  // Sphere mắt phải
+  power_cylinder_left decimal(4,2) [default: null]  // Cylinder mắt trái
+  power_cylinder_right decimal(4,2) [default: null]  // Cylinder mắt phải
+  axis_left int [default: null]  // Axis mắt trái
+  axis_right int [default: null]  // Axis mắt phải
+  pd_left decimal(4,1) [default: null]  // PD mắt trái
+  pd_right decimal(4,1) [default: null]  // PD mắt phải
+  add_left decimal(4,2) [default: null]  // Add mắt trái (Progressive/Office)
+  add_right decimal(4,2) [default: null]  // Add mắt phải (Progressive/Office)
+  prescription_date date  // Ngày toa thuốc
+  hasAxisCorrection boolean [default: false]  // Có cần điều chỉnh Axis không
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+3. Bảng lens_thickness
+
+Mô tả: Lưu thông tin độ dày lens (Standard, Thin, Very Thin, Extra Thin).
+Cấu trúc (đã có, giữ nguyên):
+textTable lens_thickness {
+  id bigint [pk, increment]
+  name varchar  // Ví dụ: "Extra Thin"
+  index_value double  // Ví dụ: 1.74
+  price decimal(10, 2)
+  description varchar
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+4. Bảng lens_quality
+
+Mô tả: Lưu thông tin chất lượng lens (Classic, SpexPro).
+Cấu trúc (đã có, giữ nguyên):
+textTable lens_quality {
+  id bigint [pk, increment]
+  name varchar  // Ví dụ: "Classic", "SpexPro"
+  price decimal(10, 2)
+  description varchar
+  uv_protection boolean [default: true]
+  anti_reflective boolean [default: true]
+  hard_coating boolean [default: true]
+  night_day_optimization boolean [default: false]
+  antistatic_coating boolean [default: false]
+  free_form_technology boolean [default: false]
+  transitions_option boolean [default: false]
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+5. Bảng lens_tint
+
+Mô tả: Lưu thông tin màu tint (No Tint, Photochromic, Polarised, v.v.).
+Cấu trúc (đã có, giữ nguyên):
+textTable lens_tint {
+  id bigint [pk, increment]
+  name varchar  // Ví dụ: "Photochromic"
+  price decimal(10, 2)
+  description varchar
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+6. Bảng tint_color
+
+Mô tả: Lưu chi tiết màu sắc của tint (hình ảnh và mã màu).
+Cấu trúc (đã có, giữ nguyên):
+textTable tint_color {
+  id bigint [pk, increment]
+  tint_id bigint
+  name varchar  // Ví dụ: "Grey"
+  image_url varchar
+  color_code varchar  // Ví dụ: "#808080"
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+7. Bảng lens_thickness_tint
+
+Mô tả: Lưu ràng buộc giữa độ dày lens và tint (theo ràng buộc trong tài liệu).
+Cấu trúc:
+textTable lens_thickness_tint {
+  id bigint [pk, increment]
+  lens_thickness_id bigint  // Liên kết với lens_thickness.id
+  tint_id bigint  // Liên kết với lens_tint.id
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+Dữ liệu mẫu (dựa trên ràng buộc):
+
+Standard/Thin: Photochromic, Polarised, Sunglasses Tint, Gradient Tint, Mirrored, Filter Tint
+Very Thin: Photochromic, Polarised, Sunglasses Tint, Gradient Tint, Filter Tint
+Extra Thin: Sunglasses Tint, Filter Tint
+
+
+
+
+
+8. Bảng lens_upgrade
+
+Mô tả: Lưu thông tin nâng cấp lens (Extra Easy-Care, Blue Light Filter, Smart Focus).
+Cấu trúc (đã có, giữ nguyên):
+textTable lens_upgrade {
+  id bigint [pk, increment]
+  upgrade_name varchar
+  description varchar
+  price decimal(10, 2)
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+
+9. Bảng lens_upgrade_detail
+
+Mô tả: Lưu chi tiết nâng cấp cho từng lens_detail.
+Cấu trúc (đã có, giữ nguyên):
+textTable lens_upgrade_detail {
+  id bigint [pk, increment]
+  lens_detail_id bigint  // Liên kết với lens_detail.id
+  lens_upgrade_id bigint  // Liên kết với lens_upgrade.id
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+Ràng buộc: Không áp dụng Smart Focus cho Progressive/Office (cần kiểm tra logic trong ứng dụng).
+
+
+
+10. Bảng eyeglass_lens
+
+Mô tả: Liên kết giữa product và lens (nếu lens là một phần của sản phẩm).
+Cấu trúc (đã có, giữ nguyên):
+textTable eyeglass_lens {
+  id bigint [pk, increment]
+  product_id bigint  // Liên kết với product.id
+  lens_id bigint  // Liên kết với lens.id
+  created_at timestamp   
+  created_by bigint
+  updated_at timestamp 
+  updated_by bigint
+  deleted_at timestamp 
+  deleted_by bigint
+}
+
+UX/UI Design: Cho phép admin quản lý danh mục lens, độ dày, chất lượng, tint, và nâng cấp.
+
+Đối tượng sử dụng:
+Admin (trang quản trị backend).
+
+Bảng lens
+
+Mô tả: Lưu thông tin cơ bản về các loại lens (Single Vision, Progressive, Office, Non-prescription).
+Yêu cầu UI/UX:
+
+Trang Admin - Quản lý Loại Lens:
+
+Bố cục: Bảng danh sách với các cột: ID, Tên, Mô tả, Ngày tạo, Ngày cập nhật, Hành động (Sửa/Xóa).
+Chức năng:
+
+Nút "Thêm mới" để mở form nhập: Tên (input text), Mô tả (textarea)
+Kết hợp với LensDetail. Sẽ có 2 checkbox, có giá trị Axis, và Non-prescription. (Nếu chọn Non-prescription thì không được chọn Axis và ngược lại).
+Nút "Lưu" để lưu thông tin mới. Tạo mới lens và LensDetail tương ứng. Các trường trong lens_detail sẽ được để trống. Quan trọng là phần hasAxisCorrection sẽ được lưu là true hoặc false.
+Tìm kiếm theo Tên hoặc Mô tả.
+Phân trang (10 mục/trang).
+
+
+Thiết kế: Sử dụng bảng có viền rõ ràng, nút hành động màu xanh (Thêm), đỏ (Xóa), cam (Sửa).
+
+2.2. Bảng lens_detail
+
+Mô tả: Lưu chi tiết toa thuốc và các thuộc tính của lens cho từng đơn hàng hoặc giỏ hàng.
