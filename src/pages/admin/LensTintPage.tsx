@@ -23,6 +23,8 @@ const LensTintPage: React.FC = () => {
     // Tint color methods
     fetchTintColorsByTintId,
     createTintColor,
+    updateTintColor,
+    deleteTintColor,
     uploadTintColorImage,
     // Compatibility methods
     fetchCompatibleThicknessesForTint,
@@ -34,6 +36,7 @@ const LensTintPage: React.FC = () => {
   const [editingItem, setEditingItem] = useState<LensTint | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [loadingTintData, setLoadingTintData] = useState(false);
   
   // Form data
   const [formData, setFormData] = useState<CreateLensTintDto>({
@@ -47,6 +50,7 @@ const LensTintPage: React.FC = () => {
   
   // Lens thickness compatibility
   const [selectedThicknesses, setSelectedThicknesses] = useState<number[]>([]);
+  const [originalThicknesses, setOriginalThicknesses] = useState<number[]>([]);
 
   // Predefined tint types from your customer journey
   const tintTypes = [
@@ -100,49 +104,136 @@ const LensTintPage: React.FC = () => {
       }
       
       if (savedTint) {
-        // Save tint colors
-        for (const color of tintColors) {
-          if (color.name.trim()) {
-            const colorData: CreateTintColorDto = {
-              tintId: savedTint.id,
-              name: color.name.trim(),
-              ...(color.colorCode && color.colorCode !== '#000000' ? { colorCode: color.colorCode } : {}),
-            };
-
-            // Upload image if present
-            if (color.imageFile) {
-              try {
-                colorData.imageUrl = await uploadImageToS3(color.imageFile);
-              } catch (uploadError) {
-                console.error('Error uploading image:', uploadError);
-                // Continue without image if upload fails
-              }
-            } else if (color.imageUrl) {
-              colorData.imageUrl = color.imageUrl;
+        if (editingItem) {
+          // For editing mode: Handle existing and new tint colors
+          const existingColorIds = tintColors
+            .filter(color => color.id !== undefined)
+            .map(color => color.id!);
+          
+          // Get current tint colors from backend to identify deleted ones
+          const currentColors = await fetchTintColorsByTintId(editingItem.id);
+          const currentColorIds = currentColors.map(color => color.id);
+          
+          // Delete colors that were removed
+          const colorsToDelete = currentColorIds.filter(id => !existingColorIds.includes(id));
+          for (const colorId of colorsToDelete) {
+            try {
+              await deleteTintColor(colorId);
+            } catch (deleteError) {
+              console.error('Error deleting tint color:', deleteError);
             }
+          }
 
-            await createTintColor(colorData);
+          // Update existing colors and create new ones
+          for (const color of tintColors) {
+            if (color.name.trim()) {
+              let imageUrl = color.imageUrl;
+              
+              // Upload new image if file is selected
+              if (color.imageFile) {
+                try {
+                  imageUrl = await uploadImageToS3(color.imageFile);
+                } catch (uploadError) {
+                  console.error('Error uploading image:', uploadError);
+                  // Continue with existing imageUrl if upload fails
+                }
+              }
+
+              if (color.id) {
+                // Update existing color
+                const updateData = {
+                  name: color.name.trim(),
+                  ...(color.colorCode && color.colorCode !== '#000000' ? { colorCode: color.colorCode } : {}),
+                  ...(imageUrl ? { imageUrl } : {}),
+                };
+                await updateTintColor(color.id, updateData);
+              } else {
+                // Create new color
+                const createData: CreateTintColorDto = {
+                  tintId: savedTint.id,
+                  name: color.name.trim(),
+                  ...(color.colorCode && color.colorCode !== '#000000' ? { colorCode: color.colorCode } : {}),
+                  ...(imageUrl ? { imageUrl } : {}),
+                };
+                await createTintColor(createData);
+              }
+            }
+          }
+        } else {
+          // For create mode: Create all tint colors
+          for (const color of tintColors) {
+            if (color.name.trim()) {
+              const colorData: CreateTintColorDto = {
+                tintId: savedTint.id,
+                name: color.name.trim(),
+                ...(color.colorCode && color.colorCode !== '#000000' ? { colorCode: color.colorCode } : {}),
+              };
+
+              // Upload image if present
+              if (color.imageFile) {
+                try {
+                  colorData.imageUrl = await uploadImageToS3(color.imageFile);
+                } catch (uploadError) {
+                  console.error('Error uploading image:', uploadError);
+                  // Continue without image if upload fails
+                }
+              } else if (color.imageUrl) {
+                colorData.imageUrl = color.imageUrl;
+              }
+
+              await createTintColor(colorData);
+            }
           }
         }
 
-        // Save lens thickness compatibility
-        if (selectedThicknesses.length > 0) {
-          await createTintThicknessCompatibility(savedTint.id, selectedThicknesses);
+        // Handle lens thickness compatibility
+        if (editingItem) {
+          // For editing mode: Check if thickness selection has changed
+          const thicknessChanged = JSON.stringify([...selectedThicknesses].sort()) !== 
+                                   JSON.stringify([...originalThicknesses].sort());
+          
+          if (thicknessChanged) {
+            console.log('Thickness selection changed, updating compatibility...');
+            // Note: Backend doesn't support updating compatibility yet, so we skip for now
+            // TODO: Implement delete existing + create new when backend supports it
+            console.log('Skipping thickness compatibility update - backend doesn\'t support updates yet');
+          } else {
+            console.log('No thickness changes detected, skipping compatibility update');
+          }
+        } else {
+          // For create mode: Save lens thickness compatibility
+          if (selectedThicknesses.length > 0) {
+            try {
+              await createTintThicknessCompatibility(savedTint.id, selectedThicknesses);
+            } catch (compatibilityError) {
+              console.error('Error creating thickness compatibility:', compatibilityError);
+              // Don't fail the entire operation if compatibility fails
+            }
+          }
         }
       }
       
       resetForm();
       fetchLensTints();
       setCurrentView('list');
+      
+      // Show success message
+      if (editingItem) {
+        console.log('Lens tint updated successfully!');
+        // You can add a toast notification here if you have a toast system
+      } else {
+        console.log('Lens tint created successfully!');
+      }
     } catch (error) {
       console.error('Error saving lens tint:', error);
-      alert('Error creating lens tint. Please check your input and try again.');
+      const action = editingItem ? 'updating' : 'creating';
+      alert(`Error ${action} lens tint. Please check your input and try again.`);
     } finally {
       setUploading(false);
     }
   };
 
-  const handleEdit = (item: LensTint) => {
+  const handleEdit = async (item: LensTint) => {
     setEditingItem(item);
     setFormData({
       name: item.name,
@@ -150,27 +241,48 @@ const LensTintPage: React.FC = () => {
       price: item.price,
     });
     
-    // Load existing tint colors and thickness compatibility
-    loadTintData(item.id);
+    // Clear existing data before loading
+    setTintColors([]);
+    setSelectedThicknesses([]);
+    setOriginalThicknesses([]);
+    
+    // Switch to form view first
     setCurrentView('form');
+    
+    // Load existing tint colors and thickness compatibility
+    await loadTintData(item.id);
   };
 
   const loadTintData = async (tintId: number) => {
     try {
-      // Load tint colors
+      setLoadingTintData(true);
+      
+      // Load tint colors with full data
       const colors = await fetchTintColorsByTintId(tintId);
-      setTintColors(colors.map(color => ({
+      const mappedColors = colors.map(color => ({
         id: color.id,
         name: color.name,
         colorCode: color.colorCode,
-        imageUrl: color.imageUrl,
-      })));
+        imageUrl: color.imageUrl || '',
+        imageFile: undefined, // For existing colors, no file is initially selected
+      }));
+      
+      console.log('Loaded tint colors for editing:', mappedColors);
+      setTintColors(mappedColors);
 
       // Load compatible thicknesses
       const compatibleThicknesses = await fetchCompatibleThicknessesForTint(tintId);
-      setSelectedThicknesses(compatibleThicknesses.map(ct => ct.lensThicknessId || ct.id));
+      const thicknessIds = compatibleThicknesses.map(ct => ct.lensThicknessId || ct.id);
+      
+      console.log('Loaded compatible thickness IDs:', thicknessIds);
+      setSelectedThicknesses(thicknessIds);
+      setOriginalThicknesses(thicknessIds); // Store original selection for comparison
+      
     } catch (error) {
       console.error('Error loading tint data:', error);
+      // Show error in console instead of setting error state since we don't have setError
+    } finally {
+      setLoadingTintData(false);
     }
   };
 
@@ -202,6 +314,7 @@ const LensTintPage: React.FC = () => {
     });
     setTintColors([]);
     setSelectedThicknesses([]);
+    setOriginalThicknesses([]);
     setEditingItem(null);
   };
 
@@ -224,7 +337,7 @@ const LensTintPage: React.FC = () => {
     setTintColors(tintColors.filter((_, i) => i !== index));
   };
 
-  const updateTintColor = (index: number, field: keyof TintColorFormData, value: string | File) => {
+  const updateTintColorForm = (index: number, field: keyof TintColorFormData, value: string | File) => {
     const newTintColors = [...tintColors];
     if (field === 'imageFile') {
       newTintColors[index].imageFile = value as File;
@@ -310,7 +423,19 @@ const LensTintPage: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900">
             {editingItem ? 'Edit Lens Tint' : 'Add New Lens Tint'}
           </h2>
+          {editingItem && (
+            <div className="text-sm text-gray-500">
+              Editing: {editingItem.name} (ID: {editingItem.id})
+            </div>
+          )}
         </div>
+
+        {loadingTintData && editingItem && (
+          <div className="flex items-center justify-center py-8 mb-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
+            <span className="text-gray-600">Loading tint data...</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information */}
@@ -407,7 +532,7 @@ const LensTintPage: React.FC = () => {
                         type="text"
                         required
                         value={color.name}
-                        onChange={(e) => updateTintColor(index, 'name', e.target.value)}
+                        onChange={(e) => updateTintColorForm(index, 'name', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="e.g., Smoke Gray"
                       />
@@ -421,14 +546,14 @@ const LensTintPage: React.FC = () => {
                         <input
                           type="color"
                           value={color.colorCode || '#000000'}
-                          onChange={(e) => updateTintColor(index, 'colorCode', e.target.value)}
+                          onChange={(e) => updateTintColorForm(index, 'colorCode', e.target.value)}
                           className="w-12 h-10 rounded border border-gray-300"
                           title="Select color"
                         />
                         <input
                           type="text"
                           value={color.colorCode || ''}
-                          onChange={(e) => updateTintColor(index, 'colorCode', e.target.value)}
+                          onChange={(e) => updateTintColorForm(index, 'colorCode', e.target.value)}
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="#000000"
                           pattern="^#[0-9A-Fa-f]{6}$"
@@ -448,7 +573,7 @@ const LensTintPage: React.FC = () => {
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
-                              updateTintColor(index, 'imageFile', file);
+                              updateTintColorForm(index, 'imageFile', file);
                             }
                           }}
                           className="hidden"
