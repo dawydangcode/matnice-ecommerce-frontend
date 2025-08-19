@@ -1,22 +1,22 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
-import { toast } from "react-hot-toast";
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { toast } from 'react-hot-toast';
 
 class ApiService {
   private api: AxiosInstance;
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
     // Debug logging
-    console.log("Environment API URL:", process.env.REACT_APP_API_URL);
-    console.log("Using baseURL:", this.baseURL);
+    console.log('Environment API URL:', process.env.REACT_APP_API_URL);
+    console.log('Using baseURL:', this.baseURL);
 
     this.api = axios.create({
       baseURL: this.baseURL,
       timeout: 10000,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       withCredentials: true, // For cookies/sessions
     });
@@ -28,22 +28,22 @@ class ApiService {
     // Request interceptor - add auth token
     this.api.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem('accessToken');
         console.log(
-          "API Request:",
+          'API Request:',
           config.url,
-          "Token:",
-          token ? "Present" : "Missing"
+          'Token:',
+          token ? 'Present' : 'Missing',
         );
         if (token) {
-          console.log("Token value:", token.substring(0, 50) + "...");
+          console.log('Token value:', token.substring(0, 50) + '...');
           config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
       },
       (error) => {
         return Promise.reject(error);
-      }
+      },
     );
 
     // Response interceptor - handle errors
@@ -54,22 +54,22 @@ class ApiService {
       (error) => {
         if (error.response?.status === 401) {
           // Token expired or invalid
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("user");
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('user');
 
           // Redirect to login
-          if (window.location.pathname !== "/login") {
-            toast.error("Session expired. Please login again.");
-            window.location.href = "/login";
+          if (window.location.pathname !== '/login') {
+            toast.error('Session expired. Please login again.');
+            window.location.href = '/login';
           }
         } else if (error.response?.status === 403) {
-          toast.error("Access denied. You do not have permission.");
+          toast.error('Access denied. You do not have permission.');
         } else if (error.response?.status >= 500) {
-          toast.error("Server error. Please try again later.");
+          toast.error('Server error. Please try again later.');
         }
 
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -80,19 +80,19 @@ class ApiService {
   }
 
   async post<T>(url: string, data?: any, config?: any): Promise<T> {
-    console.log("ApiService.post:", { url, data, config });
-    console.log("Full URL:", this.baseURL + url);
+    console.log('ApiService.post:', { url, data, config });
+    console.log('Full URL:', this.baseURL + url);
 
     try {
       const response = await this.api.post(url, data, config);
-      console.log("ApiService.post success:", {
+      console.log('ApiService.post success:', {
         url,
         status: response.status,
         data: response.data,
       });
       return response.data;
     } catch (error: any) {
-      console.error("ApiService.post failed:", {
+      console.error('ApiService.post failed:', {
         url,
         error,
         status: error.response?.status,
@@ -109,6 +109,29 @@ class ApiService {
     return response.data;
   }
 
+  async postFormData<T>(url: string, formData: FormData): Promise<T> {
+    try {
+      console.log('ApiService.postFormData:', url);
+      const response = await this.api.post(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log('ApiService.postFormData success:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('ApiService.postFormData failed:', {
+        url,
+        error,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+      });
+      throw error;
+    }
+  }
+
   async patch<T>(url: string, data?: any): Promise<T> {
     const response = await this.api.patch(url, data);
     return response.data;
@@ -123,19 +146,19 @@ class ApiService {
   async uploadFile<T>(
     url: string,
     file: File,
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void,
   ): Promise<T> {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
     const response = await this.api.post(url, formData, {
       headers: {
-        "Content-Type": "multipart/form-data",
+        'Content-Type': 'multipart/form-data',
       },
       onUploadProgress: (progressEvent) => {
         if (progressEvent.total && onProgress) {
           const progress = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
+            (progressEvent.loaded * 100) / progressEvent.total,
           );
           onProgress(progress);
         }

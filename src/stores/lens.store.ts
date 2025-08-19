@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 import {
   Lens,
   LensFilters,
@@ -16,6 +16,9 @@ import {
   LensTintFilters,
   CreateLensTintDto,
   UpdateLensTintDto,
+  TintColor,
+  CreateTintColorDto,
+  UpdateTintColorDto,
   LensUpgrade,
   LensUpgradeFilters,
   CreateLensUpgradeDto,
@@ -26,9 +29,9 @@ import {
   LensUpgradeDetail,
   CreateLensUpgradeDetailDto,
   UpdateLensUpgradeDetailDto,
-} from "../types/lens.types";
-import { lensService } from "../services/lens.service";
-import { toast } from "react-hot-toast";
+} from '../types/lens.types';
+import { lensService } from '../services/lens.service';
+import { toast } from 'react-hot-toast';
 
 interface LensStore {
   // Basic Lens State
@@ -90,7 +93,7 @@ interface LensStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setFilters: (filters: LensFilters) => void;
-  setPagination: (pagination: Partial<LensStore["pagination"]>) => void;
+  setPagination: (pagination: Partial<LensStore['pagination']>) => void;
   clearError: () => void;
 
   // API Actions for Basic Lens
@@ -112,11 +115,11 @@ interface LensStore {
   fetchLensQualities: (filters?: LensQualityFilters) => Promise<void>;
   fetchLensQualityById: (id: number) => Promise<void>;
   createLensQuality: (
-    data: CreateLensQualityDto
+    data: CreateLensQualityDto,
   ) => Promise<LensQuality | null>;
   updateLensQuality: (
     id: number,
-    data: UpdateLensQualityDto
+    data: UpdateLensQualityDto,
   ) => Promise<LensQuality | null>;
   deleteLensQuality: (id: number) => Promise<boolean>;
 
@@ -132,11 +135,11 @@ interface LensStore {
   fetchLensThicknesses: (filters?: LensThicknessFilters) => Promise<void>;
   fetchLensThicknessById: (id: number) => Promise<void>;
   createLensThickness: (
-    data: CreateLensThicknessDto
+    data: CreateLensThicknessDto,
   ) => Promise<LensThickness | null>;
   updateLensThickness: (
     id: number,
-    data: UpdateLensThicknessDto
+    data: UpdateLensThicknessDto,
   ) => Promise<LensThickness | null>;
   deleteLensThickness: (id: number) => Promise<boolean>;
 
@@ -154,9 +157,31 @@ interface LensStore {
   createLensTint: (data: CreateLensTintDto) => Promise<LensTint | null>;
   updateLensTint: (
     id: number,
-    data: UpdateLensTintDto
+    data: UpdateLensTintDto,
   ) => Promise<LensTint | null>;
   deleteLensTint: (id: number) => Promise<boolean>;
+
+  // Tint Color Actions
+  fetchTintColorsByTintId: (tintId: number) => Promise<TintColor[]>;
+  createTintColor: (data: CreateTintColorDto) => Promise<TintColor | null>;
+  uploadTintColorImage: (file: File) => Promise<{ imageUrl: string } | null>;
+  updateTintColor: (
+    id: number,
+    data: UpdateTintColorDto,
+  ) => Promise<TintColor | null>;
+  deleteTintColor: (id: number) => Promise<boolean>;
+
+  // Lens Thickness Tint Compatibility Actions
+  fetchCompatibleTintsForThickness: (thicknessId: number) => Promise<any[]>;
+  fetchCompatibleThicknessesForTint: (tintId: number) => Promise<any[]>;
+  createTintThicknessCompatibility: (
+    tintId: number,
+    thicknessIds: number[],
+  ) => Promise<any[]>;
+  updateTintThicknessCompatibility: (
+    tintId: number,
+    thicknessIds: number[],
+  ) => Promise<any[]>;
 
   // =============== LENS UPGRADE ACTIONS ===============
   setLensUpgrades: (upgrades: LensUpgrade[]) => void;
@@ -170,11 +195,11 @@ interface LensStore {
   fetchLensUpgrades: (filters?: LensUpgradeFilters) => Promise<void>;
   fetchLensUpgradeById: (id: number) => Promise<void>;
   createLensUpgrade: (
-    data: CreateLensUpgradeDto
+    data: CreateLensUpgradeDto,
   ) => Promise<LensUpgrade | null>;
   updateLensUpgrade: (
     id: number,
-    data: UpdateLensUpgradeDto
+    data: UpdateLensUpgradeDto,
   ) => Promise<LensUpgrade | null>;
   deleteLensUpgrade: (id: number) => Promise<boolean>;
 
@@ -191,7 +216,7 @@ interface LensStore {
   createLensDetail: (data: CreateLensDetailDto) => Promise<LensDetail | null>;
   updateLensDetail: (
     id: number,
-    data: UpdateLensDetailDto
+    data: UpdateLensDetailDto,
   ) => Promise<LensDetail | null>;
   deleteLensDetail: (id: number) => Promise<boolean>;
 
@@ -206,11 +231,11 @@ interface LensStore {
   fetchLensUpgradeDetails: () => Promise<void>;
   fetchLensUpgradeDetailById: (id: number) => Promise<void>;
   createLensUpgradeDetail: (
-    data: CreateLensUpgradeDetailDto
+    data: CreateLensUpgradeDetailDto,
   ) => Promise<LensUpgradeDetail | null>;
   updateLensUpgradeDetail: (
     id: number,
-    data: UpdateLensUpgradeDetailDto
+    data: UpdateLensUpgradeDetailDto,
   ) => Promise<LensUpgradeDetail | null>;
   deleteLensUpgradeDetail: (id: number) => Promise<boolean>;
 }
@@ -300,13 +325,13 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLoading: false,
       });
     } catch (error) {
-      console.error("Error fetching lenses:", error);
+      console.error('Error fetching lenses:', error);
       set({
         error:
-          error instanceof Error ? error.message : "Failed to fetch lenses",
+          error instanceof Error ? error.message : 'Failed to fetch lenses',
         isLoading: false,
       });
-      toast.error("Không thể tải danh sách lens");
+      toast.error('Không thể tải danh sách lens');
     }
   },
 
@@ -316,12 +341,12 @@ export const useLensStore = create<LensStore>((set, get) => ({
       const lens = await lensService.getLensById(id);
       set({ selectedLens: lens, isLoading: false });
     } catch (error) {
-      console.error("Error fetching lens:", error);
+      console.error('Error fetching lens:', error);
       set({
-        error: error instanceof Error ? error.message : "Failed to fetch lens",
+        error: error instanceof Error ? error.message : 'Failed to fetch lens',
         isLoading: false,
       });
-      toast.error("Không thể tải thông tin lens");
+      toast.error('Không thể tải thông tin lens');
     }
   },
 
@@ -334,15 +359,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
       await get().fetchLenses();
 
       set({ isLoading: false });
-      toast.success("Tạo lens thành công!");
+      toast.success('Tạo lens thành công!');
       return lens;
     } catch (error) {
-      console.error("Error creating lens:", error);
+      console.error('Error creating lens:', error);
       set({
-        error: error instanceof Error ? error.message : "Failed to create lens",
+        error: error instanceof Error ? error.message : 'Failed to create lens',
         isLoading: false,
       });
-      toast.error("Không thể tạo lens");
+      toast.error('Không thể tạo lens');
       return null;
     }
   },
@@ -359,15 +384,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLoading: false,
       }));
 
-      toast.success("Cập nhật lens thành công!");
+      toast.success('Cập nhật lens thành công!');
       return lens;
     } catch (error) {
-      console.error("Error updating lens:", error);
+      console.error('Error updating lens:', error);
       set({
-        error: error instanceof Error ? error.message : "Failed to update lens",
+        error: error instanceof Error ? error.message : 'Failed to update lens',
         isLoading: false,
       });
-      toast.error("Không thể cập nhật lens");
+      toast.error('Không thể cập nhật lens');
       return null;
     }
   },
@@ -384,15 +409,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLoading: false,
       }));
 
-      toast.success("Xóa lens thành công!");
+      toast.success('Xóa lens thành công!');
       return true;
     } catch (error) {
-      console.error("Error deleting lens:", error);
+      console.error('Error deleting lens:', error);
       set({
-        error: error instanceof Error ? error.message : "Failed to delete lens",
+        error: error instanceof Error ? error.message : 'Failed to delete lens',
         isLoading: false,
       });
-      toast.error("Không thể xóa lens");
+      toast.error('Không thể xóa lens');
       return false;
     }
   },
@@ -420,15 +445,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensQualityLoading: false,
       });
     } catch (error) {
-      console.error("Error fetching lens qualities:", error);
+      console.error('Error fetching lens qualities:', error);
       set({
         lensQualityError:
           error instanceof Error
             ? error.message
-            : "Failed to fetch lens qualities",
+            : 'Failed to fetch lens qualities',
         isLensQualityLoading: false,
       });
-      toast.error("Không thể tải danh sách chất lượng lens");
+      toast.error('Không thể tải danh sách chất lượng lens');
     }
   },
 
@@ -438,15 +463,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
       const quality = await lensService.getLensQualityById(id);
       set({ selectedLensQuality: quality, isLensQualityLoading: false });
     } catch (error) {
-      console.error("Error fetching lens quality:", error);
+      console.error('Error fetching lens quality:', error);
       set({
         lensQualityError:
           error instanceof Error
             ? error.message
-            : "Failed to fetch lens quality",
+            : 'Failed to fetch lens quality',
         isLensQualityLoading: false,
       });
-      toast.error("Không thể tải thông tin chất lượng lens");
+      toast.error('Không thể tải thông tin chất lượng lens');
     }
   },
 
@@ -458,18 +483,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
       await get().fetchLensQualities();
 
       set({ isLensQualityLoading: false });
-      toast.success("Tạo chất lượng lens thành công!");
+      toast.success('Tạo chất lượng lens thành công!');
       return quality;
     } catch (error) {
-      console.error("Error creating lens quality:", error);
+      console.error('Error creating lens quality:', error);
       set({
         lensQualityError:
           error instanceof Error
             ? error.message
-            : "Failed to create lens quality",
+            : 'Failed to create lens quality',
         isLensQualityLoading: false,
       });
-      toast.error("Không thể tạo chất lượng lens");
+      toast.error('Không thể tạo chất lượng lens');
       return null;
     }
   },
@@ -481,7 +506,7 @@ export const useLensStore = create<LensStore>((set, get) => ({
 
       set((state) => ({
         lensQualities: state.lensQualities.map((q) =>
-          q.id === id ? quality : q
+          q.id === id ? quality : q,
         ),
         selectedLensQuality:
           state.selectedLensQuality?.id === id
@@ -490,18 +515,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensQualityLoading: false,
       }));
 
-      toast.success("Cập nhật chất lượng lens thành công!");
+      toast.success('Cập nhật chất lượng lens thành công!');
       return quality;
     } catch (error) {
-      console.error("Error updating lens quality:", error);
+      console.error('Error updating lens quality:', error);
       set({
         lensQualityError:
           error instanceof Error
             ? error.message
-            : "Failed to update lens quality",
+            : 'Failed to update lens quality',
         isLensQualityLoading: false,
       });
-      toast.error("Không thể cập nhật chất lượng lens");
+      toast.error('Không thể cập nhật chất lượng lens');
       return null;
     }
   },
@@ -520,18 +545,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensQualityLoading: false,
       }));
 
-      toast.success("Xóa chất lượng lens thành công!");
+      toast.success('Xóa chất lượng lens thành công!');
       return true;
     } catch (error) {
-      console.error("Error deleting lens quality:", error);
+      console.error('Error deleting lens quality:', error);
       set({
         lensQualityError:
           error instanceof Error
             ? error.message
-            : "Failed to delete lens quality",
+            : 'Failed to delete lens quality',
         isLensQualityLoading: false,
       });
-      toast.error("Không thể xóa chất lượng lens");
+      toast.error('Không thể xóa chất lượng lens');
       return false;
     }
   },
@@ -561,15 +586,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensThicknessLoading: false,
       });
     } catch (error) {
-      console.error("Error fetching lens thicknesses:", error);
+      console.error('Error fetching lens thicknesses:', error);
       set({
         lensThicknessError:
           error instanceof Error
             ? error.message
-            : "Failed to fetch lens thicknesses",
+            : 'Failed to fetch lens thicknesses',
         isLensThicknessLoading: false,
       });
-      toast.error("Không thể tải danh sách độ dày lens");
+      toast.error('Không thể tải danh sách độ dày lens');
     }
   },
 
@@ -579,15 +604,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
       const thickness = await lensService.getLensThicknessById(id);
       set({ selectedLensThickness: thickness, isLensThicknessLoading: false });
     } catch (error) {
-      console.error("Error fetching lens thickness:", error);
+      console.error('Error fetching lens thickness:', error);
       set({
         lensThicknessError:
           error instanceof Error
             ? error.message
-            : "Failed to fetch lens thickness",
+            : 'Failed to fetch lens thickness',
         isLensThicknessLoading: false,
       });
-      toast.error("Không thể tải thông tin độ dày lens");
+      toast.error('Không thể tải thông tin độ dày lens');
     }
   },
 
@@ -599,18 +624,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
       await get().fetchLensThicknesses();
 
       set({ isLensThicknessLoading: false });
-      toast.success("Tạo độ dày lens thành công!");
+      toast.success('Tạo độ dày lens thành công!');
       return thickness;
     } catch (error) {
-      console.error("Error creating lens thickness:", error);
+      console.error('Error creating lens thickness:', error);
       set({
         lensThicknessError:
           error instanceof Error
             ? error.message
-            : "Failed to create lens thickness",
+            : 'Failed to create lens thickness',
         isLensThicknessLoading: false,
       });
-      toast.error("Không thể tạo độ dày lens");
+      toast.error('Không thể tạo độ dày lens');
       return null;
     }
   },
@@ -622,7 +647,7 @@ export const useLensStore = create<LensStore>((set, get) => ({
 
       set((state) => ({
         lensThicknesses: state.lensThicknesses.map((t) =>
-          t.id === id ? thickness : t
+          t.id === id ? thickness : t,
         ),
         selectedLensThickness:
           state.selectedLensThickness?.id === id
@@ -631,18 +656,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensThicknessLoading: false,
       }));
 
-      toast.success("Cập nhật độ dày lens thành công!");
+      toast.success('Cập nhật độ dày lens thành công!');
       return thickness;
     } catch (error) {
-      console.error("Error updating lens thickness:", error);
+      console.error('Error updating lens thickness:', error);
       set({
         lensThicknessError:
           error instanceof Error
             ? error.message
-            : "Failed to update lens thickness",
+            : 'Failed to update lens thickness',
         isLensThicknessLoading: false,
       });
-      toast.error("Không thể cập nhật độ dày lens");
+      toast.error('Không thể cập nhật độ dày lens');
       return null;
     }
   },
@@ -661,18 +686,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensThicknessLoading: false,
       }));
 
-      toast.success("Xóa độ dày lens thành công!");
+      toast.success('Xóa độ dày lens thành công!');
       return true;
     } catch (error) {
-      console.error("Error deleting lens thickness:", error);
+      console.error('Error deleting lens thickness:', error);
       set({
         lensThicknessError:
           error instanceof Error
             ? error.message
-            : "Failed to delete lens thickness",
+            : 'Failed to delete lens thickness',
         isLensThicknessLoading: false,
       });
-      toast.error("Không thể xóa độ dày lens");
+      toast.error('Không thể xóa độ dày lens');
       return false;
     }
   },
@@ -700,13 +725,13 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensTintLoading: false,
       });
     } catch (error) {
-      console.error("Error fetching lens tints:", error);
+      console.error('Error fetching lens tints:', error);
       set({
         lensTintError:
-          error instanceof Error ? error.message : "Failed to fetch lens tints",
+          error instanceof Error ? error.message : 'Failed to fetch lens tints',
         isLensTintLoading: false,
       });
-      toast.error("Không thể tải danh sách tông màu lens");
+      toast.error('Không thể tải danh sách tông màu lens');
     }
   },
 
@@ -716,13 +741,13 @@ export const useLensStore = create<LensStore>((set, get) => ({
       const tint = await lensService.getLensTintById(id);
       set({ selectedLensTint: tint, isLensTintLoading: false });
     } catch (error) {
-      console.error("Error fetching lens tint:", error);
+      console.error('Error fetching lens tint:', error);
       set({
         lensTintError:
-          error instanceof Error ? error.message : "Failed to fetch lens tint",
+          error instanceof Error ? error.message : 'Failed to fetch lens tint',
         isLensTintLoading: false,
       });
-      toast.error("Không thể tải thông tin tông màu lens");
+      toast.error('Không thể tải thông tin tông màu lens');
     }
   },
 
@@ -734,16 +759,16 @@ export const useLensStore = create<LensStore>((set, get) => ({
       await get().fetchLensTints();
 
       set({ isLensTintLoading: false });
-      toast.success("Tạo tông màu lens thành công!");
+      toast.success('Tạo tông màu lens thành công!');
       return tint;
     } catch (error) {
-      console.error("Error creating lens tint:", error);
+      console.error('Error creating lens tint:', error);
       set({
         lensTintError:
-          error instanceof Error ? error.message : "Failed to create lens tint",
+          error instanceof Error ? error.message : 'Failed to create lens tint',
         isLensTintLoading: false,
       });
-      toast.error("Không thể tạo tông màu lens");
+      toast.error('Không thể tạo tông màu lens');
       return null;
     }
   },
@@ -760,16 +785,16 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensTintLoading: false,
       }));
 
-      toast.success("Cập nhật tông màu lens thành công!");
+      toast.success('Cập nhật tông màu lens thành công!');
       return tint;
     } catch (error) {
-      console.error("Error updating lens tint:", error);
+      console.error('Error updating lens tint:', error);
       set({
         lensTintError:
-          error instanceof Error ? error.message : "Failed to update lens tint",
+          error instanceof Error ? error.message : 'Failed to update lens tint',
         isLensTintLoading: false,
       });
-      toast.error("Không thể cập nhật tông màu lens");
+      toast.error('Không thể cập nhật tông màu lens');
       return null;
     }
   },
@@ -786,17 +811,133 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensTintLoading: false,
       }));
 
-      toast.success("Xóa tông màu lens thành công!");
+      toast.success('Xóa tông màu lens thành công!');
       return true;
     } catch (error) {
-      console.error("Error deleting lens tint:", error);
+      console.error('Error deleting lens tint:', error);
       set({
         lensTintError:
-          error instanceof Error ? error.message : "Failed to delete lens tint",
+          error instanceof Error ? error.message : 'Failed to delete lens tint',
         isLensTintLoading: false,
       });
-      toast.error("Không thể xóa tông màu lens");
+      toast.error('Không thể xóa tông màu lens');
       return false;
+    }
+  },
+
+  // =============== TINT COLOR API ACTIONS ===============
+  fetchTintColorsByTintId: async (tintId) => {
+    try {
+      const tintColors = await lensService.getTintColorsByTintId(tintId);
+      return tintColors;
+    } catch (error) {
+      console.error('Error fetching tint colors:', error);
+      toast.error('Không thể tải danh sách màu tint');
+      return [];
+    }
+  },
+
+  createTintColor: async (data) => {
+    try {
+      const tintColor = await lensService.createTintColor(data);
+      toast.success('Tạo màu tint thành công!');
+      return tintColor;
+    } catch (error) {
+      console.error('Error creating tint color:', error);
+      toast.error('Không thể tạo màu tint');
+      return null;
+    }
+  },
+
+  uploadTintColorImage: async (file) => {
+    try {
+      const result = await lensService.uploadTintColorImage(file);
+      toast.success('Upload hình ảnh thành công!');
+      return result;
+    } catch (error) {
+      console.error('Error uploading tint color image:', error);
+      toast.error('Không thể upload hình ảnh');
+      return null;
+    }
+  },
+
+  updateTintColor: async (id, data) => {
+    try {
+      const tintColor = await lensService.updateTintColor(id, data);
+      toast.success('Cập nhật màu tint thành công!');
+      return tintColor;
+    } catch (error) {
+      console.error('Error updating tint color:', error);
+      toast.error('Không thể cập nhật màu tint');
+      return null;
+    }
+  },
+
+  deleteTintColor: async (id) => {
+    try {
+      await lensService.deleteTintColor(id);
+      toast.success('Xóa màu tint thành công!');
+      return true;
+    } catch (error) {
+      console.error('Error deleting tint color:', error);
+      toast.error('Không thể xóa màu tint');
+      return false;
+    }
+  },
+
+  // =============== LENS THICKNESS TINT COMPATIBILITY API ACTIONS ===============
+  fetchCompatibleTintsForThickness: async (thicknessId) => {
+    try {
+      const compatibleTints =
+        await lensService.getCompatibleTintsForThickness(thicknessId);
+      return compatibleTints;
+    } catch (error) {
+      console.error('Error fetching compatible tints:', error);
+      toast.error('Không thể tải danh sách tint tương thích');
+      return [];
+    }
+  },
+
+  fetchCompatibleThicknessesForTint: async (tintId) => {
+    try {
+      const compatibleThicknesses =
+        await lensService.getCompatibleThicknessesForTint(tintId);
+      return compatibleThicknesses;
+    } catch (error) {
+      console.error('Error fetching compatible thicknesses:', error);
+      toast.error('Không thể tải danh sách độ dày tương thích');
+      return [];
+    }
+  },
+
+  createTintThicknessCompatibility: async (tintId, thicknessIds) => {
+    try {
+      const result = await lensService.createTintThicknessCompatibility(
+        tintId,
+        thicknessIds,
+      );
+      toast.success('Tạo tương thích độ dày tint thành công!');
+      return result;
+    } catch (error) {
+      console.error('Error creating tint thickness compatibility:', error);
+      toast.error('Không thể tạo tương thích độ dày tint');
+      return [];
+    }
+  },
+
+  updateTintThicknessCompatibility: async (tintId, thicknessIds) => {
+    try {
+      // Delete existing and create new ones
+      const result = await lensService.createTintThicknessCompatibility(
+        tintId,
+        thicknessIds,
+      );
+      toast.success('Cập nhật tương thích độ dày tint thành công!');
+      return result;
+    } catch (error) {
+      console.error('Error updating tint thickness compatibility:', error);
+      toast.error('Không thể cập nhật tương thích độ dày tint');
+      return [];
     }
   },
 
@@ -823,15 +964,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensUpgradeLoading: false,
       });
     } catch (error) {
-      console.error("Error fetching lens upgrades:", error);
+      console.error('Error fetching lens upgrades:', error);
       set({
         lensUpgradeError:
           error instanceof Error
             ? error.message
-            : "Failed to fetch lens upgrades",
+            : 'Failed to fetch lens upgrades',
         isLensUpgradeLoading: false,
       });
-      toast.error("Không thể tải danh sách nâng cấp lens");
+      toast.error('Không thể tải danh sách nâng cấp lens');
     }
   },
 
@@ -841,15 +982,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
       const upgrade = await lensService.getLensUpgradeById(id);
       set({ selectedLensUpgrade: upgrade, isLensUpgradeLoading: false });
     } catch (error) {
-      console.error("Error fetching lens upgrade:", error);
+      console.error('Error fetching lens upgrade:', error);
       set({
         lensUpgradeError:
           error instanceof Error
             ? error.message
-            : "Failed to fetch lens upgrade",
+            : 'Failed to fetch lens upgrade',
         isLensUpgradeLoading: false,
       });
-      toast.error("Không thể tải thông tin nâng cấp lens");
+      toast.error('Không thể tải thông tin nâng cấp lens');
     }
   },
 
@@ -861,18 +1002,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
       await get().fetchLensUpgrades();
 
       set({ isLensUpgradeLoading: false });
-      toast.success("Tạo nâng cấp lens thành công!");
+      toast.success('Tạo nâng cấp lens thành công!');
       return upgrade;
     } catch (error) {
-      console.error("Error creating lens upgrade:", error);
+      console.error('Error creating lens upgrade:', error);
       set({
         lensUpgradeError:
           error instanceof Error
             ? error.message
-            : "Failed to create lens upgrade",
+            : 'Failed to create lens upgrade',
         isLensUpgradeLoading: false,
       });
-      toast.error("Không thể tạo nâng cấp lens");
+      toast.error('Không thể tạo nâng cấp lens');
       return null;
     }
   },
@@ -884,7 +1025,7 @@ export const useLensStore = create<LensStore>((set, get) => ({
 
       set((state) => ({
         lensUpgrades: state.lensUpgrades.map((u) =>
-          u.id === id ? upgrade : u
+          u.id === id ? upgrade : u,
         ),
         selectedLensUpgrade:
           state.selectedLensUpgrade?.id === id
@@ -893,18 +1034,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensUpgradeLoading: false,
       }));
 
-      toast.success("Cập nhật nâng cấp lens thành công!");
+      toast.success('Cập nhật nâng cấp lens thành công!');
       return upgrade;
     } catch (error) {
-      console.error("Error updating lens upgrade:", error);
+      console.error('Error updating lens upgrade:', error);
       set({
         lensUpgradeError:
           error instanceof Error
             ? error.message
-            : "Failed to update lens upgrade",
+            : 'Failed to update lens upgrade',
         isLensUpgradeLoading: false,
       });
-      toast.error("Không thể cập nhật nâng cấp lens");
+      toast.error('Không thể cập nhật nâng cấp lens');
       return null;
     }
   },
@@ -923,18 +1064,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensUpgradeLoading: false,
       }));
 
-      toast.success("Xóa nâng cấp lens thành công!");
+      toast.success('Xóa nâng cấp lens thành công!');
       return true;
     } catch (error) {
-      console.error("Error deleting lens upgrade:", error);
+      console.error('Error deleting lens upgrade:', error);
       set({
         lensUpgradeError:
           error instanceof Error
             ? error.message
-            : "Failed to delete lens upgrade",
+            : 'Failed to delete lens upgrade',
         isLensUpgradeLoading: false,
       });
-      toast.error("Không thể xóa nâng cấp lens");
+      toast.error('Không thể xóa nâng cấp lens');
       return false;
     }
   },
@@ -959,15 +1100,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensDetailLoading: false,
       });
     } catch (error) {
-      console.error("Error fetching lens details:", error);
+      console.error('Error fetching lens details:', error);
       set({
         lensDetailError:
           error instanceof Error
             ? error.message
-            : "Failed to fetch lens details",
+            : 'Failed to fetch lens details',
         isLensDetailLoading: false,
       });
-      toast.error("Không thể tải danh sách chi tiết lens");
+      toast.error('Không thể tải danh sách chi tiết lens');
     }
   },
 
@@ -977,15 +1118,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
       const detail = await lensService.getLensDetailById(id);
       set({ selectedLensDetail: detail, isLensDetailLoading: false });
     } catch (error) {
-      console.error("Error fetching lens detail:", error);
+      console.error('Error fetching lens detail:', error);
       set({
         lensDetailError:
           error instanceof Error
             ? error.message
-            : "Failed to fetch lens detail",
+            : 'Failed to fetch lens detail',
         isLensDetailLoading: false,
       });
-      toast.error("Không thể tải thông tin chi tiết lens");
+      toast.error('Không thể tải thông tin chi tiết lens');
     }
   },
 
@@ -997,18 +1138,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
       await get().fetchLensDetails();
 
       set({ isLensDetailLoading: false });
-      toast.success("Tạo chi tiết lens thành công!");
+      toast.success('Tạo chi tiết lens thành công!');
       return detail;
     } catch (error) {
-      console.error("Error creating lens detail:", error);
+      console.error('Error creating lens detail:', error);
       set({
         lensDetailError:
           error instanceof Error
             ? error.message
-            : "Failed to create lens detail",
+            : 'Failed to create lens detail',
         isLensDetailLoading: false,
       });
-      toast.error("Không thể tạo chi tiết lens");
+      toast.error('Không thể tạo chi tiết lens');
       return null;
     }
   },
@@ -1027,18 +1168,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensDetailLoading: false,
       }));
 
-      toast.success("Cập nhật chi tiết lens thành công!");
+      toast.success('Cập nhật chi tiết lens thành công!');
       return detail;
     } catch (error) {
-      console.error("Error updating lens detail:", error);
+      console.error('Error updating lens detail:', error);
       set({
         lensDetailError:
           error instanceof Error
             ? error.message
-            : "Failed to update lens detail",
+            : 'Failed to update lens detail',
         isLensDetailLoading: false,
       });
-      toast.error("Không thể cập nhật chi tiết lens");
+      toast.error('Không thể cập nhật chi tiết lens');
       return null;
     }
   },
@@ -1055,18 +1196,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensDetailLoading: false,
       }));
 
-      toast.success("Xóa chi tiết lens thành công!");
+      toast.success('Xóa chi tiết lens thành công!');
       return true;
     } catch (error) {
-      console.error("Error deleting lens detail:", error);
+      console.error('Error deleting lens detail:', error);
       set({
         lensDetailError:
           error instanceof Error
             ? error.message
-            : "Failed to delete lens detail",
+            : 'Failed to delete lens detail',
         isLensDetailLoading: false,
       });
-      toast.error("Không thể xóa chi tiết lens");
+      toast.error('Không thể xóa chi tiết lens');
       return false;
     }
   },
@@ -1093,15 +1234,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensUpgradeDetailLoading: false,
       });
     } catch (error) {
-      console.error("Error fetching lens upgrade details:", error);
+      console.error('Error fetching lens upgrade details:', error);
       set({
         lensUpgradeDetailError:
           error instanceof Error
             ? error.message
-            : "Failed to fetch lens upgrade details",
+            : 'Failed to fetch lens upgrade details',
         isLensUpgradeDetailLoading: false,
       });
-      toast.error("Không thể tải danh sách chi tiết nâng cấp lens");
+      toast.error('Không thể tải danh sách chi tiết nâng cấp lens');
     }
   },
 
@@ -1114,15 +1255,15 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensUpgradeDetailLoading: false,
       });
     } catch (error) {
-      console.error("Error fetching lens upgrade detail:", error);
+      console.error('Error fetching lens upgrade detail:', error);
       set({
         lensUpgradeDetailError:
           error instanceof Error
             ? error.message
-            : "Failed to fetch lens upgrade detail",
+            : 'Failed to fetch lens upgrade detail',
         isLensUpgradeDetailLoading: false,
       });
-      toast.error("Không thể tải thông tin chi tiết nâng cấp lens");
+      toast.error('Không thể tải thông tin chi tiết nâng cấp lens');
     }
   },
 
@@ -1134,18 +1275,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
       await get().fetchLensUpgradeDetails();
 
       set({ isLensUpgradeDetailLoading: false });
-      toast.success("Tạo chi tiết nâng cấp lens thành công!");
+      toast.success('Tạo chi tiết nâng cấp lens thành công!');
       return detail;
     } catch (error) {
-      console.error("Error creating lens upgrade detail:", error);
+      console.error('Error creating lens upgrade detail:', error);
       set({
         lensUpgradeDetailError:
           error instanceof Error
             ? error.message
-            : "Failed to create lens upgrade detail",
+            : 'Failed to create lens upgrade detail',
         isLensUpgradeDetailLoading: false,
       });
-      toast.error("Không thể tạo chi tiết nâng cấp lens");
+      toast.error('Không thể tạo chi tiết nâng cấp lens');
       return null;
     }
   },
@@ -1157,7 +1298,7 @@ export const useLensStore = create<LensStore>((set, get) => ({
 
       set((state) => ({
         lensUpgradeDetails: state.lensUpgradeDetails.map((d) =>
-          d.id === id ? detail : d
+          d.id === id ? detail : d,
         ),
         selectedLensUpgradeDetail:
           state.selectedLensUpgradeDetail?.id === id
@@ -1166,18 +1307,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensUpgradeDetailLoading: false,
       }));
 
-      toast.success("Cập nhật chi tiết nâng cấp lens thành công!");
+      toast.success('Cập nhật chi tiết nâng cấp lens thành công!');
       return detail;
     } catch (error) {
-      console.error("Error updating lens upgrade detail:", error);
+      console.error('Error updating lens upgrade detail:', error);
       set({
         lensUpgradeDetailError:
           error instanceof Error
             ? error.message
-            : "Failed to update lens upgrade detail",
+            : 'Failed to update lens upgrade detail',
         isLensUpgradeDetailLoading: false,
       });
-      toast.error("Không thể cập nhật chi tiết nâng cấp lens");
+      toast.error('Không thể cập nhật chi tiết nâng cấp lens');
       return null;
     }
   },
@@ -1196,18 +1337,18 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLensUpgradeDetailLoading: false,
       }));
 
-      toast.success("Xóa chi tiết nâng cấp lens thành công!");
+      toast.success('Xóa chi tiết nâng cấp lens thành công!');
       return true;
     } catch (error) {
-      console.error("Error deleting lens upgrade detail:", error);
+      console.error('Error deleting lens upgrade detail:', error);
       set({
         lensUpgradeDetailError:
           error instanceof Error
             ? error.message
-            : "Failed to delete lens upgrade detail",
+            : 'Failed to delete lens upgrade detail',
         isLensUpgradeDetailLoading: false,
       });
-      toast.error("Không thể xóa chi tiết nâng cấp lens");
+      toast.error('Không thể xóa chi tiết nâng cấp lens');
       return false;
     }
   },

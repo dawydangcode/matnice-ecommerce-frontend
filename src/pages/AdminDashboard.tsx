@@ -291,7 +291,7 @@ const AdminDashboard: React.FC = () => {
       children: [
         { id: 'lens-management', label: 'Quản lý Loại Lens', icon: Eye },
         { id: 'lens-thickness', label: 'Lens Thickness', icon: Layers },
-        { id: 'lens-tints', label: 'Tints & Colors', icon: Palette },
+        { id: 'lens-tints', label: 'Tints', icon: Palette },
         { id: 'lens-quality', label: 'Lens Quality', icon: Star },
         { id: 'lens-upgrades', label: 'Lens Upgrades', icon: Sparkles },
         { id: 'lens-details', label: 'Lens Details', icon: Grid3X3 },

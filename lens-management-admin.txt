@@ -232,6 +232,18 @@ Phân trang (10 mục/trang).
 
 Thiết kế: Sử dụng bảng có viền rõ ràng, nút hành động màu xanh (Thêm), đỏ (Xóa), cam (Sửa).
 
-2.2. Bảng lens_detail
-
-Mô tả: Lưu chi tiết toa thuốc và các thuộc tính của lens cho từng đơn hàng hoặc giỏ hàng.
+Quản lý lensTint:
+ - Danh sách lensTint
+ - Thêm mới (Không phải Modal mà là một form hoàn chỉnh):
+ Thông tin cơ bản:
++ Tên loại tint
++ Giá
++ Mô tả
+Màu của tint (Được thêm nhiều):
++ tintId (được gán vào cùng sau khi tạo hoàn tất)
++ name
++ imageUrl: Đây là hình ảnh mô tả cho màu sắc của kính. Upload lên s3.
++ Mã màu
+Độ dày lens cho loại tint này:
++ Load những lensThickness lên. Cho checkbox để chọn.
+Button Thêm mới ở dưới cuối cùng. 

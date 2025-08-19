@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, Palette, Settings, Eye, Layers } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, ArrowLeft, Upload, X } from 'lucide-react';
 import { useLensStore } from '../../stores/lens.store';
-import { LensTint, CreateLensTintDto, UpdateLensTintDto, TintColor, LensThickness } from '../../types/lens.types';
+import { LensTint, CreateLensTintDto, UpdateLensTintDto, CreateTintColorDto } from '../../types/lens.types';
 import { formatVNDWithSymbol } from '../../utils/currency';
+
+interface TintColorFormData extends Omit<CreateTintColorDto, 'tintId'> {
+  id?: number;
+  imageFile?: File;
+}
 
 const LensTintPage: React.FC = () => {
   const {
@@ -15,19 +20,33 @@ const LensTintPage: React.FC = () => {
     deleteLensTint,
     lensThicknesses,
     fetchLensThicknesses,
+    // Tint color methods
+    fetchTintColorsByTintId,
+    createTintColor,
+    uploadTintColorImage,
+    // Compatibility methods
+    fetchCompatibleThicknessesForTint,
+    createTintThicknessCompatibility,
   } = useLensStore();
 
-  const [showForm, setShowForm] = useState(false);
+  // State for navigation between list and form
+  const [currentView, setCurrentView] = useState<'list' | 'form'>('list');
   const [editingItem, setEditingItem] = useState<LensTint | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTint, setSelectedTint] = useState<LensTint | null>(null);
-  const [showTintDetails, setShowTintDetails] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'colors' | 'compatibility'>('overview');
+  const [uploading, setUploading] = useState(false);
+  
+  // Form data
   const [formData, setFormData] = useState<CreateLensTintDto>({
     name: '',
     description: '',
     price: 0,
   });
+
+  // Tint colors management
+  const [tintColors, setTintColors] = useState<TintColorFormData[]>([]);
+  
+  // Lens thickness compatibility
+  const [selectedThicknesses, setSelectedThicknesses] = useState<number[]>([]);
 
   // Predefined tint types from your customer journey
   const tintTypes = [
@@ -35,31 +54,26 @@ const LensTintPage: React.FC = () => {
       name: 'No Tint',
       description: 'Clear lenses without any tint',
       price: 0,
-      color: 'transparent'
     },
     {
       name: 'Polarised Lenses',
       description: 'Minimise disruptive glare from reflective surfaces',
       price: 1498500, // 49.95 * 30000
-      color: '#1f2937'
     },
     {
       name: 'Sunglasses Tint',
       description: 'Wear your glasses as sunglasses with 100% UV protection',
       price: 598500, // 19.95 * 30000
-      color: '#374151'
     },
     {
       name: 'Gradient Tint',
       description: 'Darker at the top edge and gradually becomes lighter towards the bottom',
       price: 1348500, // 44.95 * 30000
-      color: 'linear-gradient(to bottom, #374151, #f3f4f6)'
     },
     {
       name: 'Mirrored Lenses',
       description: 'Mirror effect for a stylish look and 100% UV protection',
       price: 1348500, // 44.95 * 30000
-      color: '#c0392b'
     }
   ];
 
@@ -70,16 +84,61 @@ const LensTintPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateTintColors()) {
+      return;
+    }
+
+    setUploading(true);
     try {
+      let savedTint: LensTint | null;
+      
       if (editingItem) {
-        await updateLensTint(editingItem.id, formData as UpdateLensTintDto);
+        savedTint = await updateLensTint(editingItem.id, formData as UpdateLensTintDto);
       } else {
-        await createLensTint(formData);
+        savedTint = await createLensTint(formData);
       }
+      
+      if (savedTint) {
+        // Save tint colors
+        for (const color of tintColors) {
+          if (color.name.trim()) {
+            const colorData: CreateTintColorDto = {
+              tintId: savedTint.id,
+              name: color.name.trim(),
+              ...(color.colorCode && color.colorCode !== '#000000' ? { colorCode: color.colorCode } : {}),
+            };
+
+            // Upload image if present
+            if (color.imageFile) {
+              try {
+                colorData.imageUrl = await uploadImageToS3(color.imageFile);
+              } catch (uploadError) {
+                console.error('Error uploading image:', uploadError);
+                // Continue without image if upload fails
+              }
+            } else if (color.imageUrl) {
+              colorData.imageUrl = color.imageUrl;
+            }
+
+            await createTintColor(colorData);
+          }
+        }
+
+        // Save lens thickness compatibility
+        if (selectedThicknesses.length > 0) {
+          await createTintThicknessCompatibility(savedTint.id, selectedThicknesses);
+        }
+      }
+      
       resetForm();
       fetchLensTints();
+      setCurrentView('list');
     } catch (error) {
       console.error('Error saving lens tint:', error);
+      alert('Error creating lens tint. Please check your input and try again.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -90,7 +149,29 @@ const LensTintPage: React.FC = () => {
       description: item.description || '',
       price: item.price,
     });
-    setShowForm(true);
+    
+    // Load existing tint colors and thickness compatibility
+    loadTintData(item.id);
+    setCurrentView('form');
+  };
+
+  const loadTintData = async (tintId: number) => {
+    try {
+      // Load tint colors
+      const colors = await fetchTintColorsByTintId(tintId);
+      setTintColors(colors.map(color => ({
+        id: color.id,
+        name: color.name,
+        colorCode: color.colorCode,
+        imageUrl: color.imageUrl,
+      })));
+
+      // Load compatible thicknesses
+      const compatibleThicknesses = await fetchCompatibleThicknessesForTint(tintId);
+      setSelectedThicknesses(compatibleThicknesses.map(ct => ct.lensThicknessId || ct.id));
+    } catch (error) {
+      console.error('Error loading tint data:', error);
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -110,18 +191,7 @@ const LensTintPage: React.FC = () => {
       description: tintType.description,
       price: tintType.price,
     });
-    setShowForm(true);
-  };
-
-  const handleViewTintDetails = (tint: LensTint) => {
-    setSelectedTint(tint);
-    setShowTintDetails(true);
-    setActiveTab('overview');
-  };
-
-  const handleCloseTintDetails = () => {
-    setSelectedTint(null);
-    setShowTintDetails(false);
+    setCurrentView('form');
   };
 
   const resetForm = () => {
@@ -130,8 +200,85 @@ const LensTintPage: React.FC = () => {
       description: '',
       price: 0,
     });
+    setTintColors([]);
+    setSelectedThicknesses([]);
     setEditingItem(null);
-    setShowForm(false);
+  };
+
+  const handleNewTint = () => {
+    resetForm();
+    setCurrentView('form');
+  };
+
+  const handleBackToList = () => {
+    setCurrentView('list');
+    resetForm();
+  };
+
+  // Tint color management functions
+  const addTintColor = () => {
+    setTintColors([...tintColors, { name: '', colorCode: '', imageUrl: '' }]);
+  };
+
+  const removeTintColor = (index: number) => {
+    setTintColors(tintColors.filter((_, i) => i !== index));
+  };
+
+  const updateTintColor = (index: number, field: keyof TintColorFormData, value: string | File) => {
+    const newTintColors = [...tintColors];
+    if (field === 'imageFile') {
+      newTintColors[index].imageFile = value as File;
+      // TODO: Upload to S3 and get URL
+      // For now, create a temporary URL for preview
+      newTintColors[index].imageUrl = URL.createObjectURL(value as File);
+    } else if (field === 'colorCode') {
+      // Validate hex color format
+      const colorValue = value as string;
+      if (colorValue && !/^#[0-9A-Fa-f]{6}$/.test(colorValue)) {
+        // If invalid format, don't update
+        return;
+      }
+      newTintColors[index].colorCode = colorValue;
+    } else {
+      (newTintColors[index] as any)[field] = value;
+    }
+    setTintColors(newTintColors);
+  };
+
+  // Lens thickness compatibility functions
+  const handleThicknessToggle = (thicknessId: number) => {
+    setSelectedThicknesses(prev => 
+      prev.includes(thicknessId)
+        ? prev.filter(id => id !== thicknessId)
+        : [...prev, thicknessId]
+    );
+  };
+
+  // Validation helper
+  const validateTintColors = (): boolean => {
+    for (const color of tintColors) {
+      if (color.name.trim()) {
+        if (color.colorCode && !/^#[0-9A-Fa-f]{6}$/.test(color.colorCode)) {
+          alert(`Invalid color code "${color.colorCode}" for color "${color.name}". Please use format #RRGGBB`);
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  // Image upload helper (S3 upload)
+  const uploadImageToS3 = async (file: File): Promise<string> => {
+    try {
+      const result = await uploadTintColorImage(file);
+      if (!result) {
+        throw new Error('Upload failed - no result returned');
+      }
+      return result.imageUrl;
+    } catch (error) {
+      console.error('Failed to upload image to S3:', error);
+      throw new Error('Failed to upload image');
+    }
   };
 
   const filteredTints = lensTints.filter(tint =>
@@ -147,205 +294,249 @@ const LensTintPage: React.FC = () => {
     );
   }
 
-  // Main tint management view
-  if (!showTintDetails) {
+  // Form View
+  if (currentView === 'form') {
     return (
-      <div className="p-6">
+      <div className="p-6 max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Lens Tint & Colors Management</h2>
-            <p className="text-gray-600">Manage lens tinting options and color variants</p>
-          </div>
+        <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            onClick={handleBackToList}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            Add Tint Option
+            <ArrowLeft className="w-4 h-4" />
+            Back to List
           </button>
+          <h2 className="text-2xl font-bold text-gray-900">
+            {editingItem ? 'Edit Lens Tint' : 'Add New Lens Tint'}
+          </h2>
         </div>
 
-        {/* Rest of main view content... */}
-        {/* Quick Add Section */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Quick Add Standard Tints</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {tintTypes.map((tintType, index) => (
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Basic Information */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Basic Information</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Tint Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter tint name"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+                  Price (VND) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  id="price"
+                  required
+                  min="0"
+                  step="1000"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="0"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Preview: {formatVNDWithSymbol(formData.price)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea
+                id="description"
+                rows={3}
+                value={formData.description || ''}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter description"
+              />
+            </div>
+          </div>
+
+          {/* Tint Colors */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Tint Colors</h3>
               <button
-                key={index}
-                onClick={() => handleQuickAdd(tintType)}
-                className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors text-left"
+                type="button"
+                onClick={addTintColor}
+                className="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1 text-sm"
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <div 
-                    className={`w-4 h-4 rounded border border-gray-300 ${
-                      tintType.name === 'No Tint' ? 'bg-white' :
-                      tintType.name === 'Polarised Lenses' ? 'bg-gray-800' :
-                      tintType.name === 'Sunglasses Tint' ? 'bg-gray-700' :
-                      tintType.name === 'Gradient Tint' ? 'bg-gradient-to-b from-gray-700 to-gray-100' :
-                      'bg-red-500'
-                    }`}
-                  />
-                  <span className="font-medium text-sm">{tintType.name}</span>
-                </div>
-                <span className="text-xs text-green-600 font-medium">{formatVNDWithSymbol(Number(tintType.price || 0))}</span>
+                <Plus className="w-4 h-4" />
+                Add Color
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="mb-6 flex gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search lens tints..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        {/* Tints Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {filteredTints.map((tint) => (
-            <div key={tint.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Palette className="w-4 h-4 text-gray-500" />
-                    <h3 className="text-lg font-semibold text-gray-900">{tint.name}</h3>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleViewTintDetails(tint)}
-                    title="Manage colors & compatibility"
-                    className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleEdit(tint)}
-                    title="Edit tint"
-                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(tint.id)}
-                    title="Delete tint"
-                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              <p className="text-gray-600 text-sm mb-4 min-h-[3rem]">
-                {tint.description || 'No description'}
-              </p>
-
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-lg font-bold text-green-600">
-                  {Number(tint.price) === 0 ? 'Free' : formatVNDWithSymbol(Number(tint.price || 0))}
-                </span>
-                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  Available
-                </span>
-              </div>
-
-              {/* Quick info about colors and compatibility */}
-              <div className="border-t pt-3">
-                <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Palette className="w-3 h-3" />
-                    <span>0 colors</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Layers className="w-3 h-3" />
-                    <span>0 compatible</span>
-                  </div>
-                </div>
-              </div>
             </div>
-          ))}
-        </div>
 
-        {/* Form Modal */}
-        {showForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-4">
-                {editingItem ? 'Edit Lens Tint' : 'Add New Lens Tint'}
-              </h3>
+            <div className="space-y-4">
+              {tintColors.map((color, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-4">
+                    <h4 className="font-medium text-gray-900">Color {index + 1}</h4>
+                    <button
+                      type="button"
+                      onClick={() => removeTintColor(index)}
+                      className="text-red-600 hover:text-red-800 transition-colors"
+                      title="Remove color"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tint Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., Polarised Lenses"
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Color Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={color.name}
+                        onChange={(e) => updateTintColor(index, 'name', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., Smoke Gray"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Color Code
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={color.colorCode || '#000000'}
+                          onChange={(e) => updateTintColor(index, 'colorCode', e.target.value)}
+                          className="w-12 h-10 rounded border border-gray-300"
+                          title="Select color"
+                        />
+                        <input
+                          type="text"
+                          value={color.colorCode || ''}
+                          onChange={(e) => updateTintColor(index, 'colorCode', e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="#000000"
+                          pattern="^#[0-9A-Fa-f]{6}$"
+                          title="Enter a valid hex color code (e.g., #FF0000)"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Image
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              updateTintColor(index, 'imageFile', file);
+                            }
+                          }}
+                          className="hidden"
+                          id={`image-${index}`}
+                        />
+                        <label
+                          htmlFor={`image-${index}`}
+                          className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer flex items-center gap-1 text-sm"
+                        >
+                          <Upload className="w-4 h-4" />
+                          Upload
+                        </label>
+                        {color.imageUrl && (
+                          <img
+                            src={color.imageUrl}
+                            alt="Preview"
+                            className="w-10 h-10 object-cover rounded-lg border border-gray-300"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              ))}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    rows={3}
-                    placeholder="Describe the tint benefits and features"
-                  />
+              {tintColors.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No colors added yet. Click "Add Color" to add tint color options.
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Giá (VNĐ) *
-                  </label>
-                  <input
-                    type="number"
-                    step="1000"
-                    min="0"
-                    required
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="0"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    {editingItem ? 'Update' : 'Create'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+              )}
             </div>
           </div>
-        )}
+
+          {/* Lens Thickness Compatibility */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Lens Thickness Compatibility</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Select which lens thicknesses are compatible with this tint:
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {lensThicknesses.map((thickness) => (
+                <label
+                  key={thickness.id}
+                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedThicknesses.includes(thickness.id)}
+                    onChange={() => handleThicknessToggle(thickness.id)}
+                    className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <div>
+                    <div className="font-medium text-gray-900">{thickness.name}</div>
+                    <div className="text-sm text-gray-500">
+                      Index: {thickness.indexValue} | {formatVNDWithSymbol(thickness.price)}
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={handleBackToList}
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={uploading}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {uploading ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  {editingItem ? 'Updating...' : 'Creating...'}
+                </div>
+              ) : (
+                editingItem ? 'Update Lens Tint' : 'Create Lens Tint'
+              )}
+            </button>
+          </div>
+        </form>
 
         {error && (
           <div className="mt-4 bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded">
@@ -356,185 +547,111 @@ const LensTintPage: React.FC = () => {
     );
   }
 
-  // Detailed tint management view (colors + compatibility)
+  // List View
   return (
     <div className="p-6">
-      {/* Header with back button */}
-      <div className="flex items-center gap-4 mb-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Lens Tint Management</h2>
+          <p className="text-gray-600">Manage lens tint options and colors</p>
+        </div>
         <button
-          onClick={handleCloseTintDetails}
-          className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+          onClick={handleNewTint}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
-          ←
+          <Plus className="w-4 h-4" />
+          Add New Tint
         </button>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {selectedTint?.name} - Management
-          </h2>
-          <p className="text-gray-600">Manage colors and thickness compatibility</p>
+      </div>
+
+      {/* Quick Add Section */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3 text-gray-900">Quick Add Predefined Tints</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {tintTypes.map((tintType, index) => (
+            <button
+              key={index}
+              onClick={() => handleQuickAdd(tintType)}
+              className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors text-left"
+            >
+              <div className="font-medium text-gray-900">{tintType.name}</div>
+              <div className="text-sm text-gray-500 mt-1">{formatVNDWithSymbol(tintType.price)}</div>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex space-x-8">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'overview'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('colors')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'colors'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Tint Colors
-          </button>
-          <button
-            onClick={() => setActiveTab('compatibility')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'compatibility'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Thickness Compatibility
-          </button>
-        </nav>
+      {/* Search */}
+      <div className="mb-6 flex gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Search lens tints..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
       </div>
 
-      {/* Tab Content */}
-      {activeTab === 'overview' && (
-        <div className="space-y-6">
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Tint Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Tints Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        {filteredTints.map((tint) => (
+          <div key={tint.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-start mb-4">
               <div>
-                <label className="text-sm font-medium text-gray-500">Name</label>
-                <p className="text-gray-900">{selectedTint?.name}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-500">Price</label>
-                <p className="text-gray-900">
-                  {Number(selectedTint?.price) === 0 ? 'Free' : formatVNDWithSymbol(Number(selectedTint?.price || 0))}
+                <h3 className="text-lg font-semibold text-gray-900">{tint.name}</h3>
+                <p className="text-xl font-bold text-blue-600 mt-1">
+                  {formatVNDWithSymbol(tint.price)}
                 </p>
               </div>
-              <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-500">Description</label>
-                <p className="text-gray-900">{selectedTint?.description || 'No description'}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h4 className="text-md font-semibold text-gray-900 mb-3">Color Variants</h4>
-              <div className="text-center py-8 text-gray-500">
-                <Palette className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>No colors added yet</p>
-                <button 
-                  onClick={() => setActiveTab('colors')}
-                  className="mt-2 text-blue-600 hover:text-blue-800"
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleEdit(tint)}
+                  className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                  title="Edit"
                 >
-                  Add colors →
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDelete(tint.id)}
+                  className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h4 className="text-md font-semibold text-gray-900 mb-3">Compatible Thicknesses</h4>
-              <div className="text-center py-8 text-gray-500">
-                <Layers className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>No compatibility set</p>
-                <button 
-                  onClick={() => setActiveTab('compatibility')}
-                  className="mt-2 text-blue-600 hover:text-blue-800"
-                >
-                  Set compatibility →
-                </button>
-              </div>
+            <p className="text-gray-600 text-sm mb-4">
+              {tint.description || 'No description'}
+            </p>
+
+            <div className="flex justify-between items-center text-xs text-gray-500">
+              <span>ID: {tint.id}</span>
+              <span>Created: {new Date(tint.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
+        ))}
+      </div>
+
+      {filteredTints.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-gray-500 text-lg mb-4">No lens tints found</div>
+          <button
+            onClick={handleNewTint}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Add Your First Lens Tint
+          </button>
         </div>
       )}
 
-      {activeTab === 'colors' && (
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Tint Colors</h3>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Add Color
-            </button>
-          </div>
-          
-          <div className="bg-white border border-gray-200 rounded-lg p-8">
-            <div className="text-center text-gray-500">
-              <Palette className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h4 className="text-lg font-medium text-gray-900 mb-2">No Colors Added</h4>
-              <p>Add color variants for this tint type (e.g., Grey, Brown, Green)</p>
-              <button className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                Add First Color
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'compatibility' && (
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Thickness Compatibility</h3>
-              <p className="text-sm text-gray-600">Select which lens thicknesses are compatible with this tint</p>
-            </div>
-            <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-              Save Compatibility
-            </button>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <div className="space-y-4">
-              {lensThicknesses.map((thickness) => (
-                <div key={thickness.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id={`thickness-${thickness.id}`}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <label htmlFor={`thickness-${thickness.id}`} className="text-sm font-medium text-gray-900">
-                        {thickness.name}
-                      </label>
-                    </div>
-                    <p className="text-xs text-gray-500 ml-7">
-                      Index: {thickness.indexValue} | {formatVNDWithSymbol(Number(thickness.price || 0))}
-                    </p>
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {thickness.description}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {lensThicknesses.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <Layers className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">No Thickness Options</h4>
-                <p>Add lens thickness options first to set compatibility</p>
-              </div>
-            )}
-          </div>
+      {error && (
+        <div className="mt-4 bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded">
+          {error}
         </div>
       )}
     </div>
