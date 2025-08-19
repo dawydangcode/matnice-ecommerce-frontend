@@ -178,6 +178,7 @@ interface LensStore {
     tintId: number,
     thicknessIds: number[],
   ) => Promise<any[]>;
+  removeAllThicknessesFromTint: (tintId: number) => Promise<boolean>;
   updateTintThicknessCompatibility: (
     tintId: number,
     thicknessIds: number[],
@@ -922,6 +923,16 @@ export const useLensStore = create<LensStore>((set, get) => ({
       console.error('Error creating tint thickness compatibility:', error);
       toast.error('Không thể tạo tương thích độ dày tint');
       return [];
+    }
+  },
+
+  removeAllThicknessesFromTint: async (tintId) => {
+    try {
+      const result = await lensService.removeAllThicknessesFromTint(tintId);
+      return result;
+    } catch (error) {
+      console.error('Error removing all thicknesses from tint:', error);
+      return false;
     }
   },
 

@@ -526,6 +526,18 @@ class LensService {
     }
   }
 
+  async removeAllThicknessesFromTint(tintId: number): Promise<boolean> {
+    try {
+      await apiService.delete(
+        `/api/v1/lens-tint/${tintId}/remove-all-thicknesses`,
+      );
+      return true;
+    } catch (error) {
+      console.error('Error removing all thicknesses from tint:', error);
+      throw error;
+    }
+  }
+
   async createThicknessTintCompatibility(
     thicknessId: number,
     tintIds: number[],

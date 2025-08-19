@@ -29,6 +29,7 @@ const LensTintPage: React.FC = () => {
     // Compatibility methods
     fetchCompatibleThicknessesForTint,
     createTintThicknessCompatibility,
+    removeAllThicknessesFromTint,
   } = useLensStore();
 
   // State for navigation between list and form
@@ -194,9 +195,20 @@ const LensTintPage: React.FC = () => {
           
           if (thicknessChanged) {
             console.log('Thickness selection changed, updating compatibility...');
-            // Note: Backend doesn't support updating compatibility yet, so we skip for now
-            // TODO: Implement delete existing + create new when backend supports it
-            console.log('Skipping thickness compatibility update - backend doesn\'t support updates yet');
+            try {
+              // First, remove all existing thickness relationships
+              await removeAllThicknessesFromTint(savedTint.id);
+              
+              // Then, add the new thickness relationships if any selected
+              if (selectedThicknesses.length > 0) {
+                await createTintThicknessCompatibility(savedTint.id, selectedThicknesses);
+              }
+              
+              console.log('Thickness compatibility updated successfully');
+            } catch (compatibilityError) {
+              console.error('Error updating thickness compatibility:', compatibilityError);
+              // Don't fail the entire operation if compatibility update fails
+            }
           } else {
             console.log('No thickness changes detected, skipping compatibility update');
           }
