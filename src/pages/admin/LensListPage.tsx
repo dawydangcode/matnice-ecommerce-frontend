@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search, Filter, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Filter } from 'lucide-react';
 import { useLensStore } from '../../stores/lens.store';
 import { Lens } from '../../types/lens.types';
 
 interface LensListPageProps {
   onEditLens: (lens: Lens) => void;
   onCreateLens: () => void;
-  onViewLens?: (lens: Lens) => void;
+  onCreateLensAdvanced: () => void;
 }
 
 const LensListPage: React.FC<LensListPageProps> = ({ 
   onEditLens, 
-  onCreateLens,
-  onViewLens 
+  onCreateLens, 
+  onCreateLensAdvanced 
 }) => {
   const {
     lenses,
@@ -45,7 +45,7 @@ const LensListPage: React.FC<LensListPageProps> = ({
   };
 
   const handleDelete = async (lens: Lens) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa lens "${lens.name}"?`)) {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa kính "${lens.name}"?`)) {
       await deleteLens(lens.id);
     }
   };
@@ -55,7 +55,7 @@ const LensListPage: React.FC<LensListPageProps> = ({
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <div className="flex">
           <div className="flex-1">
-            <h3 className="text-sm font-medium text-red-800">Lỗi</h3>
+            <h3 className="text-sm font-medium text-red-800">Error</h3>
             <p className="text-sm text-red-700 mt-1">{error}</p>
           </div>
           <button
@@ -74,16 +74,25 @@ const LensListPage: React.FC<LensListPageProps> = ({
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Quản lý Lens</h2>
-          <p className="text-gray-600">Quản lý danh sách các loại lens</p>
+          <h2 className="text-2xl font-bold text-gray-900">Quản lý tròng kính</h2>
+          <p className="text-gray-600">Quản lý danh sách tròng kính</p>
         </div>
-        <button
-          onClick={onCreateLens}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Thêm lens</span>
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={onCreateLens}
+            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Thêm tròng kính</span>
+          </button>
+          <button
+            onClick={onCreateLensAdvanced}
+            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Thêm tròng kính nâng cao</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -94,7 +103,7 @@ const LensListPage: React.FC<LensListPageProps> = ({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Tìm kiếm lens..."
+                placeholder="Tìm kiếm thương hiệu..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -113,7 +122,7 @@ const LensListPage: React.FC<LensListPageProps> = ({
         </div>
       </div>
 
-      {/* Lens List */}
+      {/* Brand List */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -121,7 +130,7 @@ const LensListPage: React.FC<LensListPageProps> = ({
           </div>
         ) : lenses.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">Không có lens nào được tìm thấy</p>
+            <p className="text-gray-500">Không có tròng kính nào được tìm thấy</p>
           </div>
         ) : (
           <>
@@ -133,13 +142,13 @@ const LensListPage: React.FC<LensListPageProps> = ({
                       ID
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tên lens
+                      Tên tròng kính
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Mô tả
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Ngày tạo
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Người tạo
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Thao tác
@@ -155,23 +164,16 @@ const LensListPage: React.FC<LensListPageProps> = ({
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{lens.name}</div>
                       </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 max-w-xs truncate" title={lens.description}>
+                          {lens.description || 'Không có mô tả'}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(lens.createdAt).toLocaleDateString('vi-VN')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        #{lens.createdBy}
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          {onViewLens && (
-                            <button
-                              onClick={() => onViewLens(lens)}
-                              className="text-green-600 hover:text-green-900 p-1"
-                              title="Xem chi tiết"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          )}
                           <button
                             onClick={() => onEditLens(lens)}
                             className="text-blue-600 hover:text-blue-900 p-1"
@@ -201,7 +203,7 @@ const LensListPage: React.FC<LensListPageProps> = ({
                   <div className="text-sm text-gray-700">
                     Hiển thị {((pagination.page - 1) * pagination.limit) + 1} đến{' '}
                     {Math.min(pagination.page * pagination.limit, pagination.total)} trong tổng số{' '}
-                    {pagination.total} lens
+                    {pagination.total} thương hiệu
                   </div>
                   <div className="flex space-x-1">
                     <button

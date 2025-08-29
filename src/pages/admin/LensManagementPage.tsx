@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Edit, Trash2, AlertCircle } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, AlertCircle, FileText } from 'lucide-react';
 import { LensFormModal, LensType } from '../../components/admin/LensFormModal';
 import { lensService } from '../../services/lens.service';
 import { lensDetailService } from '../../services/lens-detail.service';
 import { Lens, CreateLensDto, UpdateLensDto } from '../../types/lens.types';
 import toast from 'react-hot-toast';
 
-const LensManagementPage: React.FC = () => {
+interface LensManagementPageProps {
+  onCreateLensAdvanced?: () => void;
+}
+
+const LensManagementPage: React.FC<LensManagementPageProps> = ({ onCreateLensAdvanced }) => {
   const [lenses, setLenses] = useState<Lens[]>([]);
   const [filteredLenses, setFilteredLenses] = useState<Lens[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -174,13 +178,22 @@ const LensManagementPage: React.FC = () => {
               Quản lý các loại lens cơ bản và thuộc tính liên quan
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Thêm mới
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={onCreateLensAdvanced}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Tạo Lens Mới (Form Đầy Đủ)
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Thêm mới (Cơ bản)
+            </button>
+          </div>
         </div>
 
         {/* Search */}

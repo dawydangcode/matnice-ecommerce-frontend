@@ -100,6 +100,15 @@ interface LensStore {
   fetchLenses: (filters?: LensFilters) => Promise<void>;
   fetchLensById: (id: number) => Promise<void>;
   createLens: (data: CreateLensDto) => Promise<Lens | null>;
+  createLensWithImages: (data: {
+    name: string;
+    description?: string;
+    brandId?: number;
+    origin?: string;
+    lensType?: string;
+    categoryId?: number;
+    images: { file: File; imageOrder: string; isThumbnail: boolean }[];
+  }) => Promise<Lens | null>;
   updateLens: (id: number, data: UpdateLensDto) => Promise<Lens | null>;
   deleteLens: (id: number) => Promise<boolean>;
 
@@ -369,6 +378,39 @@ export const useLensStore = create<LensStore>((set, get) => ({
         isLoading: false,
       });
       toast.error('Không thể tạo lens');
+      return null;
+    }
+  },
+
+  createLensWithImages: async (data: {
+    name: string;
+    description?: string;
+    brandId?: number;
+    origin?: string;
+    lensType?: string;
+    categoryId?: number;
+    images: { file: File; imageOrder: string; isThumbnail: boolean }[];
+  }) => {
+    try {
+      set({ isLoading: true, error: null });
+      const lens = await lensService.createLensWithImages(data);
+
+      // Refresh the lens list
+      await get().fetchLenses();
+
+      set({ isLoading: false });
+      toast.success('Tạo lens với hình ảnh thành công!');
+      return lens;
+    } catch (error) {
+      console.error('Error creating lens with images:', error);
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to create lens with images',
+        isLoading: false,
+      });
+      toast.error('Không thể tạo lens với hình ảnh');
       return null;
     }
   },

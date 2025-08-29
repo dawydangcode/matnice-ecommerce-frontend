@@ -1,0 +1,16 @@
+Quản lý sản phẩm lens:
+Thêm sản phẩm mới:
+    - Tab thông tin cơ bản: name, status (kiểm tra stock), brand, origin, lensType, description, category (lấy theo type = LENS)
+    - Tab lens_variant: Một sản phẩm sẽ có nhiều variant (lensthicknes_index)
+        + Lens_id: sẽ được gán cùng sau khi tạo sản phẩm
+        + Lens_thickness_id: load lensthickness, drop downmenu cho admin chọn
+        + Design: lấy lensDesignType 
+        + 
+    - Tab lens coating: Một sản phẩm lens có nhiều coating, mỗi coating sẽ có giá khác nhau
+        + lens_id sẽ được gán cùng sau khi tạo sản phẩm lens
+        + name
+        + price
+        + description
+        + sẽ có button "Thêm", khi nhấn vào sẽ tạo ra một form để thêm coating nữa
+    - Tab refraction_range: 
+        

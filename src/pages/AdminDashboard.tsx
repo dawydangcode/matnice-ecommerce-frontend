@@ -13,10 +13,7 @@ import {
   Tag,
   Layers,
   Eye,
-  Grid3X3,
-  Star,
   Palette,
-  Sparkles,
   ChevronDown,
   ChevronRight,
   Image
@@ -27,36 +24,31 @@ import { useBrandStore } from '../stores/brand.store';
 import { useCategoryStore } from '../stores/category.store';
 import { useLensStore } from '../stores/lens.store';
 import ProductListPage from './admin/ProductListPage';
-import ProductDetailPage from './admin/ProductDetailPage';
 import ProductEditPage from './admin/ProductEditPage';
 import EnhancedProductForm from '../components/admin/EnhancedProductForm';
 import BrandListPage from './admin/BrandListPage';
 import CategoryListPage from './admin/CategoryListPage';
 import LensListPage from './admin/LensListPage';
-import LensQualityListPage from './admin/LensQualityListPage';
-import LensManagementPage from './admin/LensManagementPage';
+import LensManagementDashboard from './admin/LensManagementDashboard';
 import LensThicknessPage from './admin/LensThicknessPage';
-import LensTintPage from './admin/LensTintPage';
-import LensUpgradePage from './admin/LensUpgradePage';
-import LensDetailPage from './admin/LensDetailPage';
 import BrandForm from '../components/admin/BrandForm';
 import CategoryForm from '../components/admin/CategoryForm';
 import LensForm from '../components/admin/LensForm';
-import LensQualityForm from '../components/admin/LensQualityForm';
+import CreateLensForm from './admin/CreateLensForm';
 import ImageManagementShowcase from '../components/admin/ImageManagementShowcase';
 import { Product } from '../types/product.types';
 import { Brand } from '../types/brand.types';
 import { Category } from '../types/category.types';
-import { Lens, LensQuality } from '../types/lens.types';
+import { Lens } from '../types/lens.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-images' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-quality' | 'lens-quality-form' | 'lens-thickness' | 'lens-tints' | 'lens-upgrades' | 'lens-details';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-images' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-create-form' | 'lens-thickness' | 'lens-tints';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
   const { fetchProducts } = useProductStore();
   const { createBrand, updateBrand } = useBrandStore();
   const { createCategory, updateCategory } = useCategoryStore();
-  const { createLens, updateLens, createLensQuality, updateLensQuality } = useLensStore();
+  const { createLens, updateLens } = useLensStore();
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['lenses', 'products']));
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -64,7 +56,6 @@ const AdminDashboard: React.FC = () => {
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingLens, setEditingLens] = useState<Lens | null>(null);
-  const [editingLensQuality, setEditingLensQuality] = useState<LensQuality | null>(null);
 
   const handleLogout = () => {
     logout();
@@ -83,14 +74,6 @@ const AdminDashboard: React.FC = () => {
   const handleBackFromProductDetail = () => {
     setViewingProduct(null);
     setCurrentView('products');
-  };
-
-  const handleEditFromProductDetail = () => {
-    if (viewingProduct) {
-      setEditingProduct(viewingProduct);
-      setViewingProduct(null);
-      setCurrentView('product-edit');
-    }
   };
 
   const handleCreateProduct = () => {
@@ -208,6 +191,12 @@ const AdminDashboard: React.FC = () => {
     setCurrentView('lens-form');
   };
 
+  const handleCreateLensAdvanced = () => {
+    console.log('handleCreateLensAdvanced called');
+    setCurrentView('lens-create-form');
+    console.log('Current view set to: lens-create-form');
+  };
+
   const handleLensFormCancel = () => {
     setEditingLens(null);
     setCurrentView('lenses');
@@ -224,37 +213,6 @@ const AdminDashboard: React.FC = () => {
       setCurrentView('lenses');
     } catch (error) {
       console.error('Error submitting lens form:', error);
-      throw error;
-    }
-  };
-
-  // Lens Quality handlers
-  const handleEditLensQuality = (lensQuality: LensQuality) => {
-    setEditingLensQuality(lensQuality);
-    setCurrentView('lens-quality-form');
-  };
-
-  const handleCreateLensQuality = () => {
-    setEditingLensQuality(null);
-    setCurrentView('lens-quality-form');
-  };
-
-  const handleLensQualityFormCancel = () => {
-    setEditingLensQuality(null);
-    setCurrentView('lens-quality');
-  };
-
-  const handleLensQualityFormSubmit = async (data: any) => {
-    try {
-      if (editingLensQuality) {
-        await updateLensQuality(editingLensQuality.id, data);
-      } else {
-        await createLensQuality(data);
-      }
-      setEditingLensQuality(null);
-      setCurrentView('lens-quality');
-    } catch (error) {
-      console.error('Error submitting lens quality form:', error);
       throw error;
     }
   };
@@ -283,7 +241,7 @@ const AdminDashboard: React.FC = () => {
 
     { id: 'brands', label: 'Thương hiệu', icon: Tag },
     { id: 'categories', label: 'Danh mục', icon: Layers },
-    // Lens Management (nested)
+    // Lens Management (simplified)
     { 
       id: 'lenses', 
       label: 'Quản lý Lens', 
@@ -292,9 +250,6 @@ const AdminDashboard: React.FC = () => {
         { id: 'lens-management', label: 'Quản lý Loại Lens', icon: Eye },
         { id: 'lens-thickness', label: 'Lens Thickness', icon: Layers },
         { id: 'lens-tints', label: 'Tints', icon: Palette },
-        { id: 'lens-quality', label: 'Lens Quality', icon: Star },
-        { id: 'lens-upgrades', label: 'Lens Upgrades', icon: Sparkles },
-        { id: 'lens-details', label: 'Lens Details', icon: Grid3X3 },
       ]
     },
     // Other items
@@ -327,11 +282,10 @@ const AdminDashboard: React.FC = () => {
                              (currentView === 'brand-form' && item.id === 'brands') ||
                              (currentView === 'category-form' && item.id === 'categories') ||
                              (currentView === 'lens-form' && item.id === 'lenses') ||
-                             (currentView === 'lens-quality-form' && item.id === 'lens-quality');
+                             (currentView === 'lens-create-form' && item.id === 'lenses');
               
               const isChildActive = hasChildren && item.children?.some(child => 
                 currentView === child.id || 
-                (currentView === 'lens-quality-form' && child.id === 'lens-quality') ||
                 (currentView === 'product-edit' && child.id === 'product-list') ||
                 (currentView === 'enhanced-product-form' && child.id === 'product-list')
               );
@@ -380,7 +334,6 @@ const AdminDashboard: React.FC = () => {
                       {item.children?.map((child) => {
                         const ChildIcon = child.icon;
                         const isChildItemActive = currentView === child.id ||
-                                                (currentView === 'lens-quality-form' && child.id === 'lens-quality') ||
                                                 (currentView === 'product-edit' && child.id === 'product-list') ||
                                                 (currentView === 'enhanced-product-form' && child.id === 'product-list');
                         
@@ -398,12 +351,6 @@ const AdminDashboard: React.FC = () => {
                                 setCurrentView('lens-thickness');
                               } else if (child.id === 'lens-tints') {
                                 setCurrentView('lens-tints');
-                              } else if (child.id === 'lens-quality') {
-                                setCurrentView('lens-quality');
-                              } else if (child.id === 'lens-upgrades') {
-                                setCurrentView('lens-upgrades');
-                              } else if (child.id === 'lens-details') {
-                                setCurrentView('lens-details');
                               }
                             }}
                             className={`w-full flex items-center px-4 py-2 rounded-lg transition text-sm ${
@@ -457,12 +404,9 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'lenses' && 'Quản lý Lens'}
                 {currentView === 'lens-management' && 'Quản lý Lens'}
                 {currentView === 'lens-form' && 'Thêm/Sửa Lens'}
-                {currentView === 'lens-quality' && 'Lens Quality Management'}
-                {currentView === 'lens-quality-form' && 'Thêm/Sửa chất lượng Lens'}
+                {currentView === 'lens-create-form' && 'Tạo Lens Mới (Form Đầy Đủ)'}
                 {currentView === 'lens-thickness' && 'Lens Thickness Management'}
                 {currentView === 'lens-tints' && 'Lens Tints & Colors Management'}
-                {currentView === 'lens-upgrades' && 'Lens Upgrades Management'}
-                {currentView === 'lens-details' && 'Lens Details & Specifications'}
               </h1>
             </div>
             
@@ -524,11 +468,13 @@ const AdminDashboard: React.FC = () => {
             />
           )}
           {currentView === 'product-detail' && viewingProduct && (
-            <ProductDetailPage
-              product={viewingProduct}
-              onBack={handleBackFromProductDetail}
-              onEdit={handleEditFromProductDetail}
-            />
+            <div className="p-4 bg-yellow-100 rounded">
+              <h3>Product Detail - Coming Soon</h3>
+              <p>Product ID: {viewingProduct.productId}</p>
+              <button onClick={handleBackFromProductDetail} className="mt-2 px-4 py-2 bg-blue-500 text-white rounded">
+                Back
+              </button>
+            </div>
           )}
           {currentView === 'product-images' && <ImageManagementShowcase />}
           {currentView === 'product-edit' && editingProduct && (
@@ -564,11 +510,12 @@ const AdminDashboard: React.FC = () => {
               onCancel={handleCategoryFormCancel}
             />
           )}
-          {currentView === 'lens-management' && <LensManagementPage />}
+          {currentView === 'lens-management' && <LensManagementDashboard />}
           {currentView === 'lenses' && (
             <LensListPage
               onEditLens={handleEditLens}
               onCreateLens={handleCreateLens}
+              onCreateLensAdvanced={handleCreateLensAdvanced}
             />
           )}
           {currentView === 'lens-form' && (
@@ -578,23 +525,15 @@ const AdminDashboard: React.FC = () => {
               onCancel={handleLensFormCancel}
             />
           )}
-          {currentView === 'lens-quality' && (
-            <LensQualityListPage
-              onEditLensQuality={handleEditLensQuality}
-              onCreateLensQuality={handleCreateLensQuality}
-            />
-          )}
-          {currentView === 'lens-quality-form' && (
-            <LensQualityForm
-              lensQuality={editingLensQuality}
-              onSubmit={handleLensQualityFormSubmit}
-              onCancel={handleLensQualityFormCancel}
-            />
+          {currentView === 'lens-create-form' && (
+            <div className="p-4 bg-yellow-100 border border-yellow-300 rounded">
+              <h3>Debug: Rendering CreateLensForm</h3>
+              <p>Current view: {currentView}</p>
+              <CreateLensForm />
+            </div>
           )}
           {currentView === 'lens-thickness' && <LensThicknessPage />}
-          {currentView === 'lens-tints' && <LensTintPage />}
-          {currentView === 'lens-upgrades' && <LensUpgradePage />}
-          {currentView === 'lens-details' && <LensDetailPage />}
+          {currentView === 'lens-tints' && <div className="p-4 bg-yellow-100 rounded">Lens Tints Page - Coming Soon</div>}
         </main>
       </div>
     </div>

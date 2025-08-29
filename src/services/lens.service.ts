@@ -90,6 +90,73 @@ class LensService {
     }
   }
 
+  // Create lens with images (upload files first)
+  async createLensWithImages(data: {
+    // Basic lens info
+    name: string;
+    description?: string;
+    brandId?: number;
+    origin?: string;
+    lensType?: string;
+    categoryId?: number;
+    // Images to upload
+    images: {
+      file: File;
+      imageOrder: string;
+      isThumbnail: boolean;
+    }[];
+  }): Promise<Lens> {
+    try {
+      // First, create the basic lens
+      const lensData: CreateLensDto = {
+        name: data.name,
+        description: data.description,
+      };
+
+      const lens = await this.createLens(lensData);
+
+      // Then upload images for the lens
+      if (data.images && data.images.length > 0) {
+        for (const imageData of data.images) {
+          const formData = new FormData();
+          formData.append('image', imageData.file);
+          formData.append('lensId', lens.id.toString());
+          formData.append('imageOrder', imageData.imageOrder);
+          formData.append('isThumbnail', imageData.isThumbnail.toString());
+
+          try {
+            // Use a different endpoint for lens image upload that accepts FormData
+            const response = await apiService.uploadFile<any>(
+              '/api/v1/lens-image/upload',
+              imageData.file,
+            );
+
+            // Then create the lens image record with the uploaded URL
+            await apiService.post('/api/v1/lens-image/create', {
+              lensId: lens.id,
+              imageUrl: response.imageUrl,
+              imageOrder: imageData.imageOrder,
+              isThumbnail: imageData.isThumbnail,
+            });
+
+            console.log(`Image ${imageData.imageOrder} uploaded successfully`);
+          } catch (imageError) {
+            console.error(
+              `Error uploading image ${imageData.imageOrder}:`,
+              imageError,
+            );
+            // Continue with other images even if one fails
+          }
+        }
+      }
+
+      return lens;
+    } catch (error) {
+      console.error('Error creating lens with images:', error);
+      throw error;
+    }
+  }
+
   async updateLens(id: number, data: UpdateLensDto): Promise<Lens> {
     try {
       const response = await apiService.put<Lens>(

@@ -1,0 +1,25 @@
+/* LensCharts component styles */
+.lens-charts-progress-bar {
+  transition: width 0.3s ease-in-out;
+}
+
+.lens-charts-bar-1 { width: 5%; }
+.lens-charts-bar-2 { width: 10%; }
+.lens-charts-bar-3 { width: 15%; }
+.lens-charts-bar-4 { width: 20%; }
+.lens-charts-bar-5 { width: 25%; }
+.lens-charts-bar-6 { width: 30%; }
+.lens-charts-bar-7 { width: 35%; }
+.lens-charts-bar-8 { width: 40%; }
+.lens-charts-bar-9 { width: 45%; }
+.lens-charts-bar-10 { width: 50%; }
+.lens-charts-bar-11 { width: 55%; }
+.lens-charts-bar-12 { width: 60%; }
+.lens-charts-bar-13 { width: 65%; }
+.lens-charts-bar-14 { width: 70%; }
+.lens-charts-bar-15 { width: 75%; }
+.lens-charts-bar-16 { width: 80%; }
+.lens-charts-bar-17 { width: 85%; }
+.lens-charts-bar-18 { width: 90%; }
+.lens-charts-bar-19 { width: 95%; }
+.lens-charts-bar-20 { width: 100%; }
