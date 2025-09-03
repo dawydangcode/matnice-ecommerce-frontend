@@ -73,7 +73,7 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [lensThicknessList, setLensThicknessList] = useState<LensThickness[]>([]);
-  const [selectedLensThicknessIds, setSelectedLensThicknessIds] = useState<number[]>([]);
+  const [selectedLensThicknessIds, setSelectedLensThicknessIds] = useState<string[]>([]);
   const [colorImages, setColorImages] = useState<{ [colorId: number]: ProductImageModel[] }>({});
   const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
   const [isLoadingColors, setIsLoadingColors] = useState(true);
@@ -208,7 +208,8 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
       // Load compatible lens thickness IDs for this product
       try {
         const compatibleThicknessIds = await productThicknessCompatibilityService.getCompatibleThicknessIds(product.productId);
-        setSelectedLensThicknessIds(compatibleThicknessIds);
+        // Convert number[] to string[] to match new LensThickness.id type
+        setSelectedLensThicknessIds(compatibleThicknessIds.map(id => id.toString()));
       } catch (error) {
         console.log('No existing lens thickness compatibility found, starting with empty selection');
         setSelectedLensThicknessIds([]);
@@ -448,9 +449,11 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
       // Update lens thickness compatibility
       if (selectedLensThicknessIds.length >= 0) {
         try {
+          // Convert string[] back to number[] for API compatibility
+          const numericIds = selectedLensThicknessIds.map(id => parseInt(id, 10));
           await productThicknessCompatibilityService.updateProductCompatibilities(
             product.productId,
-            selectedLensThicknessIds
+            numericIds
           );
           toast.success('Cập nhật độ dày lens thành công');
         } catch (error) {
@@ -807,7 +810,8 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
                               className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                             />
                             <span className="text-sm text-gray-700">
-                              {lensThickness.name} - Index {lensThickness.indexValue} - {lensThickness.price.toLocaleString('vi-VN')}đ
+                              {lensThickness.name} - Index {lensThickness.indexValue}
+                              {lensThickness.description && ` - ${lensThickness.description}`}
                             </span>
                           </label>
                         );

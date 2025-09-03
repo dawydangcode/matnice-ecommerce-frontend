@@ -1,33 +1,49 @@
 import { apiService } from './api.service';
 
 export interface LensThickness {
-  id: number;
+  id: string; // API returns string
   name: string;
   indexValue: number;
-  price: number;
   description?: string;
-  createdAt: Date;
+  createdAt: string;
   createdBy: number;
-  updatedAt: Date;
-  updatedBy: number;
-  deletedAt?: Date;
-  deletedBy?: number;
+  updatedAt: string | null;
+  updatedBy: number | null;
+  deletedAt?: string | null;
+  deletedBy?: number | null;
 }
 
 export class LensThicknessService {
   async getLensThicknessList(): Promise<LensThickness[]> {
     try {
-      const response = await apiService.get<LensThickness[]>(
-        '/api/v1/lens-thickness/list',
-      );
-      return response;
+      const response = await apiService.get<any>('/api/v1/lens-thickness/list');
+
+      console.log(
+        'Raw lens thickness response:',
+        JSON.stringify(response, null, 2),
+      ); // Better debug log
+
+      // Check if response has data property (pagination structure)
+      if (response && response.data && Array.isArray(response.data)) {
+        console.log('Found data array with', response.data.length, 'items'); // Debug
+        return response.data;
+      }
+
+      // Check if response is directly an array
+      if (Array.isArray(response)) {
+        console.log('Response is direct array with', response.length, 'items'); // Debug
+        return response;
+      }
+
+      console.error('Unexpected lens thickness response structure:', response);
+      return [];
     } catch (error) {
       console.error('Failed to get lens thickness list:', error);
       throw error;
     }
   }
 
-  async getLensThicknessById(id: number): Promise<LensThickness> {
+  async getLensThicknessById(id: string): Promise<LensThickness> {
     try {
       const response = await apiService.get<LensThickness>(
         `/api/v1/lens-thickness/${id}`,
@@ -42,12 +58,11 @@ export class LensThicknessService {
   async createLensThickness(data: {
     name: string;
     indexValue: number;
-    price: number;
     description?: string;
   }): Promise<LensThickness> {
     try {
       const response = await apiService.post<LensThickness>(
-        '/api/v1/lens-thickness/create',
+        '/api/v1/lens-thickness',
         data,
       );
       return response;
@@ -58,11 +73,10 @@ export class LensThicknessService {
   }
 
   async updateLensThickness(
-    id: number,
+    id: string,
     data: {
       name: string;
       indexValue: number;
-      price: number;
       description?: string;
     },
   ): Promise<LensThickness> {
@@ -78,7 +92,7 @@ export class LensThicknessService {
     }
   }
 
-  async deleteLensThickness(id: number): Promise<boolean> {
+  async deleteLensThickness(id: string): Promise<boolean> {
     try {
       await apiService.delete(`/api/v1/lens-thickness/${id}`);
       return true;

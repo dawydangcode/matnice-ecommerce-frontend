@@ -51,7 +51,9 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
     const loadLensThickness = async () => {
       try {
         setIsLoadingLensThickness(true);
+        console.log('Loading lens thickness...'); // Debug
         const list = await lensThicknessService.getLensThicknessList();
+        console.log('Lens thickness loaded:', list); // Debug
         setLensThicknessList(list);
       } catch (error) {
         console.error('Failed to load lens thickness:', error);
@@ -185,12 +187,12 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
           <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2 space-y-2">
             {isLoadingLensThickness ? (
               <div className="text-sm text-gray-500">Đang tải...</div>
-            ) : lensThicknessList.length === 0 ? (
+            ) : !Array.isArray(lensThicknessList) || lensThicknessList.length === 0 ? (
               <div className="text-sm text-gray-500">Không có độ dày lens nào</div>
             ) : (
               lensThicknessList.map((lensThickness) => {
                 const selectedLensThickness = watchedValues.lensThicknessIds || [];
-                const isChecked = selectedLensThickness.includes(lensThickness.id.toString());
+                const isChecked = selectedLensThickness.includes(lensThickness.id);
                 
                 return (
                   <label key={lensThickness.id} className="flex items-center space-x-2 cursor-pointer">
@@ -200,14 +202,15 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
                       onChange={(e) => {
                         const selectedLensThickness = watchedValues.lensThicknessIds || [];
                         const newLensThickness = e.target.checked
-                          ? [...selectedLensThickness, lensThickness.id.toString()]
-                          : selectedLensThickness.filter((id: string) => id !== lensThickness.id.toString());
+                          ? [...selectedLensThickness, lensThickness.id]
+                          : selectedLensThickness.filter((id: string) => id !== lensThickness.id);
                         handleLensThicknessChange(newLensThickness);
                       }}
                       className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">
-                      {lensThickness.name} - Index {lensThickness.indexValue} - {lensThickness.price.toLocaleString('vi-VN')}đ
+                      {lensThickness.name} - Index {lensThickness.indexValue}
+                      {lensThickness.description && ` - ${lensThickness.description}`}
                     </span>
                   </label>
                 );
