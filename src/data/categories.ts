@@ -7,10 +7,6 @@ export const glassesCategories = [
       "Men's Glasses",
       'Varifocals',
       'Reading Glasses',
-      'Outlet Glasses',
-      'Glasses accessories',
-      'Our exclusive Brands',
-      'More glasses categories',
     ],
   },
   {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Heart, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { ProductCard } from '../types/product-card.types';
 import { 
   FrameType, 
@@ -13,9 +13,10 @@ import {
 import { BrandData, brandService } from '../services/brand.service';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
-import GlassesHeroContent from '../components/category/GlassesHeroContent';
+import HeroContent from '../components/HeroContent';
 import ProductListHeader from '../components/ProductListHeader';
 import FilterSection from '../components/FilterSection';
+import { getHeroContent } from '../data/hero-content';
 import GlassWidthSmall from '../components/icons/GlassWidth/GlassWidthSmall';
 import GlassWidthMedium from '../components/icons/GlassWidth/GlassWidthMedium';
 import GlassWidthLarge from '../components/icons/GlassWidth/GlassWidthLarge';
@@ -42,6 +43,10 @@ import '../styles/product-page.css';
 import '../styles/filter-section.css';
 
 const ProductsPage: React.FC = () => {
+  const location = useLocation();
+  const { category } = useParams<{ category: string }>();
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState([0, 1000000]);
@@ -65,6 +70,16 @@ const ProductsPage: React.FC = () => {
   const [brandSearchTerm, setBrandSearchTerm] = useState('');
   // Glasses Width filter: 'small' | 'medium' | 'large'
   const [selectedGlassesWidths, setSelectedGlassesWidths] = useState<string[]>([]);
+  // Multifocal lens option filter
+  const [isMultifocalSelected, setIsMultifocalSelected] = useState<boolean>(false);
+
+  // Determine product type from URL
+  const productType = searchParams.get('type') || category || 
+                     (location.pathname.includes('/sunglasses') ? 'sunglasses' : 
+                      location.pathname.includes('/contact-lenses') ? 'contact-lenses' : 'glasses');
+  
+  // Get dynamic hero content based on URL params
+  const heroContent = getHeroContent(productType as 'glasses' | 'sunglasses' | 'contact-lenses', searchParams);
 
   // Create stable dependencies for useEffect
   const minPrice = useMemo(() => priceRange[0], [priceRange]);
@@ -108,6 +123,50 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
 
     fetchBrands();
   }, []);
+
+  // Auto-apply filters based on URL parameters
+  useEffect(() => {
+    const categoryParam = searchParams.get('category')?.toLowerCase();
+    
+    // Auto-select gender filter based on category
+    if (categoryParam === 'womens-glasses' || categoryParam === 'women-s-glasses') {
+      setSelectedGenders([ProductGenderType.FEMALE]);
+    } else if (categoryParam === 'mens-glasses' || categoryParam === 'men-s-glasses') {
+      setSelectedGenders([ProductGenderType.MALE]);
+    } else if (categoryParam === 'all-glasses') {
+      // Clear gender filters for all glasses
+      setSelectedGenders([]);
+    }
+    
+    // Handle shape filters
+    const shapeParam = searchParams.get('shop_by_shape')?.toLowerCase();
+    if (shapeParam === 'round') {
+      setSelectedFrameShapes([FrameShapeType.ROUND]);
+    } else if (shapeParam === 'square') {
+      setSelectedFrameShapes([FrameShapeType.SQUARE]);
+    } else if (shapeParam === 'rectangle') {
+      setSelectedFrameShapes([FrameShapeType.RECTANGLE]);
+    } else if (shapeParam === 'aviator') {
+      setSelectedFrameShapes([FrameShapeType.AVIATOR]);
+    }
+    
+    // Handle varifocal category - auto-select multifocal
+    if (categoryParam === 'varifocals') {
+      setIsMultifocalSelected(true);
+    } else {
+      setIsMultifocalSelected(false);
+    }
+    
+    // You can add more parameter handling here for other filters
+  }, [searchParams]);
+
+  // Determine which filter sections to show/hide
+  const currentCategoryParam = searchParams.get('category')?.toLowerCase();
+  const shouldHideGenderFilter = currentCategoryParam === 'womens-glasses' || 
+                                 currentCategoryParam === 'women-s-glasses' ||
+                                 currentCategoryParam === 'mens-glasses' || 
+                                 currentCategoryParam === 'men-s-glasses';
+  const shouldHideLensOptions = currentCategoryParam === 'varifocals';
 
   // Filter brands based on search term
   const filteredBrands = useMemo(() => {
@@ -183,6 +242,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
           bridgeDesign: selectedBridgeDesigns.length > 0 ? selectedBridgeDesigns.map(f => f.toLowerCase()) : undefined,
           style: selectedStyles.length > 0 ? selectedStyles.map(f => f.toLowerCase()) : undefined,
           frameWidth,
+          multifocal: isMultifocalSelected ? true : undefined,
         });
         setProducts(response.data || []);
         setTotal(response.total || 0);
@@ -196,7 +256,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     };
 
     fetchData();
-  }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, selectedGlassesWidths]);
+  }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, selectedGlassesWidths, isMultifocalSelected]);
 
   // Clear all filters
   const clearAllFilters = () => {
@@ -211,13 +271,14 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     setSelectedStyles([]);
     setBrandSearchTerm('');
     setSelectedGlassesWidths([]);
+    setIsMultifocalSelected(false);
   };
 
   // Reset page to 1 when filter changes
   useEffect(() => {
     setCurrentPage(1);
     // eslint-disable-next-line
-  }, [selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, priceRange, selectedGlassesWidths]);
+  }, [selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, priceRange, selectedGlassesWidths, isMultifocalSelected]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -228,7 +289,12 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
       </header>
 
       {/* Hero Content */}
-      <GlassesHeroContent />
+      <HeroContent
+        title={heroContent.title}
+        description={heroContent.description}
+        heroImage={heroContent.heroImage}
+        backgroundColor={heroContent.backgroundColor}
+      />
 
       {/* Product List Header */}
       <ProductListHeader
@@ -272,32 +338,34 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                   </div>
                 </FilterSection>
 
-                {/* Glasses For */}
-                <FilterSection title="GLASSES FOR">
-                  <div className="space-y-3">
-                    {Object.values(ProductGenderType).map((gender) => (
-                      <label key={gender} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <input 
-                          type="checkbox" 
-                          className="filter-checkbox"
-                          checked={selectedGenders.includes(gender)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedGenders([...selectedGenders, gender]);
-                            } else {
-                              setSelectedGenders(selectedGenders.filter(g => g !== gender));
-                            }
-                          }}
-                        />
-                        <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
-                          {gender === ProductGenderType.MALE ? 'Men' : 
-                           gender === ProductGenderType.FEMALE ? 'Women' : 
-                           'Unisex'}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </FilterSection>
+                {/* Glasses For - Hide if specific gender is already selected from category */}
+                {!shouldHideGenderFilter && (
+                  <FilterSection title="GLASSES FOR">
+                    <div className="space-y-3">
+                      {Object.values(ProductGenderType).map((gender) => (
+                        <label key={gender} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                          <input 
+                            type="checkbox" 
+                            className="filter-checkbox"
+                            checked={selectedGenders.includes(gender)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedGenders([...selectedGenders, gender]);
+                              } else {
+                                setSelectedGenders(selectedGenders.filter(g => g !== gender));
+                              }
+                            }}
+                          />
+                          <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
+                            {gender === ProductGenderType.MALE ? 'Men' : 
+                             gender === ProductGenderType.FEMALE ? 'Women' : 
+                             'Unisex'}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </FilterSection>
+                )}
 
                 {/* Glasses Width */}
                 <FilterSection title="GLASSES WIDTH">
@@ -415,6 +483,27 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                     ))}
                   </div>
                 </FilterSection>
+
+                {/* Lens Options - Hide if varifocal category is selected */}
+                {!shouldHideLensOptions && (
+                  <FilterSection title="LENS OPTIONS">
+                    <div className="space-y-3">
+                      <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input 
+                          type="checkbox" 
+                          className="filter-checkbox"
+                          checked={isMultifocalSelected}
+                          onChange={(e) => {
+                            setIsMultifocalSelected(e.target.checked);
+                          }}
+                        />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">
+                          Available with varifocal lenses
+                        </span>
+                      </label>
+                    </div>
+                  </FilterSection>
+                )}
 
                 {/* Nose Bridge */}
                 <FilterSection title="NOSE BRIDGE">

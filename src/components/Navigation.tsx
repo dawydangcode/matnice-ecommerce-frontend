@@ -157,7 +157,7 @@ const Navigation: React.FC = () => {
                       {category.items.map((item, itemIndex) => (
                         <li key={itemIndex}>
                           <Link 
-                            to={`/glasses/${item.toLowerCase().replace(/\s+/g, '-')}`}
+                            to={`/glasses?category=${item.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
                             className="text-sm text-gray-600 hover:text-gray-900"
                           >
                             {item}
@@ -179,7 +179,7 @@ const Navigation: React.FC = () => {
                       {category.items.map((item, itemIndex) => (
                         <li key={itemIndex}>
                           <Link 
-                            to={`/sunglasses/${item.toLowerCase().replace(/\s+/g, '-')}`}
+                            to="/sunglasses"
                             className="text-sm text-gray-600 hover:text-gray-900"
                           >
                             {item}
@@ -201,7 +201,7 @@ const Navigation: React.FC = () => {
                       {category.items.map((item, itemIndex) => (
                         <li key={itemIndex}>
                           <Link 
-                            to={`/brands/${item.toLowerCase().replace(/\s+/g, '-')}`}
+                            to="/brands"
                             className="text-sm text-gray-600 hover:text-gray-900"
                           >
                             {item}
@@ -223,7 +223,7 @@ const Navigation: React.FC = () => {
                       {category.items.map((item, itemIndex) => (
                         <li key={itemIndex}>
                           <Link 
-                            to={`/boutique/${item.toLowerCase().replace(/\s+/g, '-')}`}
+                            to="/boutique"
                             className="text-sm text-gray-600 hover:text-gray-900"
                           >
                             {item}
@@ -245,7 +245,7 @@ const Navigation: React.FC = () => {
                       {category.items.map((item, itemIndex) => (
                         <li key={itemIndex}>
                           <Link 
-                            to={`/ai/${item.toLowerCase().replace(/\s+/g, '-')}`}
+                            to="/ai"
                             className="text-sm text-gray-600 hover:text-gray-900"
                           >
                             {item}

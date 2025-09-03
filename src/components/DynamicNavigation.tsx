@@ -49,7 +49,7 @@ const DynamicNavigation: React.FC = () => {
             onMouseLeave={handleMouseLeave}
           >
             <Link
-              to="/products/glasses"
+              to="/products?type=glasses"
               className="flex items-center text-gray-700 hover:text-black transition-colors duration-200 font-medium"
             >
               GLASSES
@@ -69,7 +69,7 @@ const DynamicNavigation: React.FC = () => {
                             {category.items.map((item) => (
                               <li key={item}>
                                 <Link
-                                  to={`/products/glasses?${category.title.toLowerCase().replace(' ', '_')}=${item.toLowerCase().replace(' ', '-').replace("'", '')}`}
+                                  to={`/products?type=glasses&${category.title.toLowerCase().replace(' ', '_')}=${item.toLowerCase().replace(' ', '-').replace("'", '')}`}
                                   className="block py-2 px-2 text-sm text-gray-600 hover:text-black hover:bg-gray-50 rounded transition-all duration-200"
                                 >
                                   {item}
@@ -116,7 +116,7 @@ const DynamicNavigation: React.FC = () => {
             onMouseLeave={handleMouseLeave}
           >
             <Link
-              to="/products/sunglasses"
+              to="/products?type=sunglasses"
               className="flex items-center text-gray-700 hover:text-black transition-colors duration-200 font-medium"
             >
               SUNGLASSES
@@ -136,7 +136,7 @@ const DynamicNavigation: React.FC = () => {
                           {category.items.map((item) => (
                             <li key={item}>
                               <Link
-                                to={`/products/sunglasses?${category.title.toLowerCase().replace(' ', '_')}=${item.toLowerCase().replace(' ', '-').replace("'", '')}`}
+                                to={`/products?type=sunglasses&${category.title.toLowerCase().replace(' ', '_')}=${item.toLowerCase().replace(' ', '-').replace("'", '')}`}
                                 className="block py-2 px-2 text-sm text-gray-600 hover:text-black hover:bg-gray-50 rounded transition-all duration-200"
                               >
                                 {item}

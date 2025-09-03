@@ -4,6 +4,7 @@ interface HeroContentProps {
   title: string;
   description: string;
   heroImage?: string;
+  backgroundColor?: string;
   categories?: Array<{
     name: string;
     href: string;
@@ -14,12 +15,13 @@ const HeroContent: React.FC<HeroContentProps> = ({
   title,
   description,
   heroImage,
+  backgroundColor = "from-green-200 to-green-400",
   categories = []
 }) => {
   return (
     <section className="relative bg-gray-100 pt-10 overflow-hidden">
       {/* Background overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-green-200 to-green-400"></div>
+      <div className={`absolute inset-0 bg-gradient-to-br ${backgroundColor}`}></div>
       
       <div className="relative max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
