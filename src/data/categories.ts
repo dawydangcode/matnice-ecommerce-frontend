@@ -1,5 +1,19 @@
 export const glassesCategories = [
   {
+    title: 'Category',
+    items: [
+      'All Glasses',
+      "Women's Glasses",
+      "Men's Glasses",
+      'Varifocals',
+      'Reading Glasses',
+      'Outlet Glasses',
+      'Glasses accessories',
+      'Our exclusive Brands',
+      'More glasses categories',
+    ],
+  },
+  {
     title: 'Shop by Shape',
     items: ['Round', 'Square', 'Cat Eye', 'Aviator', 'Wayfarer', 'Oversized'],
   },
