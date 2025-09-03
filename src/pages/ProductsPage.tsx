@@ -14,7 +14,6 @@ import { BrandData, brandService } from '../services/brand.service';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import HeroContent from '../components/HeroContent';
-import ProductListHeader from '../components/ProductListHeader';
 import FilterSection from '../components/FilterSection';
 import { getHeroContent } from '../data/hero-content';
 import GlassWidthSmall from '../components/icons/GlassWidth/GlassWidthSmall';
@@ -47,7 +46,7 @@ const ProductsPage: React.FC = () => {
   const { category } = useParams<{ category: string }>();
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState([0, 1000000]);
   
@@ -258,6 +257,82 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     fetchData();
   }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, selectedGlassesWidths, isMultifocalSelected]);
 
+  // Helper function to get selected filter labels
+  const getSelectedFilters = () => {
+    const filters = [];
+    
+    // Gender filters
+    selectedGenders.forEach(gender => {
+      const label = gender === ProductGenderType.MALE ? 'Men' : 
+                   gender === ProductGenderType.FEMALE ? 'Women' : 'Unisex';
+      filters.push({ type: 'gender', value: gender, label, remove: () => setSelectedGenders(prev => prev.filter(g => g !== gender)) });
+    });
+
+    // Frame type filters
+    selectedFrameTypes.forEach(type => {
+      const label = type.charAt(0).toUpperCase() + type.slice(1).replace(/-/g, ' ');
+      filters.push({ type: 'frameType', value: type, label: `Frame: ${label}`, remove: () => setSelectedFrameTypes(prev => prev.filter(t => t !== type)) });
+    });
+
+    // Frame shape filters
+    selectedFrameShapes.forEach(shape => {
+      const shapeLabels: { [key: string]: string } = {
+        'round': 'Round',
+        'square': 'Square',
+        'rectangular': 'Rectangle',
+        'cat-eye': 'Butterfly / Cat Eye',
+        'butterfly': 'Butterfly',
+        'aviator': 'Aviator',
+        'narrow': 'Narrow',
+        'oval': 'Oval',
+        'browline': 'Browline'
+      };
+      const label = `Shape: ${shapeLabels[shape as string] || shape.charAt(0).toUpperCase() + shape.slice(1).replace(/-/g, ' ')}`;
+      filters.push({ type: 'frameShape', value: shape, label, remove: () => setSelectedFrameShapes(prev => prev.filter(s => s !== shape)) });
+    });
+
+    // Frame material filters
+    selectedFrameMaterials.forEach(material => {
+      const label = `Material: ${material.charAt(0).toUpperCase() + material.slice(1)}`;
+      filters.push({ type: 'frameMaterial', value: material, label, remove: () => setSelectedFrameMaterials(prev => prev.filter(m => m !== material)) });
+    });
+
+    // Bridge design filters
+    selectedBridgeDesigns.forEach(design => {
+      const label = `Bridge: ${design.replace(/_/g, ' ').charAt(0).toUpperCase() + design.replace(/_/g, ' ').slice(1)}`;
+      filters.push({ type: 'bridgeDesign', value: design, label, remove: () => setSelectedBridgeDesigns(prev => prev.filter(d => d !== design)) });
+    });
+
+    // Style filters
+    selectedStyles.forEach(style => {
+      const label = `Style: ${style}`;
+      filters.push({ type: 'style', value: style, label, remove: () => setSelectedStyles(prev => prev.filter(s => s !== style)) });
+    });
+
+    // Glass width filters
+    selectedGlassesWidths.forEach(width => {
+      const label = `Glasses width: ${width.charAt(0).toUpperCase() + width.slice(1)}`;
+      filters.push({ type: 'glassWidth', value: width, label, remove: () => setSelectedGlassesWidths(prev => prev.filter(w => w !== width)) });
+    });
+
+    // Brand filters
+    selectedBrands.forEach(brandId => {
+      const brand = brands.find(b => b.id === brandId);
+      if (brand) {
+        filters.push({ type: 'brand', value: brandId, label: brand.name, remove: () => setSelectedBrands(prev => prev.filter(id => id !== brandId)) });
+      }
+    });
+
+    // Multifocal filter
+    if (isMultifocalSelected) {
+      filters.push({ type: 'multifocal', value: 'true', label: 'Multifocal', remove: () => setIsMultifocalSelected(false) });
+    }
+
+    return filters;
+  };
+
+  const selectedFilters = getSelectedFilters();
+
   // Clear all filters
   const clearAllFilters = () => {
     setPriceRange([0, 1000000]);
@@ -296,24 +371,26 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
         backgroundColor={heroContent.backgroundColor}
       />
 
-      {/* Product List Header */}
-      <ProductListHeader
-        total={total}
-        viewMode={viewMode}
-        sortBy={sortBy}
-        onViewModeChange={setViewMode}
-        onSortChange={setSortBy}
-        onClearAll={clearAllFilters}
-      />
-
       {/* Main Content Area */}
       <section className="py-8">
         <div className="max-w-full mx-auto px-6">
-          <div className="flex flex-col lg:flex-row gap-6">
+          {/* Desktop Grid Layout (≥1024px) */}
+          <div className="product-listing-grid lg:grid lg:grid-cols-[280px_1fr] lg:gap-8">
             
             {/* Left Sidebar - Filters */}
-            <div className="w-full lg:w-1/5">
-              <div className="bg-white rounded-lg shadow-sm p-2 space-y-1">
+            <div className={`filter-area ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
+              <div className="bg-white rounded-lg shadow-sm p-4 space-y-6">
+                
+                {/* Filter Header */}
+                <div className="flex items-center justify-between mb-5 pl-2">
+                  <h2 className="filter-header">Filters</h2>
+                  <button
+                    onClick={() => setShowMobileFilters(false)}
+                    className="lg:hidden text-gray-600 hover:text-black text-xl"
+                  >
+                    ×
+                  </button>
+                </div>
                 
                 {/* Recommendations Section */}
                 <FilterSection title="RECOMMENDATIONS FOR YOU">
@@ -698,9 +775,66 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
               </div>
             </div>
 
-            {/* Right Content - Products Grid */}
-            <div className="w-full lg:w-4/5">
+            {/* Right Content - Products List Area */}
+            <div className="product-list-area lg:col-start-2 lg:col-end-3">
               
+              {/* Results Count and Sort Options */}
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+                <div className="flex items-center space-x-4">
+                  <div className="product-total-count">
+                    {total} Results
+                  </div>
+                  <button
+                    onClick={() => setShowMobileFilters(true)}
+                    className="lg:hidden px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
+                  >
+                    Filters
+                  </button>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                  >
+                    <option value="newest">Most popular</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                    <option value="name_asc">Name: A to Z</option>
+                    <option value="name_desc">Name: Z to A</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Selected Filters */}
+              {selectedFilters.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {selectedFilters.map((filter, index) => (
+                      <div
+                        key={`${filter.type}-${filter.value}-${index}`}
+                        className="inline-flex items-center bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
+                      >
+                        <span>{filter.label}</span>
+                        <button
+                          onClick={filter.remove}
+                          className="ml-2 text-gray-500 hover:text-gray-700"
+                          aria-label={`Remove ${filter.label} filter`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-sm text-gray-600 hover:text-gray-900 underline ml-2"
+                    >
+                      Clear all filters
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {loading ? (
                 <div className="flex justify-center items-center h-64">
                   <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black-600"></div>
@@ -723,7 +857,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((product) => (
                       <div key={product.id} className="group cursor-pointer bg-gray-50 p-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                         <div className="relative rounded-lg mb-6 overflow-hidden h-96 flex items-center justify-center">

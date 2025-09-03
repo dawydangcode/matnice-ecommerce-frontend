@@ -10,3 +10,68 @@
     font-size: 0.75rem; /* text-xs */
     font-weight: 500; /* font-medium */
 }
+
+/* Custom grid layout for product listing page */
+@media (min-width: 1024px) {
+    .product-listing-grid {
+        margin-top: 48px;
+        display: grid;
+        column-gap: 2rem;
+        grid-template-columns: 280px 1fr;
+        grid-template-areas: "filter list";
+        align-items: start;
+    }
+}
+
+.filter-area {
+    grid-area: filter;
+    z-index: 3;
+}
+
+.product-list-area {
+    grid-area: list;
+}
+
+/* Product total count styling */
+.product-total-count {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 300;
+    color: #363434;
+    margin: 0;
+}
+
+/* Filter header styling to match product count */
+.filter-header {
+    font-size: 24px;
+    line-height: 10px;
+    font-weight: 300;
+    color: #363434;
+    margin: 0;
+}
+
+/* Ensure both headers align on same baseline */
+.header-alignment {
+    display: flex;
+    align-items: baseline;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 1023px) {
+    .filter-area {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 50;
+        padding: 1rem;
+        overflow-y: auto;
+    }
+    
+    .filter-area > div {
+        max-height: calc(100vh - 2rem);
+        overflow-y: auto;
+    }
+}

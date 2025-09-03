@@ -19,7 +19,7 @@ const ProductListHeader: React.FC<ProductListHeaderProps> = ({
   onClearAll
 }) => {
   return (
-    <section className="bg-white py-4 border-b border-gray-200">
+    <section className="bg-white py-4">
       <div className="max-w-full mx-auto px-6">
         <div className="flex items-center justify-between">
           {/* Left side: Filter title and Results count */}
