@@ -73,7 +73,7 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [lensThicknessList, setLensThicknessList] = useState<LensThickness[]>([]);
-  const [selectedLensThicknessIds, setSelectedLensThicknessIds] = useState<string[]>([]);
+  const [selectedLensThicknessIds, setSelectedLensThicknessIds] = useState<number[]>([]);
   const [colorImages, setColorImages] = useState<{ [colorId: number]: ProductImageModel[] }>({});
   const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
   const [isLoadingColors, setIsLoadingColors] = useState(true);
@@ -204,14 +204,29 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
       // Load all lens thickness
       const lensThickness = await lensThicknessService.getLensThicknessList();
       setLensThicknessList(lensThickness);
+      console.log('All lens thickness:', lensThickness);
       
       // Load compatible lens thickness IDs for this product
       try {
-        const compatibleThicknessIds = await productThicknessCompatibilityService.getCompatibleThicknessIds(product.productId);
-        // Convert number[] to string[] to match new LensThickness.id type
-        setSelectedLensThicknessIds(compatibleThicknessIds.map(id => id.toString()));
+        console.log('Fetching compatible thickness IDs for product:', product.productId);
+        
+        // Use the compatibilities endpoint to get all records, then filter by productId
+        const allCompatibilities = await productThicknessCompatibilityService.getCompatibilities();
+        console.log('All compatibility records:', allCompatibilities);
+        
+        // Filter compatibilities for this specific product
+        const productCompatibilities = allCompatibilities.filter(comp => comp.productId === product.productId);
+        console.log('Product compatibilities:', productCompatibilities);
+        
+        // Extract lens thickness IDs
+        const compatibleThicknessIds = productCompatibilities.map(comp => comp.lensThicknessId);
+        console.log('Extracted thickness IDs:', compatibleThicknessIds);
+        
+        // Keep as number[] since LensThickness.id is actually number from API response
+        setSelectedLensThicknessIds(compatibleThicknessIds);
+        console.log('Final selected lens thickness IDs:', compatibleThicknessIds);
       } catch (error) {
-        console.log('No existing lens thickness compatibility found, starting with empty selection');
+        console.log('No existing lens thickness compatibility found, starting with empty selection', error);
         setSelectedLensThicknessIds([]);
       }
     } catch (error) {
@@ -449,11 +464,10 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
       // Update lens thickness compatibility
       if (selectedLensThicknessIds.length >= 0) {
         try {
-          // Convert string[] back to number[] for API compatibility
-          const numericIds = selectedLensThicknessIds.map(id => parseInt(id, 10));
+          // selectedLensThicknessIds is already number[], no need to convert
           await productThicknessCompatibilityService.updateProductCompatibilities(
             product.productId,
-            numericIds
+            selectedLensThicknessIds
           );
           toast.success('Cập nhật độ dày lens thành công');
         } catch (error) {

@@ -1,7 +1,7 @@
 import { apiService } from './api.service';
 
 export interface LensThickness {
-  id: string; // API returns string
+  id: number; // API returns number, not string
   name: string;
   indexValue: number;
   description?: string;
@@ -43,7 +43,7 @@ export class LensThicknessService {
     }
   }
 
-  async getLensThicknessById(id: string): Promise<LensThickness> {
+  async getLensThicknessById(id: number): Promise<LensThickness> {
     try {
       const response = await apiService.get<LensThickness>(
         `/api/v1/lens-thickness/${id}`,

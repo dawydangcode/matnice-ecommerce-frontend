@@ -192,7 +192,8 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
             ) : (
               lensThicknessList.map((lensThickness) => {
                 const selectedLensThickness = watchedValues.lensThicknessIds || [];
-                const isChecked = selectedLensThickness.includes(lensThickness.id);
+                const lensThicknessIdStr = lensThickness.id.toString();
+                const isChecked = selectedLensThickness.includes(lensThicknessIdStr);
                 
                 return (
                   <label key={lensThickness.id} className="flex items-center space-x-2 cursor-pointer">
@@ -202,8 +203,8 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
                       onChange={(e) => {
                         const selectedLensThickness = watchedValues.lensThicknessIds || [];
                         const newLensThickness = e.target.checked
-                          ? [...selectedLensThickness, lensThickness.id]
-                          : selectedLensThickness.filter((id: string) => id !== lensThickness.id);
+                          ? [...selectedLensThickness, lensThicknessIdStr]
+                          : selectedLensThickness.filter((id: string) => id !== lensThicknessIdStr);
                         handleLensThicknessChange(newLensThickness);
                       }}
                       className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
