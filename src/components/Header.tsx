@@ -1,17 +1,20 @@
 import React from 'react';
-import { Search, ShoppingCart, Heart, User } from 'lucide-react';
+import { Search, ShoppingCart, Heart, User, Menu } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { Link } from 'react-router-dom';
+import smallEyeLogo from '../assets/small_eye_logo.png';
 
-const Header: React.FC = () => {
-  const { isLoggedIn, user, logout } = useAuthStore();
+// Shared props interface
+interface HeaderProps {
+  isLoggedIn: boolean;
+  user: any;
+  onLogout: () => void;
+}
 
-  const handleLogout = () => {
-    logout();
-  };
-
+// Desktop Header Component
+const DesktopHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => {
   return (
-    <div className="bg-white shadow-sm border-b">
+    <div className="hidden md:block bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Left spacer */}
@@ -43,7 +46,7 @@ const Header: React.FC = () => {
                   )}
                 </div>
                 <button
-                  onClick={handleLogout}
+                  onClick={onLogout}
                   className="text-sm text-red-600 hover:text-red-800 font-medium"
                 >
                   Logout
@@ -65,6 +68,75 @@ const Header: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Mobile Header Component
+const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => {
+  return (
+    <div className="block md:hidden bg-white shadow-sm border-b">
+      <div className="max-w-full mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          {/* Left - Menu Button + Search */}
+          <div className="flex items-center space-x-3">
+            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <Menu className="w-6 h-6" />
+            </button>
+            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <Search className="w-6 h-6" />
+            </button>
+          </div>
+          
+          {/* Center - Logo */}
+          <div className="flex justify-center">
+            <Link to="/">
+              <img 
+                src={smallEyeLogo} 
+                alt="MATNICE EYEWEAR" 
+                className="h-12 w-auto"
+              />
+            </Link>
+          </div>
+
+          {/* Right - Icons */}
+          <div className="flex items-center space-x-3">
+            <Heart className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
+            <ShoppingCart className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
+            
+            {/* User Icon Only */}
+            {isLoggedIn ? (
+              <User className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
+            ) : (
+              <Link to="/login">
+                <User className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main Header Component
+const Header: React.FC = () => {
+  const { isLoggedIn, user, logout } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const sharedProps = {
+    isLoggedIn,
+    user,
+    onLogout: handleLogout
+  };
+
+  return (
+    <>
+      <DesktopHeader {...sharedProps} />
+      <MobileHeader {...sharedProps} />
+    </>
   );
 };
 
