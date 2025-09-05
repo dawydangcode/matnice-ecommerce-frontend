@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
+import VirtualTryOnModal from '../components/VirtualTryOnModal';
 import productService, { ProductDetail } from '../services/productService';
 import '../styles/ProductDetailPage.css';
 
@@ -12,6 +13,7 @@ const ProductDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('');
+  const [isVirtualTryOnOpen, setIsVirtualTryOnOpen] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -176,7 +178,10 @@ const ProductDetailPage: React.FC = () => {
                   />
                   {index === 0 && (
                     <div className="virtual-tryon-overlay">
-                      <button className="virtual-tryon-btn">
+                      <button 
+                        className="virtual-tryon-btn"
+                        onClick={() => setIsVirtualTryOnOpen(true)}
+                      >
                         👁️ Virtual try-on
                       </button>
                     </div>
@@ -303,6 +308,14 @@ const ProductDetailPage: React.FC = () => {
         </div>
       </main>
       <Footer />
+
+      {/* Virtual Try-On Modal */}
+      <VirtualTryOnModal
+        isOpen={isVirtualTryOnOpen}
+        onClose={() => setIsVirtualTryOnOpen(false)}
+        productName={`${product?.brand?.name} ${product?.productName}`}
+        model3dUrl={undefined}
+      />
     </div>
   );
 };
