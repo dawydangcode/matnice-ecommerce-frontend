@@ -11,6 +11,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
+import ProductDetailPage from './pages/ProductDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
 
 // Protected Route Component for Admin
@@ -144,6 +145,7 @@ function App() {
           <Route path="/glasses" element={<ProductsPage />} />
           <Route path="/sunglasses" element={<ProductsPage />} />
           <Route path="/products" element={<ProductsPage />} />
+          <Route path="/product/:id" element={<ProductDetailPage />} />
 
           {/* Admin Routes */}
           <Route

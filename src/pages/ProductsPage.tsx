@@ -859,7 +859,11 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((product) => (
-                      <div key={product.id} className="group cursor-pointer bg-gray-50 p-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      <Link 
+                        key={product.id} 
+                        to={`/product/${product.id}`}
+                        className="group cursor-pointer bg-gray-50 p-2 rounded-lg shadow-sm hover:shadow-md transition-shadow block"
+                      >
                         <div className="relative rounded-lg mb-6 overflow-hidden h-96 flex items-center justify-center">
                           {/* Badges */}
                           <div className="absolute top-4 left-4 flex flex-row space-x-2 z-10">
@@ -882,9 +886,16 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                           
                           {/* Heart Icon */}
                           <div className="absolute top-2 right-4 z-10">
-                            <div className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm hover:shadow-md transition-shadow">
+                            <button 
+                              className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm hover:shadow-md transition-shadow"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                // Handle favorite logic here
+                              }}
+                            >
                               <Heart className="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" />
-                            </div>
+                            </button>
                           </div>
                           
                           {/* Product Image - using thumbnail from backend */}
@@ -918,7 +929,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
 
