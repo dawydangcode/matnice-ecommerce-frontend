@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../components/Header';
-import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import Navigation from '../components/Navigation';
 import productService, { ProductDetail } from '../services/productService';
 import '../styles/ProductDetailPage.css';
 
@@ -157,6 +157,7 @@ const ProductDetailPage: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       <Navigation />
+      
       <main className="flex-grow">
         <div className="product-detail-container">
           {/* Product Gallery */}
@@ -174,9 +175,11 @@ const ProductDetailPage: React.FC = () => {
                     draggable="false"
                   />
                   {index === 0 && (
-                    <button className="virtual-tryon-btn">
-                      👁️ Virtual try-on
-                    </button>
+                    <div className="virtual-tryon-overlay">
+                      <button className="virtual-tryon-btn">
+                        👁️ Virtual try-on
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}

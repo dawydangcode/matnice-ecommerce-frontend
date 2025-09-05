@@ -228,7 +228,7 @@ export const ImageManagementShowcase: React.FC = () => {
                   >
                     <div className="product-info">
                       <div className="product-number">#{product.productId}</div>
-                      <div className="product-name">{product.productName}</div>
+                      <div className="product-name font-light">{product.productName}</div>
                       <div className="product-colors">
                         {productColors.length} biến thể
                       </div>

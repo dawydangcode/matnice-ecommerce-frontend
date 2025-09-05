@@ -168,9 +168,10 @@
 }
 
 .product-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #262626;
+  font-size: 30px;
+  font-weight: 100;
+  color: #363434;
+  font-family: 'sans-serif';
 }
 
 .product-colors {
