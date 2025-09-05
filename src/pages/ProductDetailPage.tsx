@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../components/Header';
+import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import productService, { ProductDetail } from '../services/productService';
 import '../styles/ProductDetailPage.css';
@@ -155,6 +156,7 @@ const ProductDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      <Navigation />
       <main className="flex-grow">
         <div className="product-detail-container">
           {/* Product Gallery */}
