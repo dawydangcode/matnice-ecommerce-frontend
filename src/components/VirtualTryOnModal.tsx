@@ -37,12 +37,24 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
   // Start camera when modal opens
   useEffect(() => {
     if (isOpen) {
+      console.log('Modal opened, starting camera...');
       startCamera();
     } else {
+      console.log('Modal closed, stopping camera...');
       stopCamera();
+      
+      // Force cleanup after a delay to ensure everything is stopped
+      setTimeout(() => {
+        if (streamRef.current) {
+          console.warn('Forcing camera cleanup after modal close');
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
+      }, 200);
     }
 
     return () => {
+      console.log('isOpen effect cleanup');
       stopCamera();
     };
   }, [isOpen]);
@@ -84,12 +96,32 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
   // Cleanup function to stop camera and FaceMesh
   useEffect(() => {
     return () => {
+      console.log('Component unmounting, cleaning up...');
+      
+      // Stop MediaStream tracks
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      
+      // Stop MediaPipe Camera
       if (cameraUtilsRef.current) {
         try {
           cameraUtilsRef.current.stop();
         } catch (error) {
           console.error('Error stopping camera:', error);
         }
+        cameraUtilsRef.current = null;
+      }
+      
+      // Clean up FaceMesh
+      if (faceMeshRef.current) {
+        try {
+          faceMeshRef.current.close();
+        } catch (error) {
+          console.error('Error closing FaceMesh:', error);
+        }
+        faceMeshRef.current = null;
       }
     };
   }, []);
@@ -364,15 +396,66 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
   };
 
   const stopCamera = () => {
+    console.log('Stopping camera and cleaning up resources...');
+    
+    // Stop MediaStream tracks
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log('Stopped track:', track.kind);
+      });
       streamRef.current = null;
     }
+    
+    // Stop MediaPipe Camera
+    if (cameraUtilsRef.current) {
+      try {
+        cameraUtilsRef.current.stop();
+        console.log('Stopped MediaPipe camera');
+      } catch (error) {
+        console.error('Error stopping MediaPipe camera:', error);
+      }
+      cameraUtilsRef.current = null;
+    }
+    
+    // Clean up FaceMesh
+    if (faceMeshRef.current) {
+      try {
+        faceMeshRef.current.close();
+        console.log('Closed FaceMesh');
+      } catch (error) {
+        console.error('Error closing FaceMesh:', error);
+      }
+      faceMeshRef.current = null;
+    }
+    
+    // Clear video source
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    
+    // Reset states
     setCameraActive(false);
+    setFaceDetected(false);
+    setCurrentLandmarks(null);
+    setStatus('Camera stopped');
+    
+    console.log('Camera cleanup completed');
   };
 
   const handleClose = () => {
+    console.log('Modal closing, stopping camera...');
     stopCamera();
+    
+    // Double check after a short delay
+    setTimeout(() => {
+      if (streamRef.current) {
+        console.warn('Camera still active after stop attempt, forcing cleanup');
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+    }, 100);
+    
     onClose();
   };
 
