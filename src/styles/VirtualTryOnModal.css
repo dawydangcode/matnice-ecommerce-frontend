@@ -73,6 +73,69 @@
   width: 100%;
 }
 
+/* Camera Container with Overlay */
+.camera-container {
+  position: relative;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+  height: 500px;
+  max-height: 70vh;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror effect for selfie camera */
+  display: block;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  transform: scaleX(-1); /* Mirror overlay to match video */
+  object-fit: cover;
+}
+
+/* Status Panel */
+.status-panel {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  z-index: 3;
+  min-width: 200px;
+}
+
+.status-indicator {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #ff6b6b;
+  transition: color 0.3s ease;
+}
+
+.status-indicator.detected {
+  color: #51cf66;
+}
+
+.status-text {
+  font-size: 0.75rem;
+  color: #cbd5e0;
+}
+
 .camera-container-large {
   position: relative;
   background: #000;
