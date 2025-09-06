@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect, useMemo, useCallback } from 'react';
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import '../styles/ThreeJSOverlay.css';
@@ -35,6 +35,12 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const glassesRef = useRef<THREE.Group | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  
+  // For smooth interpolation
+  const lastPositionRef = useRef({ x: 0, y: 0, z: 0 });
+  const lastRotationRef = useRef(0);
+  const lastScaleRef = useRef(1);
 
   // Default configuration - can be overridden by glassesConfig prop
   const config = useMemo(() => {
@@ -49,6 +55,35 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
     };
     return { ...defaultConfig, ...glassesConfig };
   }, [glassesConfig]);
+
+  // Smooth interpolation function
+  const lerp = (start: number, end: number, factor: number) => {
+    return start + (end - start) * factor;
+  };
+
+  // Update glasses position smoothly
+  const updateGlassesPosition = useCallback((targetX: number, targetY: number, targetZ: number, targetRotation: number, targetScale: number) => {
+    if (!glassesRef.current) return;
+
+    const smoothingFactor = 0.9; // Increased for faster response
+
+    // Smooth interpolation
+    const currentX = lerp(lastPositionRef.current.x, targetX, smoothingFactor);
+    const currentY = lerp(lastPositionRef.current.y, targetY, smoothingFactor);
+    const currentZ = lerp(lastPositionRef.current.z, targetZ, smoothingFactor);
+    const currentRotation = lerp(lastRotationRef.current, targetRotation, smoothingFactor);
+    const currentScale = lerp(lastScaleRef.current, targetScale, smoothingFactor);
+
+    // Update position and rotation
+    glassesRef.current.position.set(currentX, currentY, currentZ);
+    glassesRef.current.rotation.z = currentRotation;
+    glassesRef.current.scale.set(currentScale, currentScale, currentScale);
+
+    // Store current values for next frame
+    lastPositionRef.current = { x: currentX, y: currentY, z: currentZ };
+    lastRotationRef.current = currentRotation;
+    lastScaleRef.current = currentScale;
+  }, []);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -191,14 +226,6 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
     const rightEyeCenter = faceLandmarks[386]; // Right eye center
     
     if (leftEye && rightEye && noseBridge && leftEyeCenter && rightEyeCenter) {
-      console.log('Updating glasses position with landmarks:', {
-        leftEye: { x: leftEye.x, y: leftEye.y },
-        rightEye: { x: rightEye.x, y: rightEye.y },
-        leftEyeCenter: { x: leftEyeCenter.x, y: leftEyeCenter.y },
-        rightEyeCenter: { x: rightEyeCenter.x, y: rightEyeCenter.y },
-        noseBridge: { x: noseBridge.x, y: noseBridge.y }
-      });
-      
       // Use eye centers and nose bridge for more accurate positioning
       const eyeDistance = Math.abs(leftEyeCenter.x - rightEyeCenter.x);
       
@@ -211,39 +238,38 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
       const glassesX = -((centerX - config.offsetX) * 2); // Use config offset
       const glassesY = -(centerY - config.offsetY) * 2; // Use config offset
       
-      console.log('Calculated glasses position:', { 
-        x: glassesX + config.positionOffsetX, 
-        y: glassesY + config.positionOffsetY, 
-        z: config.positionOffsetZ 
-      });
-      
-      // Position glasses with fine-tuned offsets from config
-      glassesRef.current.position.set(
-        glassesX + config.positionOffsetX, 
-        glassesY + config.positionOffsetY, 
-        config.positionOffsetZ
-      );
-      
-      // Scale based on eye distance - use config multiplier
-      const scale = eyeDistance * config.scaleMultiplier;
-      console.log('Calculated scale:', scale);
-      glassesRef.current.scale.set(scale, scale, scale);
+      // Calculate target values
+      const targetX = glassesX + config.positionOffsetX;
+      const targetY = glassesY + config.positionOffsetY;
+      const targetZ = config.positionOffsetZ;
       
       // Rotation based on eye alignment - flip angle for mirroring
       const angle = Math.atan2(rightEyeCenter.y - leftEyeCenter.y, rightEyeCenter.x - leftEyeCenter.x);
-      console.log('Calculated rotation angle:', angle);
-      glassesRef.current.rotation.z = angle; // Flip rotation for mirroring
+      const targetRotation = angle; // Keep original rotation
       
-      // Make sure glasses are visible and check bounds
+      // Scale based on eye distance - use config multiplier
+      const targetScale = eyeDistance * config.scaleMultiplier;
+      
+      // Use requestAnimationFrame for smooth updates
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      
+      animationFrameRef.current = requestAnimationFrame(() => {
+        updateGlassesPosition(targetX, targetY, targetZ, targetRotation, targetScale);
+      });
+      
+      // Make sure glasses are visible
       glassesRef.current.visible = true;
-      
-      // Debug: Log glasses world position and visibility
-      console.log('Glasses world position:', glassesRef.current.position);
-      console.log('Glasses scale:', glassesRef.current.scale);
-      console.log('Glasses visible:', glassesRef.current.visible);
-      console.log('Scene children count:', sceneRef.current?.children.length);
     }
-  }, [faceLandmarks, videoElement, config]);
+
+    // Cleanup animation frame on unmount
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [faceLandmarks, videoElement, config, updateGlassesPosition]);
 
   return (
     <div 
