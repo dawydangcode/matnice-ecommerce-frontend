@@ -28,6 +28,9 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
   const [status, setStatus] = useState('Initializing...');
   const [currentLandmarks, setCurrentLandmarks] = useState<any[] | null>(null);
   
+  // Face detection countdown states
+  const [model3dReady, setModel3dReady] = useState(false);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -57,6 +60,7 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
       console.log('isOpen effect cleanup');
       stopCamera();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Initialize FaceMesh when camera is active
@@ -125,6 +129,108 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
       }
     };
   }, []);
+
+  // Draw detection frame guide
+  const drawDetectionFrame = (canvasCtx: CanvasRenderingContext2D, width: number, height: number) => {
+    // Only show frame if model is not ready
+    if (model3dReady) {
+      console.log('Model3D ready - hiding detection frame');
+      return;
+    }
+
+    console.log('Drawing detection frame - model3dReady:', model3dReady);
+    
+    const frameWidth = width * 0.4; // Smaller frame - 40% of canvas width
+    const frameHeight = height * 0.5; // Smaller frame - 50% of canvas height
+    const x = (width - frameWidth) / 2;
+    const y = (height - frameHeight) / 2;
+
+    // Draw frame border
+    canvasCtx.strokeStyle = '#ffffff';
+    canvasCtx.lineWidth = 2;
+    canvasCtx.setLineDash([8, 4]);
+    canvasCtx.strokeRect(x, y, frameWidth, frameHeight);
+    
+    // Draw corner indicators
+    const cornerLength = 20;
+    canvasCtx.setLineDash([]);
+    canvasCtx.lineWidth = 3;
+    
+    // Top-left corner
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(x, y + cornerLength);
+    canvasCtx.lineTo(x, y);
+    canvasCtx.lineTo(x + cornerLength, y);
+    canvasCtx.stroke();
+    
+    // Top-right corner
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(x + frameWidth - cornerLength, y);
+    canvasCtx.lineTo(x + frameWidth, y);
+    canvasCtx.lineTo(x + frameWidth, y + cornerLength);
+    canvasCtx.stroke();
+    
+    // Bottom-left corner
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(x, y + frameHeight - cornerLength);
+    canvasCtx.lineTo(x, y + frameHeight);
+    canvasCtx.lineTo(x + cornerLength, y + frameHeight);
+    canvasCtx.stroke();
+    
+    // Bottom-right corner
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(x + frameWidth - cornerLength, y + frameHeight);
+    canvasCtx.lineTo(x + frameWidth, y + frameHeight);
+    canvasCtx.lineTo(x + frameWidth, y + frameHeight - cornerLength);
+    canvasCtx.stroke();
+
+    // Draw instruction text
+    canvasCtx.fillStyle = '#ffffff';
+    canvasCtx.font = 'bold 14px Arial';
+    canvasCtx.textAlign = 'center';
+    canvasCtx.fillText(
+      'Position your face in the frame',
+      width / 2,
+      y - 15
+    );
+  };
+
+  // Check if face is within detection frame
+  const checkFaceInFrame = (landmarks: any[], width: number, height: number): boolean => {
+    if (!landmarks || landmarks.length === 0) return false;
+
+    // Get face bounding box
+    let minX = 1, maxX = 0, minY = 1, maxY = 0;
+    landmarks.forEach((landmark: any) => {
+      minX = Math.min(minX, landmark.x);
+      maxX = Math.max(maxX, landmark.x);
+      minY = Math.min(minY, landmark.y);
+      maxY = Math.max(maxY, landmark.y);
+    });
+
+    // Convert to pixel coordinates
+    const faceLeft = minX * width;
+    const faceRight = maxX * width;
+    const faceTop = minY * height;
+    const faceBottom = maxY * height;
+
+    // Detection frame bounds (smaller frame)
+    const frameWidth = width * 0.4;
+    const frameHeight = height * 0.5;
+    const frameLeft = (width - frameWidth) / 2;
+    const frameRight = frameLeft + frameWidth;
+    const frameTop = (height - frameHeight) / 2;
+    const frameBottom = frameTop + frameHeight;
+
+    // Check if face is within frame with some tolerance
+    const tolerance = 20;
+    return (
+      faceLeft >= frameLeft - tolerance &&
+      faceRight <= frameRight + tolerance &&
+      faceTop >= frameTop - tolerance &&
+      faceBottom <= frameBottom + tolerance
+    );
+  };
 
   // Update canvas size when video loads or resizes
   useEffect(() => {
@@ -233,17 +339,45 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
     // Clear canvas
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Draw face detection guide frame
+    drawDetectionFrame(canvasCtx, canvas.width, canvas.height);
+
     if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-      setFaceDetected(true);
-      setStatus('Face detected');
-      
       const landmarks = results.multiFaceLandmarks[0];
-      setCurrentLandmarks(landmarks); // Store landmarks for 3D overlay
-      drawFaceMesh(canvasCtx, landmarks);
+      
+      if (!model3dReady) {
+        // Initial detection phase - check if face is within the detection frame
+        const isInFrame = checkFaceInFrame(landmarks, canvas.width, canvas.height);
+        
+        if (isInFrame) {
+          // Face detected in frame - immediately activate model 3D
+          console.log('Face detected in frame - activating model 3D');
+          setFaceDetected(true);
+          setModel3dReady(true);
+          setCurrentLandmarks(landmarks);
+          setStatus('3D model loaded! Try on glasses.');
+          drawFaceMesh(canvasCtx, landmarks);
+        } else {
+          // Face not in frame during initial detection
+          setFaceDetected(false);
+          setStatus('Position your face in the frame');
+        }
+      } else {
+        // Model 3D is ready - track face anywhere on screen (no frame restriction)
+        setFaceDetected(true);
+        setCurrentLandmarks(landmarks);
+        setStatus('Face tracking active');
+        drawFaceMesh(canvasCtx, landmarks);
+      }
     } else {
+      // No face detected
       setFaceDetected(false);
       setCurrentLandmarks(null);
-      setStatus('Looking for face...');
+      if (!model3dReady) {
+        setStatus('Looking for face...');
+      } else {
+        setStatus('Face not detected');
+      }
     }
   };
 
@@ -440,6 +574,9 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
     setCurrentLandmarks(null);
     setStatus('Camera stopped');
     
+    // Reset model state
+    setModel3dReady(false);
+    
     console.log('Camera cleanup completed');
   };
 
@@ -489,12 +626,14 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
             ref={canvasRef}
             className="overlay"
           />
-          <ThreeJSOverlay
-            faceLandmarks={currentLandmarks}
-            canvasWidth={canvasRef.current?.width || 640}
-            canvasHeight={canvasRef.current?.height || 480}
-            videoElement={videoRef.current}
-          />
+          {model3dReady && (
+            <ThreeJSOverlay
+              faceLandmarks={currentLandmarks}
+              canvasWidth={canvasRef.current?.width || 640}
+              canvasHeight={canvasRef.current?.height || 480}
+              videoElement={videoRef.current}
+            />
+          )}
           <div className="status-panel">
             <div className={`status-indicator ${faceDetected ? 'detected' : ''}`}>
               {faceDetected ? '● Face Detected' : '○ Looking for face...'}
