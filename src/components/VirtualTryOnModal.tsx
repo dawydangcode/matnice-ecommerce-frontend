@@ -15,19 +15,8 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
   model3dUrl
 }) => {
   const [cameraActive, setCameraActive] = useState(false);
-  const [selectedTint, setSelectedTint] = useState('Transparent');
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-
-  // Lens tint options
-  const tintOptions = [
-    { name: 'Transparent', className: 'transparent' },
-    { name: 'Grey', className: 'grey' },
-    { name: 'Brown', className: 'brown' },
-    { name: 'Green', className: 'green' },
-    { name: 'Blue', className: 'blue' },
-    { name: 'Pink', className: 'pink' }
-  ];
 
   // Start camera when modal opens
   useEffect(() => {
@@ -103,10 +92,10 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
         </div>
 
         {/* Main Content */}
-        <div className="modal-content">
-          {/* Camera Section */}
-          <div className="camera-section">
-            <div className="camera-container">
+        <div className="modal-content-full">
+          {/* Camera Section - Full Width */}
+          <div className="camera-section-full">
+            <div className="camera-container-large">
               <video
                 ref={videoRef}
                 autoPlay
@@ -140,34 +129,11 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
               </div>
             </div>
           </div>
-
-          {/* Lens Tint Selection */}
-          <div className="tint-section">
-            <h3 className="section-title">SUNGLASSES TINT</h3>
-            <div className="tint-options">
-              {tintOptions.map((tint) => (
-                <button
-                  key={tint.name}
-                  className={`tint-option ${tint.className} ${selectedTint === tint.name ? 'selected' : ''}`}
-                  onClick={() => setSelectedTint(tint.name)}
-                  title={tint.name}
-                >
-                  {tint.name === 'Transparent' && (
-                    <span className="transparent-indicator">👓</span>
-                  )}
-                </button>
-              ))}
-            </div>
-            <div className="tint-labels">
-              <span>PHOTOCHROMIC LENS</span>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
         <div className="modal-footer">
           <div className="tech-badge">
-            <span className="badge-icon">🤖</span>
             <span>3D</span>
             <span className="new-badge">NEW</span>
           </div>

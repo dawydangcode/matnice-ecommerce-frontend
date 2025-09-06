@@ -17,7 +17,7 @@
   background: white;
   border-radius: 16px;
   width: 100%;
-  max-width: 800px;
+  max-width: 900px; /* Increased for larger camera view */
   max-height: 90vh;
   overflow: hidden;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
@@ -28,7 +28,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
+  padding: 1rem 1rem;
   border-bottom: 1px solid #e5e7eb;
   background: #f9fafb;
 }
@@ -61,27 +61,26 @@
   color: #111827;
 }
 
-/* Main Content */
-.modal-content {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 2rem;
+/* Main Content - Full Width for Camera */
+.modal-content-full {
   padding: 2rem;
 }
 
-/* Camera Section */
-.camera-section {
+/* Camera Section - Full Width */
+.camera-section-full {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
-.camera-container {
+.camera-container-large {
   position: relative;
   background: #000;
   border-radius: 12px;
   overflow: hidden;
-  aspect-ratio: 4/3;
-  max-height: 400px;
+  width: 100%;
+  height: 500px; /* Larger height for better viewing */
+  max-height: 70vh;
 }
 
 .camera-video {
@@ -97,10 +96,6 @@
 
 .camera-video.inactive {
   display: none;
-}
-
-.camera-video:hover {
-  transform: scaleX(-1) scale(1.05);
 }
 
 .camera-placeholder {
@@ -191,95 +186,19 @@
   background: #4338ca;
 }
 
-/* Tint Section */
-.tint-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.section-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-  margin: 0;
-  text-align: center;
-}
-
-.tint-options {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-}
-
-.tint-option {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: 3px solid #e5e7eb;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-}
-
-.tint-option:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.tint-option.selected {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
-}
-
-.tint-option.transparent {
-  background: repeating-conic-gradient(#f3f4f6 0% 25%, white 0% 50%) 50% / 20px 20px;
-  border-color: #9ca3af;
-}
-
-.tint-option.grey {
-  background-color: #6b7280;
-  border-color: #6b7280;
-}
-
-.tint-option.brown {
-  background-color: #92400e;
-  border-color: #92400e;
-}
-
-.tint-option.green {
-  background-color: #059669;
-  border-color: #059669;
-}
-
-.tint-option.blue {
-  background-color: #2563eb;
-  border-color: #2563eb;
-}
-
-.tint-option.pink {
-  background-color: #ec4899;
-  border-color: #ec4899;
-}
-
-.transparent-indicator {
-  font-size: 1.5rem;
-  color: #6b7280;
-}
-
-.tint-labels {
-  text-align: center;
+.retry-camera-btn {
   margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.tint-labels span {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  font-weight: 500;
+.retry-camera-btn:hover {
+  background: #4338ca;
 }
 
 /* Footer */
@@ -331,18 +250,12 @@
     max-width: calc(100vw - 2rem);
   }
 
-  .modal-content {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    padding: 1.5rem;
+  .modal-content-full {
+    padding: 1rem;
   }
 
-  .tint-section {
-    order: -1;
-  }
-
-  .camera-container {
-    max-height: 300px;
+  .camera-container-large {
+    height: 400px;
   }
 
   .modal-footer {
