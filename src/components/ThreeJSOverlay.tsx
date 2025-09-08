@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useMemo, useCallback } from 'react';
 import * as THREE from 'three';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import '../styles/ThreeJSOverlay.css';
 
 interface GlassesConfig {
@@ -26,7 +26,7 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
   canvasWidth,
   canvasHeight,
   videoElement,
-  modelPath = '/assets/glasses/base.obj',
+  modelPath = '/assets/glasses/Untitled.glb',
   glassesConfig
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -34,7 +34,6 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const glassesRef = useRef<THREE.Group | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
 
   // Default configuration - optimized for stable tracking
   const config = useMemo(() => {
@@ -49,7 +48,7 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
     return { ...defaultConfig, ...glassesConfig };
   }, [glassesConfig]);
 
-  // Update glasses position smoothly - improved from face-tracking demo
+  // Update glasses position immediately - no smoothing for instant response
   const updateGlassesPosition = useCallback((
     targetX: number, 
     targetY: number, 
@@ -61,30 +60,10 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
   ) => {
     if (!glassesRef.current) return;
 
-    const smoothFactor = 1; // Reduced for more stable tracking
-
-    // Get current values
-    const currentPos = glassesRef.current.position;
-    const currentRot = glassesRef.current.rotation;
-    const currentScale = glassesRef.current.scale;
-
-    // Smooth interpolation directly to position/rotation like in the working demo
-    glassesRef.current.position.set(
-      currentPos.x + (targetX - currentPos.x) * smoothFactor,
-      currentPos.y + (targetY - currentPos.y) * smoothFactor,
-      currentPos.z + (targetZ - currentPos.z) * smoothFactor
-    );
-
-    // Smooth rotation for all 3 axes
-    glassesRef.current.rotation.set(
-      currentRot.x + (targetRotationX - currentRot.x) * smoothFactor, // X rotation (pitch)
-      currentRot.y + (targetRotationY - currentRot.y) * smoothFactor, // Y rotation (yaw) 
-      currentRot.z + (targetRotationZ - currentRot.z) * smoothFactor  // Z rotation (roll)
-    );
-
-    // Smooth scale
-    const newScale = currentScale.x + (targetScale - currentScale.x) * smoothFactor;
-    glassesRef.current.scale.set(newScale, newScale, newScale);
+    // Direct assignment - no interpolation for instant tracking
+    glassesRef.current.position.set(targetX, targetY, targetZ);
+    glassesRef.current.rotation.set(targetRotationX, targetRotationY, targetRotationZ);
+    glassesRef.current.scale.set(targetScale, targetScale, targetScale);
   }, []);
 
   useEffect(() => {
@@ -133,14 +112,15 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
     directionalLight.position.set(0, 1, 1);
     scene.add(directionalLight);
 
-    // Load glasses model
-    const loader = new OBJLoader();
+    // Load glasses model - using GLTFLoader for .glb files
+    const loader = new GLTFLoader();
     console.log('Starting to load glasses model from:', modelPath);
     
     loader.load(
       modelPath,
-      (object) => {
-        console.log('Glasses model loaded successfully:', object);
+      (gltf: any) => {
+        console.log('Glasses model loaded successfully:', gltf);
+        const object = gltf.scene; // GLB files have the model in .scene
         console.log('Object children:', object.children);
         console.log('Object scale:', object.scale);
         console.log('Object position:', object.position);
@@ -149,19 +129,22 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
         const glassesGroup = new THREE.Group();
         
         // Add materials to the loaded geometry
-        object.traverse((child) => {
+        object.traverse((child: any) => {
           if (child instanceof THREE.Mesh) {
             console.log('Found mesh child:', child);
             console.log('Mesh geometry:', child.geometry);
             console.log('Mesh vertices count:', child.geometry.attributes.position?.count);
             
-            // Create a nice material for the glasses
-            child.material = new THREE.MeshPhongMaterial({
-              color: 0x333333,
-              shininess: 100,
-              transparent: false, // Make it opaque first
-              opacity: 1.0
-            });
+            // For GLB files, preserve existing materials but ensure visibility
+            if (!child.material) {
+              // Create a nice material for the glasses if none exists
+              child.material = new THREE.MeshPhongMaterial({
+                color: 0x333333,
+                shininess: 100,
+                transparent: false,
+                opacity: 1.0
+              });
+            }
             
             // Make sure the mesh is visible
             child.visible = true;
@@ -268,24 +251,11 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
     const targetZ = worldZ + config.positionOffsetZ;
     const finalScale = targetScale * (config.initialScale / 0.06); // Scale relative to default
       
-    // Use requestAnimationFrame for smooth updates
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    
-    animationFrameRef.current = requestAnimationFrame(() => {
-      updateGlassesPosition(targetX, targetY, targetZ, pitchAngle, yawAngle, rollAngle, finalScale);
-    });
+    // Update position immediately - no requestAnimationFrame delay
+    updateGlassesPosition(targetX, targetY, targetZ, pitchAngle, yawAngle, rollAngle, finalScale);
     
     // Make sure glasses are visible
     glassesRef.current.visible = true;
-
-    // Cleanup animation frame on unmount
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
   }, [faceLandmarks, videoElement, config, updateGlassesPosition]);
 
   return (
