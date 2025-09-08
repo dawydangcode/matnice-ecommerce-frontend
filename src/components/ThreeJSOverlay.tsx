@@ -36,53 +36,49 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const glassesRef = useRef<THREE.Group | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  
-  // For smooth interpolation
-  const lastPositionRef = useRef({ x: 0, y: 0, z: 0 });
-  const lastRotationRef = useRef(0);
-  const lastScaleRef = useRef(1);
 
   // Default configuration - can be overridden by glassesConfig prop
   const config = useMemo(() => {
     const defaultConfig: GlassesConfig = {
       offsetX: 0.65,
       offsetY: 0.45, 
-      positionOffsetX: 0.0,
-      positionOffsetY: -0.02,
-      positionOffsetZ: -0.1,
+      positionOffsetX: 0.55,
+      positionOffsetY: 0.1,
+      positionOffsetZ: -0.2,
       scaleMultiplier: 50,
-      initialScale: 0.06
+      initialScale: 0.14  // Increased from 0.06 to 0.1 for larger model
     };
     return { ...defaultConfig, ...glassesConfig };
   }, [glassesConfig]);
 
-  // Smooth interpolation function
-  const lerp = (start: number, end: number, factor: number) => {
-    return start + (end - start) * factor;
-  };
-
-  // Update glasses position smoothly
+  // Update glasses position smoothly - improved from face-tracking demo
   const updateGlassesPosition = useCallback((targetX: number, targetY: number, targetZ: number, targetRotation: number, targetScale: number) => {
     if (!glassesRef.current) return;
 
-    const smoothingFactor = 0.9; // Increased for faster response
+    const smoothFactor = 0.8; // From working face-tracking demo
 
-    // Smooth interpolation
-    const currentX = lerp(lastPositionRef.current.x, targetX, smoothingFactor);
-    const currentY = lerp(lastPositionRef.current.y, targetY, smoothingFactor);
-    const currentZ = lerp(lastPositionRef.current.z, targetZ, smoothingFactor);
-    const currentRotation = lerp(lastRotationRef.current, targetRotation, smoothingFactor);
-    const currentScale = lerp(lastScaleRef.current, targetScale, smoothingFactor);
+    // Get current values
+    const currentPos = glassesRef.current.position;
+    const currentRot = glassesRef.current.rotation;
+    const currentScale = glassesRef.current.scale;
 
-    // Update position and rotation
-    glassesRef.current.position.set(currentX, currentY, currentZ);
-    glassesRef.current.rotation.z = currentRotation;
-    glassesRef.current.scale.set(currentScale, currentScale, currentScale);
+    // Smooth interpolation directly to position/rotation like in the working demo
+    glassesRef.current.position.set(
+      currentPos.x + (targetX - currentPos.x) * smoothFactor,
+      currentPos.y + (targetY - currentPos.y) * smoothFactor,
+      currentPos.z + (targetZ - currentPos.z) * smoothFactor
+    );
 
-    // Store current values for next frame
-    lastPositionRef.current = { x: currentX, y: currentY, z: currentZ };
-    lastRotationRef.current = currentRotation;
-    lastScaleRef.current = currentScale;
+    // Smooth rotation
+    glassesRef.current.rotation.set(
+      currentRot.x + (0 - currentRot.x) * smoothFactor, // No X rotation
+      currentRot.y + (0 - currentRot.y) * smoothFactor, // No Y rotation  
+      currentRot.z + (targetRotation - currentRot.z) * smoothFactor
+    );
+
+    // Smooth scale
+    const newScale = currentScale.x + (targetScale - currentScale.x) * smoothFactor;
+    glassesRef.current.scale.set(newScale, newScale, newScale);
   }, []);
 
   useEffect(() => {
@@ -214,54 +210,57 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
     };
   }, [canvasWidth, canvasHeight, modelPath, config]);
 
-  // Update glasses position based on face landmarks
+  // Update glasses position based on face landmarks - improved from working demo
   useEffect(() => {
     if (!faceLandmarks || !glassesRef.current || !videoElement) return;
 
-    // Get key landmarks for glasses positioning
-    const leftEye = faceLandmarks[33];   // Left eye outer corner
-    const rightEye = faceLandmarks[362]; // Right eye outer corner
-    const noseBridge = faceLandmarks[168]; // Nose bridge
-    const leftEyeCenter = faceLandmarks[159]; // Left eye center
-    const rightEyeCenter = faceLandmarks[386]; // Right eye center
+    // Use landmarks from working face-tracking demo
+    const middleBetweenEyes = faceLandmarks[168]; // Middle between eyes (main reference)
+    const leftEye = faceLandmarks[143];           // Left eye
+    const rightEye = faceLandmarks[372];          // Right eye
+    const bottomOfNose = faceLandmarks[2];        // Bottom of nose
+    const leftEar = faceLandmarks[234];           // Left ear
+    const rightEar = faceLandmarks[454];          // Right ear
     
-    if (leftEye && rightEye && noseBridge && leftEyeCenter && rightEyeCenter) {
-      // Use eye centers and nose bridge for more accurate positioning
-      const eyeDistance = Math.abs(leftEyeCenter.x - rightEyeCenter.x);
+    if (!middleBetweenEyes || !leftEye || !rightEye || !bottomOfNose || !leftEar || !rightEar) return;
+
+    // Use middleBetweenEyes as main center, with adjustment for glasses position
+    const centerX = middleBetweenEyes.x;
+    const centerY = (middleBetweenEyes.y + leftEye.y + rightEye.y) / 3 + 0.04; // Lower glasses slightly
+    const centerZ = middleBetweenEyes.z;
+
+    // Convert normalized coordinates to world coordinates (flip X for camera mirror)
+    const worldX = -(centerX - 0.5) * 8;
+    const worldY = -(centerY - 0.5) * 6;
+    const worldZ = centerZ * 6;
+
+    // Calculate scale based on eye distance (like in working demo)
+    const eyeDistance = Math.hypot(
+      (rightEye.x - leftEye.x) * 640,
+      (rightEye.y - leftEye.y) * 480
+    );
+    const targetScale = (eyeDistance / 80) * 0.6; // From working demo
+
+    // Calculate rotation based on eye alignment (flip for camera mirror)
+    const angle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * 1.2;
+
+    // Apply config adjustments
+    const targetX = worldX + config.positionOffsetX;
+    const targetY = worldY + config.positionOffsetY;
+    const targetZ = worldZ + config.positionOffsetZ;
+    const finalScale = targetScale * (config.initialScale / 0.06); // Scale relative to default
       
-      // Use nose bridge as the main reference point for better accuracy
-      const centerX = noseBridge.x; // Use nose bridge X for center alignment
-      const centerY = (leftEyeCenter.y + rightEyeCenter.y) / 2; // Use average eye Y position
-      
-      // Convert from normalized coords (0-1) to Three.js coords (-1 to 1)
-      // Flip X axis for proper mirroring (when you move left, glasses move left)
-      const glassesX = -((centerX - config.offsetX) * 2); // Use config offset
-      const glassesY = -(centerY - config.offsetY) * 2; // Use config offset
-      
-      // Calculate target values
-      const targetX = glassesX + config.positionOffsetX;
-      const targetY = glassesY + config.positionOffsetY;
-      const targetZ = config.positionOffsetZ;
-      
-      // Rotation based on eye alignment - flip angle for mirroring
-      const angle = Math.atan2(rightEyeCenter.y - leftEyeCenter.y, rightEyeCenter.x - leftEyeCenter.x);
-      const targetRotation = angle; // Keep original rotation
-      
-      // Scale based on eye distance - use config multiplier
-      const targetScale = eyeDistance * config.scaleMultiplier;
-      
-      // Use requestAnimationFrame for smooth updates
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      
-      animationFrameRef.current = requestAnimationFrame(() => {
-        updateGlassesPosition(targetX, targetY, targetZ, targetRotation, targetScale);
-      });
-      
-      // Make sure glasses are visible
-      glassesRef.current.visible = true;
+    // Use requestAnimationFrame for smooth updates
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
     }
+    
+    animationFrameRef.current = requestAnimationFrame(() => {
+      updateGlassesPosition(targetX, targetY, targetZ, angle, finalScale);
+    });
+    
+    // Make sure glasses are visible
+    glassesRef.current.visible = true;
 
     // Cleanup animation frame on unmount
     return () => {
