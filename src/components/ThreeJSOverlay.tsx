@@ -9,7 +9,6 @@ interface GlassesConfig {
   positionOffsetX: number; // Fine-tuning horizontal position
   positionOffsetY: number; // Fine-tuning vertical position
   positionOffsetZ: number; // Depth adjustment
-  scaleMultiplier: number; // Scale multiplier for this specific model
   initialScale: number;    // Initial scale when loading model
 }
 
@@ -37,25 +36,32 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
   const glassesRef = useRef<THREE.Group | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Default configuration - can be overridden by glassesConfig prop
+  // Default configuration - optimized for stable tracking
   const config = useMemo(() => {
     const defaultConfig: GlassesConfig = {
-      offsetX: 0.65,
-      offsetY: 0.45, 
-      positionOffsetX: 0.55,
-      positionOffsetY: 0.1,
-      positionOffsetZ: -0.2,
-      scaleMultiplier: 50,
-      initialScale: 0.14  // Increased from 0.06 to 0.1 for larger model
+      offsetX: 0.5,        // Centered horizontally  
+      offsetY: 0.5,       // Slightly above center for eye level
+      positionOffsetX: 0.4, // No additional horizontal offset
+      positionOffsetY: 0.097, // Minimal vertical adjustment
+      positionOffsetZ: -0.4, // Minimal depth adjustment
+      initialScale: 0.16    // Keep current size
     };
     return { ...defaultConfig, ...glassesConfig };
   }, [glassesConfig]);
 
   // Update glasses position smoothly - improved from face-tracking demo
-  const updateGlassesPosition = useCallback((targetX: number, targetY: number, targetZ: number, targetRotation: number, targetScale: number) => {
+  const updateGlassesPosition = useCallback((
+    targetX: number, 
+    targetY: number, 
+    targetZ: number, 
+    targetRotationX: number,
+    targetRotationY: number, 
+    targetRotationZ: number,
+    targetScale: number
+  ) => {
     if (!glassesRef.current) return;
 
-    const smoothFactor = 0.8; // From working face-tracking demo
+    const smoothFactor = 1; // Reduced for more stable tracking
 
     // Get current values
     const currentPos = glassesRef.current.position;
@@ -69,11 +75,11 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
       currentPos.z + (targetZ - currentPos.z) * smoothFactor
     );
 
-    // Smooth rotation
+    // Smooth rotation for all 3 axes
     glassesRef.current.rotation.set(
-      currentRot.x + (0 - currentRot.x) * smoothFactor, // No X rotation
-      currentRot.y + (0 - currentRot.y) * smoothFactor, // No Y rotation  
-      currentRot.z + (targetRotation - currentRot.z) * smoothFactor
+      currentRot.x + (targetRotationX - currentRot.x) * smoothFactor, // X rotation (pitch)
+      currentRot.y + (targetRotationY - currentRot.y) * smoothFactor, // Y rotation (yaw) 
+      currentRot.z + (targetRotationZ - currentRot.z) * smoothFactor  // Z rotation (roll)
     );
 
     // Smooth scale
@@ -230,9 +236,10 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
     const centerZ = middleBetweenEyes.z;
 
     // Convert normalized coordinates to world coordinates (flip X for camera mirror)
-    const worldX = -(centerX - 0.5) * 8;
-    const worldY = -(centerY - 0.5) * 6;
-    const worldZ = centerZ * 6;
+    // Reduced multipliers for more precise tracking
+    const worldX = -(centerX - 0.5) * 4;  // Reduced from 8 to 4
+    const worldY = -(centerY - 0.5) * 3;  // Reduced from 6 to 3
+    const worldZ = centerZ * 2;           // Reduced from 6 to 2
 
     // Calculate scale based on eye distance (like in working demo)
     const eyeDistance = Math.hypot(
@@ -241,8 +248,19 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
     );
     const targetScale = (eyeDistance / 80) * 0.6; // From working demo
 
-    // Calculate rotation based on eye alignment (flip for camera mirror)
-    const angle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * 1.2;
+    // Calculate more comprehensive rotation based on multiple landmarks
+    // Z rotation (roll) - based on eye alignment - reduced sensitivity
+    const rollAngle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * 0.8;  // Reduced from 1.7 to 0.8
+    
+    // Y rotation (yaw) - head turn left/right based on nose position relative to eyes
+    const noseCenterX = (leftEye.x + rightEye.x) / 2;
+    const noseOffset = bottomOfNose.x - noseCenterX;
+    const yawAngle = noseOffset * 1.0; // Reduced from 2 to 1
+    
+    // X rotation (pitch) - head tilt up/down based on nose position relative to eyes
+    const eyeCenterY = (leftEye.y + rightEye.y) / 2;
+    const noseOffsetY = bottomOfNose.y - eyeCenterY;
+    const pitchAngle = noseOffsetY * 1.0; // Reduced from 2 to 1
 
     // Apply config adjustments
     const targetX = worldX + config.positionOffsetX;
@@ -256,7 +274,7 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
     }
     
     animationFrameRef.current = requestAnimationFrame(() => {
-      updateGlassesPosition(targetX, targetY, targetZ, angle, finalScale);
+      updateGlassesPosition(targetX, targetY, targetZ, pitchAngle, yawAngle, rollAngle, finalScale);
     });
     
     // Make sure glasses are visible
