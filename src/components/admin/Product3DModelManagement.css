@@ -1,0 +1,97 @@
+.product-3d-model-management {
+  background-color: #f8fafc;
+  min-height: calc(100vh - 200px);
+}
+
+.product-3d-model-management .notification {
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.product-3d-model-management .notification-success {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+}
+
+.product-3d-model-management .notification-error {
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+}
+
+/* Custom scrollbar */
+.product-3d-model-management .overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.product-3d-model-management .overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.product-3d-model-management .overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.product-3d-model-management .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.product-3d-model-management .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Hover effects for cards */
+.product-3d-model-management .cursor-pointer {
+  transition: all 0.2s ease-in-out;
+}
+
+.product-3d-model-management .cursor-pointer:hover {
+  transform: translateY(-1px);
+}
+
+/* Loading animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.product-3d-model-management .animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Button hover effects */
+.product-3d-model-management button {
+  transition: all 0.2s ease-in-out;
+}
+
+.product-3d-model-management button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Grid spacing improvements */
+.product-3d-model-management .grid {
+  gap: 1.5rem;
+}
+
+/* Card shadow improvements */
+.product-3d-model-management .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.product-3d-model-management .shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Status indicators */
+.product-3d-model-management .status-active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.product-3d-model-management .status-inactive {
+  background-color: #f1f5f9;
+  color: #475569;
+}
