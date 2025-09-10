@@ -13,6 +13,8 @@ import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
+import AddProduct3DModel from './pages/admin/AddProduct3DModel';
+import Configure3DModel from './pages/admin/Configure3DModel';
 
 // Protected Route Component for Admin
 interface AdminRouteProps {
@@ -153,6 +155,22 @@ function App() {
             element={
               <AdminRoute>
                 <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/products/:productId/3d-models/add"
+            element={
+              <AdminRoute>
+                <AddProduct3DModel />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/products/:productId/3d-models/:modelId/config"
+            element={
+              <AdminRoute>
+                <Configure3DModel />
               </AdminRoute>
             }
           />

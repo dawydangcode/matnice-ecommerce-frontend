@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Package, Box, Upload, Eye, Plus, Edit, Trash2, Settings, Download, AlertTriangle } from 'lucide-react';
 import { productService } from '../../services/product.service';
 import { Product } from '../../types/product.types';
@@ -50,6 +51,7 @@ const showNotification = (type: 'success' | 'error', message: string) => {
 };
 
 export const Product3DModelManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [product3DModels, setProduct3DModels] = useState<Product3DModel[]>([]);
@@ -289,13 +291,22 @@ export const Product3DModelManagement: React.FC = () => {
               <h2 className="text-lg font-semibold text-gray-900">2. 3D Models</h2>
             </div>
             {selectedProduct && (
-              <button
-                onClick={() => setShowModelForm(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Thêm Model</span>
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => navigate(`/admin/products/${selectedProduct.productId}/3d-models/add`)}
+                  className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Thêm Model</span>
+                </button>
+                <button
+                  onClick={() => setShowModelForm(true)}
+                  className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Upload nhanh</span>
+                </button>
+              </div>
             )}
           </div>
 
@@ -336,6 +347,16 @@ export const Product3DModelManagement: React.FC = () => {
                           title="Chỉnh sửa model"
                         >
                           <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/admin/products/${selectedProduct?.productId}/3d-models/${model.id}/config`);
+                          }}
+                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                          title="Cấu hình model"
+                        >
+                          <Settings className="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => {
