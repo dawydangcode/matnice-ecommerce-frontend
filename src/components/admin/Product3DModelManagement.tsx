@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, Box, Upload, Eye, Plus, Edit, Trash2, Settings, Download, AlertTriangle } from 'lucide-react';
 import { productService } from '../../services/product.service';
@@ -184,12 +184,48 @@ export const Product3DModelManagement: React.FC = () => {
 
   const handleCreateConfig = async (configData: CreateModel3DConfigRequest) => {
     try {
+      console.log('Sending config data:', configData);
       const config = await product3DModelService.createConfig(configData);
       setModelConfig(config);
       showNotification('success', 'Tạo cấu hình thành công');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create config:', error);
-      showNotification('error', 'Không thể tạo cấu hình');
+      
+      if (error.response?.status === 400) {
+        const backendErrors = error.response?.data?.message;
+        if (Array.isArray(backendErrors)) {
+          showNotification('error', 'Lỗi validation: ' + backendErrors.join(', '));
+        } else {
+          showNotification('error', 'Lỗi validation: ' + backendErrors);
+        }
+      } else {
+        showNotification('error', 'Không thể tạo cấu hình: ' + (error.message || 'Unknown error'));
+      }
+      throw error;
+    }
+  };
+
+  const handleCreateSimpleConfig = async () => {
+    if (!selectedModel) return;
+    
+    try {
+      // Tạo config đơn giản với các giá trị mặc định
+      const configData = {
+        modelId: Number(selectedModel.id), // Ensure it's a number
+        offsetX: 0.5,
+        offsetY: 0.5,
+        positionOffsetX: 0.0,
+        positionOffsetY: 0.0,
+        positionOffsetZ: 0.0,
+        initialScale: 1.0,
+        rotationSensitivity: 1.0,
+        yawLimit: 1.0,
+        pitchLimit: 1.0,
+      };
+      console.log('Creating simple config with data:', configData);
+      await handleCreateConfig(configData);
+    } catch (error) {
+      console.error('Failed to create simple config:', error);
     }
   };
 
@@ -411,16 +447,28 @@ export const Product3DModelManagement: React.FC = () => {
               <h2 className="text-lg font-semibold text-gray-900">3. Cấu Hình</h2>
             </div>
             {selectedModel && (
-              <button
-                onClick={() => {
-                  setEditingConfig(modelConfig);
-                  setShowConfigForm(true);
-                }}
-                className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-              >
-                <Settings className="w-4 h-4" />
-                <span>{modelConfig ? 'Chỉnh sửa' : 'Tạo'} Cấu Hình</span>
-              </button>
+              <div className="flex gap-2">
+                {!modelConfig ? (
+                  <button
+                    onClick={handleCreateSimpleConfig}
+                    className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Tạo Cấu Hình</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setEditingConfig(modelConfig);
+                      setShowConfigForm(true);
+                    }}
+                    className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Chỉnh sửa Cấu Hình</span>
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
@@ -870,14 +918,43 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
   const [formData, setFormData] = useState({
     offsetX: 0.5,
     offsetY: 0.5,
-    positionOffsetX: 0.4,
-    positionOffsetY: 0.097,
-    positionOffsetZ: -0.4,
-    initialScale: 0.16,
+    positionOffsetX: 0.0,
+    positionOffsetY: 0.0,
+    positionOffsetZ: 0.0,
+    initialScale: 1.0,
     rotationSensitivity: 1.0,
-    yawLimit: 0.5,
-    pitchLimit: 0.3,
+    yawLimit: 1.0,
+    pitchLimit: 1.0,
   });
+
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // Validation function
+  const validateForm = useCallback(() => {
+    const errors: Record<string, string> = {};
+    
+    if (formData.offsetX < 0 || formData.offsetX > 1) {
+      errors.offsetX = 'Offset X phải từ 0 đến 1';
+    }
+    if (formData.offsetY < 0 || formData.offsetY > 1) {
+      errors.offsetY = 'Offset Y phải từ 0 đến 1';
+    }
+    if (formData.initialScale < 0.01 || formData.initialScale > 10) {
+      errors.initialScale = 'Tỷ lệ phải từ 0.01 đến 10';
+    }
+    if (formData.rotationSensitivity < 0.1 || formData.rotationSensitivity > 10) {
+      errors.rotationSensitivity = 'Độ nhạy xoay phải từ 0.1 đến 10';
+    }
+    if (formData.yawLimit < 0.1 || formData.yawLimit > 2) {
+      errors.yawLimit = 'Giới hạn Yaw phải từ 0.1 đến 2';
+    }
+    if (formData.pitchLimit < 0.1 || formData.pitchLimit > 2) {
+      errors.pitchLimit = 'Giới hạn Pitch phải từ 0.1 đến 2';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [formData]);
 
   useEffect(() => {
     if (initialData) {
@@ -896,19 +973,31 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
       setFormData({
         offsetX: 0.5,
         offsetY: 0.5,
-        positionOffsetX: 0.4,
-        positionOffsetY: 0.097,
-        positionOffsetZ: -0.4,
-        initialScale: 0.16,
+        positionOffsetX: 0.0,
+        positionOffsetY: 0.0,
+        positionOffsetZ: 0.0,
+        initialScale: 1.0,
         rotationSensitivity: 1.0,
-        yawLimit: 0.5,
-        pitchLimit: 0.3,
+        yawLimit: 1.0,
+        pitchLimit: 1.0,
       });
     }
   }, [initialData]);
 
+  // Realtime validation
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      validateForm();
+    }, 300); // Debounce validation
+
+    return () => clearTimeout(timeoutId);
+  }, [formData, validateForm]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
     onSubmit(formData);
   };
 
@@ -916,149 +1005,351 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold mb-4">
-          {isEditing ? 'Chỉnh sửa' : 'Tạo'} Cấu Hình 3D Model
-        </h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Offset X (0-1)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max="1"
-                value={formData.offsetX}
-                onChange={(e) => setFormData({ ...formData, offsetX: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Offset Y (0-1)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                max="1"
-                value={formData.offsetY}
-                onChange={(e) => setFormData({ ...formData, offsetY: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Position Offset X
-              </label>
-              <input
-                type="number"
-                step="0.001"
-                value={formData.positionOffsetX}
-                onChange={(e) => setFormData({ ...formData, positionOffsetX: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Position Offset Y
-              </label>
-              <input
-                type="number"
-                step="0.001"
-                value={formData.positionOffsetY}
-                onChange={(e) => setFormData({ ...formData, positionOffsetY: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Position Offset Z
-              </label>
-              <input
-                type="number"
-                step="0.001"
-                value={formData.positionOffsetZ}
-                onChange={(e) => setFormData({ ...formData, positionOffsetZ: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Initial Scale
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0.01"
-                max="10"
-                value={formData.initialScale}
-                onChange={(e) => setFormData({ ...formData, initialScale: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Rotation Sensitivity
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                min="0.1"
-                max="10"
-                value={formData.rotationSensitivity}
-                onChange={(e) => setFormData({ ...formData, rotationSensitivity: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Yaw Limit
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                min="0.1"
-                max="2"
-                value={formData.yawLimit}
-                onChange={(e) => setFormData({ ...formData, yawLimit: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Pitch Limit
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                min="0.1"
-                max="2"
-                value={formData.pitchLimit}
-                onChange={(e) => setFormData({ ...formData, pitchLimit: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">
+            {isEditing ? 'Chỉnh sửa' : 'Tạo'} Cấu Hình 3D Model
+          </h3>
+          <div className="text-sm text-gray-500">
+            Chi tiết cấu hình hiển thị và tương tác
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Configuration Form */}
+          <div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Position Settings */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+              <Box className="w-4 h-4 mr-2" />
+              Vị trí cơ bản
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Offset X (0-1)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="1"
+                  value={formData.offsetX}
+                  onChange={(e) => setFormData({ ...formData, offsetX: parseFloat(e.target.value) })}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    validationErrors.offsetX ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.offsetX && (
+                  <p className="text-xs text-red-600 mt-1">{validationErrors.offsetX}</p>
+                )}
+                {!validationErrors.offsetX && (
+                  <p className="text-xs text-gray-500 mt-1">Vị trí ngang tương đối (0 = trái, 1 = phải)</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Offset Y (0-1)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="1"
+                  value={formData.offsetY}
+                  onChange={(e) => setFormData({ ...formData, offsetY: parseFloat(e.target.value) })}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    validationErrors.offsetY ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.offsetY && (
+                  <p className="text-xs text-red-600 mt-1">{validationErrors.offsetY}</p>
+                )}
+                {!validationErrors.offsetY && (
+                  <p className="text-xs text-gray-500 mt-1">Vị trí dọc tương đối (0 = trên, 1 = dưới)</p>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
-              {isEditing ? 'Cập nhật' : 'Tạo'}
-            </button>
+
+          {/* 3D Position Settings */}
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+              <Settings className="w-4 h-4 mr-2 text-blue-600" />
+              Vị trí 3D trong không gian
+            </h4>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Position X
+                </label>
+                <input
+                  type="number"
+                  step="0.001"
+                  value={formData.positionOffsetX}
+                  onChange={(e) => setFormData({ ...formData, positionOffsetX: parseFloat(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">Trục X (trái/phải)</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Position Y
+                </label>
+                <input
+                  type="number"
+                  step="0.001"
+                  value={formData.positionOffsetY}
+                  onChange={(e) => setFormData({ ...formData, positionOffsetY: parseFloat(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">Trục Y (lên/xuống)</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Position Z
+                </label>
+                <input
+                  type="number"
+                  step="0.001"
+                  value={formData.positionOffsetZ}
+                  onChange={(e) => setFormData({ ...formData, positionOffsetZ: parseFloat(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">Trục Z (gần/xa)</p>
+              </div>
+            </div>
           </div>
-        </form>
+
+          {/* Scale and Rotation Settings */}
+          <div className="bg-green-50 p-4 rounded-lg">
+            <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+              <Eye className="w-4 h-4 mr-2 text-green-600" />
+              Tỷ lệ và xoay
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tỷ lệ ban đầu (0.01-10)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max="10"
+                  value={formData.initialScale}
+                  onChange={(e) => setFormData({ ...formData, initialScale: parseFloat(e.target.value) })}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    validationErrors.initialScale ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.initialScale && (
+                  <p className="text-xs text-red-600 mt-1">{validationErrors.initialScale}</p>
+                )}
+                {!validationErrors.initialScale && (
+                  <p className="text-xs text-gray-500 mt-1">Kích thước model khi hiển thị lần đầu</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Độ nhạy xoay (0.1-10)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  max="10"
+                  value={formData.rotationSensitivity}
+                  onChange={(e) => setFormData({ ...formData, rotationSensitivity: parseFloat(e.target.value) })}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    validationErrors.rotationSensitivity ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.rotationSensitivity && (
+                  <p className="text-xs text-red-600 mt-1">{validationErrors.rotationSensitivity}</p>
+                )}
+                {!validationErrors.rotationSensitivity && (
+                  <p className="text-xs text-gray-500 mt-1">Tốc độ phản ứng khi người dùng xoay</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Rotation Limits */}
+          <div className="bg-yellow-50 p-4 rounded-lg">
+            <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+              <AlertTriangle className="w-4 h-4 mr-2 text-yellow-600" />
+              Giới hạn xoay
+            </h4>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Giới hạn Yaw (0.1-2)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  max="2"
+                  value={formData.yawLimit}
+                  onChange={(e) => setFormData({ ...formData, yawLimit: parseFloat(e.target.value) })}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    validationErrors.yawLimit ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.yawLimit && (
+                  <p className="text-xs text-red-600 mt-1">{validationErrors.yawLimit}</p>
+                )}
+                {!validationErrors.yawLimit && (
+                  <p className="text-xs text-gray-500 mt-1">Giới hạn xoay trái/phải (radian)</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Giới hạn Pitch (0.1-2)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  max="2"
+                  value={formData.pitchLimit}
+                  onChange={(e) => setFormData({ ...formData, pitchLimit: parseFloat(e.target.value) })}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    validationErrors.pitchLimit ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
+                />
+                {validationErrors.pitchLimit && (
+                  <p className="text-xs text-red-600 mt-1">{validationErrors.pitchLimit}</p>
+                )}
+                {!validationErrors.pitchLimit && (
+                  <p className="text-xs text-gray-500 mt-1">Giới hạn xoay lên/xuống (radian)</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Preset Templates */}
+          <div className="bg-purple-50 p-4 rounded-lg">
+            <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+              <Download className="w-4 h-4 mr-2 text-purple-600" />
+              Template nhanh
+            </h4>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData({
+                  offsetX: 0.5, offsetY: 0.5, positionOffsetX: 0, positionOffsetY: 0, positionOffsetZ: 0,
+                  initialScale: 1.0, rotationSensitivity: 1.0, yawLimit: 1.0, pitchLimit: 0.5
+                })}
+                className="px-3 py-2 bg-purple-100 text-purple-700 text-sm rounded hover:bg-purple-200 transition-colors"
+              >
+                Mặc định
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({
+                  offsetX: 0.7, offsetY: 0.3, positionOffsetX: 0.2, positionOffsetY: 0.1, positionOffsetZ: -0.2,
+                  initialScale: 1.2, rotationSensitivity: 0.8, yawLimit: 1.5, pitchLimit: 0.8
+                })}
+                className="px-3 py-2 bg-blue-100 text-blue-700 text-sm rounded hover:bg-blue-200 transition-colors"
+              >
+                Kính mắt
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({
+                  offsetX: 0.5, offsetY: 0.6, positionOffsetX: 0, positionOffsetY: -0.1, positionOffsetZ: 0,
+                  initialScale: 0.8, rotationSensitivity: 1.2, yawLimit: 2.0, pitchLimit: 1.0
+                })}
+                className="px-3 py-2 bg-green-100 text-green-700 text-sm rounded hover:bg-green-200 transition-colors"
+              >
+                Phụ kiện
+              </button>
+            </div>
+              </div>
+              
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  {isEditing ? 'Cập nhật' : 'Tạo'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Preview Panel */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+              <Eye className="w-4 h-4 mr-2 text-blue-600" />
+              Xem trước cấu hình
+            </h4>
+            
+            {/* Visual Preview */}
+            <div className="bg-white p-4 rounded-lg border-2 border-dashed border-gray-300 mb-4">
+              <div className="aspect-square flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <Box className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm">Xem trước 3D</p>
+                  <p className="text-xs text-gray-400">Model sẽ hiển thị ở đây</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Configuration Summary */}
+            <div className="space-y-3">
+              <h5 className="text-xs font-medium text-gray-700 uppercase tracking-wide">Thông số hiện tại</h5>
+              
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-white p-2 rounded border">
+                  <div className="text-gray-500">Offset X/Y</div>
+                  <div className="font-medium">{formData.offsetX}, {formData.offsetY}</div>
+                </div>
+                <div className="bg-white p-2 rounded border">
+                  <div className="text-gray-500">Tỷ lệ</div>
+                  <div className="font-medium">{formData.initialScale}x</div>
+                </div>
+                <div className="bg-white p-2 rounded border">
+                  <div className="text-gray-500">Position XYZ</div>
+                  <div className="font-medium">{formData.positionOffsetX}, {formData.positionOffsetY}, {formData.positionOffsetZ}</div>
+                </div>
+                <div className="bg-white p-2 rounded border">
+                  <div className="text-gray-500">Độ nhạy xoay</div>
+                  <div className="font-medium">{formData.rotationSensitivity}</div>
+                </div>
+                <div className="bg-white p-2 rounded border">
+                  <div className="text-gray-500">Giới hạn Yaw</div>
+                  <div className="font-medium">{formData.yawLimit} rad</div>
+                </div>
+                <div className="bg-white p-2 rounded border">
+                  <div className="text-gray-500">Giới hạn Pitch</div>
+                  <div className="font-medium">{formData.pitchLimit} rad</div>
+                </div>
+              </div>
+
+              {/* Tips */}
+              <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                <p className="text-xs text-blue-700 font-medium">💡 Mẹo cấu hình:</p>
+                <ul className="text-xs text-blue-600 mt-1 space-y-1">
+                  <li>• Offset 0.5, 0.5 = giữa màn hình</li>
+                  <li>• Scale 1.0 = kích thước gốc</li>
+                  <li>• Sensitivity cao = xoay nhanh hơn</li>
+                  <li>• Limit thấp = ít xoay được</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -108,7 +108,7 @@ export interface UploadResponse {
 
 class Product3DModelService {
   private readonly baseURL = '/product-3d-model';
-  private readonly configBaseURL = '/model-3d-config';
+  private readonly configBaseURL = '/api/v1/model-3d-config';
 
   // Product 3D Model CRUD operations
   async getAll(): Promise<Product3DModel[]> {
@@ -196,9 +196,13 @@ class Product3DModelService {
   // Model 3D Config CRUD operations
   async getConfigByModelId(modelId: number): Promise<Model3DConfig | null> {
     try {
-      return await apiService.get<Model3DConfig>(
-        `${this.configBaseURL}/model/${modelId}`,
+      // Since backend doesn't have endpoint to get by modelId, we'll get all and filter
+      // This is not optimal but matches current backend structure
+      const allConfigs = await apiService.get<Model3DConfig[]>(
+        `${this.configBaseURL}/list`,
       );
+      const config = allConfigs.find((c) => c.modelId === modelId);
+      return config || null;
     } catch (error: any) {
       if (error.response?.status === 404) {
         return null;
@@ -208,25 +212,30 @@ class Product3DModelService {
   }
 
   async getConfigById(id: number): Promise<Model3DConfig> {
-    return await apiService.get<Model3DConfig>(`${this.configBaseURL}/${id}`);
+    return await apiService.get<Model3DConfig>(
+      `${this.configBaseURL}/${id}/detail`,
+    );
   }
 
   async createConfig(data: CreateModel3DConfigRequest): Promise<Model3DConfig> {
-    return await apiService.post<Model3DConfig>(this.configBaseURL, data);
+    return await apiService.post<Model3DConfig>(
+      `${this.configBaseURL}/create`,
+      data,
+    );
   }
 
   async updateConfig(
     id: number,
     data: UpdateModel3DConfigRequest,
   ): Promise<Model3DConfig> {
-    return await apiService.patch<Model3DConfig>(
-      `${this.configBaseURL}/${id}`,
+    return await apiService.put<Model3DConfig>(
+      `${this.configBaseURL}/${id}/update`,
       data,
     );
   }
 
   async deleteConfig(id: number): Promise<boolean> {
-    await apiService.delete(`${this.configBaseURL}/${id}`);
+    await apiService.delete(`${this.configBaseURL}/${id}/delete`);
     return true;
   }
 }
