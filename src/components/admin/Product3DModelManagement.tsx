@@ -12,6 +12,7 @@ import {
   CreateModel3DConfigRequest,
   UpdateModel3DConfigRequest
 } from '../../services/product3dModel.service';
+import Config3DPreview from './Config3DPreview';
 import './Product3DModelManagement.css';
 
 const showNotification = (type: 'success' | 'error', message: string) => {
@@ -185,6 +186,12 @@ export const Product3DModelManagement: React.FC = () => {
   const handleCreateConfig = async (configData: CreateModel3DConfigRequest) => {
     try {
       console.log('Sending config data:', configData);
+      console.log('Config data types:', {
+        modelId: typeof configData.modelId,
+        offsetX: typeof configData.offsetX,
+        offsetY: typeof configData.offsetY,
+        initialScale: typeof configData.initialScale
+      });
       const config = await product3DModelService.createConfig(configData);
       setModelConfig(config);
       showNotification('success', 'Tạo cấu hình thành công');
@@ -621,7 +628,7 @@ export const Product3DModelManagement: React.FC = () => {
             } else {
               handleCreateConfig({
                 ...data,
-                modelId: selectedModel.id,
+                modelId: Number(selectedModel.id),
               });
             }
             setShowConfigForm(false);
@@ -915,6 +922,7 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
   initialData,
   isEditing,
 }) => {
+  // State
   const [formData, setFormData] = useState({
     offsetX: 0.5,
     offsetY: 0.5,
@@ -926,6 +934,30 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
     yawLimit: 1.0,
     pitchLimit: 1.0,
   });
+
+  // (Removed safeParse helper – direct inline parsing used per input)
+
+  // (Removed unused updateNumberField helper)
+
+  // Sanitize initialData (fallback nếu backend trả về 0)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        offsetX: initialData.offsetX > 0 && initialData.offsetX <= 1 ? initialData.offsetX : 0.5,
+        offsetY: initialData.offsetY > 0 && initialData.offsetY <= 1 ? initialData.offsetY : 0.5,
+        positionOffsetX: initialData.positionOffsetX ?? 0,
+        positionOffsetY: initialData.positionOffsetY ?? 0,
+        positionOffsetZ: initialData.positionOffsetZ ?? 0,
+        initialScale: initialData.initialScale && initialData.initialScale >= 0.01 ? initialData.initialScale : 1.0,
+        rotationSensitivity: initialData.rotationSensitivity && initialData.rotationSensitivity >= 0.1 ? initialData.rotationSensitivity : 1.0,
+        yawLimit: initialData.yawLimit && initialData.yawLimit >= 0.1 ? initialData.yawLimit : 1.0,
+        pitchLimit: initialData.pitchLimit && initialData.pitchLimit >= 0.1 ? initialData.pitchLimit : 1.0,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData]);
+
+  // Existing validationErrors state remains below
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
@@ -998,7 +1030,22 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
     if (!validateForm()) {
       return;
     }
-    onSubmit(formData);
+    
+    // Sanitize data before submitting - ensure all numbers
+    const sanitized = {
+      offsetX: Number(Math.min(1, Math.max(0, formData.offsetX))),
+      offsetY: Number(Math.min(1, Math.max(0, formData.offsetY))),
+      positionOffsetX: Number(formData.positionOffsetX),
+      positionOffsetY: Number(formData.positionOffsetY),
+      positionOffsetZ: Number(formData.positionOffsetZ),
+      initialScale: Number(formData.initialScale < 0.01 ? 0.01 : formData.initialScale),
+      rotationSensitivity: Number(formData.rotationSensitivity < 0.1 ? 0.1 : formData.rotationSensitivity),
+      yawLimit: Number(formData.yawLimit < 0.1 ? 0.1 : formData.yawLimit),
+      pitchLimit: Number(formData.pitchLimit < 0.1 ? 0.1 : formData.pitchLimit),
+    };
+    
+    console.log('Submitting Model3D Config:', sanitized);
+    onSubmit(sanitized);
   };
 
   if (!isOpen) return null;
@@ -1036,7 +1083,13 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
                   min="0"
                   max="1"
                   value={formData.offsetX}
-                  onChange={(e) => setFormData({ ...formData, offsetX: parseFloat(e.target.value) })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = value === '' ? 0 : parseFloat(value);
+                    if (!isNaN(numValue)) {
+                      setFormData({ ...formData, offsetX: numValue });
+                    }
+                  }}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     validationErrors.offsetX ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
@@ -1058,7 +1111,13 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
                   min="0"
                   max="1"
                   value={formData.offsetY}
-                  onChange={(e) => setFormData({ ...formData, offsetY: parseFloat(e.target.value) })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = value === '' ? 0 : parseFloat(value);
+                    if (!isNaN(numValue)) {
+                      setFormData({ ...formData, offsetY: numValue });
+                    }
+                  }}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     validationErrors.offsetY ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
@@ -1088,7 +1147,13 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
                   type="number"
                   step="0.001"
                   value={formData.positionOffsetX}
-                  onChange={(e) => setFormData({ ...formData, positionOffsetX: parseFloat(e.target.value) })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = value === '' ? 0 : parseFloat(value);
+                    if (!isNaN(numValue)) {
+                      setFormData({ ...formData, positionOffsetX: numValue });
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <p className="text-xs text-gray-500 mt-1">Trục X (trái/phải)</p>
@@ -1101,7 +1166,13 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
                   type="number"
                   step="0.001"
                   value={formData.positionOffsetY}
-                  onChange={(e) => setFormData({ ...formData, positionOffsetY: parseFloat(e.target.value) })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = value === '' ? 0 : parseFloat(value);
+                    if (!isNaN(numValue)) {
+                      setFormData({ ...formData, positionOffsetY: numValue });
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <p className="text-xs text-gray-500 mt-1">Trục Y (lên/xuống)</p>
@@ -1114,7 +1185,13 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
                   type="number"
                   step="0.001"
                   value={formData.positionOffsetZ}
-                  onChange={(e) => setFormData({ ...formData, positionOffsetZ: parseFloat(e.target.value) })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = value === '' ? 0 : parseFloat(value);
+                    if (!isNaN(numValue)) {
+                      setFormData({ ...formData, positionOffsetZ: numValue });
+                    }
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <p className="text-xs text-gray-500 mt-1">Trục Z (gần/xa)</p>
@@ -1139,7 +1216,13 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
                   min="0.01"
                   max="10"
                   value={formData.initialScale}
-                  onChange={(e) => setFormData({ ...formData, initialScale: parseFloat(e.target.value) })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = value === '' ? 0.01 : parseFloat(value);
+                    if (!isNaN(numValue)) {
+                      setFormData({ ...formData, initialScale: numValue });
+                    }
+                  }}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     validationErrors.initialScale ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
@@ -1161,7 +1244,13 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
                   min="0.1"
                   max="10"
                   value={formData.rotationSensitivity}
-                  onChange={(e) => setFormData({ ...formData, rotationSensitivity: parseFloat(e.target.value) })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = value === '' ? 0.1 : parseFloat(value);
+                    if (!isNaN(numValue)) {
+                      setFormData({ ...formData, rotationSensitivity: numValue });
+                    }
+                  }}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     validationErrors.rotationSensitivity ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
@@ -1193,7 +1282,13 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
                   min="0.1"
                   max="2"
                   value={formData.yawLimit}
-                  onChange={(e) => setFormData({ ...formData, yawLimit: parseFloat(e.target.value) })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = value === '' ? 0.1 : parseFloat(value);
+                    if (!isNaN(numValue)) {
+                      setFormData({ ...formData, yawLimit: numValue });
+                    }
+                  }}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     validationErrors.yawLimit ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
@@ -1215,7 +1310,13 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
                   min="0.1"
                   max="2"
                   value={formData.pitchLimit}
-                  onChange={(e) => setFormData({ ...formData, pitchLimit: parseFloat(e.target.value) })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = value === '' ? 0.1 : parseFloat(value);
+                    if (!isNaN(numValue)) {
+                      setFormData({ ...formData, pitchLimit: numValue });
+                    }
+                  }}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     validationErrors.pitchLimit ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
@@ -1295,15 +1396,22 @@ const ConfigFormModal: React.FC<ConfigFormModalProps> = ({
               Xem trước cấu hình
             </h4>
             
-            {/* Visual Preview */}
-            <div className="bg-white p-4 rounded-lg border-2 border-dashed border-gray-300 mb-4">
-              <div className="aspect-square flex items-center justify-center text-gray-500">
-                <div className="text-center">
-                  <Box className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm">Xem trước 3D</p>
-                  <p className="text-xs text-gray-400">Model sẽ hiển thị ở đây</p>
-                </div>
-              </div>
+            {/* 3D Preview with Camera and FaceMesh */}
+            <div className="mb-4">
+              <Config3DPreview 
+                config={{
+                  offsetX: formData.offsetX,
+                  offsetY: formData.offsetY,
+                  positionOffsetX: formData.positionOffsetX,
+                  positionOffsetY: formData.positionOffsetY,
+                  positionOffsetZ: formData.positionOffsetZ,
+                  initialScale: formData.initialScale,
+                  rotationSensitivity: formData.rotationSensitivity,
+                  yawLimit: formData.yawLimit,
+                  pitchLimit: formData.pitchLimit,
+                }}
+                modelPath="/assets/glasses/Untitled.glb"
+              />
             </div>
 
             {/* Configuration Summary */}
