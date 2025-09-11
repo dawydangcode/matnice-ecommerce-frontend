@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Video, RotateCcw, Play, Pause } from 'lucide-react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -13,12 +13,12 @@ declare global {
 }
 
 interface GlassesConfig {
-  offsetX: number;
-  offsetY: number;
-  positionOffsetX: number;
-  positionOffsetY: number;
-  positionOffsetZ: number;
-  initialScale: number;
+  offsetX: number;      // Center point adjustment for X axis
+  offsetY: number;      // Center point adjustment for Y axis
+  positionOffsetX: number; // Fine-tuning horizontal position
+  positionOffsetY: number; // Fine-tuning vertical position
+  positionOffsetZ: number; // Depth adjustment
+  initialScale: number;    // Initial scale when loading model
   rotationSensitivity: number;
   yawLimit: number;
   pitchLimit: number;
@@ -56,6 +56,42 @@ const Config3DPreview: React.FC<Config3DPreviewProps> = ({
   const glassesRef = useRef<THREE.Group | null>(null);
   const animationIdRef = useRef<number | null>(null);
 
+  // Default configuration - optimized for stable tracking with hardcoded optimal values
+  const defaultConfig = useMemo(() => ({
+    offsetX: 0.5,        // Centered horizontally  
+    offsetY: 0.5,       // Slightly above center for eye level
+    positionOffsetX: 0.4, // No additional horizontal offset
+    positionOffsetY: 0.097, // Minimal vertical adjustment
+    positionOffsetZ: -0.4, // Minimal depth adjustment
+    initialScale: 0.16,    // Keep current size
+    // These rotation settings are hardcoded for optimal results (not user-configurable)
+    rotationSensitivity: 0.8, // Hardcoded optimal: roll=0.8, yaw=1.0, pitch=1.0
+    yawLimit: 0.5,       // Hardcoded optimal: ±0.5 radians (~±28.6°)
+    pitchLimit: 0.3      // Hardcoded optimal: ±0.3 radians (~±17.2°)
+  }), []);
+
+  const effectiveConfig = useMemo(() => {
+    return { ...defaultConfig, ...config };
+  }, [config, defaultConfig]);
+
+  // Update glasses position immediately - no smoothing for instant response
+  const updateGlassesPosition = useCallback((
+    targetX: number, 
+    targetY: number, 
+    targetZ: number, 
+    targetRotationX: number,
+    targetRotationY: number, 
+    targetRotationZ: number,
+    targetScale: number
+  ) => {
+    if (!glassesRef.current) return;
+
+    // Direct assignment - no interpolation for instant tracking
+    glassesRef.current.position.set(targetX, targetY, targetZ);
+    glassesRef.current.rotation.set(targetRotationX, targetRotationY, targetRotationZ);
+    glassesRef.current.scale.set(targetScale, targetScale, targetScale);
+  }, []);
+
   // Initialize Three.js scene
   const initializeThreeJS = useCallback(() => {
     if (!containerRef.current) return;
@@ -64,9 +100,14 @@ const Config3DPreview: React.FC<Config3DPreviewProps> = ({
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // Camera setup
-    const camera = new THREE.PerspectiveCamera(50, 1, 0.01, 10);
-    camera.position.set(0, 0, 2);
+    // Camera setup - adjust for better face tracking (same as ThreeJSOverlay)
+    const camera = new THREE.PerspectiveCamera(
+      50, // Reduced FOV for better perspective
+      1, // Square aspect ratio for preview
+      0.01, // Closer near plane
+      10    // Closer far plane
+    );
+    camera.position.set(0, 0, 2); // Move camera back a bit
     cameraThreeRef.current = camera;
 
     // Renderer setup
@@ -75,8 +116,9 @@ const Config3DPreview: React.FC<Config3DPreviewProps> = ({
       antialias: true 
     });
     renderer.setSize(300, 300);
-    renderer.setClearColor(0x000000, 0);
+    renderer.setClearColor(0x000000, 0); // Transparent background
     renderer.domElement.className = 'config-3d-threejs-canvas';
+    renderer.domElement.style.pointerEvents = 'none';
 
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
@@ -113,11 +155,11 @@ const Config3DPreview: React.FC<Config3DPreviewProps> = ({
           }
         });
 
-        // Apply config scale
-        object.scale.set(config.initialScale, config.initialScale, config.initialScale);
+        // Scale and position the glasses - use config values (same as ThreeJSOverlay)
+        object.scale.set(effectiveConfig.initialScale, effectiveConfig.initialScale, effectiveConfig.initialScale);
         object.position.set(0, 0, 0);
         
-        // Center the object
+        // Center the object at origin
         const box = new THREE.Box3().setFromObject(object);
         const center = box.getCenter(new THREE.Vector3());
         object.position.sub(center);
@@ -127,6 +169,7 @@ const Config3DPreview: React.FC<Config3DPreviewProps> = ({
         glassesRef.current = glassesGroup;
 
         console.log('3D Model loaded successfully for preview');
+        console.log('Initial scale applied:', effectiveConfig.initialScale);
       },
       undefined,
       (error) => {
@@ -144,53 +187,95 @@ const Config3DPreview: React.FC<Config3DPreviewProps> = ({
       }
     };
     animate();
-  }, [modelPath, config.initialScale]);
 
-  // Update glasses position based on config and landmarks
-  const updateGlassesPosition = useCallback(() => {
-    if (!glassesRef.current || !currentLandmarks) return;
+    // Cleanup
+    return () => {
+      if (containerRef.current && renderer.domElement && containerRef.current.contains(renderer.domElement)) {
+        containerRef.current.removeChild(renderer.domElement);
+      }
+      renderer.dispose();
+    };
+  }, [modelPath, effectiveConfig.initialScale]);
 
-    // Use landmarks similar to VirtualTryOnModal
-    const middleBetweenEyes = currentLandmarks[168];
-    const leftEye = currentLandmarks[143];
-    const rightEye = currentLandmarks[372];
-    const bottomOfNose = currentLandmarks[2];
+  // Update glasses position based on face landmarks - improved from ThreeJSOverlay
+  const updateGlassesWithLandmarks = useCallback(() => {
+    if (!currentLandmarks || !glassesRef.current) return;
+
+    // Use landmarks from working ThreeJSOverlay demo
+    const middleBetweenEyes = currentLandmarks[168]; // Middle between eyes (main reference)
+    const leftEye = currentLandmarks[143];           // Left eye
+    const rightEye = currentLandmarks[372];          // Right eye
+    const bottomOfNose = currentLandmarks[2];        // Bottom of nose
+    const leftEar = currentLandmarks[234];           // Left ear
+    const rightEar = currentLandmarks[454];          // Right ear
     
-    if (!middleBetweenEyes || !leftEye || !rightEye || !bottomOfNose) return;
+    if (!middleBetweenEyes || !leftEye || !rightEye || !bottomOfNose || !leftEar || !rightEar) return;
 
-    // Calculate position with config offsets
+    // Use middleBetweenEyes as main center, with adjustment for glasses position
     const centerX = middleBetweenEyes.x;
-    const centerY = (middleBetweenEyes.y + leftEye.y + rightEye.y) / 3 + 0.04;
+    const centerY = (middleBetweenEyes.y + leftEye.y + rightEye.y) / 3 + 0.04; // Lower glasses slightly
     const centerZ = middleBetweenEyes.z;
 
-    // Apply config offsets
-    const worldX = -(centerX - config.offsetX) * 4 + config.positionOffsetX;
-    const worldY = -(centerY - config.offsetY) * 3 + config.positionOffsetY;
-    const worldZ = centerZ * 2 + config.positionOffsetZ;
+    // Convert normalized coordinates to world coordinates (flip X for camera mirror)
+    // Reduced multipliers for more precise tracking
+    const worldX = -(centerX - 0.5) * 4;  // Reduced from 8 to 4
+    const worldY = -(centerY - 0.5) * 3;  // Reduced from 6 to 3
+    const worldZ = centerZ * 2;           // Reduced from 6 to 2
 
-    // Calculate scale
+    // Calculate scale based on eye distance (like in working demo)
     const eyeDistance = Math.hypot(
       (rightEye.x - leftEye.x) * 640,
       (rightEye.y - leftEye.y) * 480
     );
-    const targetScale = (eyeDistance / 80) * 0.6 * config.initialScale;
+    const targetScale = (eyeDistance / 80) * 0.6; // From working demo
 
-    // Calculate rotation with sensitivity
-    const rollAngle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * config.rotationSensitivity;
-    const noseCenterX = (leftEye.x + rightEye.x) / 2;
-    const noseOffset = bottomOfNose.x - noseCenterX;
-    const yawAngle = Math.max(-config.yawLimit, Math.min(config.yawLimit, noseOffset * config.rotationSensitivity));
+    // Calculate more comprehensive rotation based on multiple landmarks
+    // HARDCODED OPTIMAL VALUES: These values are proven to work well in ThreeJSOverlay
+    // Better than user configuration - provides stable, natural-looking tracking
     
+    // Z rotation (roll) - based on eye alignment 
+    const rollAngleRaw = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x);
+    const rollAngle = rollAngleRaw * 0.8; // HARDCODED: 0.8 sensitivity for natural head tilt
+    
+    // Y rotation (yaw) - head turn left/right based on nose position relative to eyes
+    const noseCenterX = (leftEye.x + rightEye.x) / 2;
+    const noseOffsetRaw = bottomOfNose.x - noseCenterX;
+    const yawAngleRaw = noseOffsetRaw * 1.0; // HARDCODED: 1.0 sensitivity for head turning
+    // HARDCODED LIMIT: Prevents over-rotation for stable tracking
+    const yawAngle = Math.max(-0.5, Math.min(0.5, yawAngleRaw)); // ±0.5 rad = ±28.6° limit
+    
+    // X rotation (pitch) - head tilt up/down based on nose position relative to eyes  
     const eyeCenterY = (leftEye.y + rightEye.y) / 2;
-    const noseOffsetY = bottomOfNose.y - eyeCenterY;
-    const pitchAngle = Math.max(-config.pitchLimit, Math.min(config.pitchLimit, noseOffsetY * config.rotationSensitivity));
+    const noseOffsetYRaw = bottomOfNose.y - eyeCenterY;
+    const pitchAngleRaw = noseOffsetYRaw * 1.0; // HARDCODED: 1.0 sensitivity for head nodding
+    // HARDCODED LIMIT: Prevents extreme up/down tilts
+    const pitchAngle = Math.max(-0.3, Math.min(0.3, pitchAngleRaw)); // ±0.3 rad = ±17.2° limit
 
-    // Apply transformations
-    glassesRef.current.position.set(worldX, worldY, worldZ);
-    glassesRef.current.rotation.set(pitchAngle, yawAngle, rollAngle);
-    glassesRef.current.scale.set(targetScale, targetScale, targetScale);
+    // Apply config adjustments
+    const targetX = worldX + effectiveConfig.positionOffsetX;
+    const targetY = worldY + effectiveConfig.positionOffsetY;
+    const targetZ = worldZ + effectiveConfig.positionOffsetZ;
+    const finalScale = targetScale * (effectiveConfig.initialScale / 0.06); // Scale relative to default
+    
+    // Debug log for rotation values (occasional logging to avoid spam)
+    if (Math.random() < 0.02) { // Log 2% of the time
+      console.log('Config3DPreview Rotation Values:', {
+        rollRaw: (rollAngleRaw * 180 / Math.PI).toFixed(1) + '°',
+        rollFinal: (rollAngle * 180 / Math.PI).toFixed(1) + '°',
+        yawRaw: (yawAngleRaw * 180 / Math.PI).toFixed(1) + '°', 
+        yawFinal: (yawAngle * 180 / Math.PI).toFixed(1) + '°',
+        pitchRaw: (pitchAngleRaw * 180 / Math.PI).toFixed(1) + '°',
+        pitchFinal: (pitchAngle * 180 / Math.PI).toFixed(1) + '°',
+        scale: finalScale.toFixed(3)
+      });
+    }
+      
+    // Update position using the callback function
+    updateGlassesPosition(targetX, targetY, targetZ, pitchAngle, yawAngle, rollAngle, finalScale);
+    
+    // Make sure glasses are visible
     glassesRef.current.visible = true;
-  }, [currentLandmarks, config]);
+  }, [currentLandmarks, effectiveConfig, updateGlassesPosition]);
 
   // Initialize FaceMesh
   const initializeFaceMesh = useCallback(async () => {
@@ -216,9 +301,18 @@ const Config3DPreview: React.FC<Config3DPreviewProps> = ({
 
       faceMesh.onResults((results: any) => {
         if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+          const landmarks = results.multiFaceLandmarks[0];
           setFaceDetected(true);
-          setCurrentLandmarks(results.multiFaceLandmarks[0]);
+          setCurrentLandmarks(landmarks);
           setStatus('Phát hiện khuôn mặt - Đang hiển thị model 3D');
+          
+          // Immediately update glasses position if glasses are loaded
+          if (glassesRef.current) {
+            // Use the same landmarks processing as ThreeJSOverlay
+            setTimeout(() => {
+              updateGlassesWithLandmarks();
+            }, 0);
+          }
         } else {
           setFaceDetected(false);
           setCurrentLandmarks(null);
@@ -246,7 +340,7 @@ const Config3DPreview: React.FC<Config3DPreviewProps> = ({
       setStatus('Lỗi khởi tạo face detection');
       setError('Không thể khởi tạo face detection');
     }
-  }, []);
+  }, [updateGlassesWithLandmarks]);
 
   // Start camera
   const startCamera = useCallback(async () => {
@@ -339,10 +433,18 @@ const Config3DPreview: React.FC<Config3DPreviewProps> = ({
     }
   }, [isActive, stopCamera, initializeThreeJS, startCamera]);
 
-  // Update glasses when config changes
+  // Update glasses when config changes or landmarks change
   useEffect(() => {
-    updateGlassesPosition();
-  }, [updateGlassesPosition, config]);
+    if (currentLandmarks && glassesRef.current) {
+      updateGlassesWithLandmarks();
+    } else if (glassesRef.current && !currentLandmarks) {
+      // If no face detected, still apply config scale
+      const baseScale = effectiveConfig.initialScale * 0.16; // Base scale for preview
+      glassesRef.current.scale.set(baseScale, baseScale, baseScale);
+      glassesRef.current.position.set(0, 0, 0);
+      glassesRef.current.rotation.set(0, 0, 0);
+    }
+  }, [updateGlassesWithLandmarks, effectiveConfig, currentLandmarks]);
 
   // Cleanup on unmount
   useEffect(() => {

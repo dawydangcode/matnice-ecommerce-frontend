@@ -10,18 +10,29 @@ declare global {
   }
 }
 
+interface GlassesConfig {
+  offsetX: number;
+  offsetY: number;
+  positionOffsetX: number;
+  positionOffsetY: number;
+  positionOffsetZ: number;
+  initialScale: number;
+}
+
 interface VirtualTryOnModalProps {
   isOpen: boolean;
   onClose: () => void;
   productName: string;
   model3dUrl?: string;
+  glassesConfig?: GlassesConfig;
 }
 
 const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
   isOpen,
   onClose,
   productName,
-  model3dUrl
+  model3dUrl,
+  glassesConfig
 }) => {
   const [cameraActive, setCameraActive] = useState(false);
   const [faceDetected, setFaceDetected] = useState(false);
@@ -38,13 +49,7 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
   const faceMeshRef = useRef<any>(null);
   const cameraUtilsRef = useRef<any>(null);
 
-  // Error handler for 3D model loading
-  const handleModelError = (errorMessage: string) => {
-    console.error('3D Model Error:', errorMessage);
-    setError(errorMessage);
-    // Auto-clear error after 5 seconds
-    setTimeout(() => setError(null), 5000);
-  };
+
 
   // Start camera when modal opens
   useEffect(() => {
@@ -532,6 +537,8 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
               canvasWidth={canvasRef.current?.width || 640}
               canvasHeight={canvasRef.current?.height || 480}
               videoElement={videoRef.current}
+              modelPath={model3dUrl}
+              glassesConfig={glassesConfig}
             />
           )}
           {error && (

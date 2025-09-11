@@ -107,7 +107,7 @@ export interface UploadResponse {
 }
 
 class Product3DModelService {
-  private readonly baseURL = '/product-3d-model';
+  private readonly baseURL = '/api/v1/product-3d-model';
   private readonly configBaseURL = '/api/v1/model-3d-config';
 
   // Product 3D Model CRUD operations
@@ -116,15 +116,14 @@ class Product3DModelService {
   }
 
   async getByProductId(productId: number): Promise<Product3DModel> {
-    return await apiService.get<Product3DModel>(
-      `${this.baseURL}/product/${productId}`,
-    );
+    return await apiService.get<Product3DModel>(`${this.baseURL}/${productId}`);
   }
 
   async getActiveByProductId(productId: number): Promise<Product3DModel[]> {
-    return await apiService.get<Product3DModel[]>(
-      `${this.baseURL}/product/${productId}/active`,
+    const model = await apiService.get<Product3DModel | null>(
+      `${this.baseURL}/${productId}/active`,
     );
+    return model ? [model] : [];
   }
 
   async getById(id: number): Promise<Product3DModel> {

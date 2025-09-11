@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
 import VirtualTryOnModal from '../components/VirtualTryOnModal';
 import productService, { ProductDetail } from '../services/productService';
+import { product3DModelService, Product3DModel, Model3DConfig } from '../services/product3dModel.service';
 import '../styles/ProductDetailPage.css';
 
 const ProductDetailPage: React.FC = () => {
@@ -14,6 +15,60 @@ const ProductDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [isVirtualTryOnOpen, setIsVirtualTryOnOpen] = useState(false);
+  
+  // 3D Model states
+  const [product3DModel, setProduct3DModel] = useState<Product3DModel | null>(null);
+  const [model3DConfig, setModel3DConfig] = useState<Model3DConfig | null>(null);
+  const [model3DLoading, setModel3DLoading] = useState(false);
+  const [model3DError, setModel3DError] = useState<string | null>(null);
+
+  // Helper function to create backend proxy URL for 3D model
+  const getModelProxyUrl = (productId: number): string => {
+    const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+    return `${backendUrl}/api/v1/product-3d-model/serve/${productId}`;
+  };
+
+  // Load 3D model and config data from database
+  const load3DModelData = async (productId: number) => {
+    try {
+      setModel3DLoading(true);
+      setModel3DError(null);
+      
+      console.log('Loading 3D model for product ID:', productId);
+      
+      // Get active 3D model for this product
+      const activeModels = await product3DModelService.getActiveByProductId(productId);
+      console.log('Active 3D models:', activeModels);
+      
+      if (activeModels && activeModels.length > 0) {
+        const model = activeModels[0]; // Use first active model
+        setProduct3DModel(model);
+        console.log('3D Model loaded:', model);
+        
+        // Load config for this model
+        const config = await product3DModelService.getConfigByModelId(model.id);
+        if (config) {
+          setModel3DConfig(config);
+          console.log('3D Model config loaded:', config);
+        } else {
+          console.log('No config found for model ID:', model.id);
+          // Set default config if none exists
+          setModel3DConfig(null);
+        }
+      } else {
+        console.log('No active 3D models found for product ID:', productId);
+        setProduct3DModel(null);
+        setModel3DConfig(null);
+      }
+    } catch (error) {
+      console.error('Error loading 3D model data:', error);
+      setModel3DError('Failed to load 3D model');
+      setProduct3DModel(null);
+      setModel3DConfig(null);
+    } finally {
+      setModel3DLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -27,6 +82,9 @@ const ProductDetailPage: React.FC = () => {
         setLoading(true);
         const productData = await productService.getProductWithDetails(parseInt(id));
         console.log('Product data received:', productData);
+
+        // Load 3D model data
+        await load3DModelData(parseInt(id));
         
         // Fallback data nếu API không trả về đủ dữ liệu
         const mockProductData = {
@@ -179,10 +237,20 @@ const ProductDetailPage: React.FC = () => {
                   {index === 0 && (
                     <div className="virtual-tryon-overlay">
                       <button 
-                        className="virtual-tryon-btn"
-                        onClick={() => setIsVirtualTryOnOpen(true)}
+                        className={`virtual-tryon-btn ${!product3DModel ? 'disabled' : ''}`}
+                        onClick={() => product3DModel && setIsVirtualTryOnOpen(true)}
+                        disabled={!product3DModel || model3DLoading}
+                        title={
+                          model3DLoading ? 'Loading 3D model...' :
+                          !product3DModel ? 'No 3D model available' :
+                          model3DError ? 'Error loading 3D model' :
+                          'Try on virtually with AR'
+                        }
                       >
-                        👁️ Virtual try-on
+                        {model3DLoading ? '⏳ Loading...' : 
+                         !product3DModel ? '❌ No 3D Model' :
+                         model3DError ? '⚠️ Error' :
+                         '👁️ Virtual try-on'}
                       </button>
                     </div>
                   )}
@@ -314,7 +382,15 @@ const ProductDetailPage: React.FC = () => {
         isOpen={isVirtualTryOnOpen}
         onClose={() => setIsVirtualTryOnOpen(false)}
         productName={`${product?.brand?.name} ${product?.productName}`}
-        model3dUrl={undefined}
+        model3dUrl={product3DModel ? getModelProxyUrl(parseInt(id || '0')) : undefined}
+        glassesConfig={model3DConfig ? {
+          offsetX: model3DConfig.offsetX,
+          offsetY: model3DConfig.offsetY,
+          positionOffsetX: model3DConfig.positionOffsetX,
+          positionOffsetY: model3DConfig.positionOffsetY,
+          positionOffsetZ: model3DConfig.positionOffsetZ,
+          initialScale: model3DConfig.initialScale
+        } : undefined}
       />
     </div>
   );
