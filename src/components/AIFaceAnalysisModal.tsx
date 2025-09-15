@@ -44,14 +44,20 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [cameraResolution, setCameraResolution] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const [autoCapture, setAutoCapture] = useState<{
     isEnabled: boolean;
     countdown: number;
     isCountingDown: boolean;
+    showGuide: boolean; // Thêm state để điều khiển hiển thị face guide
   }>({
     isEnabled: true,
     countdown: 3,
-    isCountingDown: false
+    isCountingDown: false,
+    showGuide: true // Mặc định hiển thị guide
   });
 
   // Refs
@@ -117,9 +123,40 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
           // Add event listeners for debugging
           videoRef.current.onloadedmetadata = () => {
             console.log('Video metadata loaded');
-            console.log('Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
-            console.log('Video element style:', videoRef.current?.style.cssText);
-            console.log('Video element classes:', videoRef.current?.className);
+            const actualWidth = videoRef.current?.videoWidth || 0;
+            const actualHeight = videoRef.current?.videoHeight || 0;
+            console.log('Video dimensions:', actualWidth, 'x', actualHeight);
+            
+            // Lưu độ phân giải thực tế của camera
+            setCameraResolution({
+              width: actualWidth,
+              height: actualHeight
+            });
+            
+            // Áp dụng kích thước thực tế cho video element
+            if (videoRef.current) {
+              // Tính toán kích thước hiển thị dựa trên viewport
+              const maxWidth = Math.min(window.innerWidth * 0.9, actualWidth);
+              const maxHeight = Math.min(window.innerHeight * 0.7, actualHeight);
+              
+              // Giữ nguyên tỷ lệ khung hình
+              const aspectRatio = actualWidth / actualHeight;
+              let displayWidth = maxWidth;
+              let displayHeight = maxWidth / aspectRatio;
+              
+              if (displayHeight > maxHeight) {
+                displayHeight = maxHeight;
+                displayWidth = maxHeight * aspectRatio;
+              }
+              
+              // Áp dụng kích thước tính toán
+              videoRef.current.style.width = `${displayWidth}px`;
+              videoRef.current.style.height = `${displayHeight}px`;
+              
+              console.log(`Applied video dimensions: ${displayWidth}x${displayHeight}`);
+              console.log('Video element style:', videoRef.current?.style.cssText);
+              console.log('Video element classes:', videoRef.current?.className);
+            }
           };
           
           videoRef.current.onplay = () => {
@@ -167,8 +204,12 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
     }
     if (videoRef.current) {
       videoRef.current.srcObject = null;
+      // Reset video element style
+      videoRef.current.style.width = '';
+      videoRef.current.style.height = '';
     }
     setCameraActive(false);
+    setCameraResolution(null);
   }, []);
 
   // Stop auto-capture countdown
@@ -198,13 +239,28 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
 
     if (!ctx) return;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
+    // Tính toán để crop ảnh 640x640 từ center của video
+    const sourceSize = Math.min(video.videoWidth, video.videoHeight);
+    const sourceX = (video.videoWidth - sourceSize) / 2;
+    const sourceY = (video.videoHeight - sourceSize) / 2;
+
+    // Set canvas size thành 640x640
+    canvas.width = 640;
+    canvas.height = 640;
+    
+    // Crop và scale ảnh từ center của video
+    ctx.drawImage(
+      video, 
+      sourceX, sourceY, sourceSize, sourceSize, // Source (square crop from center)
+      0, 0, 640, 640 // Destination (640x640)
+    );
 
     // Convert to data URL
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
     setCapturedImage(dataUrl);
+    
+    // Ẩn face guide sau khi capture
+    setAutoCapture(prev => ({ ...prev, showGuide: false }));
     stopCamera();
     
     // Stop auto-capture when photo is taken
@@ -260,13 +316,13 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
         
         if (!detection) return;
 
-        // Define the face guide frame area (oval in center of video)
+        // Define the face guide frame area (oval nhỏ ở center của video)
         const videoRect = videoRef.current.getBoundingClientRect();
         const frameArea = {
-          x: videoRect.width * 0.25, // Center horizontally with some margin
-          y: videoRect.height * 0.15, // Center vertically with some margin
-          width: videoRect.width * 0.5, // 50% of video width
-          height: videoRect.height * 0.7 // 70% of video height
+          x: videoRect.width * 0.37, // Center với khung nhỏ hơn (260px / ~700px video)
+          y: videoRect.height * 0.37, // Center với khung nhỏ hơn
+          width: videoRect.width * 0.26, // ~26% of video width (260px)
+          height: videoRect.height * 0.26 // ~26% of video height (260px)
         };
 
         const faceInFrame = isFaceInFrame(detection, videoRef.current, frameArea);
@@ -417,6 +473,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
     setShowResults(false);
     setError(null);
     setIsAnalyzing(false);
+    setAutoCapture(prev => ({ ...prev, showGuide: true })); // Hiển thị lại face guide
     stopCamera();
   }, [stopCamera]);
 
@@ -506,8 +563,9 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
                       </div>
 
                       {/* Face Guide Overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="face-guide-frame">
+                      {autoCapture.showGuide && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className={`face-guide-frame ${!autoCapture.showGuide ? 'hidden' : ''}`}>
                           {/* Face oval guide */}
                           <div className="face-guide-oval"></div>
                           
@@ -526,6 +584,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
                           </div>
                         </div>
                       </div>
+                      )}
                       
                       {/* Camera Controls */}
                       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-3">
@@ -662,12 +721,20 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
                           console.log('- readyState:', videoRef.current.readyState);
                           console.log('- paused:', videoRef.current.paused);
                           console.log('- srcObject:', videoRef.current.srcObject);
+                          console.log('- Camera Resolution State:', cameraResolution);
                         }
                       }}
                       className="bg-green-500 text-white px-3 py-1 rounded text-xs"
                     >
                       Debug Video
                     </button>
+                    
+                    {/* Hiển thị độ phân giải camera */}
+                    {cameraResolution && (
+                      <div className="bg-gray-800 text-white px-3 py-1 rounded text-xs">
+                        Camera: {cameraResolution.width} × {cameraResolution.height}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

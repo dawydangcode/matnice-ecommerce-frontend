@@ -358,27 +358,21 @@
   }
 }
 
-/* AI Analysis Modal Specific Styles */
+/* AI Analysis Modal Specific Styles - Extra Compact Modal với Camera Resolution Thực */
 .ai-analysis-modal {
   transition: transform 0.4s ease-out;
   transform: translateX(0);
-  max-width: 95vw !important; /* Cho phép modal mở rộng theo viewport */
-  width: auto !important; /* Tự động điều chỉnh theo nội dung */
-  min-width: 400px !important; /* Chiều rộng tối thiểu */
+  max-width: 65vw !important; /* Giảm từ 80vw xuống 65vw - modal rất nhỏ gọn */
+  width: auto !important; /* Tự động điều chỉnh theo nội dung video */
+  min-width: 300px !important; /* Giảm từ 350px xuống 300px */
   margin: 0 auto !important;
-  height: auto !important; /* Tự động điều chỉnh chiều cao */
-  max-height: 90vh !important; /* Tối đa 90% viewport height */
+  height: auto !important; /* Tự động điều chỉnh chiều cao theo video */
+  max-height: 80vh !important; /* Giảm từ 85vh xuống 80vh - modal thấp hơn nữa */
   overflow-y: auto !important; /* Scroll nếu cần */
 }
 
 .ai-analysis-modal.with-results {
   transform: translateX(-250px);
-}
-.ai-analysis-modal {
-  max-width: 1200px;
-  width: 95vw;
-  max-height: 90vh;
-  height: auto;
 }
 
 .ai-analysis-modal .modal-content-full {
@@ -393,12 +387,6 @@
 }
 
 .camera-video-modal {
-  max-height: 70vh !important; /* Tối đa 70% viewport height */
-  max-width: 90vw !important; /* Tối đa 90% viewport width */
-  width: auto !important; /* Để camera tự định kích thước */
-  height: auto !important; /* Để camera tự định kích thước */
-  min-height: 300px !important; /* Chiều cao tối thiểu */
-  min-width: 200px !important; /* Chiều rộng tối thiểu */
   display: block !important;
   background-color: #000 !important;
   border: 2px solid #22c55e !important;
@@ -406,26 +394,37 @@
   object-fit: contain !important; /* Giữ nguyên tỷ lệ camera */
   border-radius: 8px !important;
   margin: 0 auto !important; /* Center video */
+  /* Kích thước được tính toán bằng JavaScript dựa trên camera thực tế */
+  /* Max constraints rất nhỏ để modal cực kỳ gọn nhẹ */
+  max-width: 60vw !important; /* Giảm từ 75vw xuống 60vw */
+  max-height: 50vh !important; /* Giảm từ 60vh xuống 50vh */
+  /* Min constraints để đảm bảo khả dụng */
+  min-width: 180px !important; /* Giảm từ 200px xuống 180px */
+  min-height: 250px !important; /* Giảm từ 300px xuống 250px */
 }
 
-/* Force video visibility with stronger specificity */
+/* High-Resolution Camera Video với Extra Compact Modal */
 .ai-analysis-modal video.camera-video-modal.force-visible-video {
   visibility: visible !important;
   opacity: 1 !important;
   z-index: 10 !important;
   position: relative !important;
   display: block !important;
-  width: auto !important; /* Để camera tự định kích thước */
-  height: auto !important; /* Để camera tự định kích thước */
-  max-width: 90vw !important; /* Tối đa 90% viewport width */
-  max-height: 70vh !important; /* Tối đa 70% viewport height */
-  min-height: 300px !important; /* Chiều cao tối thiểu */
-  min-width: 200px !important; /* Chiều rộng tối thiểu */
+  /* Kích thước tự động dựa trên camera resolution thực tế */
+  width: auto !important;
+  height: auto !important;
+  /* Constraints rất nhỏ để modal cực kỳ gọn nhẹ */
+  max-width: 60vw !important; /* Giảm từ 75vw xuống 60vw */
+  max-height: 50vh !important; /* Giảm từ 60vh xuống 50vh */
+  min-height: 250px !important; /* Giảm từ 300px xuống 250px */
+  min-width: 180px !important; /* Giảm từ 200px xuống 180px */
   object-fit: contain !important; /* Giữ nguyên tỷ lệ camera */
-  transform: scaleX(-1) !important; /* Flip horizontally to fix mirror effect */
+  transform: scaleX(-1) !important; /* Mirror effect cho selfie camera */
   transition: transform 0.3s ease !important;
   border-radius: 8px !important;
   margin: 0 auto !important; /* Center video */
+  background-color: #000 !important;
+  border: 2px solid #22c55e !important;
 }
 
 /* Additional force visibility rules */
@@ -435,41 +434,43 @@
   display: block !important;
 }
 
-/* Face Guide Overlay Styles */
+/* Extra Compact Face Guide Overlay - Siêu Nhỏ Gọn */
 .face-guide-frame {
-  position: absolute; /* Đổi thành absolute để overlay lên video */
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 60%; /* Tương đối so với video */
-  height: 70%; /* Tương đối so với video */
-  max-width: 300px; /* Giới hạn tối đa */
-  max-height: 400px; /* Giới hạn tối đa */
-  min-width: 200px; /* Giới hạn tối thiểu */
-  min-height: 250px; /* Giới hạn tối thiểu */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none; /* Không cản trở tương tác với video */
+  position: absolute !important; /* Overlay trên video */
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) scaleX(-1) !important; /* Mirror để match video */
+  width: 50% !important; /* Giảm từ 55% xuống 50% - rất nhỏ gọn */
+  height: 60% !important; /* Giảm từ 65% xuống 60% - rất nhỏ gọn */
+  max-width: 240px !important; /* Giảm từ 280px xuống 240px */
+  max-height: 300px !important; /* Giảm từ 350px xuống 300px */
+  min-width: 150px !important; /* Giảm từ 180px xuống 150px */
+  min-height: 180px !important; /* Giảm từ 220px xuống 180px */
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: none !important; /* Không cản trở tương tác với video */
+  z-index: 20 !important; /* Luôn hiển thị trên video */
 }
 
 .face-guide-oval {
-  width: 70%; /* Tương đối so với frame */
-  height: 60%; /* Tương đối so với frame */
-  max-width: 180px;
-  max-height: 220px;
-  min-width: 120px;
-  min-height: 150px;
-  border: 3px solid rgba(34, 197, 94, 0.8);
-  border-radius: 50%;
-  background: transparent;
+  width: 70% !important; /* Giữ nguyên tỷ lệ 70% của frame */
+  height: 60% !important; /* Giữ nguyên tỷ lệ 60% của frame */
+  max-width: 140px !important; /* Giảm từ 160px xuống 140px */
+  max-height: 170px !important; /* Giảm từ 200px xuống 170px */
+  min-width: 100px !important; /* Giảm từ 110px xuống 100px */
+  min-height: 120px !important; /* Giảm từ 130px xuống 120px */
+  border: 3px solid rgba(34, 197, 94, 0.9) !important;
+  border-radius: 50% !important;
+  background: transparent !important;
   box-shadow: 
-    0 0 0 4px rgba(34, 197, 94, 0.3),
-    0 0 20px rgba(34, 197, 94, 0.5),
-    inset 0 0 0 2000px rgba(0, 0, 0, 0.3);
-  animation: pulse-guide 2s ease-in-out infinite;
-  position: relative;
+    0 0 0 4px rgba(34, 197, 94, 0.4),
+    0 0 20px rgba(34, 197, 94, 0.6),
+    /* Tạo vùng mờ xung quanh bằng box-shadow lớn */
+    0 0 0 2000px rgba(0, 0, 0, 0.6) !important;
+  animation: pulse-guide 2s ease-in-out infinite !important;
+  position: relative !important;
 }
 
 .face-guide-oval::before {
@@ -506,22 +507,29 @@
   100% { transform: rotate(360deg); }
 }
 
+.face-guide-frame.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease-out;
+}
+
 .face-guide-instruction {
   position: absolute;
-  bottom: -60px;
+  bottom: -70px;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
   color: white;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 8px 16px;
-  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 12px 20px;
+  border-radius: 25px;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
-  min-width: 200px;
+  min-width: 220px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .countdown-container {
@@ -764,7 +772,35 @@
 
 @media (max-width: 768px) {
   .ai-analysis-modal {
-    width: 98vw;
-    max-height: 95vh;
+    width: 90vw !important; /* Giảm từ 95vw xuống 90vw */
+    max-width: 90vw !important;
+    max-height: 85vh !important; /* Giảm từ 90vh xuống 85vh */
+    min-width: 280px !important; /* Giảm từ 300px xuống 280px */
+  }
+  
+  .camera-video-modal,
+  .ai-analysis-modal video.camera-video-modal.force-visible-video {
+    max-width: 85vw !important; /* Giảm từ 90vw xuống 85vw */
+    max-height: 45vh !important; /* Giảm từ 55vh xuống 45vh */
+    min-width: 240px !important; /* Giảm từ 260px xuống 240px */
+    min-height: 200px !important; /* Giảm từ 220px xuống 200px */
+  }
+  
+  .face-guide-frame {
+    width: 60% !important; /* Giảm từ 65% xuống 60% */
+    height: 65% !important; /* Giảm từ 70% xuống 65% */
+    max-width: 200px !important; /* Giảm từ 220px xuống 200px */
+    max-height: 250px !important; /* Giảm từ 280px xuống 250px */
+    min-width: 140px !important; /* Giảm từ 160px xuống 140px */
+    min-height: 160px !important; /* Giảm từ 180px xuống 160px */
+  }
+  
+  .face-guide-oval {
+    width: 75% !important; /* Giữ nguyên tỷ lệ oval */
+    height: 65% !important;
+    max-width: 120px !important; /* Giảm từ 140px xuống 120px */
+    max-height: 150px !important; /* Giảm từ 170px xuống 150px */
+    min-width: 80px !important; /* Giảm từ 90px xuống 80px */
+    min-height: 100px !important; /* Giảm từ 110px xuống 100px */
   }
 }
