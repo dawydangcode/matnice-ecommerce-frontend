@@ -461,12 +461,12 @@
   max-height: 300px !important; /* Tăng từ 280px lên 300px */
   min-width: 130px !important; /* Tăng từ 120px lên 130px */
   min-height: 160px !important; /* Tăng từ 150px lên 160px */
-  border: 3px solid rgba(34, 197, 94, 0.9) !important;
+  border: 3px solid rgba(239, 68, 68, 0.9) !important; /* Đổi từ xanh lá (34, 197, 94) sang đỏ (239, 68, 68) */
   border-radius: 50% !important;
   background: transparent !important;
   box-shadow: 
-    0 0 0 4px rgba(34, 197, 94, 0.4),
-    0 0 20px rgba(34, 197, 94, 0.6),
+    0 0 0 4px rgba(239, 68, 68, 0.4), /* Đổi từ xanh lá sang đỏ */
+    0 0 20px rgba(239, 68, 68, 0.6), /* Đổi từ xanh lá sang đỏ */
     /* Tạo vùng mờ xung quanh bằng box-shadow lớn */
     0 0 0 2000px rgba(0, 0, 0, 0.6) !important;
   animation: pulse-guide 2s ease-in-out infinite !important;
@@ -480,24 +480,24 @@
   left: -10px;
   right: -10px;
   bottom: -10px;
-  border: 2px dashed rgba(34, 197, 94, 0.6);
+  border: 2px dashed rgba(239, 68, 68, 0.6); /* Đổi từ xanh lá sang đỏ */
   border-radius: 50%;
   animation: rotate-dashed 3s linear infinite;
 }
 
 @keyframes pulse-guide {
   0%, 100% {
-    border-color: rgba(34, 197, 94, 0.8);
+    border-color: rgba(239, 68, 68, 0.8); /* Đổi từ xanh lá sang đỏ */
     box-shadow: 
-      0 0 0 4px rgba(34, 197, 94, 0.3),
-      0 0 20px rgba(34, 197, 94, 0.5),
+      0 0 0 4px rgba(239, 68, 68, 0.3), /* Đổi từ xanh lá sang đỏ */
+      0 0 20px rgba(239, 68, 68, 0.5), /* Đổi từ xanh lá sang đỏ */
       inset 0 0 0 2000px rgba(0, 0, 0, 0.3);
   }
   50% {
-    border-color: rgba(34, 197, 94, 1);
+    border-color: rgba(239, 68, 68, 1); /* Đổi từ xanh lá sang đỏ */
     box-shadow: 
-      0 0 0 8px rgba(34, 197, 94, 0.4),
-      0 0 30px rgba(34, 197, 94, 0.7),
+      0 0 0 8px rgba(239, 68, 68, 0.4), /* Đổi từ xanh lá sang đỏ */
+      0 0 30px rgba(239, 68, 68, 0.7), /* Đổi từ xanh lá sang đỏ */
       inset 0 0 0 2000px rgba(0, 0, 0, 0.2);
   }
 }
@@ -553,6 +553,18 @@
   font-weight: 500;
 }
 
+.countdown-cancelled {
+  color: #f59e0b !important; /* Orange warning color */
+  font-weight: 600 !important;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
 @keyframes countdown-pulse {
   0% { 
     transform: scale(1.2);
@@ -574,12 +586,12 @@
   font-weight: 500;
 }
 
-/* Active countdown state */
+/* Active countdown state - Màu xanh khi phát hiện mặt và đang đếm ngược */
 .face-guide-oval.counting-down {
-  border-color: #fbbf24 !important;
+  border-color: rgba(34, 197, 94, 0.9) !important; /* Đổi từ vàng sang xanh lá */
   box-shadow: 
-    0 0 0 4px rgba(251, 191, 36, 0.3),
-    0 0 20px rgba(251, 191, 36, 0.5),
+    0 0 0 4px rgba(34, 197, 94, 0.4), /* Đổi từ vàng sang xanh lá */
+    0 0 20px rgba(34, 197, 94, 0.6), /* Đổi từ vàng sang xanh lá */
     inset 0 0 0 2000px rgba(0, 0, 0, 0.4) !important;
   animation: countdown-guide 1s ease-in-out infinite;
 }

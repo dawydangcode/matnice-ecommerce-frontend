@@ -48,6 +48,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
     width: number;
     height: number;
   } | null>(null);
+  const [countdownCancelled, setCountdownCancelled] = useState(false);
   const [autoCapture, setAutoCapture] = useState<{
     isEnabled: boolean;
     countdown: number;
@@ -267,7 +268,74 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
     stopAutoCapture();
   }, [stopCamera, stopAutoCapture]);
 
-  // Start auto-capture countdown
+  // Giám sát khuôn mặt trong lúc đếm ngược
+  const startFaceMonitoringDuringCountdown = useCallback(async () => {
+    console.log('Starting face monitoring during countdown...');
+    
+    // Initialize face-api if not already done
+    await initializeFaceAPI();
+
+    // Kiểm tra khuôn mặt mỗi 200ms trong lúc đếm ngược
+    faceDetectionTimerRef.current = setInterval(async () => {
+      if (!autoCapture.isCountingDown || !cameraActive) {
+        console.log('Stopping face monitoring - countdown ended or camera inactive');
+        if (faceDetectionTimerRef.current) {
+          clearInterval(faceDetectionTimerRef.current);
+          faceDetectionTimerRef.current = null;
+        }
+        return;
+      }
+
+      try {
+        if (!videoRef.current) return;
+
+        const detection = await detectFace(videoRef.current, 0.7);
+        
+        // Define the face guide frame area
+        const videoRect = videoRef.current.getBoundingClientRect();
+        const frameArea = {
+          x: videoRect.width * 0.37,
+          y: videoRect.height * 0.37,
+          width: videoRect.width * 0.26,
+          height: videoRect.height * 0.26
+        };
+
+        const faceInFrame = detection ? isFaceInFrame(detection, videoRef.current, frameArea) : false;
+        
+        console.log('Face monitoring check - Face in frame:', faceInFrame, 'Detection:', !!detection);
+        
+        // Nếu không phát hiện mặt hoặc mặt ra khỏi khung -> hủy đếm ngược
+        if (!faceInFrame) {
+          console.log('Face moved out of frame during countdown, cancelling capture...');
+          
+          // Hủy đếm ngược
+          if (countdownTimerRef.current) {
+            clearInterval(countdownTimerRef.current);
+            countdownTimerRef.current = null;
+          }
+          
+          // Hủy giám sát khuôn mặt
+          if (faceDetectionTimerRef.current) {
+            clearInterval(faceDetectionTimerRef.current);
+            faceDetectionTimerRef.current = null;
+          }
+
+          // Reset state và trigger lại face detection thông qua useEffect
+          setAutoCapture(prev => ({ ...prev, isCountingDown: false, countdown: 3 }));
+          
+          // Hiển thị thông báo hủy đếm ngược
+          setCountdownCancelled(true);
+          setTimeout(() => setCountdownCancelled(false), 2000); // Ẩn sau 2 giây
+          
+          // useEffect sẽ tự động restart face detection khi isCountingDown thành false
+        }
+      } catch (error) {
+        console.error('Face monitoring error during countdown:', error);
+      }
+    }, 200); // Kiểm tra mỗi 200ms để responsive hơn
+  }, [autoCapture.isCountingDown, cameraActive, initializeFaceAPI, detectFace, isFaceInFrame]);
+
+  // Start auto-capture countdown với face monitoring
   const startAutoCapture = useCallback(() => {
     if (!autoCapture.isEnabled || autoCapture.isCountingDown) return;
 
@@ -277,6 +345,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
     let count = 3;
     countdownTimerRef.current = setInterval(() => {
       count--;
+      console.log('Countdown:', count);
       setAutoCapture(prev => ({ ...prev, countdown: count }));
       
       if (count <= 0) {
@@ -284,12 +353,21 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
           clearInterval(countdownTimerRef.current);
           countdownTimerRef.current = null;
         }
+        // Stop face monitoring
+        if (faceDetectionTimerRef.current) {
+          clearInterval(faceDetectionTimerRef.current);
+          faceDetectionTimerRef.current = null;
+        }
         setAutoCapture(prev => ({ ...prev, isCountingDown: false, countdown: 3 }));
         console.log('Auto-capturing photo...');
         capturePhoto();
       }
     }, 1000);
-  }, [autoCapture.isEnabled, autoCapture.isCountingDown, capturePhoto]);
+
+    // Bắt đầu giám sát khuôn mặt trong lúc đếm ngược
+    console.log('Starting face monitoring during countdown...');
+    startFaceMonitoringDuringCountdown();
+  }, [autoCapture.isEnabled, autoCapture.isCountingDown, capturePhoto, startFaceMonitoringDuringCountdown]);
 
   // Real face detection using face-api.js
   const startFaceDetection = useCallback(async () => {
@@ -566,12 +644,18 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
                       {autoCapture.showGuide && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <div className={`face-guide-frame ${!autoCapture.showGuide ? 'hidden' : ''}`}>
-                          {/* Face oval guide */}
-                          <div className="face-guide-oval"></div>
+                          {/* Face oval guide với màu thay đổi theo trạng thái */}
+                          <div className={`face-guide-oval ${autoCapture.isCountingDown ? 'counting-down' : ''}`}></div>
                           
                           {/* Instructions */}
                           <div className="face-guide-instruction">
-                            {autoCapture.isCountingDown ? (
+                            {countdownCancelled ? (
+                              <div className="countdown-container">
+                                <div className="countdown-text countdown-cancelled">
+                                  Cancelled! Keep face in frame
+                                </div>
+                              </div>
+                            ) : autoCapture.isCountingDown ? (
                               <div className="countdown-container">
                                 <div className="countdown-number">{autoCapture.countdown}</div>
                                 <div className="countdown-text">Get ready!</div>
