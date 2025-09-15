@@ -15,6 +15,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AddProduct3DModel from './pages/admin/AddProduct3DModel';
 import Configure3DModel from './pages/admin/Configure3DModel';
+import AIAnalysisPage from './pages/AIAnalysisPage';
 
 // Protected Route Component for Admin
 interface AdminRouteProps {
@@ -148,6 +149,9 @@ function App() {
           <Route path="/sunglasses" element={<ProductsPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
+
+          {/* AI Analysis Page - accessible by everyone */}
+          <Route path="/ai" element={<AIAnalysisPage />} />
 
           {/* Admin Routes */}
           <Route

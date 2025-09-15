@@ -1,4 +1,4 @@
-/* Virtual Try-On Modal Styles */
+/* Modal overlay */
 .virtual-tryon-modal-overlay {
   position: fixed;
   top: 0;
@@ -6,6 +6,8 @@
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -353,5 +355,376 @@
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* AI Analysis Modal Specific Styles */
+.ai-analysis-modal {
+  max-width: 1200px;
+  width: 95vw;
+  max-height: 90vh;
+  height: auto;
+}
+
+.ai-analysis-modal .modal-content-full {
+  padding: 0;
+  overflow-y: auto;
+  max-height: calc(90vh - 80px);
+}
+
+.ai-analysis-modal video {
+  max-height: 400px;
+  object-fit: cover;
+}
+
+.camera-video-modal {
+  min-height: 300px !important;
+  width: 100% !important;
+  display: block !important;
+  background-color: #000 !important;
+  border: 2px solid #22c55e !important;
+  box-sizing: border-box !important;
+}
+
+/* Force video visibility with stronger specificity */
+.ai-analysis-modal video.camera-video-modal.force-visible-video {
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 10 !important;
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  min-height: 300px !important;
+  max-width: none !important;
+  transform: scaleX(-1) !important; /* Flip horizontally to fix mirror effect */
+  transition: transform 0.3s ease !important;
+}
+
+/* Additional force visibility rules */
+.force-visible-video {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+/* Face Guide Overlay Styles */
+.face-guide-frame {
+  position: relative;
+  width: 280px;
+  height: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.face-guide-oval {
+  width: 200px;
+  height: 260px;
+  border: 3px solid rgba(34, 197, 94, 0.8);
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 
+    0 0 0 4px rgba(34, 197, 94, 0.3),
+    0 0 20px rgba(34, 197, 94, 0.5),
+    inset 0 0 0 2000px rgba(0, 0, 0, 0.3);
+  animation: pulse-guide 2s ease-in-out infinite;
+  position: relative;
+}
+
+.face-guide-oval::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border: 2px dashed rgba(34, 197, 94, 0.6);
+  border-radius: 50%;
+  animation: rotate-dashed 3s linear infinite;
+}
+
+@keyframes pulse-guide {
+  0%, 100% {
+    border-color: rgba(34, 197, 94, 0.8);
+    box-shadow: 
+      0 0 0 4px rgba(34, 197, 94, 0.3),
+      0 0 20px rgba(34, 197, 94, 0.5),
+      inset 0 0 0 2000px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    border-color: rgba(34, 197, 94, 1);
+    box-shadow: 
+      0 0 0 8px rgba(34, 197, 94, 0.4),
+      0 0 30px rgba(34, 197, 94, 0.7),
+      inset 0 0 0 2000px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@keyframes rotate-dashed {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.face-guide-instruction {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: white;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 16px;
+  border-radius: 20px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  min-width: 200px;
+}
+
+.countdown-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.countdown-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #22c55e;
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+  animation: countdown-pulse 1s ease-in-out;
+}
+
+.countdown-text {
+  font-size: 12px;
+  color: #fbbf24;
+  font-weight: 500;
+}
+
+@keyframes countdown-pulse {
+  0% { 
+    transform: scale(1.2);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+  100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.instruction-text {
+  color: #e5e7eb;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Active countdown state */
+.face-guide-oval.counting-down {
+  border-color: #fbbf24 !important;
+  box-shadow: 
+    0 0 0 4px rgba(251, 191, 36, 0.3),
+    0 0 20px rgba(251, 191, 36, 0.5),
+    inset 0 0 0 2000px rgba(0, 0, 0, 0.4) !important;
+  animation: countdown-guide 1s ease-in-out infinite;
+}
+
+@keyframes countdown-guide {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Utility classes for AI modal */
+.ai-analysis-modal .grid {
+  display: grid;
+}
+
+.ai-analysis-modal .grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 1024px) {
+  .ai-analysis-modal .lg\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ai-analysis-modal .gap-6 {
+  gap: 1.5rem;
+}
+
+.ai-analysis-modal .space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+.ai-analysis-modal .space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+.ai-analysis-modal .space-y-2 > * + * {
+  margin-top: 0.5rem;
+}
+
+.ai-analysis-modal .space-y-1 > * + * {
+  margin-top: 0.25rem;
+}
+
+.ai-analysis-modal .space-x-3 > * + * {
+  margin-left: 0.75rem;
+}
+
+.ai-analysis-modal .inline-flex {
+  display: inline-flex;
+}
+
+.ai-analysis-modal .items-center {
+  align-items: center;
+}
+
+.ai-analysis-modal .justify-center {
+  justify-content: center;
+}
+
+.ai-analysis-modal .justify-between {
+  justify-content: space-between;
+}
+
+.ai-analysis-modal .flex-1 {
+  flex: 1 1 0%;
+}
+
+.ai-analysis-modal .text-center {
+  text-align: center;
+}
+
+.ai-analysis-modal .font-semibold {
+  font-weight: 600;
+}
+
+.ai-analysis-modal .font-medium {
+  font-weight: 500;
+}
+
+.ai-analysis-modal .capitalize {
+  text-transform: capitalize;
+}
+
+.ai-analysis-modal .rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.ai-analysis-modal .rounded-full {
+  border-radius: 9999px;
+}
+
+.ai-analysis-modal .bg-blue-50 {
+  background-color: #eff6ff;
+}
+
+.ai-analysis-modal .bg-purple-50 {
+  background-color: #faf5ff;
+}
+
+.ai-analysis-modal .bg-gray-50 {
+  background-color: #f9fafb;
+}
+
+.ai-analysis-modal .bg-red-50 {
+  background-color: #fef2f2;
+}
+
+.ai-analysis-modal .text-blue-600 {
+  color: #2563eb;
+}
+
+.ai-analysis-modal .text-blue-800 {
+  color: #1e40af;
+}
+
+.ai-analysis-modal .text-blue-900 {
+  color: #1e3a8a;
+}
+
+.ai-analysis-modal .text-purple-600 {
+  color: #9333ea;
+}
+
+.ai-analysis-modal .text-purple-800 {
+  color: #6b21a8;
+}
+
+.ai-analysis-modal .text-purple-900 {
+  color: #581c87;
+}
+
+.ai-analysis-modal .text-gray-300 {
+  color: #d1d5db;
+}
+
+.ai-analysis-modal .text-gray-500 {
+  color: #6b7280;
+}
+
+.ai-analysis-modal .text-gray-600 {
+  color: #4b5563;
+}
+
+.ai-analysis-modal .text-gray-700 {
+  color: #374151;
+}
+
+.ai-analysis-modal .text-gray-900 {
+  color: #111827;
+}
+
+.ai-analysis-modal .text-red-700 {
+  color: #b91c1c;
+}
+
+.ai-analysis-modal .border-red-200 {
+  border-color: #fecaca;
+}
+
+.ai-analysis-modal .font-mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.ai-analysis-modal .text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.ai-analysis-modal .text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.ai-analysis-modal .text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+/* Responsive adjustments for AI modal */
+@media (max-width: 1024px) {
+  .ai-analysis-modal .lg\:grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .ai-analysis-modal {
+    width: 98vw;
+    max-height: 95vh;
   }
 }
