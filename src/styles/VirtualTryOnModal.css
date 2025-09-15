@@ -434,18 +434,18 @@
   display: block !important;
 }
 
-/* Extra Compact Face Guide Overlay - Siêu Nhỏ Gọn */
+/* Face Guide Overlay - TO HƠN XÍU NỮA và Tỷ Lệ với Modal */
 .face-guide-frame {
   position: absolute !important; /* Overlay trên video */
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) scaleX(-1) !important; /* Mirror để match video */
-  width: 50% !important; /* Giảm từ 55% xuống 50% - rất nhỏ gọn */
-  height: 60% !important; /* Giảm từ 65% xuống 60% - rất nhỏ gọn */
-  max-width: 240px !important; /* Giảm từ 280px xuống 240px */
-  max-height: 300px !important; /* Giảm từ 350px xuống 300px */
-  min-width: 150px !important; /* Giảm từ 180px xuống 150px */
-  min-height: 180px !important; /* Giảm từ 220px xuống 180px */
+  width: 75% !important; /* Tăng từ 70% lên 75% - to hơn xíu nữa */
+  height: 85% !important; /* Tăng từ 80% lên 85% - to hơn xíu nữa */
+  max-width: 450px !important; /* Tăng từ 400px lên 450px */
+  max-height: 550px !important; /* Tăng từ 500px lên 550px */
+  min-width: 220px !important; /* Tăng từ 200px lên 220px */
+  min-height: 280px !important; /* Tăng từ 250px lên 280px */
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -455,12 +455,12 @@
 }
 
 .face-guide-oval {
-  width: 70% !important; /* Giữ nguyên tỷ lệ 70% của frame */
-  height: 60% !important; /* Giữ nguyên tỷ lệ 60% của frame */
-  max-width: 140px !important; /* Giảm từ 160px xuống 140px */
-  max-height: 170px !important; /* Giảm từ 200px xuống 170px */
-  min-width: 100px !important; /* Giảm từ 110px xuống 100px */
-  min-height: 120px !important; /* Giảm từ 130px xuống 120px */
+  width: 58% !important; /* Giảm từ 60% xuống 58% để cân bằng với frame lớn hơn */
+  height: 70% !important; /* Giảm từ 50% xuống 48% để cân bằng với frame lớn hơn */
+  max-width: 240px !important; /* Tăng từ 220px lên 240px */
+  max-height: 300px !important; /* Tăng từ 280px lên 300px */
+  min-width: 130px !important; /* Tăng từ 120px lên 130px */
+  min-height: 160px !important; /* Tăng từ 150px lên 160px */
   border: 3px solid rgba(34, 197, 94, 0.9) !important;
   border-radius: 50% !important;
   background: transparent !important;
@@ -787,20 +787,20 @@
   }
   
   .face-guide-frame {
-    width: 60% !important; /* Giảm từ 65% xuống 60% */
-    height: 65% !important; /* Giảm từ 70% xuống 65% */
-    max-width: 200px !important; /* Giảm từ 220px xuống 200px */
-    max-height: 250px !important; /* Giảm từ 280px xuống 250px */
-    min-width: 140px !important; /* Giảm từ 160px xuống 140px */
-    min-height: 160px !important; /* Giảm từ 180px xuống 160px */
+    width: 80% !important; /* Tăng từ 75% lên 80% - to hơn xíu nữa trên mobile */
+    height: 88% !important; /* Tăng từ 85% lên 88% - to hơn xíu nữa trên mobile */
+    max-width: 340px !important; /* Tăng từ 320px lên 340px */
+    max-height: 430px !important; /* Tăng từ 400px lên 430px */
+    min-width: 190px !important; /* Tăng từ 180px lên 190px */
+    min-height: 210px !important; /* Tăng từ 200px lên 210px */
   }
   
   .face-guide-oval {
-    width: 75% !important; /* Giữ nguyên tỷ lệ oval */
-    height: 65% !important;
-    max-width: 120px !important; /* Giảm từ 140px xuống 120px */
-    max-height: 150px !important; /* Giảm từ 170px xuống 150px */
-    min-width: 80px !important; /* Giảm từ 90px xuống 80px */
-    min-height: 100px !important; /* Giảm từ 110px xuống 100px */
+    width: 63% !important; /* Giảm từ 65% xuống 63% để cân bằng với frame lớn hơn */
+    height: 53% !important; /* Giảm từ 55% xuống 53% để cân bằng với frame lớn hơn */
+    max-width: 190px !important; /* Tăng từ 180px lên 190px */
+    max-height: 240px !important; /* Tăng từ 220px lên 240px */
+    min-width: 115px !important; /* Tăng từ 110px lên 115px */
+    min-height: 140px !important; /* Tăng từ 130px lên 140px */
   }
 }
