@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Upload, User, Palette, Sparkles, X, Download, RotateCcw } from 'lucide-react';
+import { Camera, Upload, X, RotateCcw, Sparkles } from 'lucide-react';
 import { useFaceDetection } from '../hooks/useFaceDetection';
+import AnalysisResultsModal from './AnalysisResultsModal';
 import '../styles/VirtualTryOnModal.css';
 
 interface AnalysisResult {
@@ -39,6 +40,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
   // States
   const [cameraActive, setCameraActive] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [showResults, setShowResults] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -92,8 +94,8 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
       
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
+          width: { ideal: 1920, max: 1920 }, // Yêu cầu độ phân giải cao nhất
+          height: { ideal: 1080, max: 1080 },
           facingMode: 'user'
         }
       });
@@ -318,6 +320,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
           if (result.status === 'completed') {
             setAnalysisResult(result);
             setIsAnalyzing(false);
+            setShowResults(true); // Show results modal
             return;
           } else if (result.status === 'failed') {
             setError('Analysis failed. Please try again.');
@@ -411,22 +414,11 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
   const resetAnalysis = useCallback(() => {
     setCapturedImage(null);
     setAnalysisResult(null);
+    setShowResults(false);
     setError(null);
     setIsAnalyzing(false);
     stopCamera();
   }, [stopCamera]);
-
-  // Download result image
-  const downloadImage = useCallback(() => {
-    if (!analysisResult?.s3Url) return;
-    
-    const link = document.createElement('a');
-    link.href = analysisResult.s3Url;
-    link.download = `face-analysis-${analysisResult.sessionId}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, [analysisResult]);
 
   // Close modal handler
   const handleClose = useCallback(() => {
@@ -434,17 +426,6 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
     resetAnalysis();
     onClose();
   }, [onClose, stopCamera, resetAnalysis]);
-
-  // Initialize camera when modal opens
-  useEffect(() => {
-    if (isOpen && !capturedImage && !cameraActive) {
-      console.log('Modal opened, starting camera...');
-      // Add a small delay to ensure DOM is ready
-      setTimeout(() => {
-        startCamera();
-      }, 100);
-    }
-  }, [isOpen, capturedImage, cameraActive, startCamera]);
 
   // Cleanup when modal closes
   useEffect(() => {
@@ -481,7 +462,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
 
   return (
     <div className="virtual-tryon-modal-overlay">
-      <div className="virtual-tryon-modal ai-analysis-modal">
+      <div className={`virtual-tryon-modal ai-analysis-modal ${showResults ? 'with-results' : ''}`}>
         {/* Header */}
         <div className="modal-header">
           <h2 className="modal-title">{title}</h2>
@@ -492,9 +473,9 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
 
         {/* Main Content */}
         <div className="modal-content-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+          <div className="p-6">
             
-            {/* Left Panel - Camera/Image */}
+            {/* Main Panel - Camera/Image */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">
                 Capture or Upload Image
@@ -697,113 +678,34 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
                   {error}
                 </div>
               )}
-            </div>
 
-            {/* Right Panel - Results */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Analysis Results
-              </h3>
-              
-              {!analysisResult && !isAnalyzing && (
-                <div className="text-center py-12 text-gray-500">
-                  <Sparkles className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                  <p>Capture or upload an image to start analysis</p>
-                </div>
-              )}
-
+              {/* Analysis Loading State */}
               {isAnalyzing && (
-                <div className="text-center py-12">
-                  <div className="animate-spin mx-auto h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mb-4"></div>
-                  <p className="text-gray-700 font-medium">Analyzing your photo...</p>
-                  <p className="text-sm text-gray-500 mt-2">This may take a few seconds</p>
+                <div className="mt-6 text-center py-8 bg-blue-50 rounded-lg">
+                  <div className="animate-spin mx-auto h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mb-4"></div>
+                  <p className="text-blue-700 font-medium">Analyzing your photo...</p>
+                  <p className="text-sm text-blue-500 mt-1">This may take a few seconds</p>
                 </div>
               )}
 
-              {analysisResult && (
-                <div className="space-y-6">
-                  {/* Gender Analysis */}
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <div className="flex items-center mb-3">
-                      <User className="h-5 w-5 text-blue-600 mr-2" />
-                      <h4 className="font-semibold text-blue-900">Gender Detection</h4>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-blue-800">Detected:</span>
-                        <span className="font-semibold text-blue-900 capitalize">
-                          {analysisResult.analysis.gender.detected}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-800">Confidence:</span>
-                        <span className="font-semibold text-blue-900">
-                          {(analysisResult.analysis.gender.confidence * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Skin Color Analysis */}
-                  <div className="bg-purple-50 rounded-lg p-4">
-                    <div className="flex items-center mb-3">
-                      <Palette className="h-5 w-5 text-purple-600 mr-2" />
-                      <h4 className="font-semibold text-purple-900">Skin Tone Analysis</h4>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-purple-800">Detected:</span>
-                        <span className="font-semibold text-purple-900 capitalize">
-                          {analysisResult.analysis.SkinColor.detected}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-purple-800">Confidence:</span>
-                        <span className="font-semibold text-purple-900">
-                          {(analysisResult.analysis.SkinColor.confidence * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Processing Info */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <div className="flex justify-between">
-                        <span>Processing Time:</span>
-                        <span>{(analysisResult.analysis.overall.processingTime / 1000).toFixed(1)}s</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Session ID:</span>
-                        <span className="font-mono text-xs">{analysisResult.sessionId}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex space-x-3">
-                    {analysisResult.s3Url && (
-                      <button
-                        onClick={downloadImage}
-                        className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors inline-flex items-center justify-center"
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download
-                      </button>
-                    )}
-                    <button
-                      onClick={resetAnalysis}
-                      className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
-                    >
-                      New Analysis
-                    </button>
-                  </div>
+              {/* Error Display */}
+              {error && (
+                <div className="mt-4 p-4 bg-red-100 border border-red-300 rounded-lg text-red-700">
+                  {error}
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Analysis Results Modal */}
+      <AnalysisResultsModal
+        isOpen={showResults}
+        onClose={() => setShowResults(false)}
+        result={analysisResult}
+        onRetry={resetAnalysis}
+      />
     </div>
   );
 };
