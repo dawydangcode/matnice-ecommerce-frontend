@@ -465,12 +465,27 @@
   border-radius: 50% !important;
   background: transparent !important;
   box-shadow: 
-    0 0 0 4px rgba(239, 68, 68, 0.4), /* Đổi từ xanh lá sang đỏ */
-    0 0 20px rgba(239, 68, 68, 0.6), /* Đổi từ xanh lá sang đỏ */
-    /* Tạo vùng mờ xung quanh bằng box-shadow lớn */
+    0 0 0 4px rgba(239, 68, 68, 0.4), /* Viền phát sáng đỏ */
+    0 0 20px rgba(239, 68, 68, 0.6), /* Ánh sáng đỏ */
+    /* Tạo vùng mờ xung quanh, nhưng KHÔNG làm tối bên trong */
     0 0 0 2000px rgba(0, 0, 0, 0.6) !important;
   animation: pulse-guide 2s ease-in-out infinite !important;
   position: relative !important;
+  
+  /* Thêm pseudo-element để tạo spotlight bên trong */
+}
+
+.face-guide-oval::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 50%;
+  /* Tạo hiệu ứng spotlight sáng bên trong */
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.1);
+  pointer-events: none;
 }
 
 .face-guide-oval::before {
@@ -489,16 +504,18 @@
   0%, 100% {
     border-color: rgba(239, 68, 68, 0.8); /* Đổi từ xanh lá sang đỏ */
     box-shadow: 
-      0 0 0 4px rgba(239, 68, 68, 0.3), /* Đổi từ xanh lá sang đỏ */
-      0 0 20px rgba(239, 68, 68, 0.5), /* Đổi từ xanh lá sang đỏ */
-      inset 0 0 0 2000px rgba(0, 0, 0, 0.3);
+      0 0 0 4px rgba(239, 68, 68, 0.3), /* Viền phát sáng đỏ */
+      0 0 20px rgba(239, 68, 68, 0.5), /* Ánh sáng đỏ */
+      /* Chỉ vùng mờ bên ngoài, KHÔNG có inset */
+      0 0 0 2000px rgba(0, 0, 0, 0.6);
   }
   50% {
     border-color: rgba(239, 68, 68, 1); /* Đổi từ xanh lá sang đỏ */
     box-shadow: 
-      0 0 0 8px rgba(239, 68, 68, 0.4), /* Đổi từ xanh lá sang đỏ */
-      0 0 30px rgba(239, 68, 68, 0.7), /* Đổi từ xanh lá sang đỏ */
-      inset 0 0 0 2000px rgba(0, 0, 0, 0.2);
+      0 0 0 8px rgba(239, 68, 68, 0.4), /* Viền phát sáng đỏ mạnh hơn */
+      0 0 30px rgba(239, 68, 68, 0.7), /* Ánh sáng đỏ mạnh hơn */
+      /* Chỉ vùng mờ bên ngoài, KHÔNG có inset */
+      0 0 0 2000px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -590,10 +607,17 @@
 .face-guide-oval.counting-down {
   border-color: rgba(34, 197, 94, 0.9) !important; /* Đổi từ vàng sang xanh lá */
   box-shadow: 
-    0 0 0 4px rgba(34, 197, 94, 0.4), /* Đổi từ vàng sang xanh lá */
-    0 0 20px rgba(34, 197, 94, 0.6), /* Đổi từ vàng sang xanh lá */
-    inset 0 0 0 2000px rgba(0, 0, 0, 0.4) !important;
+    0 0 0 4px rgba(34, 197, 94, 0.4), /* Viền phát sáng xanh */
+    0 0 20px rgba(34, 197, 94, 0.6), /* Ánh sáng xanh */
+    /* Vùng mờ xung quanh với màu xanh */
+    0 0 0 2000px rgba(0, 0, 0, 0.6) !important;
   animation: countdown-guide 1s ease-in-out infinite;
+}
+
+/* Spotlight bên trong khi đang đếm ngược */
+.face-guide-oval.counting-down::after {
+  /* Tăng độ sáng spotlight khi đang đếm ngược */
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
 
 @keyframes countdown-guide {
