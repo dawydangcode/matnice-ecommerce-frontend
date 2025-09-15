@@ -333,19 +333,20 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
         }
         
         if (!detection) {
-          console.log('❌ No face detected during countdown, cancelling capture...');
+          console.log('🚨 No face detected during countdown, cancelling capture...');
+          console.log('🚨 Current countdown value before cancel:', autoCapture.countdown);
           
           // Hủy tất cả timers
           if (countdownTimerRef.current) {
             clearInterval(countdownTimerRef.current);
             countdownTimerRef.current = null;
-            console.log('❌ Countdown timer cleared');
+            console.log('🚨 Countdown timer cleared');
           }
           
           if (faceDetectionTimerRef.current) {
             clearTimeout(faceDetectionTimerRef.current);
             faceDetectionTimerRef.current = null;
-            console.log('❌ Face detection timer cleared');
+            console.log('🚨 Face detection timer cleared');
           }
 
           // Update ref trước
@@ -353,13 +354,14 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
 
           // Reset state
           setAutoCapture(prev => ({ ...prev, isCountingDown: false, countdown: 3 }));
+          console.log('🚨 Countdown reset to 3 after no face cancellation');
           
           // Hiển thị thông báo hủy
           setCountdownCancelled(true);
-          console.log('❌ Countdown cancelled, showing UI feedback');
+          console.log('🚨 Countdown cancelled, showing UI feedback');
           setTimeout(() => {
             setCountdownCancelled(false);
-            console.log('❌ Countdown cancelled UI hidden');
+            console.log('🚨 Countdown cancelled UI hidden');
           }, 3000);
           
           return; // Don't schedule next check
@@ -382,19 +384,20 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
         console.log('🔍 Face monitoring check - Face in frame:', faceInFrame, 'Detection:', !!detection);
         
         if (!faceInFrame) {
-          console.log('❌ Face moved out of frame during countdown, cancelling capture...');
+          console.log('🔥 Face moved out of frame during countdown, cancelling capture...');
+          console.log('🔥 Current countdown value before cancel:', autoCapture.countdown);
           
           // Hủy tất cả timers
           if (countdownTimerRef.current) {
             clearInterval(countdownTimerRef.current);
             countdownTimerRef.current = null;
-            console.log('❌ Countdown timer cleared');
+            console.log('🔥 Countdown timer cleared');
           }
           
           if (faceDetectionTimerRef.current) {
             clearTimeout(faceDetectionTimerRef.current);
             faceDetectionTimerRef.current = null;
-            console.log('❌ Face detection timer cleared');
+            console.log('🔥 Face detection timer cleared');
           }
 
           // Update ref trước
@@ -402,13 +405,14 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
 
           // Reset state
           setAutoCapture(prev => ({ ...prev, isCountingDown: false, countdown: 3 }));
+          console.log('🔥 Countdown reset to 3 after out-of-frame cancellation');
           
           // Hiển thị thông báo hủy
           setCountdownCancelled(true);
-          console.log('❌ Countdown cancelled, showing UI feedback');
+          console.log('🔥 Countdown cancelled, showing UI feedback');
           setTimeout(() => {
             setCountdownCancelled(false);
-            console.log('❌ Countdown cancelled UI hidden');
+            console.log('🔥 Countdown cancelled UI hidden');
           }, 3000);
           
           return; // Don't schedule next check
@@ -439,7 +443,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
         console.log('🔍 Countdown already ended, skipping monitoring');
       }
     }, 800); // Delay 800ms để countdown chạy từ 3 -> 2
-  }, [cameraActive, initializeFaceAPI, detectFace, isFaceInFrame]);
+  }, [cameraActive, initializeFaceAPI, detectFace, isFaceInFrame, autoCapture.countdown]);
 
   // Start auto-capture countdown với face monitoring
   const startAutoCapture = useCallback(() => {
@@ -461,16 +465,19 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
     countdownTimerRef.current = setInterval(() => {
       // Check if countdown was cancelled
       if (!isCountingDownRef.current) {
-        console.log('Countdown was cancelled, stopping interval');
+        console.log('⏹️ Countdown was cancelled, stopping interval. Current count:', count);
         if (countdownTimerRef.current) {
           clearInterval(countdownTimerRef.current);
           countdownTimerRef.current = null;
         }
+        // Ensure countdown is reset to 3
+        setAutoCapture(prev => ({ ...prev, countdown: 3 }));
+        console.log('⏹️ Countdown reset to 3 due to cancellation');
         return;
       }
 
       count--;
-      console.log('Countdown:', count);
+      console.log('⏰ Countdown timer tick:', count);
       setAutoCapture(prev => ({ ...prev, countdown: count }));
       
       if (count <= 0) {
