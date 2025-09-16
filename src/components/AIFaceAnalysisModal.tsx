@@ -49,6 +49,8 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
     height: number;
   } | null>(null);
   const [countdownCancelled, setCountdownCancelled] = useState(false);
+  const [faceQualityWarning, setFaceQualityWarning] = useState(false); // Cảnh báo chất lượng mặt thấp
+  const [showManualCaptureHint, setShowManualCaptureHint] = useState(false); // Hiện gợi ý chụp thủ công
   const [autoCapture, setAutoCapture] = useState<{
     isEnabled: boolean;
     countdown: number;
@@ -114,6 +116,11 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
       // Set camera active first to render video element
       setCameraActive(true);
       setError(null);
+      
+      // Reset face detection states
+      setFaceQualityWarning(false);
+      setShowManualCaptureHint(false);
+      
       streamRef.current = stream;
       
       // Wait for next render cycle to ensure video element exists
@@ -257,12 +264,20 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
     canvas.width = 640;
     canvas.height = 640;
     
+    // Lật canvas theo chiều ngang để match với video (mirror effect)
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.translate(-640, 0);
+    
     // Crop và scale ảnh từ center của video
     ctx.drawImage(
       video, 
       sourceX, sourceY, sourceSize, sourceSize, // Source (square crop from center)
       0, 0, 640, 640 // Destination (640x640)
     );
+    
+    // Restore canvas context
+    ctx.restore();
 
     // Convert to data URL
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
@@ -529,7 +544,40 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
 
         const detection = await detectFace(videoRef.current, 0.5);
         
-        if (!detection) return;
+        if (!detection) {
+          // Nếu hoàn toàn không phát hiện được mặt, hiện gợi ý
+          if (!showManualCaptureHint) {
+            console.log('🎭 No face detected, showing manual capture hint...');
+            setShowManualCaptureHint(true);
+            setFaceQualityWarning(false);
+          }
+          return;
+        }
+
+        // Reset manual hint khi tìm thấy mặt
+        setShowManualCaptureHint(false);
+        
+        // Kiểm tra chất lượng phát hiện khuôn mặt
+        const confidence = detection.score;
+        const faceSize = detection.box.width * detection.box.height;
+        const videoArea = videoRef.current.videoWidth * videoRef.current.videoHeight;
+        const faceRatio = faceSize / videoArea;
+        
+        console.log('🔍 Face quality check:', {
+          confidence: confidence.toFixed(3),
+          faceSize: Math.round(faceSize),
+          faceRatio: (faceRatio * 100).toFixed(1) + '%'
+        });
+        
+        // Cảnh báo chất lượng kém nếu confidence thấp hoặc mặt quá nhỏ
+        const lowQuality = confidence < 0.7 || faceRatio < 0.02; // confidence < 0.7 hoặc mặt < 2% video
+        if (lowQuality && !faceQualityWarning) {
+          console.log('⚠️ Low face quality detected');
+          setFaceQualityWarning(true);
+        } else if (!lowQuality && faceQualityWarning) {
+          console.log('✅ Good face quality restored');
+          setFaceQualityWarning(false);
+        }
 
         // Define the face guide frame area (oval nhỏ ở center của video)
         const videoRect = videoRef.current.getBoundingClientRect();
@@ -543,23 +591,35 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
         const faceInFrame = isFaceInFrame(detection, videoRef.current, frameArea);
         
         if (faceInFrame) {
-          console.log('Face detected in frame, starting auto-capture...');
-          // Stop detection loop and start countdown
-          if (detectionIntervalRef.current) {
-            clearInterval(detectionIntervalRef.current);
-            detectionIntervalRef.current = null;
-          }
+          // Kiểm tra chất lượng trước khi bắt đầu auto-capture
+          const confidence = detection.score;
+          const faceSize = detection.box.width * detection.box.height;
+          const videoArea = videoRef.current.videoWidth * videoRef.current.videoHeight;
+          const faceRatio = faceSize / videoArea;
+          const goodQuality = confidence >= 0.7 && faceRatio >= 0.02; // Chất lượng tốt
           
-          // Only start auto-capture if not already counting down
-          if (!autoCapture.isCountingDown && !isCountingDownRef.current) {
-            startAutoCapture();
+          if (goodQuality) {
+            console.log('✅ Good quality face detected in frame, starting auto-capture...');
+            // Stop detection loop and start countdown
+            if (detectionIntervalRef.current) {
+              clearInterval(detectionIntervalRef.current);
+              detectionIntervalRef.current = null;
+            }
+            
+            // Only start auto-capture if not already counting down
+            if (!autoCapture.isCountingDown && !isCountingDownRef.current) {
+              startAutoCapture();
+            }
+          } else {
+            console.log('⚠️ Face in frame but quality too low for auto-capture');
+            console.log('💡 User can still capture manually with button');
           }
         }
       } catch (error) {
         console.error('Face detection error:', error);
       }
     }, 500); // Check every 500ms
-  }, [cameraActive, autoCapture.isEnabled, autoCapture.isCountingDown, initializeFaceAPI, detectFace, isFaceInFrame, startAutoCapture]);
+  }, [cameraActive, autoCapture.isEnabled, autoCapture.isCountingDown, initializeFaceAPI, detectFace, isFaceInFrame, startAutoCapture, showManualCaptureHint, faceQualityWarning]);
 
   // Convert data URL to File
   const dataURLtoFile = (dataurl: string, filename: string): File => {
@@ -710,6 +770,9 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
         console.log('Modal closed, stopping camera...');
         stopCamera();
         stopAutoCapture();
+        // Reset face detection states
+        setFaceQualityWarning(false);
+        setShowManualCaptureHint(false);
       }
     };
   }, [isOpen, stopCamera, stopAutoCapture]);
@@ -800,6 +863,24 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
                               <div className="countdown-container">
                                 <div className="countdown-number">{autoCapture.countdown}</div>
                                 <div className="countdown-text">Get ready!</div>
+                              </div>
+                            ) : showManualCaptureHint ? (
+                              <div className="instruction-text">
+                                <div className="text-red-500 font-semibold mb-1">
+                                  ❌ No face detected
+                                </div>
+                                <div className="text-sm">
+                                  Position your face in frame or tap 📷 to capture manually
+                                </div>
+                              </div>
+                            ) : faceQualityWarning ? (
+                              <div className="instruction-text">
+                                <div className="text-orange-500 font-semibold mb-1">
+                                  ⚠️ Face partially obscured?
+                                </div>
+                                <div className="text-sm">
+                                  Remove mask/glasses for better analysis or tap 📷 to capture
+                                </div>
                               </div>
                             ) : (
                               <div className="instruction-text">
