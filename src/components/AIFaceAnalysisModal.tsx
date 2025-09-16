@@ -879,7 +879,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
                                   ⚠️ Face partially obscured?
                                 </div>
                                 <div className="text-sm">
-                                  Remove mask/glasses for better analysis or tap 📷 to capture
+                                  Remove mask/glasses for better analysis!
                                 </div>
                               </div>
                             ) : (

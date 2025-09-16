@@ -439,7 +439,7 @@
   position: absolute !important; /* Overlay trên video */
   top: 50% !important;
   left: 50% !important;
-  transform: translate(-50%, -50%) scaleX(-1) !important; /* Mirror để match video */
+  transform: translate(-50%, -50%) !important; /* Bỏ scaleX(-1) để text không bị lật */
   width: 75% !important; /* Tăng từ 70% lên 75% - to hơn xíu nữa */
   height: 85% !important; /* Tăng từ 80% lên 85% - to hơn xíu nữa */
   max-width: 450px !important; /* Tăng từ 400px lên 450px */
@@ -471,6 +471,7 @@
     0 0 0 2000px rgba(0, 0, 0, 0.6) !important;
   animation: pulse-guide 2s ease-in-out infinite !important;
   position: relative !important;
+  transform: scaleX(-1) !important; /* Chỉ oval bị mirror để match video */
   
   /* Thêm pseudo-element để tạo spotlight bên trong */
 }
@@ -532,7 +533,7 @@
 
 .face-guide-instruction {
   position: absolute;
-  bottom: -70px;
+  bottom: -50px; /* Giảm từ -70px xuống -50px để gần oval hơn */
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
@@ -806,6 +807,12 @@
   }
 }
 
+/* Alternative position - thông báo ở trên oval nếu dưới bị khuất */
+.face-guide-instruction.top-position {
+  bottom: auto !important;
+  top: -60px !important;
+}
+
 @media (max-width: 768px) {
   .ai-analysis-modal {
     width: 90vw !important; /* Giảm từ 95vw xuống 90vw */
@@ -838,5 +845,12 @@
     max-height: 240px !important; /* Tăng từ 220px lên 240px */
     min-width: 115px !important; /* Tăng từ 110px lên 115px */
     min-height: 140px !important; /* Tăng từ 130px lên 140px */
+  }
+  
+  .face-guide-instruction {
+    bottom: -35px !important; /* Giảm thêm trên mobile để không bị khuất */
+    font-size: 12px !important; /* Giảm font size trên mobile */
+    padding: 10px 16px !important; /* Giảm padding */
+    min-width: 180px !important; /* Giảm width */
   }
 }
