@@ -308,7 +308,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
         if (!videoRef.current) {
           console.log('🔍 No video element, skipping...');
           // Schedule next check
-          faceDetectionTimerRef.current = setTimeout(monitorFace, 500);
+          faceDetectionTimerRef.current = setTimeout(monitorFace, 100);
           return;
         }
 
@@ -362,7 +362,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
           setTimeout(() => {
             setCountdownCancelled(false);
             console.log('🚨 Countdown cancelled UI hidden');
-          }, 3000);
+          }, 1500);
           
           return; // Don't schedule next check
         }
@@ -413,7 +413,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
           setTimeout(() => {
             setCountdownCancelled(false);
             console.log('🔥 Countdown cancelled UI hidden');
-          }, 3000);
+          }, 1500);
           
           return; // Don't schedule next check
         } else {
@@ -422,14 +422,14 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
         
         // Schedule next check if still counting down
         if (isCountingDownRef.current && cameraActive) {
-          faceDetectionTimerRef.current = setTimeout(monitorFace, 500);
+          faceDetectionTimerRef.current = setTimeout(monitorFace, 100);
         }
         
       } catch (error) {
         console.error('🔍 Face monitoring error during countdown:', error);
         // Schedule next check even if error occurred
         if (isCountingDownRef.current && cameraActive) {
-          faceDetectionTimerRef.current = setTimeout(monitorFace, 500);
+          faceDetectionTimerRef.current = setTimeout(monitorFace, 100);
         }
       }
     };
@@ -442,7 +442,7 @@ const AIFaceAnalysisModal: React.FC<AIFaceAnalysisModalProps> = ({
       } else {
         console.log('🔍 Countdown already ended, skipping monitoring');
       }
-    }, 800); // Delay 800ms để countdown chạy từ 3 -> 2
+    }, 300); // Delay 300ms để countdown chạy từ 3 -> 2 nhưng phản ứng nhanh hơn
   }, [cameraActive, initializeFaceAPI, detectFace, isFaceInFrame, autoCapture.countdown]);
 
   // Start auto-capture countdown với face monitoring
