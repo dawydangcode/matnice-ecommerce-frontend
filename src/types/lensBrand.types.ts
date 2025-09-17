@@ -1,9 +1,11 @@
 export interface LensBrand {
-  id: string;
+  id: number;
   name: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
+  description: string;
+  createdAt: Date;
+  createdBy: number;
+  updatedAt: Date;
+  updatedBy: number;
 }
 
 export interface CreateLensBrandDto {

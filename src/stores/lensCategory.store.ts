@@ -22,10 +22,10 @@ interface LensCategoryStore {
   }) => Promise<void>;
   createLensCategory: (data: CreateLensCategoryDto) => Promise<void>;
   updateLensCategory: (
-    id: string,
+    id: number,
     data: UpdateLensCategoryDto,
   ) => Promise<void>;
-  deleteLensCategory: (id: string) => Promise<void>;
+  deleteLensCategory: (id: number) => Promise<void>;
   clearError: () => void;
 }
 
@@ -46,7 +46,7 @@ export const useLensCategoryStore = create<LensCategoryStore>()(
         set({ isLoading: true, error: null });
         try {
           const response: any = await apiService.get(
-            '/api/v1/lens-category/list',
+            '/api/v1/category-lens/list',
             {
               params,
             },
@@ -72,7 +72,7 @@ export const useLensCategoryStore = create<LensCategoryStore>()(
       createLensCategory: async (data: CreateLensCategoryDto) => {
         set({ error: null });
         try {
-          await apiService.post('/api/v1/lens-category/create', data);
+          await apiService.post('/api/v1/category-lens/create', data);
           // Refresh the list
           await get().fetchLensCategories({
             page: get().pagination.page,
@@ -86,17 +86,15 @@ export const useLensCategoryStore = create<LensCategoryStore>()(
         }
       },
 
-      updateLensCategory: async (id: string, data: UpdateLensCategoryDto) => {
+      updateLensCategory: async (id: number, data: UpdateLensCategoryDto) => {
         set({ error: null });
         try {
-          // TODO: Backend doesn't have update endpoint yet
-          // await apiService.put(`/api/v1/lens-category/${id}/update`, data);
+          await apiService.put(`/api/v1/category-lens/${id}/update`, data);
           // Refresh the list
-          // await get().fetchLensCategories({
-          //   page: get().pagination.page,
-          //   limit: get().pagination.limit,
-          // });
-          throw new Error('Update not implemented yet');
+          await get().fetchLensCategories({
+            page: get().pagination.page,
+            limit: get().pagination.limit,
+          });
         } catch (error: any) {
           const errorMessage =
             error.message || 'Failed to update lens category';
@@ -105,10 +103,10 @@ export const useLensCategoryStore = create<LensCategoryStore>()(
         }
       },
 
-      deleteLensCategory: async (id: string) => {
+      deleteLensCategory: async (id: number) => {
         set({ error: null });
         try {
-          await apiService.delete(`/api/v1/lens-category/${id}/delete`);
+          await apiService.delete(`/api/v1/category-lens/${id}/delete`);
           // Refresh the list
           await get().fetchLensCategories({
             page: get().pagination.page,

@@ -21,8 +21,8 @@ interface LensBrandStore {
     q?: string;
   }) => Promise<void>;
   createLensBrand: (data: CreateLensBrandDto) => Promise<void>;
-  updateLensBrand: (id: string, data: UpdateLensBrandDto) => Promise<void>;
-  deleteLensBrand: (id: string) => Promise<void>;
+  updateLensBrand: (id: number, data: UpdateLensBrandDto) => Promise<void>;
+  deleteLensBrand: (id: number) => Promise<void>;
   clearError: () => void;
 }
 
@@ -43,7 +43,7 @@ export const useLensBrandStore = create<LensBrandStore>()(
         set({ isLoading: true, error: null });
         try {
           const response: any = await apiService.get(
-            '/api/v1/lens-brand/list',
+            '/api/v1/brand-lens/list',
             {
               params,
             },
@@ -69,7 +69,7 @@ export const useLensBrandStore = create<LensBrandStore>()(
       createLensBrand: async (data: CreateLensBrandDto) => {
         set({ error: null });
         try {
-          await apiService.post('/api/v1/lens-brand/create', data);
+          await apiService.post('/api/v1/brand-lens/create', data);
           // Refresh the list
           await get().fetchLensBrands({
             page: get().pagination.page,
@@ -83,10 +83,10 @@ export const useLensBrandStore = create<LensBrandStore>()(
         }
       },
 
-      updateLensBrand: async (id: string, data: UpdateLensBrandDto) => {
+      updateLensBrand: async (id: number, data: UpdateLensBrandDto) => {
         set({ error: null });
         try {
-          await apiService.put(`/api/v1/lens-brand/${id}/update`, data);
+          await apiService.put(`/api/v1/brand-lens/${id}/update`, data);
           // Refresh the list
           await get().fetchLensBrands({
             page: get().pagination.page,
@@ -100,10 +100,10 @@ export const useLensBrandStore = create<LensBrandStore>()(
         }
       },
 
-      deleteLensBrand: async (id: string) => {
+      deleteLensBrand: async (id: number) => {
         set({ error: null });
         try {
-          await apiService.delete(`/api/v1/lens-brand/${id}/delete`);
+          await apiService.delete(`/api/v1/brand-lens/${id}/delete`);
           // Refresh the list
           await get().fetchLensBrands({
             page: get().pagination.page,
