@@ -22,25 +22,33 @@ import { useProductStore } from '../stores/product.store';
 import { useBrandStore } from '../stores/brand.store';
 import { useCategoryStore } from '../stores/category.store';
 import { useLensStore } from '../stores/lens.store';
+import { useLensBrandStore } from '../stores/lensBrand.store';
+import { useLensCategoryStore } from '../stores/lensCategory.store';
 import ProductListPage from './admin/ProductListPage';
 import ProductEditPage from './admin/ProductEditPage';
 import EnhancedProductForm from '../components/admin/EnhancedProductForm';
 import BrandListPage from './admin/BrandListPage';
 import CategoryListPage from './admin/CategoryListPage';
 import LensListPage from './admin/LensListPage';
+import LensBrandListPage from './admin/LensBrandListPage';
+import LensCategoryListPage from './admin/LensCategoryListPage';
 import LensManagementDashboard from './admin/LensManagementDashboard';
 import LensThicknessPage from './admin/LensThicknessPage';
 import BrandForm from '../components/admin/BrandForm';
 import CategoryForm from '../components/admin/CategoryForm';
 import LensForm from '../components/admin/LensForm';
 import CreateLensForm from './admin/CreateLensForm';
+import LensBrandForm from '../components/admin/LensBrandForm';
+import LensCategoryForm from '../components/admin/LensCategoryForm';
 import Product3DModelManagement from '../components/admin/Product3DModelManagement';
 import { Product } from '../types/product.types';
 import { Brand } from '../types/brand.types';
 import { Category } from '../types/category.types';
 import { Lens } from '../types/lens.types';
+import { LensBrand } from '../types/lensBrand.types';
+import { LensCategory } from '../types/lensCategory.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-create-form' | 'lens-thickness' | 'lens-tints';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-create-form' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -48,6 +56,8 @@ const AdminDashboard: React.FC = () => {
   const { createBrand, updateBrand } = useBrandStore();
   const { createCategory, updateCategory } = useCategoryStore();
   const { createLens, updateLens } = useLensStore();
+  const { createLensBrand, updateLensBrand } = useLensBrandStore();
+  const { createLensCategory, updateLensCategory } = useLensCategoryStore();
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set(['lenses', 'products']));
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -55,6 +65,8 @@ const AdminDashboard: React.FC = () => {
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingLens, setEditingLens] = useState<Lens | null>(null);
+  const [editingLensBrand, setEditingLensBrand] = useState<LensBrand | null>(null);
+  const [editingLensCategory, setEditingLensCategory] = useState<LensCategory | null>(null);
 
   const handleLogout = () => {
     logout();
@@ -216,6 +228,68 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  // Lens Brand handlers
+  const handleEditLensBrand = (lensBrand: LensBrand) => {
+    setEditingLensBrand(lensBrand);
+    setCurrentView('lens-brand-form');
+  };
+
+  const handleCreateLensBrand = () => {
+    setEditingLensBrand(null);
+    setCurrentView('lens-brand-form');
+  };
+
+  const handleLensBrandFormCancel = () => {
+    setEditingLensBrand(null);
+    setCurrentView('lens-brands');
+  };
+
+  const handleLensBrandFormSubmit = async (data: any) => {
+    try {
+      if (editingLensBrand) {
+        await updateLensBrand(editingLensBrand.id, data);
+      } else {
+        await createLensBrand(data);
+      }
+      setEditingLensBrand(null);
+      setCurrentView('lens-brands');
+    } catch (error) {
+      console.error('Error submitting lens brand form:', error);
+      throw error;
+    }
+  };
+
+  // Lens Category handlers
+  const handleEditLensCategory = (lensCategory: LensCategory) => {
+    setEditingLensCategory(lensCategory);
+    setCurrentView('lens-category-form');
+  };
+
+  const handleCreateLensCategory = () => {
+    setEditingLensCategory(null);
+    setCurrentView('lens-category-form');
+  };
+
+  const handleLensCategoryFormCancel = () => {
+    setEditingLensCategory(null);
+    setCurrentView('lens-categories');
+  };
+
+  const handleLensCategoryFormSubmit = async (data: any) => {
+    try {
+      if (editingLensCategory) {
+        await updateLensCategory(editingLensCategory.id, data);
+      } else {
+        await createLensCategory(data);
+      }
+      setEditingLensCategory(null);
+      setCurrentView('lens-categories');
+    } catch (error) {
+      console.error('Error submitting lens category form:', error);
+      throw error;
+    }
+  };
+
   const toggleMenu = (menuId: string) => {
     const newExpanded = new Set(expandedMenus);
     if (newExpanded.has(menuId)) {
@@ -249,6 +323,8 @@ const AdminDashboard: React.FC = () => {
         { id: 'lens-management', label: 'Quản lý Loại Lens', icon: Eye },
         { id: 'lens-thickness', label: 'Lens Thickness', icon: Layers },
         { id: 'lens-tints', label: 'Tints', icon: Palette },
+        { id: 'lens-brands', label: 'Lens Brand', icon: Tag },
+        { id: 'lens-categories', label: 'Lens Category', icon: Layers },
       ]
     },
     // Other items
@@ -281,7 +357,9 @@ const AdminDashboard: React.FC = () => {
                              (currentView === 'brand-form' && item.id === 'brands') ||
                              (currentView === 'category-form' && item.id === 'categories') ||
                              (currentView === 'lens-form' && item.id === 'lenses') ||
-                             (currentView === 'lens-create-form' && item.id === 'lenses');
+                             (currentView === 'lens-create-form' && item.id === 'lenses') ||
+                             (currentView === 'lens-brand-form' && item.id === 'lenses') ||
+                             (currentView === 'lens-category-form' && item.id === 'lenses');
               
               const isChildActive = hasChildren && item.children?.some(child => 
                 currentView === child.id || 
@@ -334,7 +412,9 @@ const AdminDashboard: React.FC = () => {
                         const ChildIcon = child.icon;
                         const isChildItemActive = currentView === child.id ||
                                                 (currentView === 'product-edit' && child.id === 'product-list') ||
-                                                (currentView === 'enhanced-product-form' && child.id === 'product-list');
+                                                (currentView === 'enhanced-product-form' && child.id === 'product-list') ||
+                                                (currentView === 'lens-brand-form' && child.id === 'lens-brands') ||
+                                                (currentView === 'lens-category-form' && child.id === 'lens-categories');
                         
                         return (
                           <button
@@ -346,6 +426,10 @@ const AdminDashboard: React.FC = () => {
                                 setCurrentView('product-3d-models');
                               } else if (child.id === 'lens-management') {
                                 setCurrentView('lens-management');
+                              } else if (child.id === 'lens-brands') {
+                                setCurrentView('lens-brands');
+                              } else if (child.id === 'lens-categories') {
+                                setCurrentView('lens-categories');
                               } else if (child.id === 'lens-thickness') {
                                 setCurrentView('lens-thickness');
                               } else if (child.id === 'lens-tints') {
@@ -510,6 +594,32 @@ const AdminDashboard: React.FC = () => {
             />
           )}
           {currentView === 'lens-management' && <LensManagementDashboard />}
+          {currentView === 'lens-brands' && (
+            <LensBrandListPage 
+              onEditLensBrand={handleEditLensBrand}
+              onCreateLensBrand={handleCreateLensBrand}
+            />
+          )}
+          {currentView === 'lens-brand-form' && (
+            <LensBrandForm
+              lensBrand={editingLensBrand}
+              onSubmit={handleLensBrandFormSubmit}
+              onCancel={handleLensBrandFormCancel}
+            />
+          )}
+          {currentView === 'lens-categories' && (
+            <LensCategoryListPage 
+              onEditLensCategory={handleEditLensCategory}
+              onCreateLensCategory={handleCreateLensCategory}
+            />
+          )}
+          {currentView === 'lens-category-form' && (
+            <LensCategoryForm
+              lensCategory={editingLensCategory}
+              onSubmit={handleLensCategoryFormSubmit}
+              onCancel={handleLensCategoryFormCancel}
+            />
+          )}
           {currentView === 'lenses' && (
             <LensListPage
               onEditLens={handleEditLens}

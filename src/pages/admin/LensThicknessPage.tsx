@@ -168,9 +168,6 @@ const LensThicknessPage: React.FC = () => {
             </p>
 
             <div className="flex justify-between items-center mt-auto">
-              <span className="text-lg font-bold text-green-600">
-                {Number(thickness.price) === 0 ? 'Free' : formatVNDWithSymbol(Number(thickness.price || 0))}
-              </span>
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 Available
               </span>
