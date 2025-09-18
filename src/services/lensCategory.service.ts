@@ -14,7 +14,7 @@ export interface LensCategoryResponse {
 }
 
 class LensCategoryService {
-  private baseUrl = '/lens-category';
+  private baseUrl = '/api/v1/lens-category';
 
   async createLensCategory(
     data: LensCategoryCreateRequest,

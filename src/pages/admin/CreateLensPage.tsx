@@ -68,6 +68,18 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
     categoryLensIds: [] as string[],
   });
 
+  // Validation errors state
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Helper function to get input class with error styling
+  const getInputClassName = (fieldName: string) => {
+    const baseClass = "w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent";
+    const errorClass = "border-red-500 bg-red-50";
+    const normalClass = "border-gray-300";
+    
+    return `${baseClass} ${validationErrors.includes(fieldName) ? errorClass : normalClass}`;
+  };
+
   // Complex relationships
   const [variants, setVariants] = useState<LensVariant[]>([]);
   const [coatings, setCoatings] = useState<LensCoating[]>([]);
@@ -91,6 +103,11 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear validation errors when user starts typing
+    if (validationErrors.includes(name)) {
+      setValidationErrors(prev => prev.filter(field => field !== name));
+    }
   };
 
   const addVariant = () => {
@@ -243,9 +260,36 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
     e.preventDefault();
     
     try {
-      // Validate form
-      if (!formData.name || !formData.brandId || !formData.origin) {
-        alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+      // Clear previous errors
+      setValidationErrors([]);
+      
+      // Validate form with specific error messages
+      const missingFields = [];
+      const errorFields = [];
+      
+      if (!formData.name.trim()) {
+        missingFields.push('Tên lens');
+        errorFields.push('name');
+      }
+      
+      if (!formData.origin.trim()) {
+        missingFields.push('Xuất xứ');
+        errorFields.push('origin');
+      }
+      
+      if (!formData.brandId) {
+        missingFields.push('Thương hiệu lens');
+        errorFields.push('brandId');
+      }
+      
+      if (!formData.lensType) {
+        missingFields.push('Loại lens');
+        errorFields.push('lensType');
+      }
+
+      if (missingFields.length > 0) {
+        setValidationErrors(errorFields);
+        alert(`Vui lòng điền đầy đủ các thông tin bắt buộc:\n- ${missingFields.join('\n- ')}`);
         return;
       }
 
@@ -278,6 +322,7 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
       }
       
       alert('Tạo lens và danh mục thành công!');
+      setValidationErrors([]); // Clear validation errors on success
       onCancel(); // Go back to list
       
     } catch (error) {
@@ -328,7 +373,7 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={getInputClassName('name')}
                 required
               />
             </div>
@@ -343,7 +388,7 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
                 value={formData.origin}
                 onChange={handleInputChange}
                 placeholder="Ví dụ: Việt Nam, Nhật Bản, Đức..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={getInputClassName('origin')}
                 required
               />
             </div>
@@ -356,7 +401,7 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
                 name="brandId"
                 value={formData.brandId}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={getInputClassName('brandId')}
                 required
               >
                 <option value="">Chọn thương hiệu</option>
@@ -427,7 +472,7 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
                 name="lensType"
                 value={formData.lensType}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={getInputClassName('lensType')}
                 required
               >
                 <option value="SINGLE_VISION">Single Vision</option>

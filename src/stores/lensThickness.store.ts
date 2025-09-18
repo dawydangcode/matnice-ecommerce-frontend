@@ -21,7 +21,10 @@ interface LensThicknessStore {
     q?: string;
   }) => Promise<void>;
   createLensThickness: (data: CreateLensThicknessDto) => Promise<void>;
-  updateLensThickness: (id: number, data: UpdateLensThicknessDto) => Promise<void>;
+  updateLensThickness: (
+    id: number,
+    data: UpdateLensThicknessDto,
+  ) => Promise<void>;
   deleteLensThickness: (id: number) => Promise<void>;
   clearError: () => void;
 }
