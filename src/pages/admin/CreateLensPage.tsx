@@ -3,6 +3,8 @@ import { ArrowLeft, Plus, Trash2, Save, Upload } from 'lucide-react';
 import { useLensStore } from '../../stores/lens.store';
 import { useLensBrandStore } from '../../stores/lensBrand.store';
 import { useLensCategoryStore } from '../../stores/lensCategory.store';
+import { useLensThicknessStore } from '../../stores/lensThickness.store';
+import { lensCategoryService } from '../../services/lensCategory.service';
 
 interface CreateLensPageProps {
   onCancel: () => void;
@@ -21,7 +23,7 @@ interface LensVariant {
 
 interface RefractionRange {
   id: string;
-  refractionType: 'SPH' | 'CYL' | 'ADD' | 'PRISM';
+  refractionType: 'SPHERICAL' | 'CYLINDRICAL' | 'AXIS' | 'ADDITIONAL';
   minValue: number;
   maxValue: number;
   stepValue: number;
@@ -52,14 +54,18 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
   const { createLens, isLoading } = useLensStore();
   const { lensBrands, fetchLensBrands } = useLensBrandStore();
   const { lensCategories, fetchLensCategories } = useLensCategoryStore();
+  const { lensThicknesses, fetchLensThicknesses } = useLensThicknessStore();
 
   // Basic lens info
   const [formData, setFormData] = useState({
     name: '',
+    origin: '',
+    brandId: '',
+    lensType: 'SINGLE_VISION' as 'SINGLE_VISION' | 'DRIVE_SAFE' | 'PROGRESSIVE' | 'OFFICE' | 'NON_PRESCRIPTION',
+    status: 'IN_STOCK' as 'OUT_OF_STOCK' | 'IN_STOCK' | 'PRE_ORDER',
     description: '',
-    brandLensId: '',
-    categoryLensId: '',
-    status: 'active' as 'active' | 'inactive',
+    // Additional field for category selection (not part of CreateLensBodyDto)
+    categoryLensIds: [] as string[],
   });
 
   // Complex relationships
@@ -67,27 +73,20 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
   const [coatings, setCoatings] = useState<LensCoating[]>([]);
   const [images, setImages] = useState<LensImage[]>([]);
   
-  // Available options
-  const [lensThicknesses] = useState([
-    { id: 1, name: '1.50 Standard', indexValue: 1.50 },
-    { id: 2, name: '1.56 Mid-Index', indexValue: 1.56 },
-    { id: 3, name: '1.61 High-Index', indexValue: 1.61 },
-    { id: 4, name: '1.67 Ultra High-Index', indexValue: 1.67 },
-    { id: 5, name: '1.74 Premium', indexValue: 1.74 },
-  ]);
-
+  // Available options from backend enums  
   const [designOptions] = useState([
-    'Single Vision', 'Bifocal', 'Progressive', 'Reading', 'Computer'
+    'NONE', 'ASP', 'SP', 'AS'
   ]);
 
   const [materialOptions] = useState([
-    'CR-39', 'Polycarbonate', 'Trivex', 'High-Index Plastic', 'Glass'
+    'CR39', 'POLYCARBONATE', 'HIGH_INDEX', 'PHOTOCHROMIC', 'TRIVEX', 'GLASS'
   ]);
 
   useEffect(() => {
     fetchLensBrands();
     fetchLensCategories();
-  }, [fetchLensBrands, fetchLensCategories]);
+    fetchLensThicknesses();
+  }, [fetchLensBrands, fetchLensCategories, fetchLensThicknesses]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -98,8 +97,8 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
     const newVariant: LensVariant = {
       id: `variant_${Date.now()}`,
       lensThicknessId: 1,
-      design: 'Single Vision',
-      material: 'CR-39',
+      design: 'NONE',
+      material: 'CR39',
       price: 0,
       stock: 0,
       refractionRanges: [],
@@ -121,7 +120,7 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
   const addRefractionRange = (variantId: string) => {
     const newRange: RefractionRange = {
       id: `range_${Date.now()}`,
-      refractionType: 'SPH',
+      refractionType: 'SPHERICAL',
       minValue: -8.00,
       maxValue: 6.00,
       stepValue: 0.25
@@ -245,7 +244,7 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
     
     try {
       // Validate form
-      if (!formData.name || !formData.brandLensId) {
+      if (!formData.name || !formData.brandId || !formData.origin) {
         alert('Vui lòng điền đầy đủ thông tin bắt buộc');
         return;
       }
@@ -255,25 +254,30 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
         return;
       }
 
-      // Create lens data structure
+      // Create lens data structure - only fields that CreateLensBodyDto expects
       const lensData = {
-        ...formData,
-        variants: variants.map(variant => ({
-          ...variant,
-          refractionRanges: variant.refractionRanges,
-          tintColors: variant.tintColors
-        })),
-        coatings,
-        images: images.map(img => ({
-          file: img.file,
-          order: img.order
-        }))
+        name: formData.name,
+        origin: formData.origin,
+        brandId: Number(formData.brandId), // Convert to number as backend expects
+        lensType: formData.lensType,
+        status: formData.status,
+        description: formData.description,
       };
 
-      // Submit to API
-      await createLens(lensData);
+      // Submit lens to API first
+      const createdLens = await createLens(lensData);
       
-      alert('Tạo lens thành công!');
+      if (!createdLens) {
+        throw new Error('Không thể tạo lens');
+      }
+      
+      // If categories are selected, create lens-category relationships
+      if (formData.categoryLensIds.length > 0) {
+        const categoryLensIds = formData.categoryLensIds.map(id => Number(id));
+        await lensCategoryService.createMultipleLensCategories(createdLens.id, categoryLensIds);
+      }
+      
+      alert('Tạo lens và danh mục thành công!');
       onCancel(); // Go back to list
       
     } catch (error) {
@@ -331,11 +335,26 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Xuất xứ <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="origin"
+                value={formData.origin}
+                onChange={handleInputChange}
+                placeholder="Ví dụ: Việt Nam, Nhật Bản, Đức..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Thương hiệu lens <span className="text-red-500">*</span>
               </label>
               <select
-                name="brandLensId"
-                value={formData.brandLensId}
+                name="brandId"
+                value={formData.brandId}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
@@ -352,15 +371,70 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
                 Danh mục lens
               </label>
               <select
-                name="categoryLensId"
-                value={formData.categoryLensId}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                name="categoryLensIds"
+                value={formData.categoryLensIds}
+                onChange={(e) => {
+                  const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                  setFormData(prev => ({ ...prev, categoryLensIds: selectedOptions }));
+                }}
+                multiple
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
               >
-                <option value="">Chọn danh mục</option>
                 {lensCategories.map(category => (
                   <option key={category.id} value={category.id}>{category.name}</option>
                 ))}
+              </select>
+              <p className="text-sm text-gray-500 mt-1">Giữ Ctrl để chọn nhiều danh mục</p>
+              
+              {/* Display selected categories */}
+              {formData.categoryLensIds.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Danh mục đã chọn:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.categoryLensIds.map(categoryId => {
+                      const category = lensCategories.find(c => c.id.toString() === categoryId);
+                      return (
+                        <span 
+                          key={categoryId} 
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                        >
+                          {category?.name}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                categoryLensIds: prev.categoryLensIds.filter(id => id !== categoryId)
+                              }));
+                            }}
+                            className="ml-2 text-blue-600 hover:text-blue-800"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Loại lens <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="lensType"
+                value={formData.lensType}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option value="SINGLE_VISION">Single Vision</option>
+                <option value="DRIVE_SAFE">Drive Safe</option>
+                <option value="PROGRESSIVE">Progressive</option>
+                <option value="OFFICE">Office</option>
+                <option value="NON_PRESCRIPTION">Non Prescription</option>
               </select>
             </div>
 
@@ -374,8 +448,9 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="active">Hoạt động</option>
-                <option value="inactive">Không hoạt động</option>
+                <option value="IN_STOCK">Còn hàng</option>
+                <option value="OUT_OF_STOCK">Hết hàng</option>
+                <option value="PRE_ORDER">Đặt trước</option>
               </select>
             </div>
 
@@ -564,10 +639,10 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
                           onChange={(e) => updateRefractionRange(variant.id, range.id, 'refractionType', e.target.value)}
                           className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                          <option value="SPH">SPH (Sphere)</option>
-                          <option value="CYL">CYL (Cylinder)</option>
-                          <option value="ADD">ADD (Addition)</option>
-                          <option value="PRISM">PRISM</option>
+                          <option value="SPHERICAL">SPHERICAL (Cận/Viễn thị)</option>
+                          <option value="CYLINDRICAL">CYLINDRICAL (Loạn thị)</option>
+                          <option value="AXIS">AXIS (Trục)</option>
+                          <option value="ADDITIONAL">ADDITIONAL (ADD)</option>
                         </select>
                         <input
                           type="number"
