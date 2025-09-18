@@ -5,6 +5,22 @@ import { useLensBrandStore } from '../../stores/lensBrand.store';
 import { useLensCategoryStore } from '../../stores/lensCategory.store';
 import { useLensThicknessStore } from '../../stores/lensThickness.store';
 import { lensCategoryService } from '../../services/lensCategory.service';
+import { lensVariantService } from '../../services/lensVariant.service';
+import { lensCoatingService } from '../../services/lensCoating.service';
+import { lensImageService } from '../../services/lensImage.service';
+import { lensVariantRefractionRangeService } from '../../services/lensVariantRefractionRange.service';
+import { lensVariantTintColorService } from '../../services/lensVariantTintColor.service';
+import { 
+  LensDesignType, 
+  LensMaterialsType, 
+  LensRefractionType,
+  getDesignOptions, 
+  getMaterialOptions, 
+  getRefractionOptions,
+  type LensDesignTypeValues,
+  type LensMaterialsTypeValues,
+  type LensRefractionTypeValues
+} from '../../constants/lensEnums';
 
 interface CreateLensPageProps {
   onCancel: () => void;
@@ -13,8 +29,8 @@ interface CreateLensPageProps {
 interface LensVariant {
   id: string;
   lensThicknessId: number;
-  design: string;
-  material: string;
+  design: LensDesignTypeValues;
+  material: LensMaterialsTypeValues;
   price: number;
   stock: number;
   refractionRanges: RefractionRange[];
@@ -23,7 +39,7 @@ interface LensVariant {
 
 interface RefractionRange {
   id: string;
-  refractionType: 'SPHERICAL' | 'CYLINDRICAL' | 'AXIS' | 'ADDITIONAL';
+  refractionType: LensRefractionTypeValues;
   minValue: number;
   maxValue: number;
   stepValue: number;
@@ -86,13 +102,9 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
   const [images, setImages] = useState<LensImage[]>([]);
   
   // Available options from backend enums  
-  const [designOptions] = useState([
-    'NONE', 'ASP', 'SP', 'AS'
-  ]);
-
-  const [materialOptions] = useState([
-    'CR39', 'POLYCARBONATE', 'HIGH_INDEX', 'PHOTOCHROMIC', 'TRIVEX', 'GLASS'
-  ]);
+  const designOptions = getDesignOptions();
+  const materialOptions = getMaterialOptions();
+  const refractionOptions = getRefractionOptions();
 
   useEffect(() => {
     fetchLensBrands();
@@ -114,8 +126,8 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
     const newVariant: LensVariant = {
       id: `variant_${Date.now()}`,
       lensThicknessId: 1,
-      design: 'NONE',
-      material: 'CR39',
+      design: LensDesignType.NONE,
+      material: LensMaterialsType.CR39,
       price: 0,
       stock: 0,
       refractionRanges: [],
@@ -137,7 +149,7 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
   const addRefractionRange = (variantId: string) => {
     const newRange: RefractionRange = {
       id: `range_${Date.now()}`,
-      refractionType: 'SPHERICAL',
+      refractionType: LensRefractionType.SPHERICAL,
       minValue: -8.00,
       maxValue: 6.00,
       stepValue: 0.25
@@ -298,6 +310,14 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
         return;
       }
 
+      // Debug logging
+      console.log('=== LENS CREATION DEBUG ===');
+      console.log('Form data:', formData);
+      console.log('Variants:', variants);
+      console.log('Coatings:', coatings);
+      console.log('Images:', images);
+      console.log('=== END DEBUG ===');
+
       // Create lens data structure - only fields that CreateLensBodyDto expects
       const lensData = {
         name: formData.name,
@@ -309,19 +329,96 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
       };
 
       // Submit lens to API first
+      console.log('1. Creating lens...', lensData);
       const createdLens = await createLens(lensData);
       
       if (!createdLens) {
         throw new Error('Không thể tạo lens');
       }
+      console.log('1. Lens created successfully:', createdLens);
       
       // If categories are selected, create lens-category relationships
       if (formData.categoryLensIds.length > 0) {
+        console.log('2. Creating lens-category relationships...');
         const categoryLensIds = formData.categoryLensIds.map(id => Number(id));
         await lensCategoryService.createMultipleLensCategories(createdLens.id, categoryLensIds);
+        console.log('2. Lens-category relationships created successfully');
       }
       
-      alert('Tạo lens và danh mục thành công!');
+      // Create lens variants
+      if (variants.length > 0) {
+        console.log('3. Creating lens variants...', variants);
+        const variantData = variants.map(variant => ({
+          lensThicknessId: variant.lensThicknessId,
+          design: variant.design,
+          material: variant.material,
+          price: variant.price,
+          stock: variant.stock,
+        }));
+        
+        const createdVariants = await lensVariantService.createMultipleLensVariants(createdLens.id, variantData);
+        console.log('3. Lens variants created successfully:', createdVariants);
+        
+        // Create refraction ranges and tint colors for each variant
+        for (let i = 0; i < variants.length; i++) {
+          const variant = variants[i];
+          const createdVariant = createdVariants[i];
+          
+          if (variant.refractionRanges.length > 0) {
+            console.log(`3.${i+1}a. Creating refraction ranges for variant ${createdVariant.id}...`, variant.refractionRanges);
+            const refractionRangeData = variant.refractionRanges.map(range => ({
+              refractionType: range.refractionType,
+              minValue: range.minValue,
+              maxValue: range.maxValue,
+              stepValue: range.stepValue,
+            }));
+            
+            const createdRanges = await lensVariantRefractionRangeService.createMultipleRefractionRanges(createdVariant.id, refractionRangeData);
+            console.log(`3.${i+1}a. Refraction ranges created successfully:`, createdRanges);
+          }
+          
+          if (variant.tintColors.length > 0) {
+            console.log(`3.${i+1}b. Creating tint colors for variant ${createdVariant.id}...`, variant.tintColors);
+            const tintColorData = variant.tintColors.map(tint => ({
+              name: tint.name,
+              colorCode: tint.colorCode,
+              // TODO: Handle image upload if needed
+            }));
+            
+            const createdTintColors = await lensVariantTintColorService.createMultipleTintColors(createdVariant.id, tintColorData);
+            console.log(`3.${i+1}b. Tint colors created successfully:`, createdTintColors);
+          }
+        }
+      }
+      
+      // Create lens coatings
+      if (coatings.length > 0) {
+        console.log('4. Creating lens coatings...', coatings);
+        const coatingData = coatings.map(coating => ({
+          name: coating.name,
+          price: coating.price,
+          description: coating.description,
+        }));
+        
+        const createdCoatings = await lensCoatingService.createMultipleLensCoatings(createdLens.id, coatingData);
+        console.log('4. Lens coatings created successfully:', createdCoatings);
+      }
+      
+      // Create lens images
+      if (images.length > 0) {
+        console.log('5. Creating lens images...', images);
+        // TODO: Upload images to server first, then create image records
+        // For now, we'll use placeholder URLs
+        const imageData = images.map(image => ({
+          imageUrl: `placeholder_${image.order}.jpg`, // TODO: Replace with actual uploaded URL
+          order: image.order,
+        }));
+        
+        const createdImages = await lensImageService.createMultipleLensImages(createdLens.id, imageData);
+        console.log('5. Lens images created successfully:', createdImages);
+      }
+      
+      alert('Tạo lens thành công với tất cả thông tin liên quan!');
       setValidationErrors([]); // Clear validation errors on success
       onCancel(); // Go back to list
       
@@ -615,7 +712,7 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       {designOptions.map(design => (
-                        <option key={design} value={design}>{design}</option>
+                        <option key={design.value} value={design.value}>{design.label}</option>
                       ))}
                     </select>
                   </div>
@@ -630,7 +727,7 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       {materialOptions.map(material => (
-                        <option key={material} value={material}>{material}</option>
+                        <option key={material.value} value={material.value}>{material.label}</option>
                       ))}
                     </select>
                   </div>
@@ -684,10 +781,9 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
                           onChange={(e) => updateRefractionRange(variant.id, range.id, 'refractionType', e.target.value)}
                           className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                          <option value="SPHERICAL">SPHERICAL (Cận/Viễn thị)</option>
-                          <option value="CYLINDRICAL">CYLINDRICAL (Loạn thị)</option>
-                          <option value="AXIS">AXIS (Trục)</option>
-                          <option value="ADDITIONAL">ADDITIONAL (ADD)</option>
+                          {refractionOptions.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
                         </select>
                         <input
                           type="number"
