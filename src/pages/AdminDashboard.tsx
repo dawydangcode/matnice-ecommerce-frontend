@@ -37,7 +37,7 @@ import LensThicknessPage from './admin/LensThicknessPage';
 import BrandForm from '../components/admin/BrandForm';
 import CategoryForm from '../components/admin/CategoryForm';
 import LensForm from '../components/admin/LensForm';
-import CreateLensForm from './admin/CreateLensForm';
+import CreateLensPage from './admin/CreateLensPage';
 import LensBrandForm from '../components/admin/LensBrandForm';
 import LensCategoryForm from '../components/admin/LensCategoryForm';
 import Product3DModelManagement from '../components/admin/Product3DModelManagement';
@@ -48,7 +48,7 @@ import { Lens } from '../types/lens.types';
 import { LensBrand } from '../types/lensBrand.types';
 import { LensCategory } from '../types/lensCategory.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'lens-create-form' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -199,13 +199,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleCreateLens = () => {
     setEditingLens(null);
-    setCurrentView('lens-form');
-  };
-
-  const handleCreateLensAdvanced = () => {
-    console.log('handleCreateLensAdvanced called');
-    setCurrentView('lens-create-form');
-    console.log('Current view set to: lens-create-form');
+    setCurrentView('create-lens');
   };
 
   const handleLensFormCancel = () => {
@@ -357,7 +351,7 @@ const AdminDashboard: React.FC = () => {
                              (currentView === 'brand-form' && item.id === 'brands') ||
                              (currentView === 'category-form' && item.id === 'categories') ||
                              (currentView === 'lens-form' && item.id === 'lenses') ||
-                             (currentView === 'lens-create-form' && item.id === 'lenses') ||
+                             (currentView === 'create-lens' && item.id === 'lenses') ||
                              (currentView === 'lens-brand-form' && item.id === 'lenses') ||
                              (currentView === 'lens-category-form' && item.id === 'lenses');
               
@@ -487,7 +481,7 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'lenses' && 'Quản lý Lens'}
                 {currentView === 'lens-management' && 'Quản lý Lens'}
                 {currentView === 'lens-form' && 'Thêm/Sửa Lens'}
-                {currentView === 'lens-create-form' && 'Tạo Lens Mới (Form Đầy Đủ)'}
+                {currentView === 'create-lens' && 'Tạo Lens Mới'}
                 {currentView === 'lens-thickness' && 'Lens Thickness Management'}
                 {currentView === 'lens-tints' && 'Lens Tints & Colors Management'}
               </h1>
@@ -593,7 +587,7 @@ const AdminDashboard: React.FC = () => {
               onCancel={handleCategoryFormCancel}
             />
           )}
-          {currentView === 'lens-management' && <LensManagementDashboard />}
+          {currentView === 'lens-management' && <LensManagementDashboard onCreateLens={handleCreateLens} />}
           {currentView === 'lens-brands' && (
             <LensBrandListPage 
               onEditLensBrand={handleEditLensBrand}
@@ -624,7 +618,6 @@ const AdminDashboard: React.FC = () => {
             <LensListPage
               onEditLens={handleEditLens}
               onCreateLens={handleCreateLens}
-              onCreateLensAdvanced={handleCreateLensAdvanced}
             />
           )}
           {currentView === 'lens-form' && (
@@ -634,12 +627,8 @@ const AdminDashboard: React.FC = () => {
               onCancel={handleLensFormCancel}
             />
           )}
-          {currentView === 'lens-create-form' && (
-            <div className="p-4 bg-yellow-100 border border-yellow-300 rounded">
-              <h3>Debug: Rendering CreateLensForm</h3>
-              <p>Current view: {currentView}</p>
-              <CreateLensForm />
-            </div>
+          {currentView === 'create-lens' && (
+            <CreateLensPage onCancel={() => setCurrentView('lenses')} />
           )}
           {currentView === 'lens-thickness' && <LensThicknessPage />}
           {currentView === 'lens-tints' && <div className="p-4 bg-yellow-100 rounded">Lens Tints Page - Coming Soon</div>}

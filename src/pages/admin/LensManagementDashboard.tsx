@@ -2,20 +2,23 @@ import React from 'react';
 import { Lens } from '../../types/lens.types';
 import LensListPage from './LensListPage';
 
-const LensManagementDashboard: React.FC = () => {
+interface LensManagementDashboardProps {
+  onCreateLens?: () => void;
+}
+
+const LensManagementDashboard: React.FC<LensManagementDashboardProps> = ({ onCreateLens }) => {
   const handleEditLens = (lens: Lens) => {
     // Handle edit logic - có thể navigate đến trang edit hoặc mở modal
     console.log('Edit lens:', lens);
   };
 
   const handleCreateLens = () => {
-    // Handle create logic - có thể navigate đến trang create hoặc mở modal
-    console.log('Create new lens');
-  };
-
-  const handleCreateLensAdvanced = () => {
-    // Có thể redirect đến trang khác hoặc mở form nâng cao
-    console.log('Create advanced lens');
+    if (onCreateLens) {
+      onCreateLens();
+    } else {
+      // Fallback: Handle create logic - có thể navigate đến trang create hoặc mở modal
+      console.log('Create new lens');
+    }
   };
 
   return (
@@ -24,7 +27,6 @@ const LensManagementDashboard: React.FC = () => {
         <LensListPage
           onEditLens={handleEditLens}
           onCreateLens={handleCreateLens}
-          onCreateLensAdvanced={handleCreateLensAdvanced}
         />
       </div>
     </div>

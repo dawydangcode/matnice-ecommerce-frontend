@@ -6,13 +6,11 @@ import { Lens } from '../../types/lens.types';
 interface LensListPageProps {
   onEditLens: (lens: Lens) => void;
   onCreateLens: () => void;
-  onCreateLensAdvanced: () => void;
 }
 
 const LensListPage: React.FC<LensListPageProps> = ({ 
   onEditLens, 
-  onCreateLens, 
-  onCreateLensAdvanced 
+  onCreateLens
 }) => {
   const {
     lenses,
@@ -84,13 +82,6 @@ const LensListPage: React.FC<LensListPageProps> = ({
           >
             <Plus className="w-4 h-4" />
             <span>Thêm tròng kính</span>
-          </button>
-          <button
-            onClick={onCreateLensAdvanced}
-            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Thêm tròng kính nâng cao</span>
           </button>
         </div>
       </div>

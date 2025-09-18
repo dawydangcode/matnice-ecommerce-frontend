@@ -1,0 +1,720 @@
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, Trash2, Save, Upload } from 'lucide-react';
+import { useLensStore } from '../../stores/lens.store';
+import { useLensBrandStore } from '../../stores/lensBrand.store';
+import { useLensCategoryStore } from '../../stores/lensCategory.store';
+
+interface CreateLensPageProps {
+  onCancel: () => void;
+}
+
+interface LensVariant {
+  id: string;
+  lensThicknessId: number;
+  design: string;
+  material: string;
+  price: number;
+  stock: number;
+  refractionRanges: RefractionRange[];
+  tintColors: TintColor[];
+}
+
+interface RefractionRange {
+  id: string;
+  refractionType: 'SPH' | 'CYL' | 'ADD' | 'PRISM';
+  minValue: number;
+  maxValue: number;
+  stepValue: number;
+}
+
+interface TintColor {
+  id: string;
+  name: string;
+  colorCode: string;
+  image?: File;
+}
+
+interface LensCoating {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+}
+
+interface LensImage {
+  id: string;
+  file: File;
+  order: 'a' | 'b' | 'c' | 'd' | 'e';
+  preview: string;
+}
+
+const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
+  const { createLens, isLoading } = useLensStore();
+  const { lensBrands, fetchLensBrands } = useLensBrandStore();
+  const { lensCategories, fetchLensCategories } = useLensCategoryStore();
+
+  // Basic lens info
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    brandLensId: '',
+    categoryLensId: '',
+    status: 'active' as 'active' | 'inactive',
+  });
+
+  // Complex relationships
+  const [variants, setVariants] = useState<LensVariant[]>([]);
+  const [coatings, setCoatings] = useState<LensCoating[]>([]);
+  const [images, setImages] = useState<LensImage[]>([]);
+  
+  // Available options
+  const [lensThicknesses] = useState([
+    { id: 1, name: '1.50 Standard', indexValue: 1.50 },
+    { id: 2, name: '1.56 Mid-Index', indexValue: 1.56 },
+    { id: 3, name: '1.61 High-Index', indexValue: 1.61 },
+    { id: 4, name: '1.67 Ultra High-Index', indexValue: 1.67 },
+    { id: 5, name: '1.74 Premium', indexValue: 1.74 },
+  ]);
+
+  const [designOptions] = useState([
+    'Single Vision', 'Bifocal', 'Progressive', 'Reading', 'Computer'
+  ]);
+
+  const [materialOptions] = useState([
+    'CR-39', 'Polycarbonate', 'Trivex', 'High-Index Plastic', 'Glass'
+  ]);
+
+  useEffect(() => {
+    fetchLensBrands();
+    fetchLensCategories();
+  }, [fetchLensBrands, fetchLensCategories]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const addVariant = () => {
+    const newVariant: LensVariant = {
+      id: `variant_${Date.now()}`,
+      lensThicknessId: 1,
+      design: 'Single Vision',
+      material: 'CR-39',
+      price: 0,
+      stock: 0,
+      refractionRanges: [],
+      tintColors: []
+    };
+    setVariants([...variants, newVariant]);
+  };
+
+  const removeVariant = (variantId: string) => {
+    setVariants(variants.filter(v => v.id !== variantId));
+  };
+
+  const updateVariant = (variantId: string, field: string, value: any) => {
+    setVariants(variants.map(variant => 
+      variant.id === variantId ? { ...variant, [field]: value } : variant
+    ));
+  };
+
+  const addRefractionRange = (variantId: string) => {
+    const newRange: RefractionRange = {
+      id: `range_${Date.now()}`,
+      refractionType: 'SPH',
+      minValue: -8.00,
+      maxValue: 6.00,
+      stepValue: 0.25
+    };
+    
+    setVariants(variants.map(variant => 
+      variant.id === variantId 
+        ? { ...variant, refractionRanges: [...variant.refractionRanges, newRange] }
+        : variant
+    ));
+  };
+
+  const removeRefractionRange = (variantId: string, rangeId: string) => {
+    setVariants(variants.map(variant => 
+      variant.id === variantId 
+        ? { ...variant, refractionRanges: variant.refractionRanges.filter(r => r.id !== rangeId) }
+        : variant
+    ));
+  };
+
+  const updateRefractionRange = (variantId: string, rangeId: string, field: string, value: any) => {
+    setVariants(variants.map(variant => 
+      variant.id === variantId 
+        ? { 
+            ...variant, 
+            refractionRanges: variant.refractionRanges.map(range => 
+              range.id === rangeId ? { ...range, [field]: value } : range
+            )
+          }
+        : variant
+    ));
+  };
+
+  const addTintColor = (variantId: string) => {
+    const newTintColor: TintColor = {
+      id: `tint_${Date.now()}`,
+      name: '',
+      colorCode: '#808080'
+    };
+    
+    setVariants(variants.map(variant => 
+      variant.id === variantId 
+        ? { ...variant, tintColors: [...variant.tintColors, newTintColor] }
+        : variant
+    ));
+  };
+
+  const removeTintColor = (variantId: string, tintId: string) => {
+    setVariants(variants.map(variant => 
+      variant.id === variantId 
+        ? { ...variant, tintColors: variant.tintColors.filter(t => t.id !== tintId) }
+        : variant
+    ));
+  };
+
+  const updateTintColor = (variantId: string, tintId: string, field: string, value: any) => {
+    setVariants(variants.map(variant => 
+      variant.id === variantId 
+        ? { 
+            ...variant, 
+            tintColors: variant.tintColors.map(tint => 
+              tint.id === tintId ? { ...tint, [field]: value } : tint
+            )
+          }
+        : variant
+    ));
+  };
+
+  const addCoating = () => {
+    const newCoating: LensCoating = {
+      id: `coating_${Date.now()}`,
+      name: '',
+      price: 0,
+      description: ''
+    };
+    setCoatings([...coatings, newCoating]);
+  };
+
+  const removeCoating = (coatingId: string) => {
+    setCoatings(coatings.filter(c => c.id !== coatingId));
+  };
+
+  const updateCoating = (coatingId: string, field: string, value: any) => {
+    setCoatings(coatings.map(coating => 
+      coating.id === coatingId ? { ...coating, [field]: value } : coating
+    ));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newImages: LensImage[] = [];
+      const orders: ('a' | 'b' | 'c' | 'd' | 'e')[] = ['a', 'b', 'c', 'd', 'e'];
+      
+      Array.from(files).slice(0, 5).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const newImage: LensImage = {
+            id: `image_${Date.now()}_${index}`,
+            file,
+            order: orders[index],
+            preview: reader.result as string
+          };
+          newImages.push(newImage);
+          
+          if (newImages.length === files.length) {
+            setImages([...images, ...newImages]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeImage = (imageId: string) => {
+    setImages(images.filter(img => img.id !== imageId));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      // Validate form
+      if (!formData.name || !formData.brandLensId) {
+        alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+        return;
+      }
+
+      if (variants.length === 0) {
+        alert('Vui lòng thêm ít nhất một variant cho lens');
+        return;
+      }
+
+      // Create lens data structure
+      const lensData = {
+        ...formData,
+        variants: variants.map(variant => ({
+          ...variant,
+          refractionRanges: variant.refractionRanges,
+          tintColors: variant.tintColors
+        })),
+        coatings,
+        images: images.map(img => ({
+          file: img.file,
+          order: img.order
+        }))
+      };
+
+      // Submit to API
+      await createLens(lensData);
+      
+      alert('Tạo lens thành công!');
+      onCancel(); // Go back to list
+      
+    } catch (error) {
+      console.error('Error creating lens:', error);
+      alert('Có lỗi xảy ra khi tạo lens');
+    }
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={onCancel}
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Quay lại</span>
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Thêm tròng kính mới</h1>
+            <p className="text-gray-600">Tạo sản phẩm tròng kính với đầy đủ thông tin</p>
+          </div>
+        </div>
+        <button
+          onClick={handleSubmit}
+          disabled={isLoading}
+          className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+        >
+          <Save className="w-5 h-5" />
+          <span>{isLoading ? 'Đang lưu...' : 'Lưu lens'}</span>
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Basic Information */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Thông tin cơ bản</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tên lens <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Thương hiệu lens <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="brandLensId"
+                value={formData.brandLensId}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option value="">Chọn thương hiệu</option>
+                {lensBrands.map(brand => (
+                  <option key={brand.id} value={brand.id}>{brand.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Danh mục lens
+              </label>
+              <select
+                name="categoryLensId"
+                value={formData.categoryLensId}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Chọn danh mục</option>
+                {lensCategories.map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Trạng thái
+              </label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Không hoạt động</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Mô tả
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Lens Images */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Hình ảnh lens</h2>
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+                id="image-upload"
+              />
+              <label
+                htmlFor="image-upload"
+                className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors cursor-pointer"
+              >
+                <Upload className="w-4 h-4" />
+                <span>Tải ảnh lên</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {images.map(image => (
+              <div key={image.id} className="relative group">
+                <img
+                  src={image.preview}
+                  alt={`${image.order.toUpperCase()}`}
+                  className="w-full h-32 object-cover rounded-lg border"
+                />
+                <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">
+                  {image.order.toUpperCase()}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeImage(image.id)}
+                  className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Lens Variants */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Biến thể lens</h2>
+            <button
+              type="button"
+              onClick={addVariant}
+              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Thêm variant</span>
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            {variants.map((variant, index) => (
+              <div key={variant.id} className="border border-gray-200 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Variant #{index + 1}</h3>
+                  <button
+                    type="button"
+                    onClick={() => removeVariant(variant.id)}
+                    className="text-red-600 hover:text-red-900 p-1"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Variant basic info */}
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Chiết suất
+                    </label>
+                    <select
+                      value={variant.lensThicknessId}
+                      onChange={(e) => updateVariant(variant.id, 'lensThicknessId', Number(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {lensThicknesses.map(thickness => (
+                        <option key={thickness.id} value={thickness.id}>{thickness.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Thiết kế
+                    </label>
+                    <select
+                      value={variant.design}
+                      onChange={(e) => updateVariant(variant.id, 'design', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {designOptions.map(design => (
+                        <option key={design} value={design}>{design}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Chất liệu
+                    </label>
+                    <select
+                      value={variant.material}
+                      onChange={(e) => updateVariant(variant.id, 'material', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {materialOptions.map(material => (
+                        <option key={material} value={material}>{material}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Giá (VNĐ)
+                    </label>
+                    <input
+                      type="number"
+                      value={variant.price}
+                      onChange={(e) => updateVariant(variant.id, 'price', Number(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tồn kho
+                    </label>
+                    <input
+                      type="number"
+                      value={variant.stock}
+                      onChange={(e) => updateVariant(variant.id, 'stock', Number(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                {/* Refraction Ranges */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-md font-medium text-gray-900">Dãy độ (Refraction Ranges)</h4>
+                    <button
+                      type="button"
+                      onClick={() => addRefractionRange(variant.id)}
+                      className="flex items-center space-x-1 text-blue-600 hover:text-blue-900 text-sm"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Thêm dãy độ</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {variant.refractionRanges.map(range => (
+                      <div key={range.id} className="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                        <select
+                          value={range.refractionType}
+                          onChange={(e) => updateRefractionRange(variant.id, range.id, 'refractionType', e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="SPH">SPH (Sphere)</option>
+                          <option value="CYL">CYL (Cylinder)</option>
+                          <option value="ADD">ADD (Addition)</option>
+                          <option value="PRISM">PRISM</option>
+                        </select>
+                        <input
+                          type="number"
+                          placeholder="Min"
+                          value={range.minValue}
+                          onChange={(e) => updateRefractionRange(variant.id, range.id, 'minValue', Number(e.target.value))}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-20"
+                          step="0.25"
+                        />
+                        <span className="text-gray-500">đến</span>
+                        <input
+                          type="number"
+                          placeholder="Max"
+                          value={range.maxValue}
+                          onChange={(e) => updateRefractionRange(variant.id, range.id, 'maxValue', Number(e.target.value))}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-20"
+                          step="0.25"
+                        />
+                        <span className="text-gray-500">bước</span>
+                        <input
+                          type="number"
+                          placeholder="Step"
+                          value={range.stepValue}
+                          onChange={(e) => updateRefractionRange(variant.id, range.id, 'stepValue', Number(e.target.value))}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-20"
+                          step="0.25"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeRefractionRange(variant.id, range.id)}
+                          className="text-red-600 hover:text-red-900 p-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tint Colors */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-md font-medium text-gray-900">Màu tint (nếu là tròng đổi màu)</h4>
+                    <button
+                      type="button"
+                      onClick={() => addTintColor(variant.id)}
+                      className="flex items-center space-x-1 text-blue-600 hover:text-blue-900 text-sm"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Thêm màu</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {variant.tintColors.map(tint => (
+                      <div key={tint.id} className="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                        <input
+                          type="text"
+                          placeholder="Tên màu"
+                          value={tint.name}
+                          onChange={(e) => updateTintColor(variant.id, tint.id, 'name', e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="color"
+                            value={tint.colorCode}
+                            onChange={(e) => updateTintColor(variant.id, tint.id, 'colorCode', e.target.value)}
+                            className="w-10 h-10 border border-gray-300 rounded cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            placeholder="#808080"
+                            value={tint.colorCode}
+                            onChange={(e) => updateTintColor(variant.id, tint.id, 'colorCode', e.target.value)}
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-24"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeTintColor(variant.id, tint.id)}
+                          className="text-red-600 hover:text-red-900 p-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Lens Coatings */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Lớp phủ lens</h2>
+            <button
+              type="button"
+              onClick={addCoating}
+              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Thêm lớp phủ</span>
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {coatings.map(coating => (
+              <div key={coating.id} className="flex items-center space-x-4 bg-gray-50 p-4 rounded-lg">
+                <input
+                  type="text"
+                  placeholder="Tên lớp phủ"
+                  value={coating.name}
+                  onChange={(e) => updateCoating(coating.id, 'name', e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <input
+                  type="number"
+                  placeholder="Giá"
+                  value={coating.price}
+                  onChange={(e) => updateCoating(coating.id, 'price', Number(e.target.value))}
+                  className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  min="0"
+                />
+                <input
+                  type="text"
+                  placeholder="Mô tả"
+                  value={coating.description}
+                  onChange={(e) => updateCoating(coating.id, 'description', e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeCoating(coating.id)}
+                  className="text-red-600 hover:text-red-900 p-1"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default CreateLensPage;
