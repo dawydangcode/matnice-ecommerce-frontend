@@ -119,7 +119,7 @@ const Navigation: React.FC = () => {
             onMouseLeave={handleMouseLeave}
           >
             <Link 
-              to="/lens"
+              to="/lenses"
               className={`flex items-center space-x-1 font-medium text-base transition-all duration-200 py-2 px-4 border-b-2 ${
                 activeDropdown === 'lens' 
                   ? 'text-gray-900 border-black font-bold' 
@@ -256,7 +256,7 @@ const Navigation: React.FC = () => {
                       {lensCategories.map((category) => (
                         <li key={category.id}>
                           <Link 
-                            to={`/lens?category=${category.id}`}
+                            to={`/lenses/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`}
                             className="text-sm text-gray-600 hover:text-gray-900 block"
                             title={category.description}
                           >
@@ -281,7 +281,7 @@ const Navigation: React.FC = () => {
                       {lensBrands.map((brand) => (
                         <li key={brand.id}>
                           <Link 
-                            to={`/lens?brand=${brand.id}`}
+                            to={`/lenses/brand/${brand.name.toLowerCase().replace(/\s+/g, '-')}`}
                             className="text-sm text-gray-600 hover:text-gray-900 block"
                             title={brand.description}
                           >
