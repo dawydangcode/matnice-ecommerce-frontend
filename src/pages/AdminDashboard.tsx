@@ -38,6 +38,7 @@ import BrandForm from '../components/admin/BrandForm';
 import CategoryForm from '../components/admin/CategoryForm';
 import LensForm from '../components/admin/LensForm';
 import CreateLensPage from './admin/CreateLensPage';
+import LensDetailPage from './admin/LensDetailPage';
 import LensBrandForm from '../components/admin/LensBrandForm';
 import LensCategoryForm from '../components/admin/LensCategoryForm';
 import Product3DModelManagement from '../components/admin/Product3DModelManagement';
@@ -48,7 +49,7 @@ import { Lens } from '../types/lens.types';
 import { LensBrand } from '../types/lensBrand.types';
 import { LensCategory } from '../types/lensCategory.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-detail' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -65,6 +66,7 @@ const AdminDashboard: React.FC = () => {
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingLens, setEditingLens] = useState<Lens | null>(null);
+  const [viewingLensId, setViewingLensId] = useState<number | null>(null);
   const [editingLensBrand, setEditingLensBrand] = useState<LensBrand | null>(null);
   const [editingLensCategory, setEditingLensCategory] = useState<LensCategory | null>(null);
 
@@ -202,9 +204,19 @@ const AdminDashboard: React.FC = () => {
     setCurrentView('create-lens');
   };
 
+  const handleViewLensDetail = (lensId: number) => {
+    setViewingLensId(lensId);
+    setCurrentView('lens-detail');
+  };
+
   const handleLensFormCancel = () => {
     setEditingLens(null);
-    setCurrentView('lenses');
+    setCurrentView('lens-management');
+  };
+
+  const handleLensDetailBack = () => {
+    setViewingLensId(null);
+    setCurrentView('lens-management');
   };
 
   const handleLensFormSubmit = async (data: any) => {
@@ -215,7 +227,7 @@ const AdminDashboard: React.FC = () => {
         await createLens(data);
       }
       setEditingLens(null);
-      setCurrentView('lenses');
+      setCurrentView('lens-management');
     } catch (error) {
       console.error('Error submitting lens form:', error);
       throw error;
@@ -587,7 +599,12 @@ const AdminDashboard: React.FC = () => {
               onCancel={handleCategoryFormCancel}
             />
           )}
-          {currentView === 'lens-management' && <LensManagementDashboard onCreateLens={handleCreateLens} />}
+          {currentView === 'lens-management' && (
+            <LensManagementDashboard 
+              onCreateLens={handleCreateLens} 
+              onViewLensDetail={handleViewLensDetail}
+            />
+          )}
           {currentView === 'lens-brands' && (
             <LensBrandListPage 
               onEditLensBrand={handleEditLensBrand}
@@ -628,7 +645,13 @@ const AdminDashboard: React.FC = () => {
             />
           )}
           {currentView === 'create-lens' && (
-            <CreateLensPage onCancel={() => setCurrentView('lenses')} />
+            <CreateLensPage onCancel={() => setCurrentView('lens-management')} />
+          )}
+          {currentView === 'lens-detail' && viewingLensId && (
+            <LensDetailPage 
+              lensId={viewingLensId} 
+              onBack={handleLensDetailBack}
+            />
           )}
           {currentView === 'lens-thickness' && <LensThicknessPage />}
           {currentView === 'lens-tints' && <div className="p-4 bg-yellow-100 rounded">Lens Tints Page - Coming Soon</div>}

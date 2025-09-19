@@ -462,14 +462,6 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
             <p className="text-gray-600">Tạo sản phẩm tròng kính với đầy đủ thông tin</p>
           </div>
         </div>
-        <button
-          onClick={handleSubmit}
-          disabled={isLoading}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-        >
-          <Save className="w-5 h-5" />
-          <span>{isLoading ? 'Đang lưu...' : 'Lưu lens'}</span>
-        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -529,21 +521,31 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Danh mục lens
               </label>
-              <select
-                name="categoryLensIds"
-                value={formData.categoryLensIds}
-                onChange={(e) => {
-                  const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                  setFormData(prev => ({ ...prev, categoryLensIds: selectedOptions }));
-                }}
-                multiple
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
-              >
+              <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-3">
                 {lensCategories.map(category => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
+                  <label key={category.id} className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.categoryLensIds.includes(category.id.toString())}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            categoryLensIds: [...prev.categoryLensIds, category.id.toString()]
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            categoryLensIds: prev.categoryLensIds.filter(id => id !== category.id.toString())
+                          }));
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <span className="text-sm text-gray-700">{category.name}</span>
+                  </label>
                 ))}
-              </select>
-              <p className="text-sm text-gray-500 mt-1">Giữ Ctrl để chọn nhiều danh mục</p>
+              </div>
               
               {/* Display selected categories */}
               {formData.categoryLensIds.length > 0 && (
@@ -911,38 +913,79 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
 
           <div className="space-y-4">
             {coatings.map(coating => (
-              <div key={coating.id} className="flex items-center space-x-4 bg-gray-50 p-4 rounded-lg">
-                <input
-                  type="text"
-                  placeholder="Tên lớp phủ"
-                  value={coating.name}
-                  onChange={(e) => updateCoating(coating.id, 'name', e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <input
-                  type="number"
-                  placeholder="Giá"
-                  value={coating.price}
-                  onChange={(e) => updateCoating(coating.id, 'price', Number(e.target.value))}
-                  className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  min="0"
-                />
-                <input
-                  type="text"
-                  placeholder="Mô tả"
-                  value={coating.description}
-                  onChange={(e) => updateCoating(coating.id, 'description', e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeCoating(coating.id)}
-                  className="text-red-600 hover:text-red-900 p-1"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+              <div key={coating.id} className="bg-gray-50 p-4 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tên lớp phủ
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Tên lớp phủ"
+                      value={coating.name}
+                      onChange={(e) => updateCoating(coating.id, 'name', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Giá (VNĐ)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={coating.price}
+                      onChange={(e) => updateCoating(coating.id, 'price', Number(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Mô tả
+                    </label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        placeholder="Mô tả lớp phủ"
+                        value={coating.description}
+                        onChange={(e) => updateCoating(coating.id, 'description', e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeCoating(coating.id)}
+                        className="text-red-600 hover:text-red-900 p-2 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+                        title="Xóa lớp phủ"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-end space-x-4">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex items-center space-x-2 bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              <span>Hủy</span>
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              <Save className="w-5 h-5" />
+              <span>{isLoading ? 'Đang lưu...' : 'Lưu lens'}</span>
+            </button>
           </div>
         </div>
       </form>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Edit, Trash2, AlertCircle, FileText } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, AlertCircle, FileText, Eye } from 'lucide-react';
 import { LensFormModal, LensType } from '../../components/admin/LensFormModal';
 import { lensService } from '../../services/lens.service';
 import { lensDetailService } from '../../services/lens-detail.service';
@@ -8,9 +8,13 @@ import toast from 'react-hot-toast';
 
 interface LensManagementPageProps {
   onCreateLensAdvanced?: () => void;
+  onViewLensDetail?: (lensId: number) => void;
 }
 
-const LensManagementPage: React.FC<LensManagementPageProps> = ({ onCreateLensAdvanced }) => {
+const LensManagementPage: React.FC<LensManagementPageProps> = ({ 
+  onCreateLensAdvanced, 
+  onViewLensDetail 
+}) => {
   const [lenses, setLenses] = useState<Lens[]>([]);
   const [filteredLenses, setFilteredLenses] = useState<Lens[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -282,6 +286,13 @@ const LensManagementPage: React.FC<LensManagementPageProps> = ({ onCreateLensAdv
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex space-x-2">
+                        <button
+                          onClick={() => onViewLensDetail?.(lens.id)}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded transition-colors"
+                          title="Xem chi tiết"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={() => handleEdit(lens)}
                           className="text-orange-600 hover:text-orange-900 p-1 rounded transition-colors"
