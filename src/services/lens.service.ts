@@ -906,6 +906,27 @@ class LensService {
       throw error;
     }
   }
+
+  // =============== NAVIGATION MENU METHODS ===============
+  async getLensCategories(): Promise<any[]> {
+    try {
+      const response = await apiService.get('/api/v1/lens-categories'); // API SAI
+      return (response as any).data || response || [];
+    } catch (error) {
+      console.error('Error fetching lens categories:', error);
+      return [];
+    }
+  }
+
+  async getLensBrands(): Promise<any[]> {
+    try {
+      const response = await apiService.get('/api/v1/brand-lens');
+      return (response as any).data || response || [];
+    } catch (error) {
+      console.error('Error fetching lens brands:', error);
+      return [];
+    }
+  }
 }
 
 export const lensService = new LensService();

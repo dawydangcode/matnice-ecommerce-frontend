@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { lensService } from '../services/lens.service';
 import {
   glassesCategories,
   sunglassesCategories,
@@ -9,9 +10,24 @@ import {
   aiCategories
 } from '../data/categories';
 
+interface LensCategory {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+interface LensBrand {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 const Navigation: React.FC = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [lensCategories, setLensCategories] = useState<LensCategory[]>([]);
+  const [lensBrands, setLensBrands] = useState<LensBrand[]>([]);
+  const [isLoadingLensData, setIsLoadingLensData] = useState(false);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -21,6 +37,24 @@ const Navigation: React.FC = () => {
       }
     };
   }, [timeoutId]);
+
+  // Load lens data when lens dropdown is opened
+  useEffect(() => {
+    if (activeDropdown === 'lens' && lensCategories.length === 0 && lensBrands.length === 0 && !isLoadingLensData) {
+      setIsLoadingLensData(true);
+      Promise.all([
+        lensService.getLensCategories(),
+        lensService.getLensBrands()
+      ]).then(([categories, brands]) => {
+        setLensCategories(categories);
+        setLensBrands(brands);
+        setIsLoadingLensData(false);
+      }).catch(error => {
+        console.error('Error loading lens data:', error);
+        setIsLoadingLensData(false);
+      });
+    }
+  }, [activeDropdown, lensCategories.length, lensBrands.length, isLoadingLensData]);
 
   const handleMouseEnter = (menu: string) => {
     if (timeoutId) {
@@ -75,6 +109,24 @@ const Navigation: React.FC = () => {
               }`}
             >
               <span>SUNGLASSES</span>
+             </Link>
+          </div>
+
+          {/* Lens Dropdown */}
+          <div 
+            className="relative group"
+            onMouseEnter={() => handleMouseEnter('lens')}
+            onMouseLeave={handleMouseLeave}
+          >
+            <Link 
+              to="/lens"
+              className={`flex items-center space-x-1 font-medium text-base transition-all duration-200 py-2 px-4 border-b-2 ${
+                activeDropdown === 'lens' 
+                  ? 'text-gray-900 border-black font-bold' 
+                  : 'text-gray-700 hover:text-gray-900 hover:font-bold border-transparent hover:border-gray-300'
+              }`}
+            >
+              <span>LENS</span>
              </Link>
           </div>
 
@@ -189,6 +241,60 @@ const Navigation: React.FC = () => {
                     </ul>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {activeDropdown === 'lens' && (
+              <div className="grid grid-cols-2 gap-8">
+                {/* Lens Categories */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Danh mục tròng kính</h3>
+                  {isLoadingLensData ? (
+                    <div className="text-sm text-gray-500">Đang tải...</div>
+                  ) : (
+                    <ul className="space-y-2">
+                      {lensCategories.map((category) => (
+                        <li key={category.id}>
+                          <Link 
+                            to={`/lens?category=${category.id}`}
+                            className="text-sm text-gray-600 hover:text-gray-900 block"
+                            title={category.description}
+                          >
+                            {category.name}
+                          </Link>
+                        </li>
+                      ))}
+                      {lensCategories.length === 0 && !isLoadingLensData && (
+                        <li className="text-sm text-gray-500">Không có danh mục</li>
+                      )}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Lens Brands */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Thương hiệu tròng kính</h3>
+                  {isLoadingLensData ? (
+                    <div className="text-sm text-gray-500">Đang tải...</div>
+                  ) : (
+                    <ul className="space-y-2">
+                      {lensBrands.map((brand) => (
+                        <li key={brand.id}>
+                          <Link 
+                            to={`/lens?brand=${brand.id}`}
+                            className="text-sm text-gray-600 hover:text-gray-900 block"
+                            title={brand.description}
+                          >
+                            {brand.name}
+                          </Link>
+                        </li>
+                      ))}
+                      {lensBrands.length === 0 && !isLoadingLensData && (
+                        <li className="text-sm text-gray-500">Không có thương hiệu</li>
+                      )}
+                    </ul>
+                  )}
+                </div>
               </div>
             )}
 
