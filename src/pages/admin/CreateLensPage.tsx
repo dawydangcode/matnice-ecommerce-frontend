@@ -7,9 +7,9 @@ import { useLensThicknessStore } from '../../stores/lensThickness.store';
 import { lensCategoryService } from '../../services/lensCategory.service';
 import { lensVariantService } from '../../services/lensVariant.service';
 import { lensCoatingService } from '../../services/lensCoating.service';
-import { lensImageService } from '../../services/lensImage.service';
 import { lensVariantRefractionRangeService } from '../../services/lensVariantRefractionRange.service';
 import { lensVariantTintColorService } from '../../services/lensVariantTintColor.service';
+import { apiService } from '../../services/api.service';
 import { 
   LensDesignType, 
   LensMaterialsType, 
@@ -364,6 +364,12 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
           const variant = variants[i];
           const createdVariant = createdVariants[i];
           
+          console.log(`3.${i+1}. Processing variant ${createdVariant.id}:`, {
+            refractionRangesCount: variant.refractionRanges.length,
+            tintColorsCount: variant.tintColors.length,
+            variant: variant
+          });
+          
           if (variant.refractionRanges.length > 0) {
             console.log(`3.${i+1}a. Creating refraction ranges for variant ${createdVariant.id}...`, variant.refractionRanges);
             const refractionRangeData = variant.refractionRanges.map(range => ({
@@ -375,6 +381,8 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
             
             const createdRanges = await lensVariantRefractionRangeService.createMultipleRefractionRanges(createdVariant.id, refractionRangeData);
             console.log(`3.${i+1}a. Refraction ranges created successfully:`, createdRanges);
+          } else {
+            console.log(`3.${i+1}a. No refraction ranges to create for variant ${createdVariant.id}`);
           }
           
           if (variant.tintColors.length > 0) {
@@ -387,6 +395,8 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
             
             const createdTintColors = await lensVariantTintColorService.createMultipleTintColors(createdVariant.id, tintColorData);
             console.log(`3.${i+1}b. Tint colors created successfully:`, createdTintColors);
+          } else {
+            console.log(`3.${i+1}b. No tint colors to create for variant ${createdVariant.id}`);
           }
         }
       }
@@ -404,18 +414,35 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
         console.log('4. Lens coatings created successfully:', createdCoatings);
       }
       
-      // Create lens images
+      // Create lens images - Upload real files
       if (images.length > 0) {
         console.log('5. Creating lens images...', images);
-        // TODO: Upload images to server first, then create image records
-        // For now, we'll use placeholder URLs
-        const imageData = images.map(image => ({
-          imageUrl: `placeholder_${image.order}.jpg`, // TODO: Replace with actual uploaded URL
-          order: image.order,
-        }));
-        
-        const createdImages = await lensImageService.createMultipleLensImages(createdLens.id, imageData);
-        console.log('5. Lens images created successfully:', createdImages);
+        try {
+          for (const image of images) {
+            console.log(`5. Uploading image ${image.order}...`);
+            
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('file', image.file);
+            formData.append('lensId', createdLens.id.toString());
+            formData.append('imageOrder', image.order);
+            
+            // Upload file to S3 and create image record
+            const uploadResult = await apiService.post('/lens-images/upload', formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            });
+            
+            console.log(`5. Image ${image.order} uploaded successfully:`, uploadResult);
+          }
+          console.log('5. All lens images uploaded successfully');
+        } catch (imageError) {
+          console.error('Error uploading lens images:', imageError);
+          // Continue even if image upload fails
+        }
+      } else {
+        console.log('5. No images to upload');
       }
       
       alert('Tạo lens thành công với tất cả thông tin liên quan!');

@@ -3,7 +3,8 @@ import { apiService } from './api.service';
 export interface CreateLensImageDto {
   lensId: number;
   imageUrl: string;
-  order: 'a' | 'b' | 'c' | 'd' | 'e';
+  imageOrder: 'a' | 'b' | 'c' | 'd' | 'e';
+  isThumbnail?: boolean;
 }
 
 export interface LensImageResponse {
