@@ -7,9 +7,9 @@ import { useLensThicknessStore } from '../../stores/lensThickness.store';
 import { lensCategoryService } from '../../services/lensCategory.service';
 import { lensVariantService } from '../../services/lensVariant.service';
 import { lensCoatingService } from '../../services/lensCoating.service';
+import { lensImageService } from '../../services/lensImage.service';
 import { lensVariantRefractionRangeService } from '../../services/lensVariantRefractionRange.service';
 import { lensVariantTintColorService } from '../../services/lensVariantTintColor.service';
-import { apiService } from '../../services/api.service';
 import { 
   LensDesignType, 
   LensMaterialsType, 
@@ -414,35 +414,25 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
         console.log('4. Lens coatings created successfully:', createdCoatings);
       }
       
-      // Create lens images - Upload real files
+      // Create lens images - Use placeholder URLs for now
       if (images.length > 0) {
         console.log('5. Creating lens images...', images);
         try {
-          for (const image of images) {
-            console.log(`5. Uploading image ${image.order}...`);
-            
-            // Create FormData for file upload
-            const formData = new FormData();
-            formData.append('file', image.file);
-            formData.append('lensId', createdLens.id.toString());
-            formData.append('imageOrder', image.order);
-            
-            // Upload file to S3 and create image record
-            const uploadResult = await apiService.post('/lens-images/upload', formData, {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-            });
-            
-            console.log(`5. Image ${image.order} uploaded successfully:`, uploadResult);
-          }
-          console.log('5. All lens images uploaded successfully');
+          const imageData = images.map(image => ({
+            lensId: createdLens.id,
+            imageUrl: `https://placeholder.com/600x400?text=Lens+${createdLens.id}+${image.order.toUpperCase()}`,
+            imageOrder: image.order,
+            isThumbnail: image.order === 'a', // First image as thumbnail
+          }));
+          
+          const createdImages = await lensImageService.createMultipleLensImages(createdLens.id, imageData);
+          console.log('5. Lens images created successfully:', createdImages);
         } catch (imageError) {
-          console.error('Error uploading lens images:', imageError);
-          // Continue even if image upload fails
+          console.error('Error creating lens images:', imageError);
+          // Continue even if image creation fails
         }
       } else {
-        console.log('5. No images to upload');
+        console.log('5. No images to create');
       }
       
       alert('Tạo lens thành công với tất cả thông tin liên quan!');
