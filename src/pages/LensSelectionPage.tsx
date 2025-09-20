@@ -6,6 +6,42 @@ import Navigation from '../components/Navigation';
 import productCardService from '../services/product-card.service';
 import { ProductCard } from '../types/product-card.types';
 
+// Prescription dropdown values
+const SPHERE_VALUES = [
+  '-9.00', '-8.75', '-8.50', '-8.25', '-8.00', '-7.75', '-7.50', '-7.25', '-7.00', '-6.75',
+  '-6.50', '-6.25', '-6.00', '-5.75', '-5.50', '-5.25', '-5.00', '-4.75', '-4.50', '-4.25',
+  '-4.00', '-3.75', '-3.50', '-3.25', '-3.00', '-2.75', '-2.50', '-2.25', '-2.00', '-1.75',
+  '-1.50', '-1.25', '-1.00', '-0.75', '-0.50', '-0.25', '± 0.00', '+0.25', '+0.50', '+0.75',
+  '+1.00', '+1.25', '+1.50', '+1.75', '+2.00', '+2.25', '+2.50', '+2.75', '+3.00', '+3.25',
+  '+3.50', '+3.75', '+4.00', '+4.25', '+4.50', '+4.75', '+5.00', '+5.25', '+5.50', '+5.75',
+  '+6.00', '+6.25', '+6.50', '+6.75', '+7.00', '+7.25', '+7.50', '+7.75', '+8.00'
+];
+
+const CYLINDER_VALUES = [
+  '-4.00', '-3.75', '-3.50', '-3.25', '-3.00', '-2.75', '-2.50', '-2.25', '-2.00', '-1.75',
+  '-1.50', '-1.25', '-1.00', '-0.75', '-0.50', '-0.25', '± 0.00', '+0.25', '+0.50', '+0.75',
+  '+1.00', '+1.25', '+1.50', '+1.75', '+2.00', '+2.25', '+2.50', '+2.75', '+3.00', '+3.25',
+  '+3.50', '+3.75', '+4.00'
+];
+
+const AXIS_VALUES = Array.from({length: 181}, (_, i) => `${i}°`);
+
+const PD_SINGLE_VALUES = [
+  '50.00', '51.00', '52.00', '53.00', '54.00', '55.00', '56.00', '57.00', '58.00', '59.00',
+  '60.00', '61.00', '62.00', '63.00', '64.00', '65.00', '66.00', '67.00', '68.00', '69.00',
+  '70.00', '71.00', '72.00', '73.00', '74.00', '75.00', '76.00', '77.00', '78.00', '79.00', '80.00'
+];
+
+const PD_DUAL_VALUES = [
+  '25.00', '25.50', '26.00', '26.50', '27.00', '27.50', '28.00', '28.50', '29.00', '29.50',
+  '30.00', '30.50', '31.00', '31.50', '32.00', '32.50', '33.00', '33.50', '34.00', '34.50',
+  '35.00', '35.50', '36.00', '36.50', '37.00', '37.50', '38.00', '38.50', '39.00', '39.50', '40.00'
+];
+
+const ADD_VALUES = [
+  '-', '1.00', '1.25', '1.50', '1.75', '2.00', '2.25', '2.50', '2.75', '3.00'
+];
+
 interface LensTypeOption {
   type: string;
   name: string;
@@ -61,6 +97,8 @@ const LensSelectionPage: React.FC = () => {
     axisR: '0°',
     axisL: '0°',
     pd: '63.00',
+    pdR: '31.50',
+    pdL: '31.50',
     hasTwoPD: false,
     prescriptionDate: {
       day: '',
@@ -124,17 +162,17 @@ const LensSelectionPage: React.FC = () => {
       <Navigation />
       
       <main className="flex-grow max-w-full mx-auto px-8 py-12">
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-10">
-          {/* Left Content */}
-          <div className="xl:col-span-3">
-            <div className="bg-white rounded-lg shadow-lg p-10">
-              <h1 className="text-3xl font-bold text-gray-900 mb-10">Lens Selection</h1>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Left Content - Lens Selection (smaller) */}
+          <div className="xl:col-span-2">
+            <div className="bg-white rounded-lg shadow-lg p-8 w-full min-w-[950px] min-h-[1544px]">
+              <h1 className="text-2xl font-bold text-gray-900 mb-8">Lens Selection</h1>
           
           {/* Step 1: Your Glasses Type */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
-                <div className="bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3">
+                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white" style={{backgroundColor: '#363434'}}>
                   1
                 </div>
                 <h2 className="text-lg font-semibold">Your Glasses Type</h2>
@@ -191,7 +229,7 @@ const LensSelectionPage: React.FC = () => {
           {showPrescriptionStep && (
             <div className="mb-8">
               <div className="flex items-center mb-6">
-                <div className="bg-black text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3">
+                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white" style={{backgroundColor: '#363434'}}>
                   2
                 </div>
                 <h2 className="text-lg font-semibold">Your Prescription Values</h2>
@@ -202,55 +240,70 @@ const LensSelectionPage: React.FC = () => {
                 <div
                   className={`border rounded-lg p-4 cursor-pointer transition-all ${
                     prescriptionOption === 'saved'
-                      ? 'border-blue-500 bg-blue-50'
+                      ? 'border-2 bg-white'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
+                  style={prescriptionOption === 'saved' ? {borderColor: '#363434'} : {}}
                   onClick={() => setPrescriptionOption('saved')}
                 >
                   <h3 className="font-semibold text-gray-900 mb-2">Use saved prescription values</h3>
-                  <p className="text-gray-600 text-sm">
-                    If you have stored your values from an eye test or previous purchase in your customer account.
-                  </p>
+                  {prescriptionOption === 'saved' ? (
+                    <>
+                      <p className="text-gray-600 text-sm mb-4">Please sign in to load saved values from your account.</p>
+                      <button className="bg-gray-800 text-white py-2 px-6 rounded-lg font-medium hover:bg-gray-900 transition-colors">
+                        Login now
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-gray-600 text-sm">
+                      If you have stored your values from an eye test or previous purchase in your customer account.
+                    </p>
+                  )}
                 </div>
 
-                <div
-                  className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                    prescriptionOption === 'manual'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => setPrescriptionOption('manual')}
-                >
-                  <h3 className="font-semibold text-gray-900 mb-2">Enter your prescription values manually</h3>
-                  <p className="text-gray-600 text-sm">
-                    Please enter your prescription values as recorded on your prescription card.
-                  </p>
-                </div>
+                {prescriptionOption !== 'manual' && (
+                  <div
+                    className="border rounded-lg p-4 cursor-pointer transition-all border-gray-200 hover:border-gray-300"
+                    onClick={() => setPrescriptionOption('manual')}
+                  >
+                    <h3 className="font-semibold text-gray-900 mb-2">Enter your prescription values manually</h3>
+                    <p className="text-gray-600 text-sm">
+                      Please enter your prescription values as recorded on your prescription card.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Manual Prescription Form */}
               {prescriptionOption === 'manual' && (
-                <div className="border rounded-lg p-6 bg-gray-50">
-                  <h3 className="font-semibold text-gray-900 mb-4">Enter your prescription values manually</h3>
+                <div className="border-2 rounded-lg p-6 mt-4" style={{borderColor: '#363434'}}>
+                  <h3 className="font-semibold text-gray-900 mb-2">Enter your prescription values manually</h3>
                   <p className="text-gray-600 text-sm mb-6">
                     Please enter your prescription values as recorded on your prescription card.
                   </p>
-
                   <div className="space-y-6">
                     {/* Sphere */}
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-3">Sphere (S/SPH)</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center mb-3">
+                        <h4 className="font-medium text-gray-700">Sphere (S/SPH)</h4>
+                        <div className="ml-2 w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center">
+                          <span className="text-gray-400 text-xs">i</span>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-600 mb-1">R</label>
                           <div className="flex">
-                            <input
-                              type="text"
+                            <select
                               value={prescriptionData.sphereR}
                               onChange={(e) => setPrescriptionData(prev => ({...prev, sphereR: e.target.value}))}
                               className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600">
+                            >
+                              {SPHERE_VALUES.map((value) => (
+                                <option key={value} value={value}>{value}</option>
+                              ))}
+                            </select>
+                            <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center">
                               dpt
                             </div>
                           </div>
@@ -258,13 +311,16 @@ const LensSelectionPage: React.FC = () => {
                         <div>
                           <label className="block text-sm font-medium text-gray-600 mb-1">L</label>
                           <div className="flex">
-                            <input
-                              type="text"
+                            <select
                               value={prescriptionData.sphereL}
                               onChange={(e) => setPrescriptionData(prev => ({...prev, sphereL: e.target.value}))}
                               className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600">
+                            >
+                              {SPHERE_VALUES.map((value) => (
+                                <option key={value} value={value}>{value}</option>
+                              ))}
+                            </select>
+                            <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center">
                               dpt
                             </div>
                           </div>
@@ -274,18 +330,26 @@ const LensSelectionPage: React.FC = () => {
 
                     {/* Cylinder */}
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-3">Cylinder (ZYL / CYL)</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center mb-3">
+                        <h4 className="font-medium text-gray-700">Cylinder (ZYL / CYL)</h4>
+                        <div className="ml-2 w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center">
+                          <span className="text-gray-400 text-xs">i</span>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-600 mb-1">R</label>
                           <div className="flex">
-                            <input
-                              type="text"
+                            <select
                               value={prescriptionData.cylinderR}
                               onChange={(e) => setPrescriptionData(prev => ({...prev, cylinderR: e.target.value}))}
                               className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600">
+                            >
+                              {CYLINDER_VALUES.map((value) => (
+                                <option key={value} value={value}>{value}</option>
+                              ))}
+                            </select>
+                            <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center">
                               dpt
                             </div>
                           </div>
@@ -293,13 +357,16 @@ const LensSelectionPage: React.FC = () => {
                         <div>
                           <label className="block text-sm font-medium text-gray-600 mb-1">L</label>
                           <div className="flex">
-                            <input
-                              type="text"
+                            <select
                               value={prescriptionData.cylinderL}
                               onChange={(e) => setPrescriptionData(prev => ({...prev, cylinderL: e.target.value}))}
                               className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600">
+                            >
+                              {CYLINDER_VALUES.map((value) => (
+                                <option key={value} value={value}>{value}</option>
+                              ))}
+                            </select>
+                            <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center">
                               dpt
                             </div>
                           </div>
@@ -311,17 +378,20 @@ const LensSelectionPage: React.FC = () => {
                     {needsAddValue() && (
                       <div>
                         <h4 className="font-medium text-gray-700 mb-3">Add (ADD)</h4>
-                        <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div className="space-y-4 mb-3">
                           <div>
                             <label className="block text-sm font-medium text-gray-600 mb-1">R</label>
                             <div className="flex">
-                              <input
-                                type="text"
+                              <select
                                 value={prescriptionData.addR}
                                 onChange={(e) => setPrescriptionData(prev => ({...prev, addR: e.target.value}))}
                                 className="flex-1 px-3 py-2 border border-red-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <div className="bg-gray-100 border-t border-r border-b border-red-300 rounded-r-lg px-3 py-2 text-gray-600">
+                              >
+                                {ADD_VALUES.map((value) => (
+                                  <option key={value} value={value}>{value}</option>
+                                ))}
+                              </select>
+                              <div className="bg-gray-100 border-t border-r border-b border-red-300 rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center">
                                 dpt
                               </div>
                             </div>
@@ -329,13 +399,16 @@ const LensSelectionPage: React.FC = () => {
                           <div>
                             <label className="block text-sm font-medium text-gray-600 mb-1">L</label>
                             <div className="flex">
-                              <input
-                                type="text"
+                              <select
                                 value={prescriptionData.addL}
                                 onChange={(e) => setPrescriptionData(prev => ({...prev, addL: e.target.value}))}
                                 className="flex-1 px-3 py-2 border border-red-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <div className="bg-gray-100 border-t border-r border-b border-red-300 rounded-r-lg px-3 py-2 text-gray-600">
+                              >
+                                {ADD_VALUES.map((value) => (
+                                  <option key={value} value={value}>{value}</option>
+                                ))}
+                              </select>
+                              <div className="bg-gray-100 border-t border-r border-b border-red-300 rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center">
                                 dpt
                               </div>
                             </div>
@@ -354,8 +427,13 @@ const LensSelectionPage: React.FC = () => {
 
                     {/* Axis */}
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-3">Axis (A/ACH)</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center mb-3">
+                        <h4 className="font-medium text-gray-700">Axis (A/ACH)</h4>
+                        <div className="ml-2 w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center">
+                          <span className="text-gray-400 text-xs">i</span>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-600 mb-1">R</label>
                           <select
@@ -363,9 +441,8 @@ const LensSelectionPage: React.FC = () => {
                             onChange={(e) => setPrescriptionData(prev => ({...prev, axisR: e.target.value}))}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
-                            <option value="0°">0°</option>
-                            {Array.from({length: 180}, (_, i) => i + 1).map(degree => (
-                              <option key={degree} value={`${degree}°`}>{degree}°</option>
+                            {AXIS_VALUES.map(value => (
+                              <option key={value} value={value}>{value}</option>
                             ))}
                           </select>
                         </div>
@@ -376,9 +453,8 @@ const LensSelectionPage: React.FC = () => {
                             onChange={(e) => setPrescriptionData(prev => ({...prev, axisL: e.target.value}))}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
-                            <option value="0°">0°</option>
-                            {Array.from({length: 180}, (_, i) => i + 1).map(degree => (
-                              <option key={degree} value={`${degree}°`}>{degree}°</option>
+                            {AXIS_VALUES.map(value => (
+                              <option key={value} value={value}>{value}</option>
                             ))}
                           </select>
                         </div>
@@ -387,24 +463,84 @@ const LensSelectionPage: React.FC = () => {
 
                     {/* Pupillary Distance */}
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-3">Pupillary distance (PD)</h4>
                       <div className="flex items-center mb-3">
-                        <input
-                          type="text"
-                          value={prescriptionData.pd}
-                          onChange={(e) => setPrescriptionData(prev => ({...prev, pd: e.target.value}))}
-                          className="w-24 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600">
-                          mm
+                        <h4 className="font-medium text-gray-700">Pupillary distance (PD)</h4>
+                        <div className="ml-2 w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center">
+                          <span className="text-gray-400 text-xs">i</span>
                         </div>
                       </div>
-                      <button
-                        onClick={() => setPrescriptionData(prev => ({...prev, hasTwoPD: !prev.hasTwoPD}))}
-                        className="text-blue-600 text-sm hover:underline mb-2"
-                      >
-                        I have two PD values
-                      </button>
+                      
+                      {!prescriptionData.hasTwoPD ? (
+                        // Single PD value
+                        <div className="mb-4">
+                          <div className="flex w-40">
+                            <select
+                              value={prescriptionData.pd}
+                              onChange={(e) => setPrescriptionData(prev => ({...prev, pd: e.target.value}))}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              {PD_SINGLE_VALUES.map((value) => (
+                                <option key={value} value={value}>{value}</option>
+                              ))}
+                            </select>
+                            <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center">
+                              mm
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        // Two PD values
+                        <div className="mb-4">
+                          <div className="space-y-4 mb-3">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-600 mb-1">R</label>
+                              <div className="flex">
+                                <select
+                                  value={prescriptionData.pdR}
+                                  onChange={(e) => setPrescriptionData(prev => ({...prev, pdR: e.target.value}))}
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  {PD_DUAL_VALUES.map((value) => (
+                                    <option key={value} value={value}>{value}</option>
+                                  ))}
+                                </select>
+                                <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center">
+                                  mm
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-600 mb-1">L</label>
+                              <div className="flex">
+                                <select
+                                  value={prescriptionData.pdL}
+                                  onChange={(e) => setPrescriptionData(prev => ({...prev, pdL: e.target.value}))}
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  {PD_DUAL_VALUES.map((value) => (
+                                    <option key={value} value={value}>{value}</option>
+                                  ))}
+                                </select>
+                                <div className="bg-gray-100 border-t border-r border-b border-gray-300 rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center">
+                                    mm
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Toggle Button - Centered */}
+                      <div className="flex justify-center mb-4">
+                        <button
+                          onClick={() => setPrescriptionData(prev => ({...prev, hasTwoPD: !prev.hasTwoPD}))}
+                          className="w-full bg-white border rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors"
+                          style={{color: '#363434', borderColor: '#363434'}}
+                        >
+                          {prescriptionData.hasTwoPD ? 'I have one PD value' : 'I have two PD values'}
+                        </button>
+                      </div>
+                      
                       <p className="text-gray-600 text-xs">
                         Please round up to the nearest mm. This value will be equally divided into 2 values, one for each eye.
                       </p>
@@ -489,16 +625,6 @@ const LensSelectionPage: React.FC = () => {
                       Continue to Lens Thickness
                     </button>
                   </div>
-                </div>
-              )}
-
-              {/* Saved prescription option */}
-              {prescriptionOption === 'saved' && (
-                <div className="border rounded-lg p-6 bg-blue-50">
-                  <p className="text-blue-800 mb-4">Please sign in to load saved values from your account.</p>
-                  <button className="bg-blue-600 text-white py-2 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                    Login now
-                  </button>
                 </div>
               )}
             </div>
@@ -604,7 +730,7 @@ const LensSelectionPage: React.FC = () => {
                 
                 <div className="flex justify-between items-center mb-3">
                   <span className="font-bold text-xl text-gray-900">Tổng cộng</span>
-                  <span className="font-bold text-2xl text-black">
+                  <span className="font-bold text-2xl" style={{color: '#363434'}}>
                     {((Number(selectedProduct?.price) || 0) + (
                       selectedLensType === 'PROGRESSIVE' ? 1800000 :
                       selectedLensType === 'OFFICE' ? 2300000 :
