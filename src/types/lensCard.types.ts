@@ -41,7 +41,7 @@ export interface LensCardFilters {
   sortOrder?: 'ASC' | 'DESC';
   brandIds?: number[];
   categoryIds?: number[];
-  types?: string[];
+  types?: LensType[];
   search?: string;
 }
 

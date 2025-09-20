@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Heart, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { LensCard, BrandLensData, LensCategoryData } from '../types/lensCard.types';
+import { LensCard, BrandLensData, LensCategoryData, LensType } from '../types/lensCard.types';
 import { lensCardService } from '../services/lensCard.service';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
@@ -28,7 +28,7 @@ const LensPage: React.FC = () => {
   const [categories, setCategories] = useState<LensCategoryData[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<LensType[]>([]);
   const [brandSearchTerm, setBrandSearchTerm] = useState('');
 
   // Create stable dependencies for useEffect
@@ -74,6 +74,9 @@ const LensPage: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        console.log('Selected types:', selectedTypes);
+        console.log('Selected brands:', selectedBrands);
+        console.log('Selected categories:', selectedCategories);
 
         // Map sort options to backend API format
         let backendSortBy: 'price' | 'name' | 'newest' = 'newest';
@@ -130,7 +133,8 @@ const LensPage: React.FC = () => {
     
     // Type filters
     selectedTypes.forEach(type => {
-      filters.push({ type: 'type', value: type, label: `Type: ${type}`, remove: () => setSelectedTypes(prev => prev.filter(t => t !== type)) });
+      const displayName = type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+      filters.push({ type: 'type', value: type, label: `Type: ${displayName}`, remove: () => setSelectedTypes(prev => prev.filter(t => t !== type)) });
     });
 
     // Category filters
@@ -233,7 +237,7 @@ const LensPage: React.FC = () => {
                 {/* Type */}
                 <FilterSection title="TYPE">
                   <div className="space-y-2">
-                    {['Daily', 'Weekly', 'Monthly', 'Yearly'].map((type) => (
+                    {Object.values(LensType).map((type) => (
                       <label key={type} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
                         <input 
                           type="checkbox" 
@@ -247,7 +251,9 @@ const LensPage: React.FC = () => {
                             }
                           }}
                         />
-                        <span className="ml-3 mt-3 text-sm text-gray-700">{type}</span>
+                        <span className="ml-3 mt-3 text-sm text-gray-700">
+                          {type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
+                        </span>
                       </label>
                     ))}
                   </div>

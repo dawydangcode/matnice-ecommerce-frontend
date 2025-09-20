@@ -26,16 +26,20 @@ class LensCardService {
 
       // Array filters
       if (filters?.brandIds?.length) {
-        params.append('brandIds', filters.brandIds.join(','));
+        params.append('brandLensIds', filters.brandIds.join(','));
       }
       if (filters?.categoryIds?.length) {
-        params.append('categoryIds', filters.categoryIds.join(','));
+        params.append('categoryLensIds', filters.categoryIds.join(','));
       }
       if (filters?.types?.length) {
-        params.append('types', filters.types.join(','));
+        params.append('lensTypes', filters.types.join(','));
       }
 
       const response = await apiService.get<LensCardResponse>(
+        `/api/v1/lens/cards${params.toString() ? `?${params.toString()}` : ''}`,
+      );
+      console.log(
+        'Full API URL:',
         `/api/v1/lens/cards${params.toString() ? `?${params.toString()}` : ''}`,
       );
       console.log('Lens cards response:', response);
