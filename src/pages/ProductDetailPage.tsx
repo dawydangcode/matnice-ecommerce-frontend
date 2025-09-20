@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
@@ -10,6 +10,7 @@ import '../styles/ProductDetailPage.css';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -324,7 +325,10 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="action-buttons">
-              <button className="btn-primary">
+              <button 
+                className="btn-primary"
+                onClick={() => navigate('/lens-selection')}
+              >
                 🔒 With prescription from {formatVND(getPrescriptionPrice())}
               </button>
               <button className="btn-secondary">
