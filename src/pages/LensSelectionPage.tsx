@@ -85,6 +85,7 @@ const LensSelectionPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [prescriptionOption, setPrescriptionOption] = useState<'saved' | 'manual'>('saved');
   const [showPrescriptionStep, setShowPrescriptionStep] = useState(false);
+  const [isCertified, setIsCertified] = useState(false);
   
   // Prescription form state
   const [prescriptionData, setPrescriptionData] = useState({
@@ -150,6 +151,38 @@ const LensSelectionPage: React.FC = () => {
     // navigate('/lens-thickness');
   };
 
+  // Validation functions
+  const isPrescriptionDateValid = () => {
+    const { day, month, year } = prescriptionData.prescriptionDate;
+    
+    if (!day || !month || !year) {
+      return false;
+    }
+    
+    const prescriptionDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const currentDate = new Date();
+    const twoYearsAgo = new Date();
+    twoYearsAgo.setFullYear(currentDate.getFullYear() - 2);
+    
+    return prescriptionDate >= twoYearsAgo && prescriptionDate <= currentDate;
+  };
+
+  const shouldShowDateError = () => {
+    const { day, month, year } = prescriptionData.prescriptionDate;
+    // Only show error if user has filled all 3 fields AND the date is invalid
+    const hasFilledAllFields = day && month && year;
+    return hasFilledAllFields && !isPrescriptionDateValid();
+  };
+
+  const canContinue = () => {
+    if (prescriptionOption === 'saved') {
+      return true; // For saved prescription, no additional validation needed
+    }
+    
+    // For manual prescription entry
+    return isPrescriptionDateValid() && isCertified;
+  };
+
   const needsAddValue = () => {
     return ['PROGRESSIVE', 'OFFICE'].includes(selectedLensType);
   };
@@ -180,7 +213,7 @@ const LensSelectionPage: React.FC = () => {
               {showPrescriptionStep && (
                 <button 
                   onClick={() => setShowPrescriptionStep(false)}
-                  className="text-blue-600 text-sm hover:underline"
+                  className="text-black-600 text-sm hover:underline"
                 >
                   Change
                 </button>
@@ -194,7 +227,7 @@ const LensSelectionPage: React.FC = () => {
                     key={option.type}
                     className={`border rounded-lg p-4 cursor-pointer transition-all ${
                       selectedLensType === option.type
-                        ? 'border-blue-500 bg-blue-50'
+                        ? 'border-2 border-black'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                     onClick={() => handleLensTypeSelect(option.type)}
@@ -216,7 +249,7 @@ const LensSelectionPage: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="border rounded-lg p-4 bg-gray-50">
+              <div className="border-2 rounded-lg p-4 bg-white" style={{borderColor: '#363434'}}>
                 <div>
                   <h3 className="font-semibold text-gray-900">{selectedOption?.name}</h3>
                   <p className="text-gray-600 text-sm mt-1">{selectedOption?.description}</p>
@@ -285,7 +318,7 @@ const LensSelectionPage: React.FC = () => {
                     {/* Sphere */}
                     <div>
                       <div className="flex items-center mb-3">
-                        <h4 className="font-medium text-gray-700">Sphere (S/SPH)</h4>
+                        <h4 className="font-medium text-black-700">Sphere (S/SPH)</h4>
                         <div className="ml-2 w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center">
                           <span className="text-gray-400 text-xs">i</span>
                         </div>
@@ -331,7 +364,7 @@ const LensSelectionPage: React.FC = () => {
                     {/* Cylinder */}
                     <div>
                       <div className="flex items-center mb-3">
-                        <h4 className="font-medium text-gray-700">Cylinder (ZYL / CYL)</h4>
+                        <h4 className="font-medium text-black-700">Cylinder (ZYL / CYL)</h4>
                         <div className="ml-2 w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center">
                           <span className="text-gray-400 text-xs">i</span>
                         </div>
@@ -377,7 +410,7 @@ const LensSelectionPage: React.FC = () => {
                     {/* Add - Only for Progressive and Office */}
                     {needsAddValue() && (
                       <div>
-                        <h4 className="font-medium text-gray-700 mb-3">Add (ADD)</h4>
+                        <h4 className="font-medium text-black-700 mb-3">Add (ADD)</h4>
                         <div className="space-y-4 mb-3">
                           <div>
                             <label className="block text-sm font-medium text-gray-600 mb-1">R</label>
@@ -428,7 +461,7 @@ const LensSelectionPage: React.FC = () => {
                     {/* Axis */}
                     <div>
                       <div className="flex items-center mb-3">
-                        <h4 className="font-medium text-gray-700">Axis (A/ACH)</h4>
+                        <h4 className="font-medium text-black-700">Axis (A/ACH)</h4>
                         <div className="ml-2 w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center">
                           <span className="text-gray-400 text-xs">i</span>
                         </div>
@@ -464,7 +497,7 @@ const LensSelectionPage: React.FC = () => {
                     {/* Pupillary Distance */}
                     <div>
                       <div className="flex items-center mb-3">
-                        <h4 className="font-medium text-gray-700">Pupillary distance (PD)</h4>
+                        <h4 className="font-medium text-black-700">Pupillary distance (PD)</h4>
                         <div className="ml-2 w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center">
                           <span className="text-gray-400 text-xs">i</span>
                         </div>
@@ -534,7 +567,7 @@ const LensSelectionPage: React.FC = () => {
                       <div className="flex justify-center mb-4">
                         <button
                           onClick={() => setPrescriptionData(prev => ({...prev, hasTwoPD: !prev.hasTwoPD}))}
-                          className="w-full bg-white border rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors"
+                          className="w-full bg-white border-2 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors"
                           style={{color: '#363434', borderColor: '#363434'}}
                         >
                           {prescriptionData.hasTwoPD ? 'I have one PD value' : 'I have two PD values'}
@@ -548,7 +581,7 @@ const LensSelectionPage: React.FC = () => {
 
                     {/* Date of prescription */}
                     <div>
-                      <h4 className="font-medium text-gray-700 mb-3">Date of my last prescription</h4>
+                      <h4 className="font-medium text-black-700 mb-3">Date of my last prescription</h4>
                       <p className="text-gray-600 text-sm mb-3">
                         Your prescription must have been taken within the last two years
                       </p>
@@ -611,20 +644,58 @@ const LensSelectionPage: React.FC = () => {
                     <div className="flex items-start">
                       <input
                         type="checkbox"
-                        className="mt-1 mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        checked={isCertified}
+                        onChange={(e) => setIsCertified(e.target.checked)}
+                        className="mt-1 mr-3 h-4 w-4 text-gray-900 border-gray-900 rounded focus:ring-gray-900"
                       />
                       <p className="text-gray-600 text-sm">
                         I certify that the person wearing these glasses is at least 16 years old and not registered as either blind or partially sighted.
                       </p>
                     </div>
-
-                    <button
-                      onClick={handleContinue}
-                      className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors"
-                    >
-                      Continue to Lens Thickness
-                    </button>
                   </div>
+                </div>
+              )}
+
+              {/* Continue Button - Outside the form but inside prescription step */}
+              {showPrescriptionStep && (
+                <div className="mt-6">
+                  {/* Validation error messages */}
+                  {prescriptionOption === 'manual' && (
+                    <div className="mb-4">
+                      {shouldShowDateError() && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-2">
+                          <p className="text-red-700 text-sm flex items-center">
+                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                            Please enter a valid prescription date within the last 2 years.
+                          </p>
+                        </div>
+                      )}
+                      {!isCertified && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-2">
+                          <p className="text-red-700 text-sm flex items-center">
+                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                            Please confirm that you meet the certification requirements.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <button
+                    onClick={handleContinue}
+                    disabled={!canContinue()}
+                    className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
+                      canContinue()
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Continue to Lens Thickness
+                  </button>
                 </div>
               )}
             </div>
