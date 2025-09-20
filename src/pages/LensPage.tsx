@@ -1,45 +1,55 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useLocation, useParams, Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Heart, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { LensCard, BrandLensData, LensCategoryData } from '../types/lensCard.types';
+import { lensCardService } from '../services/lensCard.service';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
+import HeroContent from '../components/HeroContent';
 import FilterSection from '../components/FilterSection';
-import LensCard from '../components/LensCard';
-import { lensCardService } from '../services/lensCard.service';
-import { 
-  LensCard as LensCardType, 
-  LensType, 
-  BrandLensData, 
-  CategoryLensData 
-} from '../types/lensCard.types';
+import { formatVND } from '../utils/currency';
+import '../styles/product-page.css';
+import '../styles/filter-section.css';
 
 const LensPage: React.FC = () => {
-  const location = useLocation();
-  const { category, brand } = useParams<{ category?: string; brand?: string }>();
-  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState([0, 10000000]);
-
+  
   // Lenses state
-  const [lenses, setLenses] = useState<LensCardType[]>([]);
+  const [lenses, setLenses] = useState<LensCard[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(12);
 
   // Filter states
-  const [brandLenses, setBrandLenses] = useState<BrandLensData[]>([]);
-  const [categoryLenses, setCategoryLenses] = useState<CategoryLensData[]>([]);
-  const [selectedBrandLenses, setSelectedBrandLenses] = useState<number[]>([]);
-  const [selectedCategoryLenses, setSelectedCategoryLenses] = useState<number[]>([]);
-  const [selectedLensTypes, setSelectedLensTypes] = useState<LensType[]>([]);
+  const [brands, setBrands] = useState<BrandLensData[]>([]);
+  const [categories, setCategories] = useState<LensCategoryData[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [brandSearchTerm, setBrandSearchTerm] = useState('');
 
   // Create stable dependencies for useEffect
   const minPrice = useMemo(() => priceRange[0], [priceRange]);
   const maxPrice = useMemo(() => priceRange[1], [priceRange]);
+  
+  // Get dynamic hero content for lenses
+  const heroContent = {
+    title: 'Contact Lenses',
+    description: 'Discover our premium collection of contact lenses for clear vision and comfort.',
+    heroImage: '/assets/hero-lens.jpg',
+    backgroundColor: 'bg-blue-50'
+  };
+
+  // Filter brands based on search term
+  const filteredBrands = useMemo(() => {
+    if (!brandSearchTerm) return brands;
+    return brands.filter(brand => 
+      brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase())
+    );
+  }, [brands, brandSearchTerm]);
 
   // Fetch brands and categories for filter on component mount
   useEffect(() => {
@@ -49,8 +59,8 @@ const LensPage: React.FC = () => {
           lensCardService.getBrandLensForFilter(),
           lensCardService.getCategoryLensForFilter(),
         ]);
-        setBrandLenses(brandsData);
-        setCategoryLenses(categoriesData);
+        setBrands(brandsData);
+        setCategories(categoriesData);
       } catch (error) {
         console.error('Error fetching filter data:', error);
       }
@@ -58,42 +68,6 @@ const LensPage: React.FC = () => {
 
     fetchFilters();
   }, []);
-
-  // Auto-apply filters based on URL parameters
-  useEffect(() => {
-    const categoryParam = searchParams.get('category')?.toLowerCase() || category?.toLowerCase();
-    const brandParam = searchParams.get('brand')?.toLowerCase() || brand?.toLowerCase();
-
-    // Auto-select category if from URL
-    if (categoryParam && categoryLenses.length > 0) {
-      const foundCategory = categoryLenses.find(cat => 
-        cat.name.toLowerCase().includes(categoryParam) ||
-        categoryParam.includes(cat.name.toLowerCase())
-      );
-      if (foundCategory && !selectedCategoryLenses.includes(foundCategory.id)) {
-        setSelectedCategoryLenses([foundCategory.id]);
-      }
-    }
-
-    // Auto-select brand if from URL  
-    if (brandParam && brandLenses.length > 0) {
-      const foundBrand = brandLenses.find(brand => 
-        brand.name.toLowerCase().includes(brandParam) ||
-        brandParam.includes(brand.name.toLowerCase())
-      );
-      if (foundBrand && !selectedBrandLenses.includes(foundBrand.id)) {
-        setSelectedBrandLenses([foundBrand.id]);
-      }
-    }
-  }, [searchParams, category, brand, categoryLenses, brandLenses, selectedCategoryLenses, selectedBrandLenses]);
-
-  // Filter brands based on search term
-  const filteredBrands = useMemo(() => {
-    if (!brandSearchTerm) return brandLenses;
-    return brandLenses.filter(brand => 
-      brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase())
-    );
-  }, [brandLenses, brandSearchTerm]);
 
   // Fetch lenses on component mount and when filters change
   useEffect(() => {
@@ -132,11 +106,10 @@ const LensPage: React.FC = () => {
           maxPrice: maxPrice < 10000000 ? maxPrice : undefined,
           sortBy: backendSortBy,
           sortOrder: sortOrder,
-          brandLensIds: selectedBrandLenses.length > 0 ? selectedBrandLenses : undefined,
-          categoryLensIds: selectedCategoryLenses.length > 0 ? selectedCategoryLenses : undefined,
-          lensTypes: selectedLensTypes.length > 0 ? selectedLensTypes : undefined,
+          brandIds: selectedBrands.length > 0 ? selectedBrands : undefined,
+          categoryIds: selectedCategories.length > 0 ? selectedCategories : undefined,
+          types: selectedTypes.length > 0 ? selectedTypes : undefined,
         });
-        
         setLenses(response.data || []);
         setTotal(response.total || 0);
       } catch (error) {
@@ -149,53 +122,30 @@ const LensPage: React.FC = () => {
     };
 
     fetchData();
-  }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrandLenses, selectedCategoryLenses, selectedLensTypes]);
+  }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrands, selectedCategories, selectedTypes]);
 
   // Helper function to get selected filter labels
-  const getSelectedFilters = () => {
-    const filters: { type: string; value: any; label: string; remove: () => void }[] = [];
+  const getSelectedFilters = (): Array<{type: string, value: any, label: string, remove: () => void}> => {
+    const filters: Array<{type: string, value: any, label: string, remove: () => void}> = [];
     
-    // Lens type filters
-    selectedLensTypes.forEach(type => {
-      const typeLabels: Record<LensType, string> = {
-        [LensType.SINGLE_VISION]: 'Single Vision',
-        [LensType.DRIVE_SAFE]: 'Drive Safe',
-        [LensType.PROGRESSIVE]: 'Progressive',
-        [LensType.OFFICE]: 'Office',
-        [LensType.NON_PRESCRIPTION]: 'Non-Prescription',
-      };
-      const label = `Type: ${typeLabels[type]}`;
-      filters.push({ 
-        type: 'lensType', 
-        value: type, 
-        label, 
-        remove: () => setSelectedLensTypes(prev => prev.filter(t => t !== type)) 
-      });
-    });
-
-    // Brand filters
-    selectedBrandLenses.forEach(brandId => {
-      const brand = brandLenses.find(b => b.id === brandId);
-      if (brand) {
-        filters.push({ 
-          type: 'brand', 
-          value: brandId, 
-          label: brand.name, 
-          remove: () => setSelectedBrandLenses(prev => prev.filter(id => id !== brandId)) 
-        });
-      }
+    // Type filters
+    selectedTypes.forEach(type => {
+      filters.push({ type: 'type', value: type, label: `Type: ${type}`, remove: () => setSelectedTypes(prev => prev.filter(t => t !== type)) });
     });
 
     // Category filters
-    selectedCategoryLenses.forEach(categoryId => {
-      const category = categoryLenses.find(c => c.id === categoryId);
+    selectedCategories.forEach(categoryId => {
+      const category = categories.find(c => c.id === categoryId);
       if (category) {
-        filters.push({ 
-          type: 'category', 
-          value: categoryId, 
-          label: `Category: ${category.name}`, 
-          remove: () => setSelectedCategoryLenses(prev => prev.filter(id => id !== categoryId)) 
-        });
+        filters.push({ type: 'category', value: categoryId, label: `Category: ${category.name}`, remove: () => setSelectedCategories(prev => prev.filter(id => id !== categoryId)) });
+      }
+    });
+
+    // Brand filters
+    selectedBrands.forEach(brandId => {
+      const brand = brands.find(b => b.id === brandId);
+      if (brand) {
+        filters.push({ type: 'brand', value: brandId, label: brand.name, remove: () => setSelectedBrands(prev => prev.filter(id => id !== brandId)) });
       }
     });
 
@@ -208,9 +158,9 @@ const LensPage: React.FC = () => {
   const clearAllFilters = () => {
     setPriceRange([0, 10000000]);
     setCurrentPage(1);
-    setSelectedBrandLenses([]);
-    setSelectedCategoryLenses([]);
-    setSelectedLensTypes([]);
+    setSelectedBrands([]);
+    setSelectedCategories([]);
+    setSelectedTypes([]);
     setBrandSearchTerm('');
   };
 
@@ -218,7 +168,7 @@ const LensPage: React.FC = () => {
   useEffect(() => {
     setCurrentPage(1);
     // eslint-disable-next-line
-  }, [selectedBrandLenses, selectedCategoryLenses, selectedLensTypes, priceRange]);
+  }, [selectedBrands, selectedCategories, selectedTypes, priceRange]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -228,19 +178,13 @@ const LensPage: React.FC = () => {
         <Navigation />
       </header>
 
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-100 py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Premium Lenses
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Discover our collection of high-quality lenses designed for your vision needs
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Hero Content */}
+      <HeroContent
+        title={heroContent.title}
+        description={heroContent.description}
+        heroImage={heroContent.heroImage}
+        backgroundColor={heroContent.backgroundColor}
+      />
 
       {/* Main Content Area */}
       <section className="py-8">
@@ -254,7 +198,7 @@ const LensPage: React.FC = () => {
                 
                 {/* Filter Header */}
                 <div className="flex items-center justify-between mb-5 pl-2">
-                  <h2 className="filter-header text-lg font-semibold">Filters</h2>
+                  <h2 className="filter-header">Filters</h2>
                   <button
                     onClick={() => setShowMobileFilters(false)}
                     className="lg:hidden text-gray-600 hover:text-black text-xl"
@@ -262,27 +206,48 @@ const LensPage: React.FC = () => {
                     ×
                   </button>
                 </div>
+                
+                {/* Recommendations Section */}
+                <FilterSection title="RECOMMENDATIONS FOR YOU">
+                  <div className="space-y-3">
+                    <label className="flex items-start space-x-3">
+                      <input type="checkbox" className="mt-1 filter-checkbox" />
+                      <span className="text-sm text-gray-700">Your recommended lens size</span>
+                    </label>
+                    <div className="bg-gray-200 p-3 rounded-lg border border-gray-100">
+                      <div className="flex items-start space-x-2">
+                        <div className="w-4 h-4 rounded-full bg-gray-100 text-black-600 flex items-center justify-center mt-1 text-xs font-medium">
+                          i
+                        </div>
+                        <div className="text-[14px] text-black-700">
+                          Do you already own a pair of our lenses? Log in now and filter lenses in your size.
+                        </div>
+                      </div>
+                      <button className="w-full mt-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-black-600 hover:bg-gray-50 transition-colors">
+                        Log in now
+                      </button>
+                    </div>
+                  </div>
+                </FilterSection>
 
-                {/* Lens Type */}
-                <FilterSection title="LENS TYPE">
+                {/* Type */}
+                <FilterSection title="TYPE">
                   <div className="space-y-2">
-                    {Object.values(LensType).map((type) => (
-                      <label key={type} className="flex items-center space-x-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedLensTypes.includes(type)}
+                    {['Daily', 'Weekly', 'Monthly', 'Yearly'].map((type) => (
+                      <label key={type} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="filter-checkbox"
+                          checked={selectedTypes.includes(type)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedLensTypes(prev => [...prev, type]);
+                              setSelectedTypes([...selectedTypes, type]);
                             } else {
-                              setSelectedLensTypes(prev => prev.filter(t => t !== type));
+                              setSelectedTypes(selectedTypes.filter(t => t !== type));
                             }
                           }}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                         />
-                        <span className="text-sm text-gray-700">
-                          {type.replace(/_/g, ' ').charAt(0).toUpperCase() + type.replace(/_/g, ' ').slice(1).toLowerCase()}
-                        </span>
+                        <span className="ml-3 mt-3 text-sm text-gray-700">{type}</span>
                       </label>
                     ))}
                   </div>
@@ -290,26 +255,24 @@ const LensPage: React.FC = () => {
 
                 {/* Category */}
                 <FilterSection title="CATEGORY">
-                  <div className="space-y-4">
-                    <div className="space-y-1 max-h-40 overflow-y-auto">
-                      {categoryLenses.map((category) => (
-                        <label key={category.id} className="flex items-center space-x-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedCategoryLenses.includes(category.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedCategoryLenses(prev => [...prev, category.id]);
-                              } else {
-                                setSelectedCategoryLenses(prev => prev.filter(id => id !== category.id));
-                              }
-                            }}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                          />
-                          <span className="text-sm text-gray-700">{category.name}</span>
-                        </label>
-                      ))}
-                    </div>
+                  <div className="space-y-2">
+                    {categories.map((category) => (
+                      <label key={category.id} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="filter-checkbox"
+                          checked={selectedCategories.includes(category.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedCategories([...selectedCategories, category.id]);
+                            } else {
+                              setSelectedCategories(selectedCategories.filter(id => id !== category.id));
+                            }
+                          }}
+                        />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">{category.name}</span>
+                      </label>
+                    ))}
                   </div>
                 </FilterSection>
 
@@ -323,25 +286,25 @@ const LensPage: React.FC = () => {
                         placeholder="Search brands..."
                         value={brandSearchTerm}
                         onChange={(e) => setBrandSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                       />
                     </div>
                     <div className="space-y-1 max-h-40 overflow-y-auto">
                       {filteredBrands.map((brand) => (
-                        <label key={brand.id} className="flex items-center space-x-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedBrandLenses.includes(brand.id)}
+                        <label key={brand.id} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            className="filter-checkbox"
+                            checked={selectedBrands.includes(brand.id)}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedBrandLenses(prev => [...prev, brand.id]);
+                                setSelectedBrands([...selectedBrands, brand.id]);
                               } else {
-                                setSelectedBrandLenses(prev => prev.filter(id => id !== brand.id));
+                                setSelectedBrands(selectedBrands.filter(id => id !== brand.id));
                               }
                             }}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                           />
-                          <span className="text-sm text-gray-700">{brand.name}</span>
+                          <span className="ml-3 mt-3 text-sm text-gray-700">{brand.name}</span>
                         </label>
                       ))}
                     </div>
@@ -370,26 +333,40 @@ const LensPage: React.FC = () => {
                     </div>
                     <div className="space-y-1">
                       {[
-                        { label: '< 500,000₫', min: 0, max: 500000 },
-                        { label: '500,000₫ - 1,000,000₫', min: 500000, max: 1000000 },
-                        { label: '1,000,000₫ - 2,000,000₫', min: 1000000, max: 2000000 },
-                        { label: '2,000,000₫ - 5,000,000₫', min: 2000000, max: 5000000 },
-                        { label: '> 5,000,000₫', min: 5000000, max: 10000000 }
-                      ].map((range) => (
-                        <label key={range.label} className="flex items-center space-x-3">
-                          <input
-                            type="checkbox"
-                            checked={priceRange[0] === range.min && priceRange[1] === range.max}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setPriceRange([range.min, range.max]);
-                              }
-                            }}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                          />
-                          <span className="text-sm text-gray-700">{range.label}</span>
-                        </label>
-                      ))}
+                        'Dưới 100,000₫',
+                        '100,000₫ - 500,000₫', 
+                        '500,000₫ - 1,000,000₫',
+                        '1,000,000₫ - 2,000,000₫',
+                        'Trên 2,000,000₫'
+                      ].map((price, index) => {
+                        const ranges = [
+                          [0, 100000],
+                          [100000, 500000],
+                          [500000, 1000000],
+                          [1000000, 2000000],
+                          [2000000, 10000000]
+                        ];
+                        const [min, max] = ranges[index];
+                        const isSelected = priceRange[0] === min && priceRange[1] === max;
+                        
+                        return (
+                          <label key={price} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              className="filter-checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setPriceRange([min, max]);
+                                } else {
+                                  setPriceRange([0, 10000000]);
+                                }
+                              }}
+                            />
+                            <span className="ml-3 text-sm text-gray-600 font-medium">{price}</span>
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
                 </FilterSection>
@@ -403,7 +380,7 @@ const LensPage: React.FC = () => {
               {/* Results Count and Sort Options */}
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
                 <div className="flex items-center space-x-4">
-                  <div className="product-total-count text-gray-600">
+                  <div className="product-total-count">
                     {total} Results
                   </div>
                   <button
@@ -417,9 +394,9 @@ const LensPage: React.FC = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
                   >
-                    <option value="newest">Most Popular</option>
+                    <option value="newest">Most popular</option>
                     <option value="price-low">Price: Low to High</option>
                     <option value="price-high">Price: High to Low</option>
                     <option value="name">Name: A to Z</option>
@@ -432,18 +409,19 @@ const LensPage: React.FC = () => {
                 <div className="mb-6">
                   <div className="flex flex-wrap gap-2 items-center">
                     {selectedFilters.map((filter, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                      <div
+                        key={`${filter.type}-${filter.value}-${index}`}
+                        className="inline-flex items-center bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
                       >
-                        {filter.label}
+                        <span>{filter.label}</span>
                         <button
                           onClick={filter.remove}
-                          className="ml-2 text-blue-600 hover:text-blue-800"
+                          className="ml-2 text-gray-500 hover:text-gray-700"
+                          aria-label={`Remove ${filter.label} filter`}
                         >
                           ×
                         </button>
-                      </span>
+                      </div>
                     ))}
                     <button
                       onClick={clearAllFilters}
@@ -457,7 +435,7 @@ const LensPage: React.FC = () => {
 
               {loading ? (
                 <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black-600"></div>
                 </div>
               ) : lenses.length === 0 ? (
                 <div className="flex flex-col justify-center items-center h-64 text-center">
@@ -470,7 +448,7 @@ const LensPage: React.FC = () => {
                   <p className="text-gray-500 mb-4">Try adjusting your filters or search terms</p>
                   <button 
                     onClick={clearAllFilters}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    className="bg-black-600 text-white px-4 py-2 rounded-md hover:bg-black-700 transition-colors"
                   >
                     Clear All Filters
                   </button>
@@ -479,7 +457,74 @@ const LensPage: React.FC = () => {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {lenses.map((lens) => (
-                      <LensCard key={lens.id} lens={lens} />
+                      <Link 
+                        key={lens.id} 
+                        to={`/lens/${lens.id}`}
+                        className="group cursor-pointer bg-gray-50 p-2 rounded-lg shadow-sm hover:shadow-md transition-shadow block"
+                      >
+                        <div className="relative rounded-lg mb-6 overflow-hidden h-96 flex items-center justify-center">
+                          {/* Badges */}
+                          <div className="absolute top-4 left-4 flex flex-row space-x-2 z-10">
+                            {lens.isNew && (
+                              <div className="bg-white text-green-700 px-3 py-1 text-xs font-medium">
+                                New
+                              </div>
+                            )}
+                            {lens.isFeatured && (
+                              <div className="bg-gray-800 text-white px-3 py-1 text-xs font-medium">
+                                Featured
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Heart Icon */}
+                          <div className="absolute top-2 right-4 z-10">
+                            <button 
+                              className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm hover:shadow-md transition-shadow"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                // Handle favorite logic here
+                              }}
+                            >
+                              <Heart className="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" />
+                            </button>
+                          </div>
+                          
+                          {/* Lens Image */}
+                          <img 
+                            src={lens.images && lens.images.length > 0 
+                              ? lens.images.find(img => img.isThumbnail === 1)?.imageUrl || lens.images[0]?.imageUrl 
+                              : "/api/placeholder/400/320"}
+                            alt={`${lens.brandLens?.name || 'Lens'} ${lens.name}`}
+                            className="w-full h-full max-w-[350px] max-h-[350px] object-contain group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              e.currentTarget.src = "/api/placeholder/400/320";
+                            }}
+                          />
+                        </div>
+                        
+                        {/* Lens Info */}
+                        <div className="space-y-4 p-2">
+                          <div>
+                            <h3 className="font-bold text-lg text-gray-900 text-secondary">{lens.brandLens?.name || 'Unknown Brand'}</h3>
+                            <p className="text-base font-light text-secondary">{lens.name}</p>
+                          </div>
+                          
+                          {lens.categoryLens?.name && (
+                            <p className="text-sm text-gray-500">{lens.categoryLens.name}</p>
+                          )}
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-light text-secondary">Base price</p>
+                              <span className="text-right text-base font-bold text-primary">
+                                {formatVND(typeof lens.basePrice === 'string' ? parseInt(lens.basePrice) : lens.basePrice)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
                     ))}
                   </div>
 
@@ -487,37 +532,36 @@ const LensPage: React.FC = () => {
                   {total > pageSize && (
                     <div className="flex justify-center mt-12">
                       <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        <button 
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                           disabled={currentPage === 1}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
                         >
                           Previous
                         </button>
                         
-                        {[...Array(Math.ceil(total / pageSize))].map((_, index) => {
-                          const page = index + 1;
-                          const isCurrentPage = page === currentPage;
-                          
+                        {/* Page numbers */}
+                        {Array.from({ length: Math.min(5, Math.ceil(total / pageSize)) }, (_, i) => {
+                          const pageNum = i + 1;
                           return (
                             <button
-                              key={page}
-                              onClick={() => setCurrentPage(page)}
-                              className={`px-3 py-2 border rounded-lg text-sm ${
-                                isCurrentPage
-                                  ? 'bg-blue-600 text-white border-blue-600'
-                                  : 'border-gray-300 hover:bg-gray-50'
+                              key={pageNum}
+                              onClick={() => setCurrentPage(pageNum)}
+                              className={`px-3 py-2 rounded-md ${
+                                currentPage === pageNum
+                                  ? 'bg-black-600 text-white'
+                                  : 'border border-gray-300 hover:bg-gray-50'
                               }`}
                             >
-                              {page}
+                              {pageNum}
                             </button>
                           );
                         })}
                         
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(total / pageSize)))}
-                          disabled={currentPage === Math.ceil(total / pageSize)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        <button 
+                          onClick={() => setCurrentPage(Math.min(Math.ceil(total / pageSize), currentPage + 1))}
+                          disabled={currentPage >= Math.ceil(total / pageSize)}
+                          className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
                         >
                           Next
                         </button>
@@ -533,14 +577,14 @@ const LensPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer - Same as ProductsPage */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <h3 className="font-bold text-lg mb-4">MATNICE EYEWEAR</h3>
               <p className="text-gray-400">
-                Your premier destination for premium lenses and optical solutions.
+                Your premier destination for stylish glasses and contact lenses.
               </p>
             </div>
             <div>
@@ -548,7 +592,7 @@ const LensPage: React.FC = () => {
               <ul className="space-y-2 text-gray-400">
                 <li><Link to="/glasses" className="hover:text-white">Glasses</Link></li>
                 <li><Link to="/sunglasses" className="hover:text-white">Sunglasses</Link></li>
-                <li><Link to="/lenses" className="hover:text-white">Lenses</Link></li>
+                <li><Link to="/lenses" className="hover:text-white">Contact Lenses</Link></li>
                 <li><Link to="/brands" className="hover:text-white">Brands</Link></li>
               </ul>
             </div>

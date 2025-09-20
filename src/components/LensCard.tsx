@@ -25,11 +25,11 @@ const LensCard: React.FC<LensCardProps> = ({ lens }) => {
   const getPrimaryImage = (): string | null => {
     if (!lens.images || lens.images.length === 0) return null;
     
-    // Find image with imageOrder 'a'
-    const primaryImage = lens.images.find(img => img.imageOrder === 'a');
-    if (primaryImage) return primaryImage.imageUrl;
+    // Find thumbnail image (isThumbnail === 1)
+    const thumbnailImage = lens.images.find(img => img.isThumbnail === 1);
+    if (thumbnailImage) return thumbnailImage.imageUrl;
     
-    // If no 'a' image, return first image
+    // If no thumbnail, return first image
     return lens.images[0]?.imageUrl || null;
   };
 

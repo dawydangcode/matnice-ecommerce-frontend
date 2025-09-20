@@ -5,11 +5,13 @@ export interface LensCard {
   description?: string;
   type?: LensType;
   basePrice: number | string;
+  isNew?: boolean;
+  isFeatured?: boolean;
   images: {
     id: number;
     imageUrl: string;
-    imageOrder: string;
-    isThumbnail?: number;
+    imageOrder: string; // "a", "b", "c", etc.
+    isThumbnail?: number; // 0 or 1 from backend
   }[];
   brandLens?: {
     id: number;
@@ -19,7 +21,6 @@ export interface LensCard {
     id: number;
     name: string;
   };
-  // Add more fields as needed
 }
 
 export enum LensType {
@@ -38,9 +39,9 @@ export interface LensCardFilters {
   maxPrice?: number;
   sortBy?: 'price' | 'name' | 'newest';
   sortOrder?: 'ASC' | 'DESC';
-  brandLensIds?: number[];
-  categoryLensIds?: number[];
-  lensTypes?: LensType[];
+  brandIds?: number[];
+  categoryIds?: number[];
+  types?: string[];
   search?: string;
 }
 
@@ -61,8 +62,11 @@ export interface BrandLensData {
 }
 
 // Category Lens Data for Filter
-export interface CategoryLensData {
+export interface LensCategoryData {
   id: number;
   name: string;
   description?: string;
 }
+
+// Alias for backward compatibility
+export type CategoryLensData = LensCategoryData;

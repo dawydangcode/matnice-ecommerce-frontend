@@ -25,14 +25,14 @@ class LensCardService {
       if (filters?.search) params.append('search', filters.search);
 
       // Array filters
-      if (filters?.brandLensIds?.length) {
-        params.append('brandLensIds', filters.brandLensIds.join(','));
+      if (filters?.brandIds?.length) {
+        params.append('brandIds', filters.brandIds.join(','));
       }
-      if (filters?.categoryLensIds?.length) {
-        params.append('categoryLensIds', filters.categoryLensIds.join(','));
+      if (filters?.categoryIds?.length) {
+        params.append('categoryIds', filters.categoryIds.join(','));
       }
-      if (filters?.lensTypes?.length) {
-        params.append('lensTypes', filters.lensTypes.join(','));
+      if (filters?.types?.length) {
+        params.append('types', filters.types.join(','));
       }
 
       const response = await apiService.get<LensCardResponse>(
