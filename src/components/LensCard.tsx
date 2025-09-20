@@ -21,12 +21,12 @@ const LensCard: React.FC<LensCardProps> = ({ lens }) => {
     return typeNames[type] || type;
   };
 
-  // Get primary image (with orderImage 'a')
+  // Get primary image (with imageOrder 'a')
   const getPrimaryImage = (): string | null => {
     if (!lens.images || lens.images.length === 0) return null;
     
-    // Find image with orderImage 'a'
-    const primaryImage = lens.images.find(img => img.orderImage === 'a');
+    // Find image with imageOrder 'a'
+    const primaryImage = lens.images.find(img => img.imageOrder === 'a');
     if (primaryImage) return primaryImage.imageUrl;
     
     // If no 'a' image, return first image
@@ -34,11 +34,12 @@ const LensCard: React.FC<LensCardProps> = ({ lens }) => {
   };
 
   // Format price
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('en-US', {
+  const formatPrice = (price: number | string): string => {
+    const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
+    return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
-      currency: 'USD',
-    }).format(price);
+      currency: 'VND',
+    }).format(numericPrice || 0);
   };
 
   const primaryImageUrl = getPrimaryImage();

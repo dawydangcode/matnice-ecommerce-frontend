@@ -20,7 +20,7 @@ const LensPage: React.FC = () => {
 
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
-  const [priceRange, setPriceRange] = useState([0, 1000]);
+  const [priceRange, setPriceRange] = useState([0, 10000000]);
 
   // Lenses state
   const [lenses, setLenses] = useState<LensCardType[]>([]);
@@ -129,7 +129,7 @@ const LensPage: React.FC = () => {
           page: currentPage,
           limit: pageSize,
           minPrice: minPrice > 0 ? minPrice : undefined,
-          maxPrice: maxPrice < 1000 ? maxPrice : undefined,
+          maxPrice: maxPrice < 10000000 ? maxPrice : undefined,
           sortBy: backendSortBy,
           sortOrder: sortOrder,
           brandLensIds: selectedBrandLenses.length > 0 ? selectedBrandLenses : undefined,
@@ -206,7 +206,7 @@ const LensPage: React.FC = () => {
 
   // Clear all filters
   const clearAllFilters = () => {
-    setPriceRange([0, 1000]);
+    setPriceRange([0, 10000000]);
     setCurrentPage(1);
     setSelectedBrandLenses([]);
     setSelectedCategoryLenses([]);
@@ -288,6 +288,31 @@ const LensPage: React.FC = () => {
                   </div>
                 </FilterSection>
 
+                {/* Category */}
+                <FilterSection title="CATEGORY">
+                  <div className="space-y-4">
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {categoryLenses.map((category) => (
+                        <label key={category.id} className="flex items-center space-x-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategoryLenses.includes(category.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCategoryLenses(prev => [...prev, category.id]);
+                              } else {
+                                setSelectedCategoryLenses(prev => prev.filter(id => id !== category.id));
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                          />
+                          <span className="text-sm text-gray-700">{category.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </FilterSection>
+
                 {/* Brand */}
                 <FilterSection title="BRAND">
                   <div className="space-y-4">
@@ -329,27 +354,27 @@ const LensPage: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <input 
                         type="number" 
-                        placeholder="Min"
+                        placeholder="Min (₫)"
                         value={priceRange[0]}
                         onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-                        className="w-20 px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-24 px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                       <span className="text-gray-500">-</span>
                       <input 
                         type="number" 
-                        placeholder="Max"
+                        placeholder="Max (₫)"
                         value={priceRange[1]}
                         onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                        className="w-20 px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-24 px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
                     <div className="space-y-1">
                       {[
-                        { label: '< $50', min: 0, max: 50 },
-                        { label: '$50 - $100', min: 50, max: 100 },
-                        { label: '$100 - $200', min: 100, max: 200 },
-                        { label: '$200 - $500', min: 200, max: 500 },
-                        { label: '> $500', min: 500, max: 1000 }
+                        { label: '< 500,000₫', min: 0, max: 500000 },
+                        { label: '500,000₫ - 1,000,000₫', min: 500000, max: 1000000 },
+                        { label: '1,000,000₫ - 2,000,000₫', min: 1000000, max: 2000000 },
+                        { label: '2,000,000₫ - 5,000,000₫', min: 2000000, max: 5000000 },
+                        { label: '> 5,000,000₫', min: 5000000, max: 10000000 }
                       ].map((range) => (
                         <label key={range.label} className="flex items-center space-x-3">
                           <input

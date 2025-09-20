@@ -4,11 +4,12 @@ export interface LensCard {
   name: string;
   description?: string;
   type?: LensType;
-  basePrice: number;
+  basePrice: number | string;
   images: {
     id: number;
     imageUrl: string;
-    orderImage: string;
+    imageOrder: string;
+    isThumbnail?: number;
   }[];
   brandLens?: {
     id: number;
