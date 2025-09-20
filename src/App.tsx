@@ -13,6 +13,7 @@ import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import LensPage from './pages/LensPage';
+import LensDetailPage from './pages/LensDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AddProduct3DModel from './pages/admin/AddProduct3DModel';
 import Configure3DModel from './pages/admin/Configure3DModel';
@@ -155,6 +156,7 @@ function App() {
           <Route path="/lenses" element={<LensPage />} />
           <Route path="/lenses/category/:category" element={<LensPage />} />
           <Route path="/lenses/brand/:brand" element={<LensPage />} />
+          <Route path="/lens/:id" element={<LensDetailPage />} />
 
           {/* AI Analysis Page - accessible by everyone */}
           <Route path="/ai" element={<AIAnalysisPage />} />
