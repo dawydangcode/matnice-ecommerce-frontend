@@ -187,6 +187,17 @@ const LensSelectionPage: React.FC = () => {
     return ['PROGRESSIVE', 'OFFICE'].includes(selectedLensType);
   };
 
+  const shouldShowAddWarning = () => {
+    if (!needsAddValue()) return false;
+    // Show warning if either R or L ADD value is still "-" (not selected)
+    return prescriptionData.addR === '-' || prescriptionData.addL === '-';
+  };
+
+  const getAddBorderColor = (value: string) => {
+    // Return red border if value is "-" (not selected), otherwise normal gray border
+    return value === '-' ? 'border-red-300' : 'border-gray-300';
+  };
+
   const selectedOption = lensTypeOptions.find(opt => opt.type === selectedLensType);
 
   return (
@@ -418,13 +429,13 @@ const LensSelectionPage: React.FC = () => {
                               <select
                                 value={prescriptionData.addR}
                                 onChange={(e) => setPrescriptionData(prev => ({...prev, addR: e.target.value}))}
-                                className="flex-1 px-3 py-2 border border-red-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className={`flex-1 px-3 py-2 border ${getAddBorderColor(prescriptionData.addR)} rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
                               >
                                 {ADD_VALUES.map((value) => (
                                   <option key={value} value={value}>{value}</option>
                                 ))}
                               </select>
-                              <div className="bg-gray-100 border-t border-r border-b border-red-300 rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center">
+                              <div className={`bg-gray-100 border-t border-r border-b ${getAddBorderColor(prescriptionData.addR)} rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center`}>
                                 dpt
                               </div>
                             </div>
@@ -435,26 +446,28 @@ const LensSelectionPage: React.FC = () => {
                               <select
                                 value={prescriptionData.addL}
                                 onChange={(e) => setPrescriptionData(prev => ({...prev, addL: e.target.value}))}
-                                className="flex-1 px-3 py-2 border border-red-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className={`flex-1 px-3 py-2 border ${getAddBorderColor(prescriptionData.addL)} rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500`}
                               >
                                 {ADD_VALUES.map((value) => (
                                   <option key={value} value={value}>{value}</option>
                                 ))}
                               </select>
-                              <div className="bg-gray-100 border-t border-r border-b border-red-300 rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center">
+                              <div className={`bg-gray-100 border-t border-r border-b ${getAddBorderColor(prescriptionData.addL)} rounded-r-lg px-3 py-2 text-gray-600 text-sm flex items-center`}>
                                 dpt
                               </div>
                             </div>
                           </div>
                         </div>
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                          <p className="text-red-700 text-sm flex items-center">
-                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                            </svg>
-                            Please provide an addition value if you have selected progressive or office glasses.
-                          </p>
-                        </div>
+                        {shouldShowAddWarning() && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <p className="text-red-700 text-sm flex items-center">
+                              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                              </svg>
+                              Please provide an addition value if you have selected progressive or office glasses.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -669,16 +682,6 @@ const LensSelectionPage: React.FC = () => {
                               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                             </svg>
                             Please enter a valid prescription date within the last 2 years.
-                          </p>
-                        </div>
-                      )}
-                      {!isCertified && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-2">
-                          <p className="text-red-700 text-sm flex items-center">
-                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                            </svg>
-                            Please confirm that you meet the certification requirements.
                           </p>
                         </div>
                       )}
