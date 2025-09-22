@@ -146,9 +146,27 @@ const LensSelectionPage: React.FC = () => {
   };
 
   const handleContinue = () => {
-    // Navigate to next step (Lens Thickness)
-    console.log('Continue to Lens Thickness');
-    // navigate('/lens-thickness');
+    // Prepare prescription data for lens filtering
+    const prescriptionParams = {
+      lensType: selectedLensType,
+      prescriptionOption,
+      ...(prescriptionOption === 'manual' && {
+        sphereR: prescriptionData.sphereR,
+        sphereL: prescriptionData.sphereL,
+        cylinderR: prescriptionData.cylinderR,
+        cylinderL: prescriptionData.cylinderL,
+        axisR: prescriptionData.axisR,
+        axisL: prescriptionData.axisL,
+        pd: prescriptionData.hasTwoPD ? `${prescriptionData.pdR}/${prescriptionData.pdL}` : prescriptionData.pd,
+        ...(needsAddValue() && {
+          addR: prescriptionData.addR,
+          addL: prescriptionData.addL
+        })
+      })
+    };
+    
+    console.log('Continue to Lens Selection with params:', prescriptionParams);
+    // navigate('/lens-selection-filter', { state: prescriptionParams });
   };
 
   // Validation functions
@@ -255,7 +273,7 @@ const LensSelectionPage: React.FC = () => {
                     onClick={handleContinue}
                     className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors mt-6"
                   >
-                    Continue to Lens Thickness
+                    Continue to Lens Selection
                   </button>
                 )}
               </div>
@@ -697,34 +715,10 @@ const LensSelectionPage: React.FC = () => {
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >
-                    Continue to Lens Thickness
+                    Continue to Lens Selection
                   </button>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Future Steps Preview */}
-          {showPrescriptionStep && (
-            <div className="space-y-4 text-gray-400">
-              <div className="flex items-center">
-                <div className="bg-gray-300 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3">
-                  3
-                </div>
-                <h2 className="text-lg">Your Lens Thickness</h2>
-              </div>
-              <div className="flex items-center">
-                <div className="bg-gray-300 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3">
-                  4
-                </div>
-                <h2 className="text-lg">Your lens quality</h2>
-              </div>
-              <div className="flex items-center">
-                <div className="bg-gray-300 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3">
-                  5
-                </div>
-                <h2 className="text-lg">Your Tint</h2>
-              </div>
             </div>
           )}
             </div>
