@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
 import productCardService from '../services/product-card.service';
+import lensPrescriptionService, { FilteredLens, LensPrescriptionFilterResponse } from '../services/lens-prescription.service';
 import { ProductCard } from '../types/product-card.types';
 
 // Prescription dropdown values
@@ -85,7 +86,12 @@ const LensSelectionPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [prescriptionOption, setPrescriptionOption] = useState<'saved' | 'manual'>('saved');
   const [showPrescriptionStep, setShowPrescriptionStep] = useState(false);
+  const [showLensSelectionStep, setShowLensSelectionStep] = useState(false);
   const [isCertified, setIsCertified] = useState(false);
+  const [filteredLenses, setFilteredLenses] = useState<FilteredLens[]>([]);
+  const [lensesLoading, setLensesLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   
   // Prescription form state
   const [prescriptionData, setPrescriptionData] = useState({
@@ -134,6 +140,13 @@ const LensSelectionPage: React.FC = () => {
     loadProductData();
   }, []);
 
+  // Effect to reload filtered lenses when page changes
+  useEffect(() => {
+    if (showLensSelectionStep && currentPage > 1) {
+      loadFilteredLenses();
+    }
+  }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleLensTypeSelect = (lensType: string) => {
     setSelectedLensType(lensType);
     
@@ -145,7 +158,7 @@ const LensSelectionPage: React.FC = () => {
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     // Prepare prescription data for lens filtering
     const prescriptionParams = {
       lensType: selectedLensType,
@@ -166,7 +179,10 @@ const LensSelectionPage: React.FC = () => {
     };
     
     console.log('Continue to Lens Selection with params:', prescriptionParams);
-    // navigate('/lens-selection-filter', { state: prescriptionParams });
+    
+    // Show step 3: Lens Selection and load filtered lenses
+    setShowLensSelectionStep(true);
+    await loadFilteredLenses();
   };
 
   // Validation functions
@@ -203,6 +219,68 @@ const LensSelectionPage: React.FC = () => {
 
   const needsAddValue = () => {
     return ['PROGRESSIVE', 'OFFICE'].includes(selectedLensType);
+  };
+
+  // Helper function to convert prescription values
+  const convertPrescriptionValue = (value: string): number | undefined => {
+    if (value === '± 0.00' || value === '-' || !value) return undefined;
+    
+    // Remove '+' prefix if present and convert to number
+    const numericValue = parseFloat(value.replace('+', ''));
+    return isNaN(numericValue) ? undefined : numericValue;
+  };
+
+  // Function to load filtered lenses based on prescription
+  const loadFilteredLenses = async () => {
+    if (prescriptionOption === 'saved') {
+      // For saved prescriptions, we would need to get the saved data first
+      // For now, just show all lenses
+      setLensesLoading(true);
+      try {
+        const response = await lensPrescriptionService.filterLensesByPrescription({
+          page: currentPage,
+          limit: 12
+        });
+        setFilteredLenses(response.data);
+        setTotalPages(response.meta.totalPages);
+      } catch (error) {
+        console.error('Error loading lenses:', error);
+        setFilteredLenses([]);
+      } finally {
+        setLensesLoading(false);
+      }
+      return;
+    }
+
+    // For manual prescription input, filter based on entered values
+    setLensesLoading(true);
+    try {
+      const prescriptionParams = {
+        sphereLeft: convertPrescriptionValue(prescriptionData.sphereL),
+        sphereRight: convertPrescriptionValue(prescriptionData.sphereR),
+        cylinderLeft: convertPrescriptionValue(prescriptionData.cylinderL),
+        cylinderRight: convertPrescriptionValue(prescriptionData.cylinderR),
+        ...(needsAddValue() && {
+          addLeft: convertPrescriptionValue(prescriptionData.addL),
+          addRight: convertPrescriptionValue(prescriptionData.addR),
+        }),
+        page: currentPage,
+        limit: 12
+      };
+
+      console.log('Filtering lenses with prescription:', prescriptionParams);
+      
+      const response = await lensPrescriptionService.filterLensesByPrescription(prescriptionParams);
+      setFilteredLenses(response.data);
+      setTotalPages(response.meta.totalPages);
+      
+      console.log(`Found ${response.data.length} compatible lenses`);
+    } catch (error) {
+      console.error('Error filtering lenses:', error);
+      setFilteredLenses([]);
+    } finally {
+      setLensesLoading(false);
+    }
   };
 
   const shouldShowAddWarning = () => {
@@ -290,15 +368,30 @@ const LensSelectionPage: React.FC = () => {
           {/* Step 2: Your Prescription Values */}
           {showPrescriptionStep && (
             <div className="mb-8">
-              <div className="flex items-center mb-6">
-                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white" style={{backgroundColor: '#363434'}}>
-                  2
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white" style={{backgroundColor: '#363434'}}>
+                    2
+                  </div>
+                  <h2 className="text-lg font-semibold">Your Prescription Values</h2>
                 </div>
-                <h2 className="text-lg font-semibold">Your Prescription Values</h2>
+                {showLensSelectionStep && (
+                  <button 
+                    onClick={() => {
+                      setShowLensSelectionStep(false);
+                    }}
+                    className="text-blue-600 text-sm hover:underline"
+                  >
+                    Change
+                  </button>
+                )}
               </div>
 
-              {/* Prescription Options */}
-              <div className="space-y-4 mb-6">
+              {!showLensSelectionStep ? (
+                // Full prescription form when not in step 3
+                <>
+                  {/* Prescription Options */}
+                  <div className="space-y-4 mb-6">
                 <div
                   className={`border rounded-lg p-4 cursor-pointer transition-all ${
                     prescriptionOption === 'saved'
@@ -719,6 +812,196 @@ const LensSelectionPage: React.FC = () => {
                   </button>
                 </div>
               )}
+                </>
+              ) : (
+                // Collapsed view when in step 3
+                <div className="border-2 rounded-lg p-4 bg-white" style={{borderColor: '#363434'}}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{prescriptionOption === 'saved' ? 'Using saved prescription values' : 'Manual prescription values entered'}</h3>
+                      <p className="text-gray-600 text-sm mt-1">
+                        {selectedLensType} lens prescription completed
+                      </p>
+                    </div>
+                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Lens Selection */}
+          {showLensSelectionStep && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white" style={{backgroundColor: '#363434'}}>
+                    3
+                  </div>
+                  <h2 className="text-lg font-semibold">Lens Selection</h2>
+                </div>
+                <button 
+                  onClick={() => setShowLensSelectionStep(false)}
+                  className="text-blue-600 text-sm hover:underline"
+                >
+                  Change
+                </button>
+              </div>
+
+              {/* Lens Filter Tabs */}
+              <div className="bg-white rounded-lg border p-6">
+                <div className="flex flex-wrap gap-4 mb-6">
+                  {/* Brand Filter */}
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Hãng</label>
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <option value="">Tất cả hãng</option>
+                      <option value="essilor">Essilor</option>
+                      <option value="zeiss">Zeiss</option>
+                      <option value="hoya">Hoya</option>
+                      <option value="rodenstock">Rodenstock</option>
+                    </select>
+                  </div>
+
+                  {/* Thickness Filter */}
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Độ dày</label>
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <option value="">Tất cả độ dày</option>
+                      <option value="thin">Mỏng (1.56)</option>
+                      <option value="medium">Trung bình (1.60)</option>
+                      <option value="thick">Dày (1.67)</option>
+                      <option value="ultra-thin">Siêu mỏng (1.74)</option>
+                    </select>
+                  </div>
+
+                  {/* Price Filter */}
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Giá</label>
+                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <option value="">Tất cả mức giá</option>
+                      <option value="under-1m">Dưới 1 triệu</option>
+                      <option value="1m-2m">1 - 2 triệu</option>
+                      <option value="2m-3m">2 - 3 triệu</option>
+                      <option value="over-3m">Trên 3 triệu</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Lens Results */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900">Tròng kính phù hợp</h3>
+                    {lensesLoading && (
+                      <div className="text-sm text-gray-600">Đang tìm kiếm...</div>
+                    )}
+                  </div>
+                  
+                  {/* Loading state */}
+                  {lensesLoading && (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  )}
+
+                  {/* No results */}
+                  {!lensesLoading && filteredLenses.length === 0 && (
+                    <div className="text-center py-8">
+                      <div className="text-gray-500 mb-2">Không tìm thấy tròng kính phù hợp</div>
+                      <div className="text-sm text-gray-400">Vui lòng thử điều chỉnh các thông số đo mắt</div>
+                    </div>
+                  )}
+
+                  {/* Lens grid */}
+                  {!lensesLoading && filteredLenses.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {filteredLenses.map((lens) => (
+                        <div key={lens.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-gray-900">{lens.name}</h4>
+                            <span className="text-lg font-semibold text-green-600">
+                              {lens.basePrice.toLocaleString('vi-VN')}₫
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {lens.lensType === 'SINGLE_VISION' && 'Single Vision'}
+                            {lens.lensType === 'PROGRESSIVE' && 'Progressive'}
+                            {lens.lensType === 'OFFICE' && 'Office'}
+                            {lens.lensType === 'DRIVE_SAFE' && 'Drive Safe'}
+                            {lens.lensType === 'NON_PRESCRIPTION' && 'Non-Prescription'}
+                            {lens.brandLens && ` - ${lens.brandLens.name}`}
+                          </p>
+                          {lens.description && (
+                            <p className="text-xs text-gray-500 mb-2 line-clamp-2">{lens.description}</p>
+                          )}
+                          {lens.imageUrl && (
+                            <div className="mb-2">
+                              <img 
+                                src={lens.imageUrl} 
+                                alt={lens.name}
+                                className="w-full h-32 object-cover rounded"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                              {lens.origin || 'Imported'}
+                            </span>
+                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                              {lens.status === 'IN_STOCK' ? 'Còn hàng' : 'Hết hàng'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Pagination */}
+                  {!lensesLoading && filteredLenses.length > 0 && totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-6">
+                      <button
+                        onClick={() => {
+                          if (currentPage > 1) {
+                            setCurrentPage(currentPage - 1);
+                            loadFilteredLenses();
+                          }
+                        }}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Trước
+                      </button>
+                      
+                      <span className="text-sm text-gray-600">
+                        Trang {currentPage} / {totalPages}
+                      </span>
+                      
+                      <button
+                        onClick={() => {
+                          if (currentPage < totalPages) {
+                            setCurrentPage(currentPage + 1);
+                            loadFilteredLenses();
+                          }
+                        }}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Tiếp
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <button className="w-full mt-6 bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                  Thêm vào giỏ hàng
+                </button>
+              </div>
             </div>
           )}
             </div>
