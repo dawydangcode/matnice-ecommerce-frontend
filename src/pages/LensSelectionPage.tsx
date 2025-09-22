@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -6,6 +6,7 @@ import Navigation from '../components/Navigation';
 import productCardService from '../services/product-card.service';
 import lensPrescriptionService, { FilteredLens, LensPrescriptionFilterResponse } from '../services/lens-prescription.service';
 import { ProductCard } from '../types/product-card.types';
+import '../styles/value-table.css';
 
 // Prescription dropdown values
 const SPHERE_VALUES = [
@@ -85,6 +86,7 @@ const LensSelectionPage: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<ProductCard | null>(null);
   const [loading, setLoading] = useState(true);
   const [prescriptionOption, setPrescriptionOption] = useState<'saved' | 'manual'>('saved');
+  const [currentStep, setCurrentStep] = useState(1);
   const [showPrescriptionStep, setShowPrescriptionStep] = useState(false);
   const [showLensSelectionStep, setShowLensSelectionStep] = useState(false);
   const [isCertified, setIsCertified] = useState(false);
@@ -92,6 +94,7 @@ const LensSelectionPage: React.FC = () => {
   const [lensesLoading, setLensesLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedLens, setSelectedLens] = useState<FilteredLens | null>(null);
   
   // Prescription form state
   const [prescriptionData, setPrescriptionData] = useState({
@@ -140,13 +143,6 @@ const LensSelectionPage: React.FC = () => {
     loadProductData();
   }, []);
 
-  // Effect to reload filtered lenses when page changes
-  useEffect(() => {
-    if (showLensSelectionStep && currentPage > 1) {
-      loadFilteredLenses();
-    }
-  }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const handleLensTypeSelect = (lensType: string) => {
     setSelectedLensType(lensType);
     
@@ -155,6 +151,40 @@ const LensSelectionPage: React.FC = () => {
     } else {
       // For NON_PRESCRIPTION, skip to next step
       handleContinue();
+    }
+  };
+
+  // Helper function to format prescription values for display
+  const formatPrescriptionValue = (value: string) => {
+    if (!value) return '0.00';
+    // Remove 'dpt' suffix and '±' prefix if present
+    let cleanValue = value.replace(/dpt$/, '').replace(/^± /, '').trim();
+    // If it's '0.00' or empty, show as '0.00'
+    if (cleanValue === '0.00' || cleanValue === '' || cleanValue === '± 0.00') return '0.00';
+    return cleanValue;
+  };
+
+  // Helper function to format axis values
+  const formatAxisValue = (value: string) => {
+    if (!value) return '0';
+    // Remove degree symbol if present
+    return value.replace(/°$/, '').trim();
+  };
+
+  // Helper function to format PD values
+  const formatPDValue = (isRight: boolean) => {
+    if (prescriptionData.hasTwoPD) {
+      // Use individual PD values
+      const value = isRight ? prescriptionData.pdR : prescriptionData.pdL;
+      return value || '0.00';
+    } else {
+      // Split single PD value in half
+      const singlePD = prescriptionData.pd;
+      if (singlePD) {
+        const numValue = parseFloat(singlePD);
+        return (numValue / 2).toFixed(2);
+      }
+      return '0.00';
     }
   };
 
@@ -217,9 +247,9 @@ const LensSelectionPage: React.FC = () => {
     return isPrescriptionDateValid() && isCertified;
   };
 
-  const needsAddValue = () => {
+  const needsAddValue = useCallback(() => {
     return ['PROGRESSIVE', 'OFFICE'].includes(selectedLensType);
-  };
+  }, [selectedLensType]);
 
   // Helper function to convert prescription values
   const convertPrescriptionValue = (value: string): number | undefined => {
@@ -231,7 +261,11 @@ const LensSelectionPage: React.FC = () => {
   };
 
   // Function to load filtered lenses based on prescription
-  const loadFilteredLenses = async () => {
+  const loadFilteredLenses = useCallback(async () => {
+    // Reset selected lens when filtering changes
+    console.log('Resetting selected lens and filtering...');
+    setSelectedLens(null);
+    
     if (prescriptionOption === 'saved') {
       // For saved prescriptions, we would need to get the saved data first
       // For now, just show all lenses
@@ -281,7 +315,46 @@ const LensSelectionPage: React.FC = () => {
     } finally {
       setLensesLoading(false);
     }
-  };
+  }, [
+    prescriptionOption, 
+    prescriptionData.sphereL,
+    prescriptionData.sphereR,
+    prescriptionData.cylinderL,
+    prescriptionData.cylinderR,
+    prescriptionData.addL,
+    prescriptionData.addR,
+    currentPage,
+    needsAddValue
+  ]);
+
+  // Effect to reload filtered lenses when prescription changes
+  useEffect(() => {
+    if (showLensSelectionStep && prescriptionOption === 'manual') {
+      // Debounce the filtering to avoid too many API calls
+      const timeoutId = setTimeout(() => {
+        loadFilteredLenses();
+      }, 500);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [
+    prescriptionData.sphereL,
+    prescriptionData.sphereR, 
+    prescriptionData.cylinderL,
+    prescriptionData.cylinderR,
+    prescriptionData.addL,
+    prescriptionData.addR,
+    showLensSelectionStep,
+    prescriptionOption,
+    loadFilteredLenses
+  ]);
+
+  // Effect to reload filtered lenses when page changes
+  useEffect(() => {
+    if (showLensSelectionStep && currentPage > 1) {
+      loadFilteredLenses();
+    }
+  }, [currentPage, loadFilteredLenses, showLensSelectionStep]);
 
   const shouldShowAddWarning = () => {
     if (!needsAddValue()) return false;
@@ -816,17 +889,50 @@ const LensSelectionPage: React.FC = () => {
               ) : (
                 // Collapsed view when in step 3
                 <div className="border-2 rounded-lg p-4 bg-white" style={{borderColor: '#363434'}}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{prescriptionOption === 'saved' ? 'Using saved prescription values' : 'Manual prescription values entered'}</h3>
-                      <p className="text-gray-600 text-sm mt-1">
-                        {selectedLensType} lens prescription completed
-                      </p>
+                  
+                  {prescriptionOption === 'manual' && (
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                      <h4 className="font-semibold text-gray-800 mb-6">Manually entered prescription values</h4>
+                      
+                      <div className="prescription-grid">
+                        {/* Header Row - All Prescription Types */}
+                        <div className="prescription-headers">
+                          <div className="prescription-spacer"></div>
+                          <div className="prescription-type-header">Sphere (S/SPH)</div>
+                          <div className="prescription-type-header">Cylinder (C/CYL)</div>
+                          <div className="prescription-type-header">Axis (A/ACH)</div>
+                          {needsAddValue() && <div className="prescription-type-header">Add (ADD)</div>}
+                          <div className="prescription-type-header">PD</div>
+                        </div>
+
+                        {/* Right Eye Row */}
+                        <div className="prescription-values-row">
+                          <div className="prescription-eye-label">Right eye</div>
+                          <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.sphereR)} dpt</div>
+                          <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.cylinderR)} dpt</div>
+                          <div className="prescription-value-box">{formatAxisValue(prescriptionData.axisR)}°</div>
+                          {needsAddValue() && <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.addR)} dpt</div>}
+                          <div className="prescription-value-box">{formatPDValue(true)} mm</div>
+                        </div>
+
+                        {/* Left Eye Row */}
+                        <div className="prescription-values-row">
+                          <div className="prescription-eye-label">Left eye</div>
+                          <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.sphereL)} dpt</div>
+                          <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.cylinderL)} dpt</div>
+                          <div className="prescription-value-box">{formatAxisValue(prescriptionData.axisL)}°</div>
+                          {needsAddValue() && <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.addL)} dpt</div>}
+                          <div className="prescription-value-box">{formatPDValue(false)} mm</div>
+                        </div>
+                      </div>
                     </div>
-                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </div>
+                  )}
+                  
+                  {prescriptionOption === 'saved' && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="text-gray-600 text-sm">Using saved prescription values</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -837,7 +943,7 @@ const LensSelectionPage: React.FC = () => {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
-                  <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white" style={{backgroundColor: '#363434'}}>
+                  <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white bg-gray-800">
                     3
                   </div>
                   <h2 className="text-lg font-semibold">Lens Selection</h2>
@@ -918,7 +1024,15 @@ const LensSelectionPage: React.FC = () => {
                   {!lensesLoading && filteredLenses.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {filteredLenses.map((lens) => (
-                        <div key={lens.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                        <div 
+                          key={lens.id} 
+                          className={`border rounded-lg p-4 transition-all cursor-pointer ${
+                            selectedLens?.id === lens.id 
+                              ? 'border-2 border-blue-500 bg-blue-50 shadow-md' 
+                              : 'border hover:shadow-md hover:border-gray-300'
+                          }`}
+                          onClick={() => setSelectedLens(lens)}
+                        >
                           <div className="flex justify-between items-start mb-2">
                             <h4 className="font-medium text-gray-900">{lens.name}</h4>
                             <span className="text-lg font-semibold text-green-600">
@@ -957,6 +1071,16 @@ const LensSelectionPage: React.FC = () => {
                               {lens.status === 'IN_STOCK' ? 'Còn hàng' : 'Hết hàng'}
                             </span>
                           </div>
+                          
+                          {/* Selection indicator */}
+                          {selectedLens?.id === lens.id && (
+                            <div className="mt-3 flex items-center text-blue-600">
+                              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-sm font-medium">Đã chọn</span>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1055,7 +1179,8 @@ const LensSelectionPage: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 text-base">Loại tròng</span>
                     <span className="font-semibold text-lg">
-                      {selectedLensType === 'SINGLE_VISION' ? 'Miễn phí' :
+                      {selectedLens ? `${selectedLens.basePrice.toLocaleString('vi-VN')}₫` :
+                       selectedLensType === 'SINGLE_VISION' ? 'Miễn phí' :
                        selectedLensType === 'PROGRESSIVE' ? '1.800.000₫' :
                        selectedLensType === 'OFFICE' ? '2.300.000₫' :
                        selectedLensType === 'DRIVE_SAFE' ? '2.100.000₫' :
@@ -1063,12 +1188,21 @@ const LensSelectionPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="text-sm text-gray-500 pl-0">
-                    {selectedLensType === 'SINGLE_VISION' ? 'Tròng đơn tròng' :
-                     selectedLensType === 'PROGRESSIVE' ? 'Tròng đa tròng' :
-                     selectedLensType === 'OFFICE' ? 'Tròng văn phòng' :
-                     selectedLensType === 'DRIVE_SAFE' ? 'Tròng lái xe an toàn' :
-                     selectedLensType === 'NON_PRESCRIPTION' ? 'Không có độ' :
-                     'Chọn loại tròng kính'}
+                    {selectedLens ? (
+                      <>
+                        <div>{selectedLens.name}</div>
+                        {selectedLens.brandLens && (
+                          <div className="text-xs text-gray-400 mt-1">{selectedLens.brandLens.name}</div>
+                        )}
+                      </>
+                    ) : (
+                      selectedLensType === 'SINGLE_VISION' ? 'Tròng đơn tròng' :
+                      selectedLensType === 'PROGRESSIVE' ? 'Tròng đa tròng' :
+                      selectedLensType === 'OFFICE' ? 'Tròng văn phòng' :
+                      selectedLensType === 'DRIVE_SAFE' ? 'Tròng lái xe an toàn' :
+                      selectedLensType === 'NON_PRESCRIPTION' ? 'Không có độ' :
+                      'Chọn loại tròng kính'
+                    )}
                   </div>
                   
                   <div className="flex justify-between items-center">
@@ -1081,13 +1215,17 @@ const LensSelectionPage: React.FC = () => {
                 
                 <div className="flex justify-between items-center mb-3">
                   <span className="font-bold text-xl text-gray-900">Tổng cộng</span>
-                  <span className="font-bold text-2xl" style={{color: '#363434'}}>
-                    {((Number(selectedProduct?.price) || 0) + (
-                      selectedLensType === 'PROGRESSIVE' ? 1800000 :
-                      selectedLensType === 'OFFICE' ? 2300000 :
-                      selectedLensType === 'DRIVE_SAFE' ? 2100000 :
-                      0
-                    )).toLocaleString('vi-VN')}₫
+                  <span className="font-bold text-2xl text-gray-800">
+                    {(() => {
+                      const framePrice = Number(selectedProduct?.price) || 0;
+                      const lensPrice = selectedLens ? selectedLens.basePrice : (
+                        selectedLensType === 'PROGRESSIVE' ? 1800000 :
+                        selectedLensType === 'OFFICE' ? 2300000 :
+                        selectedLensType === 'DRIVE_SAFE' ? 2100000 :
+                        0
+                      );
+                      return (framePrice + lensPrice).toLocaleString('vi-VN');
+                    })()}₫
                   </span>
                 </div>
                 <p className="text-sm text-gray-500">Đã bao gồm VAT</p>
