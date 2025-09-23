@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
 import productCardService from '../services/product-card.service';
 import lensPrescriptionService, { FilteredLens, LensPrescriptionFilterResponse } from '../services/lens-prescription.service';
+import lensDetailsService, { LensFullDetails, SelectedLensOptions, LensVariant, LensCoating, TintColor } from '../services/lens-details.service';
 import { ProductCard } from '../types/product-card.types';
 import '../styles/value-table.css';
 
@@ -89,12 +90,18 @@ const LensSelectionPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPrescriptionStep, setShowPrescriptionStep] = useState(false);
   const [showLensSelectionStep, setShowLensSelectionStep] = useState(false);
+  const [showLensOptionsStep, setShowLensOptionsStep] = useState(false);
   const [isCertified, setIsCertified] = useState(false);
   const [filteredLenses, setFilteredLenses] = useState<FilteredLens[]>([]);
   const [lensesLoading, setLensesLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedLens, setSelectedLens] = useState<FilteredLens | null>(null);
+  const [lensFullDetails, setLensFullDetails] = useState<LensFullDetails | null>(null);
+  const [selectedLensOptions, setSelectedLensOptions] = useState<SelectedLensOptions>({
+    coatings: []
+  });
+  const [lensOptionsLoading, setLensOptionsLoading] = useState(false);
   
   // Prescription form state
   const [prescriptionData, setPrescriptionData] = useState({
@@ -326,6 +333,31 @@ const LensSelectionPage: React.FC = () => {
     currentPage,
     needsAddValue
   ]);
+
+  // Function to load lens full details for step 4
+  const loadLensDetails = useCallback(async (lensId: string) => {
+    setLensOptionsLoading(true);
+    try {
+      const details = await lensDetailsService.getLensFullDetails(lensId);
+      setLensFullDetails(details);
+      console.log('Loaded lens details:', details);
+    } catch (error) {
+      console.error('Error loading lens details:', error);
+    } finally {
+      setLensOptionsLoading(false);
+    }
+  }, []);
+
+  // Function to proceed to lens options step
+  const proceedToLensOptions = async () => {
+    if (!selectedLens) {
+      alert('Vui lòng chọn một loại tròng kính trước khi tiếp tục');
+      return;
+    }
+    
+    await loadLensDetails(selectedLens.id);
+    setShowLensOptionsStep(true);
+  };
 
   // Effect to reload filtered lenses when prescription changes
   useEffect(() => {
@@ -949,15 +981,24 @@ const LensSelectionPage: React.FC = () => {
                   <h2 className="text-lg font-semibold">Lens Selection</h2>
                 </div>
                 <button 
-                  onClick={() => setShowLensSelectionStep(false)}
+                  onClick={() => {
+                    setShowLensSelectionStep(false);
+                    setShowLensOptionsStep(false);
+                    setSelectedLens(null);
+                    setLensFullDetails(null);
+                    setSelectedLensOptions({ coatings: [] });
+                  }}
                   className="text-blue-600 text-sm hover:underline"
                 >
                   Change
                 </button>
               </div>
 
-              {/* Lens Filter Tabs */}
-              <div className="bg-white rounded-lg border p-6">
+              {!showLensOptionsStep ? (
+                // Show lens grid when not in step 4
+                <>
+                  {/* Lens Filter Tabs */}
+                  <div className="bg-white rounded-lg border p-6">
                 <div className="flex flex-wrap gap-4 mb-6">
                   {/* Brand Filter */}
                   <div className="flex-1 min-w-[200px]">
@@ -1121,10 +1162,242 @@ const LensSelectionPage: React.FC = () => {
                     </div>
                   )}
                 </div>
+              </div>
+                </>
+              ) : (
+                // Show selected lens info when in step 4
+                selectedLens && (
+                  <div className="bg-white rounded-lg border p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Tròng kính đã chọn</h3>
+                    <div className="flex items-center justify-between bg-blue-50 rounded-lg p-4">
+                      <div className="flex items-center">
+                        {selectedLens.imageUrl && (
+                          <img 
+                            src={selectedLens.imageUrl} 
+                            alt={selectedLens.name}
+                            className="w-16 h-16 object-cover rounded mr-4"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                            }}
+                          />
+                        )}
+                        <div>
+                          <p className="font-medium text-blue-900">{selectedLens.name}</p>
+                          <p className="text-sm text-blue-700">
+                            {selectedLens.lensType === 'SINGLE_VISION' && 'Single Vision'}
+                            {selectedLens.lensType === 'PROGRESSIVE' && 'Progressive'}
+                            {selectedLens.lensType === 'OFFICE' && 'Office'}
+                            {selectedLens.lensType === 'DRIVE_SAFE' && 'Drive Safe'}
+                            {selectedLens.lensType === 'NON_PRESCRIPTION' && 'Non-Prescription'}
+                            {selectedLens.brandLens && ` - ${selectedLens.brandLens.name}`}
+                          </p>
+                          <p className="text-xs text-blue-600">{selectedLens.origin}</p>
+                        </div>
+                      </div>
+                      <span className="text-lg font-semibold text-blue-600">
+                        {selectedLens.basePrice.toLocaleString('vi-VN')}₫
+                      </span>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
 
-                <button className="w-full mt-6 bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors">
-                  Thêm vào giỏ hàng
-                </button>
+          {/* Continue to Lens Options Button */}
+          {showLensSelectionStep && selectedLens && !showLensOptionsStep && (
+            <div className="mb-8">
+              <button 
+                onClick={proceedToLensOptions}
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Tiếp tục với tùy chỉnh
+              </button>
+            </div>
+          )}
+
+          {/* Step 4: Lens Options */}
+          {showLensOptionsStep && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white bg-gray-800">
+                    4
+                  </div>
+                  <h2 className="text-lg font-semibold">Tùy chỉnh tròng kính</h2>
+                </div>
+              </div>
+
+              {/* Lens Options Content */}
+              <div className="bg-white rounded-lg border p-6">
+                {lensOptionsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-3 text-gray-600">Đang tải tùy chọn...</span>
+                  </div>
+                ) : lensFullDetails ? (
+                  <div className="space-y-6">
+                    {/* Selected Lens Info */}
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <h3 className="font-semibold text-blue-900 mb-2">Tròng kính đã chọn</h3>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{lensFullDetails.lens.name}</p>
+                          <p className="text-sm text-gray-600">
+                            {lensFullDetails.lens.brandLens?.name} - {lensFullDetails.lens.origin}
+                          </p>
+                        </div>
+                        <span className="text-lg font-semibold text-blue-600">
+                          {selectedLens?.basePrice.toLocaleString('vi-VN')}₫
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Variants Selection */}
+                    {lensFullDetails.variants.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-3">Chọn loại tròng và độ dày</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {lensFullDetails.variants.map((variant) => (
+                            <div 
+                              key={variant.id}
+                              className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                                selectedLensOptions.variant?.id === variant.id 
+                                  ? 'border-2 border-blue-500 bg-blue-50' 
+                                  : 'border hover:border-gray-300'
+                              }`}
+                              onClick={() => setSelectedLensOptions(prev => ({...prev, variant}))}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <h5 className="font-medium text-gray-900">{variant.lensThickness.name}</h5>
+                                <span className="text-sm font-semibold text-green-600">
+                                  +{Number(variant.price).toLocaleString('vi-VN')}₫
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-1">
+                                Chỉ số khúc xạ: {variant.lensThickness.indexValue}
+                              </p>
+                              <p className="text-sm text-gray-600 mb-2">
+                                Chất liệu: {variant.material} | Design: {variant.design}
+                              </p>
+                              <p className="text-xs text-gray-500">{variant.lensThickness.description}</p>
+                              <div className="mt-2">
+                                <span className={`px-2 py-1 text-xs rounded ${
+                                  variant.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {variant.stock > 0 ? `Còn ${variant.stock} sản phẩm` : 'Hết hàng'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Coatings Selection */}
+                    {lensFullDetails.coatings.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-3">Chọn lớp phủ (có thể chọn nhiều)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {lensFullDetails.coatings.map((coating) => (
+                            <div 
+                              key={coating.id}
+                              className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                                selectedLensOptions.coatings.some(c => c.id === coating.id)
+                                  ? 'border-2 border-blue-500 bg-blue-50' 
+                                  : 'border hover:border-gray-300'
+                              }`}
+                              onClick={() => {
+                                const isSelected = selectedLensOptions.coatings.some(c => c.id === coating.id);
+                                if (isSelected) {
+                                  setSelectedLensOptions(prev => ({
+                                    ...prev, 
+                                    coatings: prev.coatings.filter(c => c.id !== coating.id)
+                                  }));
+                                } else {
+                                  setSelectedLensOptions(prev => ({
+                                    ...prev, 
+                                    coatings: [...prev.coatings, coating]
+                                  }));
+                                }
+                              }}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <h5 className="font-medium text-gray-900">{coating.name}</h5>
+                                <span className="text-sm font-semibold text-green-600">
+                                  +{Number(coating.price).toLocaleString('vi-VN')}₫
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600">{coating.description}</p>
+                              {selectedLensOptions.coatings.some(c => c.id === coating.id) && (
+                                <div className="mt-2 flex items-center text-blue-600">
+                                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                  </svg>
+                                  <span className="text-sm font-medium">Đã chọn</span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tint Colors Selection (if available) */}
+                    {lensFullDetails.variants.some(v => v.tintColors.length > 0) && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-3">Chọn màu tông (tùy chọn)</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {lensFullDetails.variants
+                            .flatMap(v => v.tintColors)
+                            .filter((color, index, self) => self.findIndex(c => c.id === color.id) === index)
+                            .map((tintColor) => (
+                              <div 
+                                key={tintColor.id}
+                                className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                                  selectedLensOptions.tintColor?.id === tintColor.id
+                                    ? 'border-2 border-blue-500 bg-blue-50' 
+                                    : 'border hover:border-gray-300'
+                                }`}
+                                onClick={() => {
+                                  const isSelected = selectedLensOptions.tintColor?.id === tintColor.id;
+                                  setSelectedLensOptions(prev => ({
+                                    ...prev, 
+                                    tintColor: isSelected ? undefined : tintColor
+                                  }));
+                                }}
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center">
+                                    <div 
+                                      className="w-6 h-6 rounded-full border-2 border-gray-300 mr-2"
+                                      style={{ backgroundColor: tintColor.colorCode }}
+                                    ></div>
+                                    <span className="font-medium text-sm">{tintColor.name}</span>
+                                  </div>
+                                </div>
+                                <span className="text-xs font-semibold text-green-600">
+                                  +{Number(tintColor.price).toLocaleString('vi-VN')}₫
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="border-t pt-6">
+                      <button className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                        Thêm vào giỏ hàng
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">Không thể tải thông tin tùy chọn tròng kính</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1204,6 +1477,51 @@ const LensSelectionPage: React.FC = () => {
                       'Chọn loại tròng kính'
                     )}
                   </div>
+
+                  {/* Lens Variant Option */}
+                  {selectedLensOptions.variant && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-base">Độ dày tròng</span>
+                        <span className="font-semibold text-lg">
+                          +{Number(selectedLensOptions.variant.price).toLocaleString('vi-VN')}₫
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-500 pl-0">
+                        {selectedLensOptions.variant.lensThickness.name} (Chỉ số: {selectedLensOptions.variant.lensThickness.indexValue})
+                      </div>
+                    </>
+                  )}
+
+                  {/* Lens Coatings */}
+                  {selectedLensOptions.coatings.length > 0 && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-base">Lớp phủ</span>
+                        <span className="font-semibold text-lg">
+                          +{selectedLensOptions.coatings.reduce((sum, coating) => sum + Number(coating.price), 0).toLocaleString('vi-VN')}₫
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-500 pl-0">
+                        {selectedLensOptions.coatings.map(coating => coating.name).join(', ')}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Tint Color */}
+                  {selectedLensOptions.tintColor && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-base">Màu tông</span>
+                        <span className="font-semibold text-lg">
+                          +{Number(selectedLensOptions.tintColor.price).toLocaleString('vi-VN')}₫
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-500 pl-0">
+                        {selectedLensOptions.tintColor.name}
+                      </div>
+                    </>
+                  )}
                   
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 text-base">Giao hàng (7-15 ngày)</span>
@@ -1224,7 +1542,14 @@ const LensSelectionPage: React.FC = () => {
                         selectedLensType === 'DRIVE_SAFE' ? 2100000 :
                         0
                       );
-                      return (framePrice + lensPrice).toLocaleString('vi-VN');
+                      
+                      // Add lens options prices
+                      const variantPrice = selectedLensOptions.variant ? Number(selectedLensOptions.variant.price) : 0;
+                      const coatingsPrice = selectedLensOptions.coatings.reduce((sum, coating) => sum + Number(coating.price), 0);
+                      const tintPrice = selectedLensOptions.tintColor ? Number(selectedLensOptions.tintColor.price) : 0;
+                      
+                      const totalPrice = framePrice + lensPrice + variantPrice + coatingsPrice + tintPrice;
+                      return totalPrice.toLocaleString('vi-VN');
                     })()}₫
                   </span>
                 </div>
