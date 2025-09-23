@@ -75,6 +75,104 @@ export interface AddLensProductToCartResponse {
   };
 }
 
+export interface CartSummary {
+  cartId: number;
+  items: CartItemSummary[];
+  totalItems: number;
+  totalFramePrice: number;
+  totalLensPrice: number;
+  totalDiscount: number;
+  grandTotal: number;
+}
+
+export interface CartItemSummary {
+  cartFrameId: number;
+  productId: number;
+  productName?: string;
+  frameColor?: string;
+  quantity: number;
+  framePrice: number;
+  totalPrice: number;
+  discount: number;
+  lensDetail?: {
+    id: number;
+    lensId: number | undefined;
+    lensType: string | undefined;
+    lensQuality: string;
+    lensPrice: number;
+    totalUpgradesPrice: number;
+    prescription: {
+      rightEye: {
+        sphere: number | undefined;
+        cylinder: number | undefined;
+        axis: number | undefined;
+      };
+      leftEye: {
+        sphere: number | undefined;
+        cylinder: number | undefined;
+        axis: number | undefined;
+      };
+      pdLeft: number | undefined;
+      pdRight: number | undefined;
+    };
+    upgrades: {
+      hardCoating: boolean;
+      antiReflection: boolean;
+      uvProtection: boolean;
+      blueLight: boolean;
+      lotusEffect: boolean;
+      smartFocus: boolean;
+      transition: boolean;
+      progressive: boolean;
+    };
+  };
+}
+
+export interface CartItemWithDetails {
+  frame: {
+    id: number;
+    cartId: number;
+    productId: number;
+    quantity: number;
+    framePrice: number;
+    totalPrice: number;
+    discount: number;
+    addedAt: string;
+    createdAt: string;
+    createdBy: number;
+    updatedAt: string;
+    updatedBy: number;
+    deletedAt?: string;
+    deletedBy?: number;
+  };
+  lensDetail?: {
+    id: number;
+    cartFrameId: number;
+    lensVariantId: number;
+    rightEyeSphere: number;
+    rightEyeCylinder?: number;
+    rightEyeAxis?: number;
+    leftEyeSphere: number;
+    leftEyeCylinder?: number;
+    leftEyeAxis?: number;
+    pdLeft?: number;
+    pdRight?: number;
+    addLeft?: number;
+    addRight?: number;
+    lensPrice: number;
+    selectedCoatingIds: string | null; // JSON string
+    selectedTintColorId: number | null;
+    prescriptionNotes?: string;
+    lensNotes?: string;
+    createdAt: string;
+    createdBy: number;
+    updatedAt: string;
+    updatedBy: number;
+    deletedAt?: string;
+    deletedBy?: number;
+  };
+}
+
 class CartService {
   async addLensProductToCart(
     data: AddLensProductToCartRequest,
@@ -101,6 +199,60 @@ class CartService {
     // For now, return a hardcoded cartId. In real implementation,
     // you would check if user has an active cart or create a new one
     return { cartId: 1 };
+  }
+
+  // Get cart summary
+  async getCartSummary(cartId: number): Promise<CartSummary> {
+    try {
+      const response = await apiService.get<CartSummary>(
+        `/api/v1/cart/${cartId}/summary`,
+      );
+      return response;
+    } catch (error: any) {
+      console.error('Error getting cart summary:', error);
+      throw error;
+    }
+  }
+
+  // Get cart items with full details
+  async getCartItemsWithFullDetails(
+    cartId: number,
+  ): Promise<CartItemWithDetails[]> {
+    try {
+      const response = await apiService.get<CartItemWithDetails[]>(
+        `/api/v1/cart/${cartId}/items-with-details`,
+      );
+      return response;
+    } catch (error: any) {
+      console.error('Error getting cart items with details:', error);
+      throw error;
+    }
+  }
+
+  // Delete cart item
+  async deleteCartItem(cartFrameId: number): Promise<boolean> {
+    try {
+      const response = await apiService.delete<boolean>(
+        `/api/v1/cart/item/${cartFrameId}/delete-complete`,
+      );
+      return response;
+    } catch (error: any) {
+      console.error('Error deleting cart item:', error);
+      throw error;
+    }
+  }
+
+  // Clear cart
+  async clearCart(cartId: number): Promise<boolean> {
+    try {
+      const response = await apiService.delete<boolean>(
+        `/api/v1/cart/${cartId}/clear`,
+      );
+      return response;
+    } catch (error: any) {
+      console.error('Error clearing cart:', error);
+      throw error;
+    }
   }
 }
 

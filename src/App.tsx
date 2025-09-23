@@ -15,6 +15,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import LensPage from './pages/LensPage';
 import LensDetailPage from './pages/LensDetailPage';
 import LensSelectionPage from './pages/LensSelectionPage';
+import CartPage from './pages/CartPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AddProduct3DModel from './pages/admin/AddProduct3DModel';
 import Configure3DModel from './pages/admin/Configure3DModel';
@@ -159,6 +160,16 @@ function App() {
           <Route path="/lenses/brand/:brand" element={<LensPage />} />
           <Route path="/lens/:id" element={<LensDetailPage />} />
           <Route path="/lens-selection" element={<LensSelectionPage />} />
+
+          {/* Cart Page - requires login */}
+          <Route 
+            path="/cart" 
+            element={
+              <ProtectedRoute>
+                <CartPage />
+              </ProtectedRoute>
+            } 
+          />
 
           {/* AI Analysis Page - accessible by everyone */}
           <Route path="/ai" element={<AIAnalysisPage />} />

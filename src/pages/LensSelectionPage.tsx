@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
@@ -342,6 +343,17 @@ const LensSelectionPage: React.FC = () => {
       const details = await lensDetailsService.getLensFullDetails(lensId);
       setLensFullDetails(details);
       console.log('Loaded lens details:', details);
+
+      // Auto-select first options as defaults
+      setSelectedLensOptions({
+        variant: details.variants.length > 0 ? details.variants[0] : undefined,
+        coatings: details.coatings.length > 0 
+          ? [details.coatings[0]] 
+          : [],
+        tintColor: details.variants.length > 0 && details.variants[0].tintColors.length > 0
+          ? details.variants[0].tintColors[0]
+          : undefined,
+      });
     } catch (error) {
       console.error('Error loading lens details:', error);
     } finally {
@@ -485,14 +497,16 @@ const LensSelectionPage: React.FC = () => {
       const result = await cartService.addLensProductToCart(cartData);
       console.log('Added to cart successfully:', result);
       
-      alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
+      toast.success('Đã thêm sản phẩm vào giỏ hàng thành công!');
       
-      // Optionally navigate to cart or reset form
-      // navigate('/cart');
+      // Navigate to cart page after successful addition
+      setTimeout(() => {
+        navigate('/cart');
+      }, 1500); // Give user time to see the success message
       
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert('Có lỗi xảy ra khi thêm vào giỏ hàng. Vui lòng thử lại.');
+      toast.error('Có lỗi xảy ra khi thêm vào giỏ hàng. Vui lòng thử lại.');
     } finally {
       setIsAddingToCart(false);
     }
