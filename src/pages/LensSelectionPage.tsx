@@ -6,6 +6,7 @@ import Navigation from '../components/Navigation';
 import productCardService from '../services/product-card.service';
 import lensPrescriptionService, { FilteredLens, LensPrescriptionFilterResponse } from '../services/lens-prescription.service';
 import lensDetailsService, { LensFullDetails, SelectedLensOptions, LensVariant, LensCoating, TintColor } from '../services/lens-details.service';
+import cartService, { AddLensProductToCartRequest } from '../services/cart.service';
 import { ProductCard } from '../types/product-card.types';
 import '../styles/value-table.css';
 
@@ -102,6 +103,7 @@ const LensSelectionPage: React.FC = () => {
     coatings: []
   });
   const [lensOptionsLoading, setLensOptionsLoading] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   
   // Prescription form state
   const [prescriptionData, setPrescriptionData] = useState({
@@ -396,6 +398,79 @@ const LensSelectionPage: React.FC = () => {
   const getAddBorderColor = (value: string) => {
     // Return red border if value is "-" (not selected), otherwise normal gray border
     return value === '-' ? 'border-red-300' : 'border-gray-300';
+  };
+
+  const handleAddToCart = async () => {
+    if (!selectedProduct || !selectedLens || !lensFullDetails?.variants?.[0]) {
+      alert('Vui lòng đảm bảo đã chọn đầy đủ sản phẩm và tròng kính');
+      return;
+    }
+
+    // Validation for Progressive lenses
+    if (selectedLensType === 'PROGRESSIVE' && shouldShowAddWarning()) {
+      alert('Với tròng kính Progressive, vui lòng chọn giá trị ADD cho cả hai mắt');
+      return;
+    }
+
+    try {
+      setIsAddingToCart(true);
+      
+      // Get or create cart
+      const { cartId } = await cartService.getOrCreateCart();
+
+      // Prepare prescription values - convert string to numbers
+      const parseValue = (value: string) => {
+        if (value === '± 0.00') return 0;
+        if (value === '-') return 0;
+        if (value.includes('°')) return parseFloat(value.replace('°', ''));
+        return parseFloat(value);
+      };
+
+      // Prepare cart data
+      const cartData: AddLensProductToCartRequest = {
+        cartId,
+        frameData: {
+          productId: selectedProduct.id,
+          framePrice: selectedProduct.price,
+          quantity: 1,
+          // selectedColorId: selectedProduct.colors?.[0]?.id || undefined // ProductCard doesn't have colors
+        },
+        lensData: {
+          lensVariantId: parseInt(lensFullDetails.variants[0].id),
+          lensPrice: selectedLens.basePrice,
+          prescriptionValues: {
+            rightEyeSphere: parseValue(prescriptionData.sphereR),
+            leftEyeSphere: parseValue(prescriptionData.sphereL),
+            rightEyeCylinder: parseValue(prescriptionData.cylinderR),
+            leftEyeCylinder: parseValue(prescriptionData.cylinderL),
+            rightEyeAxis: parseValue(prescriptionData.axisR),
+            leftEyeAxis: parseValue(prescriptionData.axisL),
+            pdLeft: prescriptionData.hasTwoPD ? parseValue(prescriptionData.pdL) : parseValue(prescriptionData.pd) / 2,
+            pdRight: prescriptionData.hasTwoPD ? parseValue(prescriptionData.pdR) : parseValue(prescriptionData.pd) / 2,
+            addLeft: parseValue(prescriptionData.addL),
+            addRight: parseValue(prescriptionData.addR)
+          },
+          selectedCoatingIds: selectedLensOptions.coatings.map(coating => parseInt(coating.id)),
+          selectedTintColorId: selectedLensOptions.tintColor ? parseInt(selectedLensOptions.tintColor.id) : undefined,
+          prescriptionNotes: 'Từ trang Lens Selection',
+          lensNotes: `Loại tròng: ${selectedLensType}`
+        }
+      };
+
+      const result = await cartService.addLensProductToCart(cartData);
+      console.log('Added to cart successfully:', result);
+      
+      alert('Đã thêm sản phẩm vào giỏ hàng thành công!');
+      
+      // Optionally navigate to cart or reset form
+      // navigate('/cart');
+      
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Có lỗi xảy ra khi thêm vào giỏ hàng. Vui lòng thử lại.');
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const selectedOption = lensTypeOptions.find(opt => opt.type === selectedLensType);
@@ -1680,6 +1755,28 @@ const LensSelectionPage: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-sm text-gray-500">Đã bao gồm VAT</p>
+                
+                {/* Add to Cart Button */}
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isAddingToCart || !selectedProduct || !selectedLens || (selectedLensType === 'PROGRESSIVE' && shouldShowAddWarning())}
+                  className={`w-full mt-6 py-4 px-6 rounded-lg font-semibold text-lg transition-colors ${
+                    isAddingToCart || !selectedProduct || !selectedLens || (selectedLensType === 'PROGRESSIVE' && shouldShowAddWarning())
+                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {isAddingToCart ? 'Đang thêm vào giỏ hàng...' : 'Thêm vào giỏ hàng'}
+                </button>
+                
+                {/* Validation message for Progressive lenses */}
+                {selectedLensType === 'PROGRESSIVE' && shouldShowAddWarning() && (
+                  <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-700">
+                      Với tròng kính Progressive, vui lòng chọn giá trị ADD cho cả hai mắt
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Trust Indicators */}
