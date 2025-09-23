@@ -79,10 +79,10 @@ export interface CartSummary {
   cartId: number;
   items: CartItemSummary[];
   totalItems: number;
-  totalFramePrice: number;
-  totalLensPrice: number;
-  totalDiscount: number;
-  grandTotal: number;
+  totalFramePrice: number | string; // API might return string
+  totalLensPrice: number | string; // API might return string
+  totalDiscount: number | string; // API might return string
+  grandTotal: number | string; // API might return string
 }
 
 export interface CartItemSummary {
@@ -91,16 +91,16 @@ export interface CartItemSummary {
   productName?: string;
   frameColor?: string;
   quantity: number;
-  framePrice: number;
-  totalPrice: number;
-  discount: number;
+  framePrice: number | string; // API might return string
+  totalPrice: number | string; // API might return string
+  discount: number | string; // API might return string
   lensDetail?: {
     id: number;
     lensId: number | undefined;
     lensType: string | undefined;
     lensQuality: string;
-    lensPrice: number;
-    totalUpgradesPrice: number;
+    lensPrice: number | string; // API might return string
+    totalUpgradesPrice: number | string; // API might return string
     prescription: {
       rightEye: {
         sphere: number | undefined;
@@ -134,9 +134,9 @@ export interface CartItemWithDetails {
     cartId: number;
     productId: number;
     quantity: number;
-    framePrice: number;
-    totalPrice: number;
-    discount: number;
+    framePrice: number | string; // API returns string
+    totalPrice: number | string; // API returns string
+    discount: number | string; // API returns string
     addedAt: string;
     createdAt: string;
     createdBy: number;
@@ -149,17 +149,17 @@ export interface CartItemWithDetails {
     id: number;
     cartFrameId: number;
     lensVariantId: number;
-    rightEyeSphere: number;
-    rightEyeCylinder?: number;
-    rightEyeAxis?: number;
-    leftEyeSphere: number;
-    leftEyeCylinder?: number;
-    leftEyeAxis?: number;
-    pdLeft?: number;
-    pdRight?: number;
-    addLeft?: number;
-    addRight?: number;
-    lensPrice: number;
+    rightEyeSphere: number | string; // API returns string
+    rightEyeCylinder?: number | string; // API returns string
+    rightEyeAxis?: number | string; // API can return string
+    leftEyeSphere: number | string; // API returns string
+    leftEyeCylinder?: number | string; // API returns string
+    leftEyeAxis?: number | string; // API can return string
+    pdLeft?: number | string; // API returns string
+    pdRight?: number | string; // API returns string
+    addLeft?: number | string; // API returns string
+    addRight?: number | string; // API returns string
+    lensPrice: number | string; // API returns string
     selectedCoatingIds: string | null; // JSON string
     selectedTintColorId: number | null;
     prescriptionNotes?: string;

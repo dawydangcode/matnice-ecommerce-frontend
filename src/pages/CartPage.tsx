@@ -93,35 +93,52 @@ const CartPage: React.FC = () => {
     }
   };
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | string) => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    if (isNaN(numPrice)) return '0 ₫';
+    
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND',
-    }).format(price);
+    }).format(numPrice);
   };
 
-  const formatPrescriptionValue = (value: number | undefined, suffix: string = '') => {
+  const safeParseNumber = (value: number | string | undefined): number => {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  };
+
+  const formatPrescriptionValue = (value: number | string | undefined, suffix: string = '') => {
     if (value === undefined || value === null) return '-';
-    if (value === 0) return `± 0.00${suffix}`;
-    return value > 0 ? `+${value.toFixed(2)}${suffix}` : `${value.toFixed(2)}${suffix}`;
+    
+    // Convert string to number if needed
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    
+    if (isNaN(numValue)) return '-';
+    if (numValue === 0) return `± 0.00${suffix}`;
+    return numValue > 0 ? `+${numValue.toFixed(2)}${suffix}` : `${numValue.toFixed(2)}${suffix}`;
   };
 
   const parsePrescriptionFromLensDetail = (lensDetail: any): PrescriptionDisplay => {
     return {
       rightEye: {
-        sphere: lensDetail.rightEyeSphere,
-        cylinder: lensDetail.rightEyeCylinder,
-        axis: lensDetail.rightEyeAxis,
+        sphere: lensDetail.rightEyeSphere ? safeParseNumber(lensDetail.rightEyeSphere) : undefined,
+        cylinder: lensDetail.rightEyeCylinder ? safeParseNumber(lensDetail.rightEyeCylinder) : undefined,
+        axis: lensDetail.rightEyeAxis ? safeParseNumber(lensDetail.rightEyeAxis) : undefined,
       },
       leftEye: {
-        sphere: lensDetail.leftEyeSphere,
-        cylinder: lensDetail.leftEyeCylinder,
-        axis: lensDetail.leftEyeAxis,
+        sphere: lensDetail.leftEyeSphere ? safeParseNumber(lensDetail.leftEyeSphere) : undefined,
+        cylinder: lensDetail.leftEyeCylinder ? safeParseNumber(lensDetail.leftEyeCylinder) : undefined,
+        axis: lensDetail.leftEyeAxis ? safeParseNumber(lensDetail.leftEyeAxis) : undefined,
       },
-      pdLeft: lensDetail.pdLeft,
-      pdRight: lensDetail.pdRight,
-      addLeft: lensDetail.addLeft,
-      addRight: lensDetail.addRight,
+      pdLeft: lensDetail.pdLeft ? safeParseNumber(lensDetail.pdLeft) : undefined,
+      pdRight: lensDetail.pdRight ? safeParseNumber(lensDetail.pdRight) : undefined,
+      addLeft: lensDetail.addLeft ? safeParseNumber(lensDetail.addLeft) : undefined,
+      addRight: lensDetail.addRight ? safeParseNumber(lensDetail.addRight) : undefined,
     };
   };
 
@@ -258,7 +275,10 @@ const CartPage: React.FC = () => {
                             <p><strong>Giảm giá:</strong> {formatPrice(item.frame.discount)}</p>
                             <p><strong>Tổng tiền:</strong> 
                               <span className="text-blue-600 font-semibold">
-                                {formatPrice(item.frame.totalPrice + (item.lensDetail?.lensPrice || 0))}
+                                {formatPrice(
+                                  safeParseNumber(item.frame.totalPrice) + 
+                                  safeParseNumber(item.lensDetail?.lensPrice)
+                                )}
                               </span>
                             </p>
                           </div>
@@ -350,7 +370,7 @@ const CartPage: React.FC = () => {
                     <span>{formatPrice(cartSummary.totalLensPrice)}</span>
                   </div>
                   
-                  {cartSummary.totalDiscount > 0 && (
+                  {safeParseNumber(cartSummary.totalDiscount) > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Giảm giá:</span>
                       <span className="text-red-600">-{formatPrice(cartSummary.totalDiscount)}</span>
