@@ -42,6 +42,7 @@ export interface LensPrescriptionFilterResponse {
 class LensPrescriptionService {
   async filterLensesByPrescription(
     prescriptionData: PrescriptionData,
+    lensType?: string,
   ): Promise<LensPrescriptionFilterResponse> {
     try {
       const params = new URLSearchParams();
@@ -66,6 +67,11 @@ class LensPrescriptionService {
       }
       if (prescriptionData.addRight !== undefined) {
         params.append('addRight', prescriptionData.addRight.toString());
+      }
+
+      // Add lens type filter
+      if (lensType) {
+        params.append('lensType', lensType);
       }
 
       params.append('page', (prescriptionData.page || 1).toString());

@@ -279,7 +279,7 @@ const LensSelectionPage: React.FC = () => {
         const response = await lensPrescriptionService.filterLensesByPrescription({
           page: currentPage,
           limit: 12
-        });
+        }, selectedLensType);
         setFilteredLenses(response.data);
         setTotalPages(response.meta.totalPages);
       } catch (error) {
@@ -309,7 +309,7 @@ const LensSelectionPage: React.FC = () => {
 
       console.log('Filtering lenses with prescription:', prescriptionParams);
       
-      const response = await lensPrescriptionService.filterLensesByPrescription(prescriptionParams);
+      const response = await lensPrescriptionService.filterLensesByPrescription(prescriptionParams, selectedLensType);
       setFilteredLenses(response.data);
       setTotalPages(response.meta.totalPages);
       
@@ -329,7 +329,8 @@ const LensSelectionPage: React.FC = () => {
     prescriptionData.addL,
     prescriptionData.addR,
     currentPage,
-    needsAddValue
+    needsAddValue,
+    selectedLensType
   ]);
 
   // Function to load lens full details for step 4
