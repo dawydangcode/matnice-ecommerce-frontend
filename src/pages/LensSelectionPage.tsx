@@ -82,7 +82,7 @@ const lensTypeOptions: LensTypeOption[] = [
 const LensSelectionPage: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const navigate = useNavigate();
-  const [selectedLensType, setSelectedLensType] = useState<string>('');
+  const [selectedLensType, setSelectedLensType] = useState<string>('SINGLE_VISION');
   const [availableProducts, setAvailableProducts] = useState<ProductCard[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<ProductCard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -152,13 +152,11 @@ const LensSelectionPage: React.FC = () => {
 
   const handleLensTypeSelect = (lensType: string) => {
     setSelectedLensType(lensType);
-    
-    if (['SINGLE_VISION', 'DRIVE_SAFE', 'PROGRESSIVE', 'OFFICE'].includes(lensType)) {
-      setShowPrescriptionStep(true);
-    } else {
-      // For NON_PRESCRIPTION, skip to next step
-      handleContinue();
-    }
+    // Không tự động chuyển step, chờ user nhấn button Continue
+  };
+
+  const handleContinueToPrescription = () => {
+    setShowPrescriptionStep(true);
   };
 
   // Helper function to format prescription values for display
@@ -459,6 +457,15 @@ const LensSelectionPage: React.FC = () => {
                     Continue to Lens Selection
                   </button>
                 )}
+
+                {selectedLensType && !showPrescriptionStep && ['SINGLE_VISION', 'PROGRESSIVE', 'OFFICE', 'DRIVE_SAFE'].includes(selectedLensType) && (
+                  <button
+                    onClick={handleContinueToPrescription}
+                    className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors mt-6"
+                  >
+                    Continue to Prescription Values
+                  </button>
+                )}
               </div>
             ) : (
               <div className="border-2 rounded-lg p-4 bg-white" style={{borderColor: '#363434'}}>
@@ -469,6 +476,84 @@ const LensSelectionPage: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Step Preview - Upcoming Steps */}
+          {!showPrescriptionStep && !showLensSelectionStep && !showLensOptionsStep && (
+            <div className="space-y-4 opacity-40 mt-8">
+              {selectedLensType !== 'NON_PRESCRIPTION' && (
+                <div className="flex items-center">
+                  <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
+                    2
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-500">Your Prescription Values</h2>
+                </div>
+              )}
+              
+              <div className="flex items-center">
+                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
+                  {selectedLensType === 'NON_PRESCRIPTION' ? '2' : '3'}
+                </div>
+                <h2 className="text-lg font-semibold text-gray-500">Your Lens Selection</h2>
+              </div>
+              
+              <div className="flex items-center">
+                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
+                  {selectedLensType === 'NON_PRESCRIPTION' ? '3' : '4'}
+                </div>
+                <h2 className="text-lg font-semibold text-gray-500">Your Lens Options</h2>
+              </div>
+              
+              <div className="flex items-center">
+                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
+                  {selectedLensType === 'NON_PRESCRIPTION' ? '4' : '5'}
+                </div>
+                <h2 className="text-lg font-semibold text-gray-500">Your Summary</h2>
+              </div>
+            </div>
+          )}
+
+          {showPrescriptionStep && !showLensSelectionStep && !showLensOptionsStep && (
+            <div className="space-y-4 opacity-40 mt-8">
+              <div className="flex items-center">
+                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
+                  3
+                </div>
+                <h2 className="text-lg font-semibold text-gray-500">Your Lens Selection</h2>
+              </div>
+              
+              <div className="flex items-center">
+                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
+                  4
+                </div>
+                <h2 className="text-lg font-semibold text-gray-500">Your Lens Options</h2>
+              </div>
+              
+              <div className="flex items-center">
+                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
+                  5
+                </div>
+                <h2 className="text-lg font-semibold text-gray-500">Your Summary</h2>
+              </div>
+            </div>
+          )}
+
+          {showLensSelectionStep && !showLensOptionsStep && (
+            <div className="space-y-4 opacity-40 mt-8">
+              <div className="flex items-center">
+                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
+                  {selectedLensType === 'NON_PRESCRIPTION' ? '3' : '4'}
+                </div>
+                <h2 className="text-lg font-semibold text-gray-500">Your Lens Options</h2>
+              </div>
+              
+              <div className="flex items-center">
+                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
+                  {selectedLensType === 'NON_PRESCRIPTION' ? '4' : '5'}
+                </div>
+                <h2 className="text-lg font-semibold text-gray-500">Your Summary</h2>
+              </div>
+            </div>
+          )}
 
           {/* Step 2: Your Prescription Values */}
           {showPrescriptionStep && (
@@ -1298,7 +1383,7 @@ const LensSelectionPage: React.FC = () => {
                     {/* Coatings Selection */}
                     {lensFullDetails.coatings.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-3">Chọn lớp phủ (có thể chọn nhiều)</h4>
+                        <h4 className="font-semibold text-gray-900 mb-3">Chọn lớp phủ (chỉ được chọn 1)</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {lensFullDetails.coatings.map((coating) => (
                             <div 
@@ -1311,14 +1396,16 @@ const LensSelectionPage: React.FC = () => {
                               onClick={() => {
                                 const isSelected = selectedLensOptions.coatings.some(c => c.id === coating.id);
                                 if (isSelected) {
+                                  // Deselect current coating
                                   setSelectedLensOptions(prev => ({
                                     ...prev, 
-                                    coatings: prev.coatings.filter(c => c.id !== coating.id)
+                                    coatings: []
                                   }));
                                 } else {
+                                  // Select only this coating (replace any existing)
                                   setSelectedLensOptions(prev => ({
                                     ...prev, 
-                                    coatings: [...prev.coatings, coating]
+                                    coatings: [coating]
                                   }));
                                 }
                               }}
