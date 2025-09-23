@@ -80,13 +80,18 @@ class CartService {
     data: AddLensProductToCartRequest,
   ): Promise<AddLensProductToCartResponse> {
     try {
+      console.log('Sending cart data:', JSON.stringify(data, null, 2));
       const response = await apiService.post<AddLensProductToCartResponse>(
         `/api/v1/cart/add-lens-product`,
         data,
       );
       return response;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding lens product to cart:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
       throw error;
     }
   }

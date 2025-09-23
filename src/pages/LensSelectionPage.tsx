@@ -395,6 +395,27 @@ const LensSelectionPage: React.FC = () => {
     return prescriptionData.addR === '-' || prescriptionData.addL === '-';
   };
 
+  const isPrescriptionComplete = () => {
+    // Check if required prescription fields are filled
+    const requiredFields = [
+      prescriptionData.sphereR,
+      prescriptionData.sphereL,
+    ];
+
+    // Check PD is filled (either single PD or both pdL and pdR)
+    const pdComplete = prescriptionData.hasTwoPD 
+      ? (prescriptionData.pdL !== '-' && prescriptionData.pdR !== '-')
+      : prescriptionData.pd !== '-';
+
+    // Check basic required fields
+    const basicFieldsComplete = requiredFields.every(field => field !== '-' && field !== '');
+
+    // For progressive lenses, also check ADD values
+    const addFieldsComplete = !needsAddValue() || (prescriptionData.addR !== '-' && prescriptionData.addL !== '-');
+
+    return basicFieldsComplete && pdComplete && addFieldsComplete;
+  };
+
   const getAddBorderColor = (value: string) => {
     // Return red border if value is "-" (not selected), otherwise normal gray border
     return value === '-' ? 'border-red-300' : 'border-gray-300';
@@ -406,9 +427,8 @@ const LensSelectionPage: React.FC = () => {
       return;
     }
 
-    // Validation for Progressive lenses
-    if (selectedLensType === 'PROGRESSIVE' && shouldShowAddWarning()) {
-      alert('Với tròng kính Progressive, vui lòng chọn giá trị ADD cho cả hai mắt');
+    if (!isPrescriptionComplete()) {
+      alert('Vui lòng hoàn thành thông tin đơn thuốc trước khi thêm vào giỏ hàng');
       return;
     }
 
@@ -416,27 +436,31 @@ const LensSelectionPage: React.FC = () => {
       setIsAddingToCart(true);
       
       // Get or create cart
-      const { cartId } = await cartService.getOrCreateCart();
+      const cartResult = await cartService.getOrCreateCart();
+      console.log('Cart result:', cartResult);
+      const { cartId } = cartResult;
 
       // Prepare prescription values - convert string to numbers
       const parseValue = (value: string) => {
+        console.log('Parsing value:', value);
         if (value === '± 0.00') return 0;
-        if (value === '-') return 0;
+        if (value === '-' || !value) return 0;
         if (value.includes('°')) return parseFloat(value.replace('°', ''));
-        return parseFloat(value);
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? 0 : parsed;
       };
 
       // Prepare cart data
       const cartData: AddLensProductToCartRequest = {
         cartId,
         frameData: {
-          productId: selectedProduct.id,
+          productId: Number(selectedProduct.id),
           framePrice: selectedProduct.price,
           quantity: 1,
           // selectedColorId: selectedProduct.colors?.[0]?.id || undefined // ProductCard doesn't have colors
         },
         lensData: {
-          lensVariantId: parseInt(lensFullDetails.variants[0].id),
+          lensVariantId: Number(lensFullDetails.variants[0].id),
           lensPrice: selectedLens.basePrice,
           prescriptionValues: {
             rightEyeSphere: parseValue(prescriptionData.sphereR),
@@ -450,13 +474,14 @@ const LensSelectionPage: React.FC = () => {
             addLeft: parseValue(prescriptionData.addL),
             addRight: parseValue(prescriptionData.addR)
           },
-          selectedCoatingIds: selectedLensOptions.coatings.map(coating => parseInt(coating.id)),
-          selectedTintColorId: selectedLensOptions.tintColor ? parseInt(selectedLensOptions.tintColor.id) : undefined,
+          selectedCoatingIds: selectedLensOptions.coatings.map(coating => Number(coating.id)),
+          selectedTintColorId: selectedLensOptions.tintColor ? Number(selectedLensOptions.tintColor.id) : undefined,
           prescriptionNotes: 'Từ trang Lens Selection',
           lensNotes: `Loại tròng: ${selectedLensType}`
         }
       };
 
+      console.log('Cart data being sent:', JSON.stringify(cartData, null, 2));
       const result = await cartService.addLensProductToCart(cartData);
       console.log('Added to cart successfully:', result);
       
@@ -1509,12 +1534,6 @@ const LensSelectionPage: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Action Buttons */}
-                    <div className="border-t pt-6">
-                      <button className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors">
-                        Thêm vào giỏ hàng
-                      </button>
-                    </div>
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -1522,6 +1541,41 @@ const LensSelectionPage: React.FC = () => {
                   </div>
                 )}
               </div>
+
+              {/* Add to Cart Button - Only show in step 4 */}
+              {lensFullDetails && (
+                <div className="mt-8 border-t pt-6">
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={isAddingToCart || !selectedProduct || !selectedLens || !isPrescriptionComplete()}
+                    className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-colors ${
+                      isAddingToCart || !selectedProduct || !selectedLens || !isPrescriptionComplete()
+                        ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {isAddingToCart ? 'Đang thêm vào giỏ hàng...' : 'Thêm vào giỏ hàng'}
+                  </button>
+                  
+                  {/* Validation message for incomplete prescription */}
+                  {!isPrescriptionComplete() && selectedProduct && selectedLens && (
+                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-700">
+                        Vui lòng hoàn thành thông tin đơn thuốc để có thể thêm vào giỏ hàng
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Validation message for Progressive lenses */}
+                  {selectedLensType === 'PROGRESSIVE' && shouldShowAddWarning() && (
+                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-700">
+                        Với tròng kính Progressive, vui lòng chọn giá trị ADD cho cả hai mắt
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -1755,28 +1809,6 @@ const LensSelectionPage: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-sm text-gray-500">Đã bao gồm VAT</p>
-                
-                {/* Add to Cart Button */}
-                <button
-                  onClick={handleAddToCart}
-                  disabled={isAddingToCart || !selectedProduct || !selectedLens || (selectedLensType === 'PROGRESSIVE' && shouldShowAddWarning())}
-                  className={`w-full mt-6 py-4 px-6 rounded-lg font-semibold text-lg transition-colors ${
-                    isAddingToCart || !selectedProduct || !selectedLens || (selectedLensType === 'PROGRESSIVE' && shouldShowAddWarning())
-                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  {isAddingToCart ? 'Đang thêm vào giỏ hàng...' : 'Thêm vào giỏ hàng'}
-                </button>
-                
-                {/* Validation message for Progressive lenses */}
-                {selectedLensType === 'PROGRESSIVE' && shouldShowAddWarning() && (
-                  <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-700">
-                      Với tròng kính Progressive, vui lòng chọn giá trị ADD cho cả hai mắt
-                    </p>
-                  </div>
-                )}
               </div>
 
               {/* Trust Indicators */}
