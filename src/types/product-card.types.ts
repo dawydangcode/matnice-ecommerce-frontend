@@ -1,6 +1,6 @@
 // Product Card types for displaying products in grid/list format
 export interface ProductCard {
-  id: number;
+  id: number | string; // API returns string, but we handle both
   productName: string;
   displayName: string; // Product name + variant name
   brandName: string;

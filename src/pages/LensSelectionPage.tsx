@@ -182,20 +182,28 @@ const LensSelectionPage: React.FC = () => {
         
         // Get productId from URL params
         const productIdParam = searchParams.get('productId');
+        console.log('ProductId from URL:', productIdParam);
+        console.log('Available products:', response.data.map(p => ({ id: p.id, name: p.productName, brand: p.brandName })));
         
         if (productIdParam && response.data.length > 0) {
-          // Try to find the product with matching id
-          const targetProduct = response.data.find(product => product.id === parseInt(productIdParam));
+          // Try to find the product with matching id (convert both to string for comparison)
+          const targetProduct = response.data.find(product => 
+            String(product.id) === String(productIdParam)
+          );
+          console.log('Target product found:', targetProduct);
+          
           if (targetProduct) {
             setSelectedProduct(targetProduct);
             console.log('Selected product from URL:', targetProduct);
           } else {
             // If product not found in current page, still try to load it by ID
             console.log('Product not found in current page, using first product as fallback');
+            console.log('Looking for product ID:', parseInt(productIdParam), 'in available products');
             setSelectedProduct(response.data[0]);
           }
         } else {
           // Select first product as default if no productId in URL
+          console.log('No productId in URL or no products available');
           if (response.data.length > 0) {
             setSelectedProduct(response.data[0]);
           }
