@@ -414,17 +414,57 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
         console.log('4. Lens coatings created successfully:', createdCoatings);
       }
       
-      // Create lens images - Use placeholder URLs for now
+      // Create lens images - Upload to S3 first
       if (images.length > 0) {
         console.log('5. Creating lens images...', images);
         try {
-          const imageData = images.map(image => ({
-            lensId: createdLens.id,
-            imageUrl: `https://placeholder.com/600x400?text=Lens+${createdLens.id}+${image.order.toUpperCase()}`,
-            imageOrder: image.order,
-            isThumbnail: image.order === 'a', // First image as thumbnail
-          }));
+          const imageData = [];
           
+          // Upload each image to S3 first
+          for (let i = 0; i < images.length; i++) {
+            const image = images[i];
+            console.log(`5.${i+1}. Uploading image ${image.order} to S3...`);
+            
+            try {
+              // Create FormData for file upload
+              const formData = new FormData();
+              formData.append('file', image.file);
+              formData.append('lensId', createdLens.id.toString());
+              formData.append('imageOrder', image.order);
+              formData.append('isThumbnail', (image.order === 'a').toString());
+              
+              // Upload to S3 via backend API
+              const uploadResponse = await fetch('/api/v1/lens-images/upload', {
+                method: 'POST',
+                body: formData,
+              });
+              
+              if (!uploadResponse.ok) {
+                throw new Error(`Failed to upload image ${image.order}: ${uploadResponse.statusText}`);
+              }
+              
+              const uploadedImage = await uploadResponse.json();
+              console.log(`5.${i+1}. Image ${image.order} uploaded successfully:`, uploadedImage);
+              
+              imageData.push({
+                lensId: createdLens.id,
+                imageUrl: uploadedImage.data.imageUrl, // Use the S3 URL returned from backend
+                imageOrder: image.order,
+                isThumbnail: image.order === 'a', // First image as thumbnail
+              });
+            } catch (uploadError) {
+              console.error(`Error uploading image ${image.order}:`, uploadError);
+              // Fallback to placeholder if upload fails
+              imageData.push({
+                lensId: createdLens.id,
+                imageUrl: `https://placeholder.com/600x400?text=Lens+${createdLens.id}+${image.order.toUpperCase()}`,
+                imageOrder: image.order,
+                isThumbnail: image.order === 'a',
+              });
+            }
+          }
+          
+          console.log('5. All images processed, saving to database...', imageData);
           const createdImages = await lensImageService.createMultipleLensImages(createdLens.id, imageData);
           console.log('5. Lens images created successfully:', createdImages);
         } catch (imageError) {
