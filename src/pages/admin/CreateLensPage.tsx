@@ -10,6 +10,7 @@ import { lensCoatingService } from '../../services/lensCoating.service';
 import { lensImageService } from '../../services/lensImage.service';
 import { lensVariantRefractionRangeService } from '../../services/lensVariantRefractionRange.service';
 import { lensVariantTintColorService } from '../../services/lensVariantTintColor.service';
+import { apiService } from '../../services/api.service';
 import { 
   LensDesignType, 
   LensMaterialsType, 
@@ -433,17 +434,15 @@ const CreateLensPage: React.FC<CreateLensPageProps> = ({ onCancel }) => {
               formData.append('imageOrder', image.order);
               formData.append('isThumbnail', (image.order === 'a').toString());
               
-              // Upload to S3 via backend API
-              const uploadResponse = await fetch('/api/v1/lens-images/upload', {
-                method: 'POST',
-                body: formData,
-              });
-              
-              if (!uploadResponse.ok) {
-                throw new Error(`Failed to upload image ${image.order}: ${uploadResponse.statusText}`);
-              }
-              
-              const uploadedImage = await uploadResponse.json();
+              // Upload to S3 via backend API using apiService
+              const uploadedImage = await apiService.postFormData<{
+                statusCode: number;
+                message: string;
+                data: {
+                  imageUrl: string;
+                  lensImage?: any;
+                };
+              }>('/api/v1/lens-images/upload', formData);
               console.log(`5.${i+1}. Image ${image.order} uploaded successfully:`, uploadedImage);
               
               imageData.push({

@@ -17,7 +17,7 @@ export interface LensImageResponse {
 }
 
 class LensImageService {
-  private baseUrl = '/lens-images';
+  private baseUrl = '/api/v1/lens-images';
 
   async createLensImage(data: CreateLensImageDto): Promise<LensImageResponse> {
     const response = await apiService.post<LensImageResponse>(
