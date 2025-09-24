@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -84,6 +84,14 @@ const lensTypeOptions: LensTypeOption[] = [
 const LensSelectionPage: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Refs for each step
+  const step1Ref = useRef<HTMLDivElement>(null);
+  const step2Ref = useRef<HTMLDivElement>(null);
+  const step3Ref = useRef<HTMLDivElement>(null);
+  const step4Ref = useRef<HTMLDivElement>(null);
+  
   const [selectedLensType, setSelectedLensType] = useState<string>('SINGLE_VISION');
   const [availableProducts, setAvailableProducts] = useState<ProductCard[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<ProductCard | null>(null);
@@ -105,6 +113,39 @@ const LensSelectionPage: React.FC = () => {
   });
   const [lensOptionsLoading, setLensOptionsLoading] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  
+  // Auto-scroll utility function
+  const scrollToStep = useCallback((stepNumber: number) => {
+    const refs = [step1Ref, step2Ref, step3Ref, step4Ref];
+    const targetRef = refs[stepNumber - 1];
+    
+    if (targetRef.current) {
+      targetRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+        inline: 'nearest'
+      });
+    }
+  }, []);
+
+  // Handle lens selection (only select, don't move to step 4)
+  const handleLensSelect = (lens: FilteredLens) => {
+    setSelectedLens(lens);
+    // Don't automatically show step 4, wait for user to click continue button
+  };
+
+  // Handle continue to lens options (step 4)
+  const handleContinueToLensOptions = async () => {
+    if (!selectedLens) return;
+    
+    setShowLensOptionsStep(true);
+    
+    // Load lens details for step 4
+    await loadLensDetails(selectedLens.id);
+    
+    // Auto-scroll to step 4 after a short delay
+    setTimeout(() => scrollToStep(4), 100);
+  }; 
   
   // Prescription form state
   const [prescriptionData, setPrescriptionData] = useState({
@@ -139,9 +180,25 @@ const LensSelectionPage: React.FC = () => {
         });
         setAvailableProducts(response.data);
         
-        // Select first product as default
-        if (response.data.length > 0) {
-          setSelectedProduct(response.data[0]);
+        // Get productId from URL params
+        const productIdParam = searchParams.get('productId');
+        
+        if (productIdParam && response.data.length > 0) {
+          // Try to find the product with matching id
+          const targetProduct = response.data.find(product => product.id === parseInt(productIdParam));
+          if (targetProduct) {
+            setSelectedProduct(targetProduct);
+            console.log('Selected product from URL:', targetProduct);
+          } else {
+            // If product not found in current page, still try to load it by ID
+            console.log('Product not found in current page, using first product as fallback');
+            setSelectedProduct(response.data[0]);
+          }
+        } else {
+          // Select first product as default if no productId in URL
+          if (response.data.length > 0) {
+            setSelectedProduct(response.data[0]);
+          }
         }
       } catch (error) {
         console.error('Error loading product data:', error);
@@ -151,7 +208,10 @@ const LensSelectionPage: React.FC = () => {
     };
 
     loadProductData();
-  }, []);
+    
+    // Auto-scroll to step 1 when page loads
+    setTimeout(() => scrollToStep(1), 500);
+  }, [scrollToStep, searchParams]);
 
   const handleLensTypeSelect = (lensType: string) => {
     setSelectedLensType(lensType);
@@ -160,6 +220,8 @@ const LensSelectionPage: React.FC = () => {
 
   const handleContinueToPrescription = () => {
     setShowPrescriptionStep(true);
+    // Auto-scroll to step 2 after a short delay
+    setTimeout(() => scrollToStep(2), 100);
   };
 
   // Helper function to format prescription values for display
@@ -221,6 +283,9 @@ const LensSelectionPage: React.FC = () => {
     // Show step 3: Lens Selection and load filtered lenses
     setShowLensSelectionStep(true);
     await loadFilteredLenses();
+    
+    // Auto-scroll to step 3 after a short delay
+    setTimeout(() => scrollToStep(3), 100);
   };
 
   // Validation functions
@@ -356,21 +421,11 @@ const LensSelectionPage: React.FC = () => {
       });
     } catch (error) {
       console.error('Error loading lens details:', error);
+      toast.error('Không thể tải thông tin tùy chọn tròng kính');
     } finally {
       setLensOptionsLoading(false);
     }
   }, []);
-
-  // Function to proceed to lens options step
-  const proceedToLensOptions = async () => {
-    if (!selectedLens) {
-      alert('Vui lòng chọn một loại tròng kính trước khi tiếp tục');
-      return;
-    }
-    
-    await loadLensDetails(selectedLens.id);
-    setShowLensOptionsStep(true);
-  };
 
   // Effect to reload filtered lenses when prescription changes
   useEffect(() => {
@@ -527,7 +582,7 @@ const LensSelectionPage: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900 mb-8">Lens Selection</h1>
           
           {/* Step 1: Your Glasses Type */}
-          <div className="mb-8">
+          <div ref={step1Ref} className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
                 <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white" style={{backgroundColor: '#363434'}}>
@@ -584,7 +639,7 @@ const LensSelectionPage: React.FC = () => {
                 {selectedLensType && !showPrescriptionStep && selectedLensType === 'NON_PRESCRIPTION' && (
                   <button
                     onClick={handleContinue}
-                    className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors mt-6"
+                    className="w-full bg-green-700 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors mt-6"
                   >
                     Continue to Lens Selection
                   </button>
@@ -593,7 +648,7 @@ const LensSelectionPage: React.FC = () => {
                 {selectedLensType && !showPrescriptionStep && ['SINGLE_VISION', 'PROGRESSIVE', 'OFFICE', 'DRIVE_SAFE'].includes(selectedLensType) && (
                   <button
                     onClick={handleContinueToPrescription}
-                    className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors mt-6"
+                    className="w-full bg-green-700 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors mt-6"
                   >
                     Continue to Prescription Values
                   </button>
@@ -611,7 +666,7 @@ const LensSelectionPage: React.FC = () => {
 
           {/* Step 2: Your Prescription Values */}
           {showPrescriptionStep && (
-            <div className="mb-8">
+            <div ref={step2Ref} className="mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
                   <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white" style={{backgroundColor: '#363434'}}>
@@ -1062,7 +1117,7 @@ const LensSelectionPage: React.FC = () => {
                     disabled={!canContinue()}
                     className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
                       canContinue()
-                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        ? 'bg-green-700 text-white hover:bg-green-700'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >
@@ -1125,7 +1180,7 @@ const LensSelectionPage: React.FC = () => {
 
           {/* Step 3: Lens Selection */}
           {showLensSelectionStep && (
-            <div className="mb-8">
+            <div ref={step3Ref} className="mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
                   <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white bg-gray-800">
@@ -1232,7 +1287,7 @@ const LensSelectionPage: React.FC = () => {
                               ? 'border-2 border-blue-500 bg-blue-50 shadow-md' 
                               : 'border hover:shadow-md hover:border-gray-300'
                           }`}
-                          onClick={() => setSelectedLens(lens)}
+                          onClick={() => handleLensSelect(lens)}
                         >
                           <div className="flex justify-between items-start mb-2">
                             <h4 className="font-medium text-gray-900">{lens.name}</h4>
@@ -1366,20 +1421,28 @@ const LensSelectionPage: React.FC = () => {
           )}
 
           {/* Continue to Lens Options Button */}
-          {showLensSelectionStep && selectedLens && !showLensOptionsStep && (
+          {showLensSelectionStep && !showLensOptionsStep && (
             <div className="mb-8">
               <button 
-                onClick={proceedToLensOptions}
-                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                onClick={handleContinueToLensOptions}
+                disabled={!selectedLens}
+                className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
+                  selectedLens 
+                    ? 'bg-green-700 text-white hover:bg-blue-700' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
-                Tiếp tục với tùy chỉnh
+                {selectedLens 
+                  ? 'Tiếp tục với tùy chọn cho tròng kính' 
+                  : 'Tiếp tục với tùy chọn cho tròng kính'
+                }
               </button>
             </div>
           )}
 
           {/* Step 4: Lens Options */}
           {showLensOptionsStep && (
-            <div className="mb-8">
+            <div ref={step4Ref} className="mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
                   <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white bg-gray-800">
@@ -1861,7 +1924,7 @@ const LensSelectionPage: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <span className="text-green-600 text-xl">★</span>
                     <span className="text-base font-medium">Matnice Reviews</span>
-                    <span className="text-xs bg-green-600 text-white px-3 py-1 rounded">UY TÍN & CHẤT LƯỢNG</span>
+                    <span className="text-xs bg-green-700 text-white px-3 py-1 rounded">UY TÍN & CHẤT LƯỢNG</span>
                   </div>
                 </div>
 

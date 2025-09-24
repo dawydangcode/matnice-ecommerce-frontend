@@ -327,7 +327,7 @@ const ProductDetailPage: React.FC = () => {
             <div className="action-buttons">
               <button 
                 className="btn-primary"
-                onClick={() => navigate('/lens-selection')}
+                onClick={() => navigate(`/lens-selection?productId=${id}`)}
               >
                 🔒 With prescription from {formatVND(getPrescriptionPrice())}
               </button>

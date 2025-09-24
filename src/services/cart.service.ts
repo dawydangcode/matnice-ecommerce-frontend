@@ -89,6 +89,7 @@ export interface CartItemSummary {
   cartFrameId: number;
   productId: number;
   productName?: string;
+  productImage?: string;
   frameColor?: string;
   quantity: number;
   framePrice: number | string; // API might return string
@@ -133,6 +134,8 @@ export interface CartItemWithDetails {
     id: number;
     cartId: number;
     productId: number;
+    productName?: string;
+    productImage?: string;
     quantity: number;
     framePrice: number | string; // API returns string
     totalPrice: number | string; // API returns string

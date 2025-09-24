@@ -8,7 +8,10 @@ import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 
 // Simple icon components
+const ShoppingCartIcon = () => <span className="text-2xl">🛒</span>;
 const TrashIcon = () => <span className="text-lg">🗑️</span>;
+const ArrowLeftIcon = () => <span className="text-lg">←</span>;
+const XMarkIcon = () => <span className="text-lg">✕</span>;
 
 interface PrescriptionDisplay {
   rightEye: {
@@ -77,7 +80,21 @@ const CartPage: React.FC = () => {
     }
   };
 
-  // handleClearCart function removed as we simplified the header
+  const handleClearCart = async () => {
+    // Use window.confirm instead of confirm
+    if (!window.confirm('Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng?')) {
+      return;
+    }
+
+    try {
+      await cartService.clearCart(cartId);
+      toast.success('Đã xóa toàn bộ giỏ hàng');
+      loadCartData(); // Reload cart data
+    } catch (error: any) {
+      console.error('Error clearing cart:', error);
+      toast.error('Không thể xóa giỏ hàng');
+    }
+  };
 
   const formatPrice = (price: number | string) => {
     const numPrice = typeof price === 'string' ? parseFloat(price) : price;
@@ -151,9 +168,17 @@ const CartPage: React.FC = () => {
         {/* Empty Cart Header */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900">
-                Basket
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <ArrowLeftIcon />
+                Quay lại
+              </button>
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <ShoppingCartIcon />
+                Giỏ hàng của bạn
               </h1>
             </div>
           </div>
@@ -200,14 +225,29 @@ const CartPage: React.FC = () => {
       {/* Cart Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Basket
-            </h1>
-            {/* Product Added Notification */}
-            <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-              ✓ Tròng kính đã được thêm vào giỏ hàng
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <ArrowLeftIcon />
+                Quay lại
+              </button>
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <ShoppingCartIcon />
+                Giỏ hàng ({cartItems.length} sản phẩm)
+              </h1>
             </div>
+            
+            {cartItems.length > 0 && (
+              <button
+                onClick={handleClearCart}
+                className="text-red-600 hover:text-red-800 text-sm font-medium transition-colors"
+              >
+                Xóa toàn bộ giỏ hàng
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -224,25 +264,15 @@ const CartPage: React.FC = () => {
                 return (
                   <div key={item.frame.id} className="bg-white rounded-lg shadow-sm border p-6">
                     <div className="flex items-start gap-4">
-                      {/* Product Image */}
-                      <div className="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden">
-                        {item.frame.productImage ? (
-                          <img 
-                            src={item.frame.productImage} 
-                            alt={item.frame.productName || `Product ${item.frame.productId}`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-gray-400 text-xs">No Image</span>
-                          </div>
-                        )}
+                      {/* Product Image Placeholder */}
+                      <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <span className="text-gray-400 text-xs">Ảnh sản phẩm</span>
                       </div>
 
                       {/* Product Details */}
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          {item.frame.productName || `Sản phẩm #${item.frame.productId}`}
+                          Sản phẩm #{item.frame.productId}
                         </h3>
                         
                         <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
@@ -270,43 +300,31 @@ const CartPage: React.FC = () => {
                         {prescription && (
                           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                             <h4 className="font-semibold text-gray-900 mb-3">Chi tiết kính cận</h4>
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-sm border-collapse">
-                                <thead>
-                                  <tr className="border-b border-gray-300">
-                                    <th className="text-left py-2 px-3 font-semibold text-gray-700">Both eyes</th>
-                                    <th className="text-center py-2 px-3 font-semibold text-gray-700">Sphere</th>
-                                    <th className="text-center py-2 px-3 font-semibold text-gray-700">Cylinder</th>
-                                    <th className="text-center py-2 px-3 font-semibold text-gray-700">Axis</th>
-                                    <th className="text-center py-2 px-3 font-semibold text-gray-700">PD</th>
-                                    {(prescription.addLeft || prescription.addRight) && (
-                                      <th className="text-center py-2 px-3 font-semibold text-gray-700">Addition</th>
-                                    )}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr className="border-b border-gray-200">
-                                    <td className="py-2 px-3 font-medium text-gray-700">Mắt phải (OD)</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.rightEye.sphere)}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.rightEye.cylinder)}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.rightEye.axis, '°')}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.pdRight)}</td>
-                                    {(prescription.addLeft || prescription.addRight) && (
-                                      <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.addRight)}</td>
-                                    )}
-                                  </tr>
-                                  <tr className="border-b border-gray-200">
-                                    <td className="py-2 px-3 font-medium text-gray-700">Mắt trái (OS)</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.leftEye.sphere)}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.leftEye.cylinder)}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.leftEye.axis, '°')}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.pdLeft)}</td>
-                                    {(prescription.addLeft || prescription.addRight) && (
-                                      <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.addLeft)}</td>
-                                    )}
-                                  </tr>
-                                </tbody>
-                              </table>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <p className="font-medium text-gray-700 mb-2">Mắt phải (OD)</p>
+                                <p>Cầu (SPH): {formatPrescriptionValue(prescription.rightEye.sphere)}</p>
+                                <p>Trụ (CYL): {formatPrescriptionValue(prescription.rightEye.cylinder)}</p>
+                                <p>Trục (AXIS): {formatPrescriptionValue(prescription.rightEye.axis, '°')}</p>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-700 mb-2">Mắt trái (OS)</p>
+                                <p>Cầu (SPH): {formatPrescriptionValue(prescription.leftEye.sphere)}</p>
+                                <p>Trụ (CYL): {formatPrescriptionValue(prescription.leftEye.cylinder)}</p>
+                                <p>Trục (AXIS): {formatPrescriptionValue(prescription.leftEye.axis, '°')}</p>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-700 mb-2">Khoảng cách (PD)</p>
+                                <p>PD trái: {formatPrescriptionValue(prescription.pdLeft)}</p>
+                                <p>PD phải: {formatPrescriptionValue(prescription.pdRight)}</p>
+                              </div>
+                              {(prescription.addLeft || prescription.addRight) && (
+                                <div>
+                                  <p className="font-medium text-gray-700 mb-2">ADD</p>
+                                  <p>ADD trái: {formatPrescriptionValue(prescription.addLeft)}</p>
+                                  <p>ADD phải: {formatPrescriptionValue(prescription.addRight)}</p>
+                                </div>
+                              )}
                             </div>
                             
                             {/* Lens Notes */}
