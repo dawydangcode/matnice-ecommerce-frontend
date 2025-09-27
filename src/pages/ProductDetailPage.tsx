@@ -7,6 +7,9 @@ import VirtualTryOnModal from '../components/VirtualTryOnModal';
 import productService, { ProductDetail } from '../services/productService';
 import { product3DModelService, Product3DModel, Model3DConfig } from '../services/product3dModel.service';
 import '../styles/ProductDetailPage.css';
+import { Glasses, Handbag, ShoppingCart, X, Video } from 'lucide-react';
+
+
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -249,9 +252,19 @@ const ProductDetailPage: React.FC = () => {
                         }
                       >
                         {model3DLoading ? '⏳ Loading...' : 
-                         !product3DModel ? '❌ No 3D Model' :
+                         !product3DModel ? (
+                           <>
+                             <X size={16} className="inline mr-1" />
+                             No 3D Model
+                           </>
+                         ) :
                          model3DError ? '⚠️ Error' :
-                         '👁️ Virtual try-on'}
+                         (
+                           <>
+                             <Video size={20} className="inline mr-1" />
+                             Virtual try-on
+                           </>
+                         )}
                       </button>
                     </div>
                   )}
@@ -329,7 +342,8 @@ const ProductDetailPage: React.FC = () => {
                 className="btn-primary"
                 onClick={() => navigate(`/lens-selection?productId=${id}`)}
               >
-                🔒 With prescription from {formatVND(getPrescriptionPrice())}
+                <Handbag className="icon-inline" size={24} />
+                With prescription from {formatVND(getPrescriptionPrice())}
               </button>
               <button className="btn-secondary">
                 Buy frame only
@@ -338,19 +352,13 @@ const ProductDetailPage: React.FC = () => {
               <button className="btn-outline">
                 Try at home
               </button>
-              <p className="service-note">Plus service fee for home trial orders ℹ️</p>
-            </div>
-
-            {/* Additional Options */}
-            <div className="additional-options">
-              <button className="btn-link">💙 Buy risk-free online</button>
             </div>
 
             {/* Delivery Times */}
             <div className="delivery-info">
               <h3 className="delivery-title">Delivery times</h3>
               <div className="delivery-option">
-                <span className="delivery-icon">💊</span>
+                <Glasses className="inline-icon" />                
                 <span className="delivery-text">With prescription / Tint</span>
                 <span className="delivery-time">7 - 15 days</span>
               </div>

@@ -85,21 +85,19 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
   max-width: 500px;
 }
 
 .product-category {
   font-size: 0.875rem;
   color: #6b7280;
-  margin-bottom: 0.5rem;
 }
 
 .product-brand {
   font-size: 2rem;
   font-weight: 700;
   color: #111827;
-  margin-bottom: 0.5rem;
   line-height: 1.2;
 }
 
@@ -107,13 +105,12 @@
   font-size: 1.5rem;
   font-weight: 300;
   color: #374151;
-  margin-bottom: 0.7rem;
   font-family: Roboto, Arial, sans-serif;
 }
 
 /* Color Selection */
 .color-section {
-  margin-bottom: 0.7rem;
+  margin-bottom: 0.1rem;
 }
 
 .section-label {
@@ -200,11 +197,11 @@
 
 /* Frame Width */
 .frame-width-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .frame-width-display {
-  margin-bottom: 2rem;
+  margin-bottom: 1.3rem;
 }
 
 .frame-width-value {
@@ -226,7 +223,6 @@
   color: #059669;
   font-weight: 500;
   background-color: #f5f4f4;
-  margin-top: 1rem;
   width: fit-content;
   padding : 0.4rem 0.5rem;
   border-radius: 4px;
@@ -245,7 +241,7 @@
 
 /* Prescription Info */
 .prescription-info {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   background-color: #f5f4f4;
   padding: 1rem;
   border-radius: 4px;
@@ -484,4 +480,11 @@
   .product-name {
     font-size: 1.25rem;
   }
+}
+
+.icon-inline {
+  display: inline;
+  margin-right: 8px;
+  vertical-align: middle;
+  font-size: 0.25rem;
 }

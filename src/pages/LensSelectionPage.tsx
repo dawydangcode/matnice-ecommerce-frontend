@@ -1292,7 +1292,7 @@ const LensSelectionPage: React.FC = () => {
                           key={lens.id} 
                           className={`border rounded-lg p-4 transition-all cursor-pointer ${
                             selectedLens?.id === lens.id 
-                              ? 'border-2 border-blue-500 bg-blue-50 shadow-md' 
+                              ? 'border-2 border-black shadow-md' 
                               : 'border hover:shadow-md hover:border-gray-300'
                           }`}
                           onClick={() => handleLensSelect(lens)}
@@ -1391,7 +1391,6 @@ const LensSelectionPage: React.FC = () => {
                 // Show selected lens info when in step 4
                 selectedLens && (
                   <div className="bg-white rounded-lg border p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Tròng kính đã chọn</h3>
                     <div className="flex items-center justify-between bg-blue-50 rounded-lg p-4">
                       <div className="flex items-center">
                         {selectedLens.imageUrl && (
@@ -1470,20 +1469,6 @@ const LensSelectionPage: React.FC = () => {
                 ) : lensFullDetails ? (
                   <div className="space-y-6">
                     {/* Selected Lens Info */}
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <h3 className="font-semibold text-blue-900 mb-2">Tròng kính đã chọn</h3>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{lensFullDetails.lens.name}</p>
-                          <p className="text-sm text-gray-600">
-                            {lensFullDetails.lens.brandLens?.name} - {lensFullDetails.lens.origin}
-                          </p>
-                        </div>
-                        <span className="text-lg font-semibold text-blue-600">
-                          {selectedLens?.basePrice.toLocaleString('vi-VN')}₫
-                        </span>
-                      </div>
-                    </div>
 
                     {/* Variants Selection */}
                     {lensFullDetails.variants.length > 0 && (
@@ -1495,7 +1480,7 @@ const LensSelectionPage: React.FC = () => {
                               key={variant.id}
                               className={`border rounded-lg p-4 cursor-pointer transition-all ${
                                 selectedLensOptions.variant?.id === variant.id 
-                                  ? 'border-2 border-blue-500 bg-blue-50' 
+                                  ? 'border-2 border-black' 
                                   : 'border hover:border-gray-300'
                               }`}
                               onClick={() => setSelectedLensOptions(prev => ({...prev, variant}))}
@@ -1536,7 +1521,7 @@ const LensSelectionPage: React.FC = () => {
                               key={coating.id}
                               className={`border rounded-lg p-4 cursor-pointer transition-all ${
                                 selectedLensOptions.coatings.some(c => c.id === coating.id)
-                                  ? 'border-2 border-blue-500 bg-blue-50' 
+                                  ? 'border-2 border-black' 
                                   : 'border hover:border-gray-300'
                               }`}
                               onClick={() => {
@@ -1564,7 +1549,7 @@ const LensSelectionPage: React.FC = () => {
                               </div>
                               <p className="text-sm text-gray-600">{coating.description}</p>
                               {selectedLensOptions.coatings.some(c => c.id === coating.id) && (
-                                <div className="mt-2 flex items-center text-blue-600">
+                                <div className="mt-2 flex items-center text-black-600">
                                   <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                   </svg>
