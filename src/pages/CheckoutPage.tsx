@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
-import { apiService } from '../services/api.service';
+import cartService from '../services/cart.service';
 
 interface CustomerInfo {
   fullName: string;
@@ -56,8 +56,8 @@ const CheckoutPage: React.FC = () => {
     const fetchCartData = async () => {
       try {
         setLoading(true);
-        // Fetch cart data from backend API using apiService
-        const cartData = await apiService.get<any[]>('/api/v1/cart/1/items-with-details');
+        // Fetch cart data from backend API using cartService (gets current user's cart)
+        const cartData = await cartService.getMyCartItemsWithFullDetails();
         
         // Convert backend cart data to our CartItem format
         const formattedItems: CartItem[] = cartData.map((item: any) => ({

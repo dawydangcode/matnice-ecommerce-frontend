@@ -183,7 +183,7 @@ class CartService {
     try {
       console.log('Sending cart data:', JSON.stringify(data, null, 2));
       const response = await apiService.post<AddLensProductToCartResponse>(
-        `/api/v1/cart/add-lens-product`,
+        `/api/v1/cart-combined/add-lens-product`,
         data,
       );
       return response;
@@ -208,7 +208,7 @@ class CartService {
   async getCartSummary(cartId: number): Promise<CartSummary> {
     try {
       const response = await apiService.get<CartSummary>(
-        `/api/v1/cart/${cartId}/summary`,
+        `/api/v1/cart-combined/${cartId}/summary`,
       );
       return response;
     } catch (error: any) {
@@ -223,7 +223,7 @@ class CartService {
   ): Promise<CartItemWithDetails[]> {
     try {
       const response = await apiService.get<CartItemWithDetails[]>(
-        `/api/v1/cart/${cartId}/items-with-details`,
+        `/api/v1/cart-combined/${cartId}/items-with-details`,
       );
       return response;
     } catch (error: any) {
@@ -236,7 +236,7 @@ class CartService {
   async deleteCartItem(cartFrameId: number): Promise<boolean> {
     try {
       const response = await apiService.delete<boolean>(
-        `/api/v1/cart/item/${cartFrameId}/delete-complete`,
+        `/api/v1/cart-combined/item/${cartFrameId}/delete-complete`,
       );
       return response;
     } catch (error: any) {
@@ -249,11 +249,37 @@ class CartService {
   async clearCart(cartId: number): Promise<boolean> {
     try {
       const response = await apiService.delete<boolean>(
-        `/api/v1/cart/${cartId}/clear`,
+        `/api/v1/cart-combined/${cartId}/clear`,
       );
       return response;
     } catch (error: any) {
       console.error('Error clearing cart:', error);
+      throw error;
+    }
+  }
+
+  // Get current user's cart items
+  async getMyCartItemsWithFullDetails(): Promise<CartItemWithDetails[]> {
+    try {
+      const response = await apiService.get<CartItemWithDetails[]>(
+        '/api/v1/cart/my-cart/items-with-details',
+      );
+      return response;
+    } catch (error: any) {
+      console.error('Error fetching my cart items:', error);
+      throw error;
+    }
+  }
+
+  // Get current user's cart summary
+  async getMyCartSummary(): Promise<CartSummary> {
+    try {
+      const response = await apiService.get<CartSummary>(
+        '/api/v1/cart/my-cart/summary',
+      );
+      return response;
+    } catch (error: any) {
+      console.error('Error fetching my cart summary:', error);
       throw error;
     }
   }

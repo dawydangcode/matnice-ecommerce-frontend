@@ -64,7 +64,7 @@ interface CartStore {
   error: string | null;
 
   // Actions
-  fetchCartItems: (userId: number) => Promise<void>;
+  fetchCartItems: () => Promise<void>;
   removeItem: (frameId: number) => Promise<void>;
   updateQuantity: (frameId: number, quantity: number) => Promise<void>;
   clearCart: () => void;
@@ -92,11 +92,9 @@ const transformApiCartItem = (apiItem: ApiCartItem): CartItem => {
 };
 
 // API functions using apiService
-const fetchCartItemsFromAPI = async (
-  userId: number,
-): Promise<ApiCartItem[]> => {
+const fetchCartItemsFromAPI = async (): Promise<ApiCartItem[]> => {
   return await apiService.get<ApiCartItem[]>(
-    `/api/v1/cart/${userId}/items-with-details`,
+    '/api/v1/cart/my-cart/items-with-details',
   );
 };
 
@@ -118,10 +116,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
   isLoading: false,
   error: null,
 
-  fetchCartItems: async (userId: number) => {
+  fetchCartItems: async () => {
     set({ isLoading: true, error: null });
     try {
-      const apiItems = await fetchCartItemsFromAPI(userId);
+      const apiItems = await fetchCartItemsFromAPI();
       const items = apiItems.map(transformApiCartItem);
       set({ items, isLoading: false });
       get().calculateTotals();

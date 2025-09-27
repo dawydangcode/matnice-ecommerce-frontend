@@ -25,7 +25,7 @@ const CartDropdown: React.FC = () => {
   // Load cart data when user is available
   useEffect(() => {
     if (user?.id) {
-      fetchCartItems(user.id);
+      fetchCartItems();
     }
   }, [user?.id, fetchCartItems]);
 

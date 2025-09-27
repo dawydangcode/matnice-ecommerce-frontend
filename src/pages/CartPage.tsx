@@ -34,14 +34,12 @@ const CartPage: React.FC = () => {
   const [cartItems, setCartItems] = useState<CartItemWithDetails[]>([]);
   const [cartSummary, setCartSummary] = useState<CartSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [cartId] = useState(1); // Hardcoded for now
-
   const loadCartData = useCallback(async () => {
     try {
       setLoading(true);
       const [items, summary] = await Promise.all([
-        cartService.getCartItemsWithFullDetails(cartId),
-        cartService.getCartSummary(cartId)
+        cartService.getMyCartItemsWithFullDetails(),
+        cartService.getMyCartSummary()
       ]);
       setCartItems(items);
       setCartSummary(summary);
@@ -51,7 +49,7 @@ const CartPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [cartId]);
+  }, []);
 
   useEffect(() => {
     if (!isLoggedIn) {
