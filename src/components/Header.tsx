@@ -1,8 +1,9 @@
 import React from 'react';
-import { Search, ShoppingCart, Heart, User, Menu } from 'lucide-react';
+import { Search, Heart, User, Menu } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { Link } from 'react-router-dom';
 import smallEyeLogo from '../assets/small_eye_logo.png';
+import CartDropdown from './CartDropdown';
 
 // Shared props interface
 interface HeaderProps {
@@ -31,9 +32,7 @@ const DesktopHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) =>
           <div className="flex-1 flex justify-end items-center space-x-4">
             <Search className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
             <Heart className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
-            <Link to="/cart">
-              <ShoppingCart className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
-            </Link>
+            <CartDropdown />
             
             {/* User Menu */}
             {isLoggedIn ? (
@@ -103,9 +102,7 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
           {/* Right - Icons */}
           <div className="flex items-center space-x-3">
             <Heart className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
-            <Link to="/cart">
-              <ShoppingCart className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
-            </Link>
+            <CartDropdown />
             
             {/* User Icon Only */}
             {isLoggedIn ? (
