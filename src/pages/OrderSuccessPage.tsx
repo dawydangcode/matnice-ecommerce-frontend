@@ -6,9 +6,19 @@ import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 
 const OrderSuccessPage: React.FC = () => {
-  // Mock order data - in real app, this would come from props or state
-  const orderNumber = 'ORD' + Date.now().toString().slice(-6);
   const estimatedDelivery = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+  
+  // Get order info from URL params
+  const [paymentMethod, setPaymentMethod] = React.useState<string>('cod');
+  const [orderNumber, setOrderNumber] = React.useState<string>('');
+  
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const method = urlParams.get('payment') || 'cod';
+    const order = urlParams.get('order') || 'ORD' + Date.now().toString().slice(-6);
+    setPaymentMethod(method);
+    setOrderNumber(order);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -47,6 +57,13 @@ const OrderSuccessPage: React.FC = () => {
                   <span className="text-gray-600">Trạng thái:</span>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                     Đang xử lý
+                  </span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Thanh toán:</span>
+                  <span className="text-blue-600">
+                    {paymentMethod === 'bank_transfer' ? '🏦 Chuyển khoản' : '💵 COD'}
                   </span>
                 </div>
               </div>
@@ -103,6 +120,44 @@ const OrderSuccessPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Payment Info for Bank Transfer */}
+        {paymentMethod === 'bank_transfer' && (
+          <div className="bg-orange-50 rounded-lg border border-orange-200 p-6 mb-8">
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1">🏦</div>
+              <div>
+                <h3 className="font-semibold text-orange-900 mb-2">Thông tin chuyển khoản</h3>
+                <p className="text-orange-800 text-sm mb-3">
+                  Vui lòng chuyển khoản theo thông tin dưới đây trong vòng 24h:
+                </p>
+                <div className="bg-white rounded-lg p-4 border border-orange-200">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Ngân hàng:</span>
+                      <span>Vietcombank</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Số tài khoản:</span>
+                      <span className="font-mono">1234567890</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Chủ tài khoản:</span>
+                      <span>CÔNG TY MATNICE</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Nội dung:</span>
+                      <span className="font-mono text-blue-600">#{orderNumber}</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-orange-700 text-xs mt-2">
+                  * Đơn hàng sẽ được xử lý sau khi chúng tôi nhận được thanh toán
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Contact Info */}
         <div className="bg-blue-50 rounded-lg border border-blue-200 p-6 mb-8">

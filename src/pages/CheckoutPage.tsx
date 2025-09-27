@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import { apiService } from '../services/api.service';
 
 interface CustomerInfo {
   fullName: string;
@@ -14,6 +15,11 @@ interface CustomerInfo {
   ward: string;
   address: string;
   notes: string;
+}
+
+enum PaymentMethod {
+  COD = 'cod',
+  BANK_TRANSFER = 'bank_transfer'
 }
 
 interface PromoCode {
@@ -42,45 +48,63 @@ const formatPrice = (price: number): string => {
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   
-  // Mock cart data - replace with actual cart store when available
-  const [cartItems] = useState<CartItem[]>([
-    {
-      id: 1,
-      name: 'Kính Râm Phân Cực Lily P22060',
-      image: '/placeholder-image.jpg',
-      color: 'Ghi',
-      price: 350000,
-      quantity: 1,
-      totalPrice: 350000
-    },
-    {
-      id: 2,
-      name: 'Kính Nhựa Lily 0958',
-      image: '/placeholder-image.jpg',
-      color: 'Hồng trắng',
-      price: 650000,
-      quantity: 2,
-      totalPrice: 1300000
-    },
-    {
-      id: 3,
-      name: 'Kính Nhựa Càng Titan LiLy 00352',
-      image: '/placeholder-image.jpg',
-      color: 'Hồng trắng',
-      price: 690000,
-      quantity: 1,
-      totalPrice: 690000
-    },
-    {
-      id: 4,
-      name: 'Kính Acetate Lily JMM86RX',
-      image: '/placeholder-image.jpg',
-      color: 'Đen',
-      price: 990000,
-      quantity: 1,
-      totalPrice: 990000
-    }
-  ]);
+  // Load cart data from backend API
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchCartData = async () => {
+      try {
+        setLoading(true);
+        // Fetch cart data from backend API using apiService
+        const cartData = await apiService.get<any[]>('/api/v1/cart/1/items-with-details');
+        
+        // Convert backend cart data to our CartItem format
+        const formattedItems: CartItem[] = cartData.map((item: any) => ({
+          id: item.frame.id,
+          name: item.frame.productName || 'Sản phẩm không xác định',
+          image: item.frame.productImage || '/placeholder-image.jpg',
+          color: 'Đen', // Default color - you can get this from product details later
+          price: item.frame.framePrice + (item.lensDetail?.lensPrice || 0),
+          quantity: item.frame.quantity,
+          totalPrice: item.frame.totalPrice + (item.lensDetail?.lensPrice || 0)
+        }));
+        
+        setCartItems(formattedItems);
+      } catch (error) {
+        console.error('Error fetching cart data:', error);
+        
+        // Try to load cart from localStorage as fallback
+        const savedCart = localStorage.getItem('cart');
+        if (savedCart) {
+          try {
+            const parsedCart = JSON.parse(savedCart);
+            const formattedItems: CartItem[] = parsedCart.map((item: any) => ({
+              id: item.id || Math.random(),
+              name: item.productName || item.name || 'Sản phẩm không xác định',
+              image: item.productImage || item.image || '/placeholder-image.jpg',
+              color: item.selectedColor?.name || item.color || 'Không xác định',
+              price: item.price || 0,
+              quantity: item.quantity || 1,
+              totalPrice: item.totalPrice || (item.price * item.quantity) || 0
+            }));
+            setCartItems(formattedItems);
+          } catch (parseError) {
+            console.error('Error parsing cart from localStorage:', parseError);
+            // Show empty cart
+            setCartItems([]);
+          }
+        } else {
+          // No cart data available
+          setCartItems([]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCartData();
+  }, []);
   
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     fullName: '',
@@ -97,19 +121,20 @@ const CheckoutPage: React.FC = () => {
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<CustomerInfo>>({});
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(PaymentMethod.COD);
 
   const shippingCost = 30000; // 30k shipping cost
   
   // Calculate subtotal from cart items
   const subtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty (only after loading is complete)
   useEffect(() => {
-    if (cartItems.length === 0) {
+    if (!loading && cartItems.length === 0) {
       toast.error('Giỏ hàng của bạn đang trống');
       navigate('/cart');
     }
-  }, [cartItems, navigate]);
+  }, [cartItems, navigate, loading]);
 
   const calculateTotal = () => {
     const discount = appliedPromo?.discount || 0;
@@ -193,17 +218,42 @@ const CheckoutPage: React.FC = () => {
     setIsSubmitting(true);
     
     try {
+      // Prepare order data
+      const orderData = {
+        customerInfo,
+        cartItems,
+        paymentMethod: selectedPaymentMethod,
+        subtotal,
+        discount: appliedPromo?.discount || 0,
+        shippingCost,
+        totalAmount: calculateTotal(),
+        promoCode: appliedPromo?.code
+      };
+
+      console.log('Order data:', orderData);
+
       // Mock API call - replace with actual order creation
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Here you would typically:
-      // 1. Create order with customer info and cart items
-      // 2. Process payment
-      // 3. Clear cart
+      // 1. Send orderData to backend API
+      // 2. Process payment (if bank transfer, show instructions)
+      // 3. Clear cart from localStorage
       // 4. Redirect to success page
       
-      toast.success('Đặt hàng thành công! Cảm ơn bạn đã mua hàng.');
-      navigate('/order-success');
+      // Clear cart after successful order
+      localStorage.removeItem('cart');
+      
+      // Generate order number
+      const orderNumber = 'ORD' + Date.now().toString().slice(-6);
+      
+      if (selectedPaymentMethod === PaymentMethod.BANK_TRANSFER) {
+        toast.success('Đặt hàng thành công! Vui lòng chuyển khoản theo thông tin đã cung cấp.');
+      } else {
+        toast.success('Đặt hàng thành công! Đơn hàng sẽ được giao trong 3-5 ngày làm việc.');
+      }
+      
+      navigate(`/order-success?payment=${selectedPaymentMethod}&order=${orderNumber}`);
     } catch (error) {
       toast.error('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại.');
     } finally {
@@ -213,6 +263,27 @@ const CheckoutPage: React.FC = () => {
 
   if (cartItems.length === 0) {
     return null; // Will redirect in useEffect
+  }
+
+  // Show loading indicator while fetching cart data
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <Navigation />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Đang tải thông tin giỏ hàng...</p>
+            </div>
+          </div>
+        </div>
+        
+        <Footer />
+      </div>
+    );
   }
 
   return (
@@ -288,6 +359,70 @@ const CheckoutPage: React.FC = () => {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Payment Method */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Hình thức thanh toán</h2>
+              
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <input
+                    id="cod"
+                    name="payment-method"
+                    type="radio"
+                    value={PaymentMethod.COD}
+                    checked={selectedPaymentMethod === PaymentMethod.COD}
+                    onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="cod" className="ml-3 block text-sm font-medium text-gray-700">
+                    <div className="flex items-center">
+                      <span className="mr-3">💵</span>
+                      <div>
+                        <div className="font-semibold">Thanh toán khi nhận hàng (COD)</div>
+                        <div className="text-gray-500 text-sm">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    id="bank-transfer"
+                    name="payment-method"
+                    type="radio"
+                    value={PaymentMethod.BANK_TRANSFER}
+                    checked={selectedPaymentMethod === PaymentMethod.BANK_TRANSFER}
+                    onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="bank-transfer" className="ml-3 block text-sm font-medium text-gray-700">
+                    <div className="flex items-center">
+                      <span className="mr-3">🏦</span>
+                      <div>
+                        <div className="font-semibold">Chuyển khoản ngân hàng</div>
+                        <div className="text-gray-500 text-sm">Chuyển khoản trước khi nhận hàng</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {selectedPaymentMethod === PaymentMethod.BANK_TRANSFER && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-blue-900 mb-2">Thông tin chuyển khoản:</h4>
+                  <div className="space-y-1 text-sm text-blue-800">
+                    <p><strong>Ngân hàng:</strong> Vietcombank</p>
+                    <p><strong>Số tài khoản:</strong> 1234567890</p>
+                    <p><strong>Chủ tài khoản:</strong> CÔNG TY MATNICE</p>
+                    <p><strong>Nội dung:</strong> [Họ tên] - [Số điện thoại] - Thanh toán đơn hàng</p>
+                  </div>
+                  <div className="mt-2 text-xs text-blue-600">
+                    * Vui lòng chuyển khoản đúng số tiền và nội dung để đơn hàng được xử lý nhanh chóng
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Shipping Address */}
@@ -489,6 +624,13 @@ const CheckoutPage: React.FC = () => {
                   <span>{formatPrice(shippingCost)}</span>
                 </div>
                 
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Hình thức thanh toán</span>
+                  <span className="text-blue-600">
+                    {selectedPaymentMethod === PaymentMethod.COD ? '💵 COD' : '🏦 Chuyển khoản'}
+                  </span>
+                </div>
+                
                 <hr className="border-gray-200" />
                 
                 <div className="flex justify-between text-lg font-semibold">
@@ -502,7 +644,8 @@ const CheckoutPage: React.FC = () => {
                 disabled={isSubmitting}
                 className="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Đang xử lý...' : 'Đặt hàng'}
+                {isSubmitting ? 'Đang xử lý...' : 
+                 selectedPaymentMethod === PaymentMethod.COD ? 'Đặt hàng (COD)' : 'Đặt hàng & Chuyển khoản'}
               </button>
             </div>
           </div>
