@@ -20,6 +20,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import AddProduct3DModel from './pages/admin/AddProduct3DModel';
 import Configure3DModel from './pages/admin/Configure3DModel';
 import AIAnalysisPage from './pages/AIAnalysisPage';
+import CheckoutPage from './pages/CheckoutPage';
+import OrderSuccessPage from './pages/OrderSuccessPage';
 
 // Protected Route Component for Admin
 interface AdminRouteProps {
@@ -167,6 +169,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <CartPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Checkout Page - requires login */}
+          <Route 
+            path="/checkout" 
+            element={
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Order Success Page - requires login */}
+          <Route 
+            path="/order-success" 
+            element={
+              <ProtectedRoute>
+                <OrderSuccessPage />
               </ProtectedRoute>
             } 
           />
