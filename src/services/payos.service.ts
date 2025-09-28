@@ -59,7 +59,7 @@ class PayOSService {
     try {
       console.log('Creating PayOS payment link:', data);
       const response = await apiService.post<PaymentLinkResponse>(
-        '/api/v1/payos/create-payment-link',
+        '/api/payment/payos/create-payment-link',
         data,
       );
       return response;
@@ -75,7 +75,7 @@ class PayOSService {
     try {
       console.log('Creating embedded PayOS payment link:', data);
       const response = await apiService.post<EmbeddedPaymentResponse>(
-        '/api/v1/payos/create-embedded-payment-link',
+        '/api/payment/payos/create-embedded-payment-link',
         data,
       );
       return response;
@@ -88,7 +88,7 @@ class PayOSService {
   async getPaymentInfo(paymentLinkId: string): Promise<any> {
     try {
       const response = await apiService.get<any>(
-        `/api/v1/payos/payment-info/${paymentLinkId}`,
+        `/api/payment/payos/payment-info/${paymentLinkId}`,
       );
       return response;
     } catch (error: any) {
@@ -100,7 +100,7 @@ class PayOSService {
   async cancelPayment(paymentLinkId: string, reason?: string): Promise<any> {
     try {
       const response = await apiService.post<any>(
-        `/api/v1/payos/cancel-payment/${paymentLinkId}`,
+        `/api/payment/payos/cancel-payment/${paymentLinkId}`,
         { reason },
       );
       return response;
