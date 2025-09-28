@@ -22,6 +22,7 @@ import Configure3DModel from './pages/admin/Configure3DModel';
 import AIAnalysisPage from './pages/AIAnalysisPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
 
 // Protected Route Component for Admin
 interface AdminRouteProps {
@@ -181,6 +182,12 @@ function App() {
                 <CheckoutPage />
               </ProtectedRoute>
             } 
+          />
+
+          {/* Payment Success Page */}
+          <Route 
+            path="/checkout/payment-success" 
+            element={<PaymentSuccessPage />} 
           />
 
           {/* Order Success Page - requires login */}

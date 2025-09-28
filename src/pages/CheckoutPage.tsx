@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import PayOSPayment from '../components/PayOSPayment';
 import cartService from '../services/cart.service';
 
 interface CustomerInfo {
@@ -19,7 +20,8 @@ interface CustomerInfo {
 
 enum PaymentMethod {
   COD = 'cod',
-  BANK_TRANSFER = 'bank_transfer'
+  BANK_TRANSFER = 'bank_transfer',
+  PAYOS = 'payos'
 }
 
 interface PromoCode {
@@ -122,6 +124,7 @@ const CheckoutPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<CustomerInfo>>({});
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(PaymentMethod.COD);
+  const [showPayOSPayment, setShowPayOSPayment] = useState(false);
 
   const shippingCost = 30000; // 30k shipping cost
   
@@ -215,6 +218,12 @@ const CheckoutPage: React.FC = () => {
       return;
     }
 
+    // If PayOS is selected, show PayOS payment interface
+    if (selectedPaymentMethod === PaymentMethod.PAYOS) {
+      setShowPayOSPayment(true);
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -259,6 +268,19 @@ const CheckoutPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handlePayOSSuccess = (orderCode: number) => {
+    // Handle successful PayOS payment
+    localStorage.removeItem('cart');
+    toast.success('Thanh toán thành công! Đơn hàng sẽ được xử lý sớm nhất.');
+    navigate(`/order-success?payment=payos&order=${orderCode}`);
+  };
+
+  const handlePayOSCancel = () => {
+    // Handle PayOS payment cancellation
+    setShowPayOSPayment(false);
+    toast('Thanh toán đã bị hủy');
   };
 
   if (cartItems.length === 0) {
@@ -403,6 +425,27 @@ const CheckoutPage: React.FC = () => {
                       <div>
                         <div className="font-semibold">Chuyển khoản ngân hàng</div>
                         <div className="text-gray-500 text-sm">Chuyển khoản trước khi nhận hàng</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    id="payos"
+                    name="payment-method"
+                    type="radio"
+                    value={PaymentMethod.PAYOS}
+                    checked={selectedPaymentMethod === PaymentMethod.PAYOS}
+                    onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="payos" className="ml-3 block text-sm font-medium text-gray-700">
+                    <div className="flex items-center">
+                      <span className="mr-3">💳</span>
+                      <div>
+                        <div className="font-semibold">Thanh toán trực tuyến (PayOS)</div>
+                        <div className="text-gray-500 text-sm">Thanh toán qua thẻ ATM, Internet Banking, QR Code</div>
                       </div>
                     </div>
                   </label>
@@ -645,12 +688,46 @@ const CheckoutPage: React.FC = () => {
                 className="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Đang xử lý...' : 
-                 selectedPaymentMethod === PaymentMethod.COD ? 'Đặt hàng (COD)' : 'Đặt hàng & Chuyển khoản'}
+                 selectedPaymentMethod === PaymentMethod.COD ? 'Đặt hàng (COD)' : 
+                 selectedPaymentMethod === PaymentMethod.PAYOS ? 'Thanh toán trực tuyến' : 'Đặt hàng & Chuyển khoản'}
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* PayOS Payment Modal */}
+      {showPayOSPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full m-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Thanh toán trực tuyến</h2>
+                <button
+                  onClick={() => setShowPayOSPayment(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <PayOSPayment
+                isVisible={showPayOSPayment}
+                onSuccess={handlePayOSSuccess}
+                onCancel={handlePayOSCancel}
+                customerInfo={{
+                  fullName: customerInfo.fullName,
+                  phone: customerInfo.phone,
+                  email: customerInfo.email,
+                  address: `${customerInfo.address}, ${customerInfo.ward}, ${customerInfo.district}, ${customerInfo.province}`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
       
       <Footer />
     </div>
