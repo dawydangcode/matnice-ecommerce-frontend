@@ -129,8 +129,8 @@
 }
 
 .color-option {
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   border: 2px solid #e5e7eb;
   background: none;
@@ -153,6 +153,29 @@
   height: 100%;
   border-radius: 50%;
   background-color: #8b5cf6;
+}
+
+.color-image-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+}
+
+.color-preview-img {
+  width: 130%;
+  height: 130%;
+  object-fit: cover;
+  transform: scale(0.75);
+  transition: transform 0.2s ease;
+}
+
+.color-option:hover .color-preview-img {
+  transform: scale(0.8);
 }
 
 .color-option[title*="Black"] .color-swatch {

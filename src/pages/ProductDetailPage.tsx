@@ -165,6 +165,13 @@ const ProductDetailPage: React.FC = () => {
     return 'clear';
   };
 
+  const getColorPreviewImage = (colorId: number) => {
+    // Tìm hình ảnh với imageOrder = 'a' cho màu này
+    return product?.productImages?.find((img: any) => 
+      img.productColorId === colorId && img.imageOrder === 'a'
+    );
+  };
+
   const getImagesByColor = () => {
     const colorData = getSelectedColorData();
     if (colorData && product?.productImages) {
@@ -290,16 +297,29 @@ const ProductDetailPage: React.FC = () => {
             <div className="color-section">
               <label className="section-label">Colour: {selectedColor}</label>
               <div className="color-options">
-                {product.productColors?.slice(0, 6).map((color: any) => (
-                  <button
-                    key={color.id}
-                    className={`color-option ${selectedColor === color.colorName ? 'selected' : ''}`}
-                    onClick={() => setSelectedColor(color.colorName)}
-                    title={color.colorName}
-                  >
-                    <div className={`color-swatch ${getColorClass(color.colorName)}`}></div>
-                  </button>
-                ))}
+                {product.productColors?.slice(0, 6).map((color: any) => {
+                  const previewImage = getColorPreviewImage(color.id);
+                  return (
+                    <button
+                      key={color.id}
+                      className={`color-option ${selectedColor === color.colorName ? 'selected' : ''}`}
+                      onClick={() => setSelectedColor(color.colorName)}
+                      title={color.colorName}
+                    >
+                      {previewImage ? (
+                        <div className="color-image-preview">
+                          <img 
+                            src={previewImage.imageUrl} 
+                            alt={color.colorName}
+                            className="color-preview-img"
+                          />
+                        </div>
+                      ) : (
+                        <div className={`color-swatch ${getColorClass(color.colorName)}`}></div>
+                      )}
+                    </button>
+                  );
+                })}
                 {getAdditionalColorsCount() > 0 && (
                   <div className="color-count">+{getAdditionalColorsCount()}</div>
                 )}
