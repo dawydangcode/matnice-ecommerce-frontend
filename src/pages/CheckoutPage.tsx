@@ -6,6 +6,7 @@ import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import PayOSPayment from '../components/PayOSPayment';
 import cartService from '../services/cart.service';
+import orderService from '../services/order.service';
 
 interface CustomerInfo {
   fullName: string;
@@ -19,7 +20,7 @@ interface CustomerInfo {
 }
 
 enum PaymentMethod {
-  COD = 'cod',
+  CASH = 'cash',
   BANK_TRANSFER = 'bank_transfer',
   PAYOS = 'payos'
 }
@@ -123,7 +124,7 @@ const CheckoutPage: React.FC = () => {
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<CustomerInfo>>({});
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(PaymentMethod.COD);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [showPayOSPayment, setShowPayOSPayment] = useState(false);
 
   const shippingCost = 30000; // 30k shipping cost
@@ -227,34 +228,38 @@ const CheckoutPage: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Prepare order data
+      // Check if user is logged in
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        toast.error('Vui lòng đăng nhập để đặt hàng');
+        return;
+      }
+
+      // Prepare order data according to backend DTO (userId will be extracted from token)
       const orderData = {
-        customerInfo,
-        cartItems,
-        paymentMethod: selectedPaymentMethod,
         subtotal,
-        discount: appliedPromo?.discount || 0,
         shippingCost,
-        totalAmount: calculateTotal(),
-        promoCode: appliedPromo?.code
+        totalPrice: calculateTotal(),
+        paymentMethod: selectedPaymentMethod,
+        fullName: customerInfo.fullName,
+        phone: customerInfo.phone,
+        email: customerInfo.email,
+        province: customerInfo.province,
+        district: customerInfo.district,
+        ward: customerInfo.ward,
+        addressDetail: customerInfo.address,
+        notes: customerInfo.notes || undefined,
       };
 
-      console.log('Order data:', orderData);
+      console.log('Creating order with data:', orderData);
 
-      // Mock API call - replace with actual order creation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Call actual backend API
+      const createdOrder = await orderService.createOrder(orderData);
       
-      // Here you would typically:
-      // 1. Send orderData to backend API
-      // 2. Process payment (if bank transfer, show instructions)
-      // 3. Clear cart from localStorage
-      // 4. Redirect to success page
+      console.log('Order created successfully:', createdOrder);
       
       // Clear cart after successful order
       localStorage.removeItem('cart');
-      
-      // Generate order number
-      const orderNumber = 'ORD' + Date.now().toString().slice(-6);
       
       if (selectedPaymentMethod === PaymentMethod.BANK_TRANSFER) {
         toast.success('Đặt hàng thành công! Vui lòng chuyển khoản theo thông tin đã cung cấp.');
@@ -262,8 +267,9 @@ const CheckoutPage: React.FC = () => {
         toast.success('Đặt hàng thành công! Đơn hàng sẽ được giao trong 3-5 ngày làm việc.');
       }
       
-      navigate(`/order-success?payment=${selectedPaymentMethod}&order=${orderNumber}`);
+      navigate(`/order-success?payment=${selectedPaymentMethod}&order=${createdOrder.id}`);
     } catch (error) {
+      console.error('Error creating order:', error);
       toast.error('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại.');
     } finally {
       setIsSubmitting(false);
@@ -390,15 +396,15 @@ const CheckoutPage: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center">
                   <input
-                    id="cod"
+                    id="cash"
                     name="payment-method"
                     type="radio"
-                    value={PaymentMethod.COD}
-                    checked={selectedPaymentMethod === PaymentMethod.COD}
+                    value={PaymentMethod.CASH}
+                    checked={selectedPaymentMethod === PaymentMethod.CASH}
                     onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <label htmlFor="cod" className="ml-3 block text-sm font-medium text-gray-700">
+                  <label htmlFor="cash" className="ml-3 block text-sm font-medium text-gray-700">
                     <div className="flex items-center">
                       <span className="mr-3">💵</span>
                       <div>
@@ -670,7 +676,8 @@ const CheckoutPage: React.FC = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Hình thức thanh toán</span>
                   <span className="text-blue-600">
-                    {selectedPaymentMethod === PaymentMethod.COD ? '💵 COD' : '🏦 Chuyển khoản'}
+                    {selectedPaymentMethod === PaymentMethod.CASH ? '💵 COD' : 
+                     selectedPaymentMethod === PaymentMethod.PAYOS ? '💳 PayOS' : '🏦 Chuyển khoản'}
                   </span>
                 </div>
                 
@@ -688,7 +695,7 @@ const CheckoutPage: React.FC = () => {
                 className="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Đang xử lý...' : 
-                 selectedPaymentMethod === PaymentMethod.COD ? 'Đặt hàng (COD)' : 
+                 selectedPaymentMethod === PaymentMethod.CASH ? 'Đặt hàng (COD)' : 
                  selectedPaymentMethod === PaymentMethod.PAYOS ? 'Thanh toán trực tuyến' : 'Đặt hàng & Chuyển khoản'}
               </button>
             </div>
