@@ -180,6 +180,9 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     const fetchData = async () => {
       try {
         setLoading(true);
+        
+        // Add a small delay to prevent rapid successive calls from StrictMode
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         // Map sort options to backend API format
         let backendSortBy: 'price' | 'name' | 'newest' = 'newest';
@@ -243,7 +246,17 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
           frameWidth,
           multifocal: isMultifocalSelected ? true : undefined,
         });
-        setProducts(response.data || []);
+        
+        console.log('[ProductsPage] API Response:', response.data?.length, 'products');
+        
+        // Deduplicate products by ID to prevent React key conflicts
+        const uniqueProducts = response.data ? response.data.filter((product, index, array) => 
+          array.findIndex(p => p.id === product.id) === index
+        ) : [];
+        
+        console.log('[ProductsPage] After dedup:', uniqueProducts.length, 'unique products');
+        
+        setProducts(uniqueProducts);
         setTotal(response.total || 0);
       } catch (error) {
         console.error('Error fetching products:', error);

@@ -18,6 +18,7 @@ const ProductDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('');
+  const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
   const [isVirtualTryOnOpen, setIsVirtualTryOnOpen] = useState(false);
   
   // 3D Model states
@@ -127,7 +128,9 @@ const ProductDetailPage: React.FC = () => {
         // Set default selections
         if (mockProductData.productColors && mockProductData.productColors.length > 0) {
           setSelectedColor(mockProductData.productColors[0].colorName);
+          setSelectedColorId(mockProductData.productColors[0].id);
           console.log('Selected color:', mockProductData.productColors[0].colorName);
+          console.log('Selected color ID:', mockProductData.productColors[0].id);
         }
         console.log('Frame width:', mockProductData.productDetail.frameWidth);
       } catch (err) {
@@ -303,7 +306,11 @@ const ProductDetailPage: React.FC = () => {
                     <button
                       key={color.id}
                       className={`color-option ${selectedColor === color.colorName ? 'selected' : ''}`}
-                      onClick={() => setSelectedColor(color.colorName)}
+                      onClick={() => {
+                        setSelectedColor(color.colorName);
+                        setSelectedColorId(color.id);
+                        console.log('Selected color:', color.colorName, 'ID:', color.id);
+                      }}
                       title={color.colorName}
                     >
                       {previewImage ? (
@@ -360,7 +367,7 @@ const ProductDetailPage: React.FC = () => {
             <div className="action-buttons">
               <button 
                 className="btn-primary"
-                onClick={() => navigate(`/lens-selection?productId=${id}`)}
+                onClick={() => navigate(`/lens-selection?productId=${id}&selectedColorId=${selectedColorId}`)}
               >
                 <Handbag className="icon-inline" size={24} />
                 With prescription from {formatVND(getPrescriptionPrice())}

@@ -180,9 +180,11 @@ const LensSelectionPage: React.FC = () => {
         });
         setAvailableProducts(response.data);
         
-        // Get productId from URL params
+        // Get productId and selectedColorId from URL params
         const productIdParam = searchParams.get('productId');
+        const selectedColorIdParam = searchParams.get('selectedColorId');
         console.log('ProductId from URL:', productIdParam);
+        console.log('SelectedColorId from URL:', selectedColorIdParam);
         console.log('Available products:', response.data.map(p => ({ id: p.id, name: p.productName, brand: p.brandName })));
         
         if (productIdParam && response.data.length > 0) {
@@ -526,13 +528,14 @@ const LensSelectionPage: React.FC = () => {
       };
 
       // Prepare cart data
+      const selectedColorIdParam = searchParams.get('selectedColorId');
       const cartData: AddLensProductToCartRequest = {
         cartId,
         frameData: {
           productId: Number(selectedProduct.id),
           framePrice: selectedProduct.price,
           quantity: 1,
-          // selectedColorId: selectedProduct.colors?.[0]?.id || undefined // ProductCard doesn't have colors
+          selectedColorId: selectedColorIdParam ? Number(selectedColorIdParam) : undefined
         },
         lensData: {
           lensVariantId: Number(lensFullDetails.variants[0].id),
