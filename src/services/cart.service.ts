@@ -91,6 +91,12 @@ export interface CartItemSummary {
   productName?: string;
   productImage?: string;
   frameColor?: string;
+  selectedColor?: {
+    id: number;
+    colorName: string;
+    colorCode?: string; // Made optional since API doesn't return this
+    productVariantName?: string;
+  } | null;
   quantity: number;
   framePrice: number | string; // API might return string
   totalPrice: number | string; // API might return string
@@ -136,6 +142,12 @@ export interface CartItemWithDetails {
     productId: number;
     productName?: string;
     productImage?: string;
+    selectedColor?: {
+      id: number;
+      colorName: string;
+      colorCode?: string; // Made optional since API doesn't return this
+      productVariantName?: string;
+    } | null;
     quantity: number;
     framePrice: number | string; // API returns string
     totalPrice: number | string; // API returns string
@@ -199,9 +211,24 @@ class CartService {
 
   // Get or create cart for user
   async getOrCreateCart(): Promise<{ cartId: number }> {
-    // For now, return a hardcoded cartId. In real implementation,
-    // you would check if user has an active cart or create a new one
-    return { cartId: 1 };
+    try {
+      // First try to get user's existing cart
+      const response = await apiService.get<{ cartId: number }>(
+        `/api/v1/cart/my-cart/id`,
+      );
+      return response;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        // Cart doesn't exist, create a new one
+        console.log('No existing cart found, creating new cart...');
+        const createResponse = await apiService.post<{ cartId: number }>(
+          `/api/v1/cart/create`,
+          {},
+        );
+        return createResponse;
+      }
+      throw error;
+    }
   }
 
   // Get cart summary

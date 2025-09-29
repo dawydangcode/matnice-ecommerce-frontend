@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
 import productCardService from '../services/product-card.service';
+import productService from '../services/productService';
 import lensPrescriptionService, { FilteredLens, LensPrescriptionFilterResponse } from '../services/lens-prescription.service';
 import lensDetailsService, { LensFullDetails, SelectedLensOptions, LensVariant, LensCoating, TintColor } from '../services/lens-details.service';
 import cartService, { AddLensProductToCartRequest } from '../services/cart.service';
@@ -95,6 +96,8 @@ const LensSelectionPage: React.FC = () => {
   const [selectedLensType, setSelectedLensType] = useState<string>('SINGLE_VISION');
   const [availableProducts, setAvailableProducts] = useState<ProductCard[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<ProductCard | null>(null);
+  const [selectedColorImageUrl, setSelectedColorImageUrl] = useState<string | null>(null);
+  const [selectedProductDetail, setSelectedProductDetail] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [prescriptionOption, setPrescriptionOption] = useState<'saved' | 'manual'>('saved');
   const [currentStep, setCurrentStep] = useState(1);
@@ -147,6 +150,27 @@ const LensSelectionPage: React.FC = () => {
     setTimeout(() => scrollToStep(4), 100);
   }; 
   
+  // Helper function to get selected color info from product detail
+  const getSelectedColorInfo = () => {
+    const selectedColorIdParam = searchParams.get('selectedColorId');
+    if (selectedProductDetail && selectedColorIdParam) {
+      const selectedColor = selectedProductDetail.productColors?.find((color: any) => 
+        color.id === parseInt(selectedColorIdParam)
+      );
+      return selectedColor;
+    }
+    return null;
+  };
+  
+  // Helper function to get display name with color
+  const getDisplayNameWithColor = () => {
+    const colorInfo = getSelectedColorInfo();
+    if (selectedProductDetail && colorInfo) {
+      return `${selectedProductDetail.productName} ${colorInfo.productVariantName}`;
+    }
+    return selectedProduct?.displayName || '';
+  };
+  
   // Prescription form state
   const [prescriptionData, setPrescriptionData] = useState({
     sphereR: '± 0.00',
@@ -197,6 +221,29 @@ const LensSelectionPage: React.FC = () => {
           if (targetProduct) {
             setSelectedProduct(targetProduct);
             console.log('Selected product from URL:', targetProduct);
+            
+            // Load product detail to get color images if selectedColorId is provided
+            if (selectedColorIdParam) {
+              try {
+                const productDetail = await productService.getProductWithDetails(parseInt(productIdParam));
+                console.log('Product detail loaded:', productDetail);
+                setSelectedProductDetail(productDetail);
+                
+                // Find image with imageOrder = 'a' for selected color
+                const colorImage = productDetail.productImages?.find((img: any) => 
+                  img.productColorId === parseInt(selectedColorIdParam) && img.imageOrder === 'a'
+                );
+                
+                if (colorImage) {
+                  setSelectedColorImageUrl(colorImage.imageUrl);
+                  console.log('Color image found:', colorImage.imageUrl);
+                } else {
+                  console.log('No color image found for colorId:', selectedColorIdParam);
+                }
+              } catch (error) {
+                console.error('Error loading product detail:', error);
+              }
+            }
           } else {
             // If product not found in current page, still try to load it by ID
             console.log('Product not found in current page, using first product as fallback');
@@ -1740,13 +1787,16 @@ const LensSelectionPage: React.FC = () => {
                 {selectedProduct ? (
                   <>
                     <img 
-                      src={selectedProduct.thumbnailUrl || 
+                      src={selectedColorImageUrl || selectedProduct.thumbnailUrl || 
                            "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=250&fit=crop&crop=center"} 
                       alt={selectedProduct.displayName}
                       className="w-full h-56 object-contain bg-gray-50 rounded-lg"
                     />
                     <p className="text-base text-gray-600 text-center mt-3 font-medium">
-                      {selectedProduct.brandName} | {selectedProduct.displayName}
+                      {selectedProductDetail ? 
+                        `${selectedProductDetail.brand?.name} | ${getDisplayNameWithColor()}` :
+                        `${selectedProduct.brandName} | ${selectedProduct.displayName}`
+                      }
                     </p>
                   </>
                 ) : (
@@ -1774,7 +1824,10 @@ const LensSelectionPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="text-sm text-gray-500 pl-0">
-                    {selectedProduct?.displayName || 'Chưa chọn gọng kính'}
+                    {selectedProductDetail ? 
+                      getDisplayNameWithColor() :
+                      (selectedProduct?.displayName || 'Chưa chọn gọng kính')
+                    }
                   </div>
                   
                   <div className="flex justify-between items-center">
