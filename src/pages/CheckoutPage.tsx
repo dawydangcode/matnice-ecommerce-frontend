@@ -5,7 +5,7 @@ import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import PayOSPayment from '../components/PayOSPayment';
-import cartService from '../services/cart.service';
+import cartService, { CartSummary } from '../services/cart.service';
 import orderService from '../services/order.service';
 
 interface CustomerInfo {
@@ -31,16 +31,6 @@ interface PromoCode {
   isValid: boolean;
 }
 
-interface CartItem {
-  id: number;
-  name: string;
-  image: string;
-  color: string;
-  price: number;
-  quantity: number;
-  totalPrice: number;
-}
-
 const formatPrice = (price: number): string => {
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
@@ -51,56 +41,21 @@ const formatPrice = (price: number): string => {
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   
-  // Load cart data from backend API
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  // Load cart data from backend API using the same CartSummary as CartPage
+  const [cartSummary, setCartSummary] = useState<CartSummary | null>(null);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     const fetchCartData = async () => {
       try {
         setLoading(true);
-        // Fetch cart data from backend API using cartService (gets current user's cart)
-        const cartData = await cartService.getMyCartItemsWithFullDetails();
-        
-        // Convert backend cart data to our CartItem format
-        const formattedItems: CartItem[] = cartData.map((item: any) => ({
-          id: item.frame.id,
-          name: item.frame.productName || 'Sản phẩm không xác định',
-          image: item.frame.productImage || '/placeholder-image.jpg',
-          color: 'Đen', // Default color - you can get this from product details later
-          price: item.frame.framePrice + (item.lensDetail?.lensPrice || 0),
-          quantity: item.frame.quantity,
-          totalPrice: item.frame.totalPrice + (item.lensDetail?.lensPrice || 0)
-        }));
-        
-        setCartItems(formattedItems);
+        // Use the same cart summary API as CartPage
+        const summary = await cartService.getMyCartSummary();
+        setCartSummary(summary);
       } catch (error) {
         console.error('Error fetching cart data:', error);
-        
-        // Try to load cart from localStorage as fallback
-        const savedCart = localStorage.getItem('cart');
-        if (savedCart) {
-          try {
-            const parsedCart = JSON.parse(savedCart);
-            const formattedItems: CartItem[] = parsedCart.map((item: any) => ({
-              id: item.id || Math.random(),
-              name: item.productName || item.name || 'Sản phẩm không xác định',
-              image: item.productImage || item.image || '/placeholder-image.jpg',
-              color: item.selectedColor?.name || item.color || 'Không xác định',
-              price: item.price || 0,
-              quantity: item.quantity || 1,
-              totalPrice: item.totalPrice || (item.price * item.quantity) || 0
-            }));
-            setCartItems(formattedItems);
-          } catch (parseError) {
-            console.error('Error parsing cart from localStorage:', parseError);
-            // Show empty cart
-            setCartItems([]);
-          }
-        } else {
-          // No cart data available
-          setCartItems([]);
-        }
+        toast.error('Không thể tải giỏ hàng');
+        setCartSummary(null);
       } finally {
         setLoading(false);
       }
@@ -127,18 +82,20 @@ const CheckoutPage: React.FC = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [showPayOSPayment, setShowPayOSPayment] = useState(false);
 
-  const shippingCost = 30000; // 30k shipping cost
+  // Calculate shipping cost based on whether there are lenses
+  const hasLenses = cartSummary?.items?.some(item => item.lensDetail) || false;
+  const shippingCost = hasLenses ? 0 : 30000; // Free shipping if has lenses, 30k if frame only
   
-  // Calculate subtotal from cart items
-  const subtotal = cartItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  // Calculate subtotal from cart summary
+  const subtotal = Number(cartSummary?.grandTotal || 0);
 
   // Redirect if cart is empty (only after loading is complete)
   useEffect(() => {
-    if (!loading && cartItems.length === 0) {
+    if (!loading && (!cartSummary || cartSummary.items.length === 0)) {
       toast.error('Giỏ hàng của bạn đang trống');
       navigate('/cart');
     }
-  }, [cartItems, navigate, loading]);
+  }, [cartSummary, navigate, loading]);
 
   const calculateTotal = () => {
     const discount = appliedPromo?.discount || 0;
@@ -289,7 +246,7 @@ const CheckoutPage: React.FC = () => {
     toast('Thanh toán đã bị hủy');
   };
 
-  if (cartItems.length === 0) {
+  if (!cartSummary || cartSummary.items.length === 0) {
     return null; // Will redirect in useEffect
   }
 
@@ -387,91 +344,6 @@ const CheckoutPage: React.FC = () => {
                   )}
                 </div>
               </div>
-            </div>
-
-            {/* Payment Method */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Hình thức thanh toán</h2>
-              
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <input
-                    id="cash"
-                    name="payment-method"
-                    type="radio"
-                    value={PaymentMethod.CASH}
-                    checked={selectedPaymentMethod === PaymentMethod.CASH}
-                    onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <label htmlFor="cash" className="ml-3 block text-sm font-medium text-gray-700">
-                    <div className="flex items-center">
-                      <span className="mr-3">💵</span>
-                      <div>
-                        <div className="font-semibold">Thanh toán khi nhận hàng (COD)</div>
-                        <div className="text-gray-500 text-sm">Thanh toán bằng tiền mặt khi nhận hàng</div>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    id="bank-transfer"
-                    name="payment-method"
-                    type="radio"
-                    value={PaymentMethod.BANK_TRANSFER}
-                    checked={selectedPaymentMethod === PaymentMethod.BANK_TRANSFER}
-                    onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <label htmlFor="bank-transfer" className="ml-3 block text-sm font-medium text-gray-700">
-                    <div className="flex items-center">
-                      <span className="mr-3">🏦</span>
-                      <div>
-                        <div className="font-semibold">Chuyển khoản ngân hàng</div>
-                        <div className="text-gray-500 text-sm">Chuyển khoản trước khi nhận hàng</div>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    id="payos"
-                    name="payment-method"
-                    type="radio"
-                    value={PaymentMethod.PAYOS}
-                    checked={selectedPaymentMethod === PaymentMethod.PAYOS}
-                    onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <label htmlFor="payos" className="ml-3 block text-sm font-medium text-gray-700">
-                    <div className="flex items-center">
-                      <span className="mr-3">💳</span>
-                      <div>
-                        <div className="font-semibold">Thanh toán trực tuyến (PayOS)</div>
-                        <div className="text-gray-500 text-sm">Thanh toán qua thẻ ATM, Internet Banking, QR Code</div>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {selectedPaymentMethod === PaymentMethod.BANK_TRANSFER && (
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h4 className="font-semibold text-blue-900 mb-2">Thông tin chuyển khoản:</h4>
-                  <div className="space-y-1 text-sm text-blue-800">
-                    <p><strong>Ngân hàng:</strong> Vietcombank</p>
-                    <p><strong>Số tài khoản:</strong> 1234567890</p>
-                    <p><strong>Chủ tài khoản:</strong> CÔNG TY MATNICE</p>
-                    <p><strong>Nội dung:</strong> [Họ tên] - [Số điện thoại] - Thanh toán đơn hàng</p>
-                  </div>
-                  <div className="mt-2 text-xs text-blue-600">
-                    * Vui lòng chuyển khoản đúng số tiền và nội dung để đơn hàng được xử lý nhanh chóng
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Shipping Address */}
@@ -589,6 +461,91 @@ const CheckoutPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Payment Method */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Hình thức thanh toán</h2>
+              
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <input
+                    id="cash"
+                    name="payment-method"
+                    type="radio"
+                    value={PaymentMethod.CASH}
+                    checked={selectedPaymentMethod === PaymentMethod.CASH}
+                    onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="cash" className="ml-3 block text-sm font-medium text-gray-700">
+                    <div className="flex items-center">
+                      <span className="mr-3">💵</span>
+                      <div>
+                        <div className="font-semibold">Thanh toán khi nhận hàng (COD)</div>
+                        <div className="text-gray-500 text-sm">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    id="bank-transfer"
+                    name="payment-method"
+                    type="radio"
+                    value={PaymentMethod.BANK_TRANSFER}
+                    checked={selectedPaymentMethod === PaymentMethod.BANK_TRANSFER}
+                    onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="bank-transfer" className="ml-3 block text-sm font-medium text-gray-700">
+                    <div className="flex items-center">
+                      <span className="mr-3">🏦</span>
+                      <div>
+                        <div className="font-semibold">Chuyển khoản ngân hàng</div>
+                        <div className="text-gray-500 text-sm">Chuyển khoản trước khi nhận hàng</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    id="payos"
+                    name="payment-method"
+                    type="radio"
+                    value={PaymentMethod.PAYOS}
+                    checked={selectedPaymentMethod === PaymentMethod.PAYOS}
+                    onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="payos" className="ml-3 block text-sm font-medium text-gray-700">
+                    <div className="flex items-center">
+                      <span className="mr-3">💳</span>
+                      <div>
+                        <div className="font-semibold">Thanh toán trực tuyến (PayOS)</div>
+                        <div className="text-gray-500 text-sm">Thanh toán qua thẻ ATM, Internet Banking, QR Code</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {selectedPaymentMethod === PaymentMethod.BANK_TRANSFER && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-blue-900 mb-2">Thông tin chuyển khoản:</h4>
+                  <div className="space-y-1 text-sm text-blue-800">
+                    <p><strong>Ngân hàng:</strong> Vietcombank</p>
+                    <p><strong>Số tài khoản:</strong> 1234567890</p>
+                    <p><strong>Chủ tài khoản:</strong> CÔNG TY MATNICE</p>
+                    <p><strong>Nội dung:</strong> [Họ tên] - [Số điện thoại] - Thanh toán đơn hàng</p>
+                  </div>
+                  <div className="mt-2 text-xs text-blue-600">
+                    * Vui lòng chuyển khoản đúng số tiền và nội dung để đơn hàng được xử lý nhanh chóng
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Order Summary */}
@@ -597,28 +554,174 @@ const CheckoutPage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Đơn hàng</h2>
               
-              <div className="space-y-4">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-4 py-4 border-b border-gray-200 last:border-b-0">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">
-                        {item.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Màu: {item.color}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-gray-900">
-                        {formatPrice(item.totalPrice)}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Số lượng: {item.quantity}
+              <div className="space-y-6">
+                {cartSummary?.items?.map((item) => (
+                  <div key={item.cartFrameId} className="bg-gray-50 rounded-lg p-6">
+                    <div className="flex gap-6">
+                      <img
+                        src={item.productImage || '/api/placeholder/120/120'}
+                        alt={item.productName || 'Product'}
+                        className="w-24 h-24 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                          {item.productName}
+                        </h3>
+                        
+                        {/* Basic product info */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-700">Màu:</span>
+                              {item.selectedColor && (
+                                <>
+                                  <span
+                                    className="w-4 h-4 rounded-full border border-gray-300"
+                                    style={{ backgroundColor: item.selectedColor.colorCode || '#ccc' }}
+                                  />
+                                  <span className="text-gray-900">{item.selectedColor.colorName}</span>
+                                </>
+                              )}
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700">Số lượng:</span>
+                              <span className="ml-2 text-gray-900">{item.quantity}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700">Giá gọng:</span>
+                              <span className="ml-2 text-gray-900">{formatPrice(Number(item.framePrice))}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            {item.lensDetail && (
+                              <>
+                                <div>
+                                  <span className="font-medium text-gray-700">Giá tròng:</span>
+                                  <span className="ml-2 text-gray-900">{formatPrice(Number(item.lensDetail.lensPrice))}</span>
+                                </div>
+                                {item.lensDetail.selectedCoatings && item.lensDetail.selectedCoatings.length > 0 && (
+                                  <div>
+                                    {item.lensDetail.selectedCoatings.map((coating, index) => (
+                                      <div key={index}>
+                                        <span className="font-medium text-gray-700">Lớp phủ ({coating.name}):</span>
+                                        <span className="ml-2 text-gray-900">+{formatPrice(coating.price)}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {item.lensDetail.selectedTintColor && (
+                                  <div>
+                                    <span className="font-medium text-gray-700">Tint ({item.lensDetail.selectedTintColor.name}):</span>
+                                    <span className="ml-2 text-gray-900">+{formatPrice(item.lensDetail.selectedTintColor.price || 0)}</span>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                            <div className="border-t pt-2 mt-2">
+                              <span className="text-lg font-bold text-blue-600">
+                                Tổng tiền: {formatPrice(Number(item.totalPrice))}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Lens Information */}
+                        {item.lensDetail && (
+                          <div className="bg-white rounded-lg p-4 mb-4">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Thông tin tròng kính</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <div>
+                                  <span className="font-medium text-gray-700">Loại:</span>
+                                  <span className="ml-2 text-gray-900">{item.lensDetail.lensType}</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-gray-700">Chất lượng:</span>
+                                  <span className="ml-2 text-gray-900">{item.lensDetail.lensQuality}</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-gray-700">Giá:</span>
+                                  <span className="ml-2 text-gray-900">{formatPrice(Number(item.lensDetail.lensPrice))}</span>
+                                </div>
+                              </div>
+                              
+                              {/* Coating details */}
+                              {item.lensDetail.selectedCoatings && item.lensDetail.selectedCoatings.length > 0 && (
+                                <div>
+                                  <h5 className="font-medium text-gray-700 mb-2">Lớp phủ</h5>
+                                  {item.lensDetail.selectedCoatings.map((coating, index) => (
+                                    <div key={index} className="bg-blue-50 p-2 rounded mb-2">
+                                      <div className="font-medium text-blue-900">{coating.name}</div>
+                                      {coating.description && (
+                                        <div className="text-sm text-blue-700">{coating.description}</div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Prescription Information */}
+                        {item.lensDetail?.prescription && (
+                          <div className="bg-white rounded-lg p-4">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Thông tin đơn thuốc</h4>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm border-collapse border border-gray-300">
+                                <thead>
+                                  <tr className="bg-gray-100">
+                                    <th className="border border-gray-300 px-3 py-2 text-left">Mắt</th>
+                                    <th className="border border-gray-300 px-3 py-2 text-center">SPH</th>
+                                    <th className="border border-gray-300 px-3 py-2 text-center">CYL</th>
+                                    <th className="border border-gray-300 px-3 py-2 text-center">AXIS</th>
+                                    <th className="border border-gray-300 px-3 py-2 text-center">ADD</th>
+                                    <th className="border border-gray-300 px-3 py-2 text-center">PD</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr>
+                                    <td className="border border-gray-300 px-3 py-2 font-medium">Phải</td>
+                                    <td className="border border-gray-300 px-3 py-2 text-center">
+                                      {item.lensDetail.prescription.rightEye.sphere || 0}
+                                    </td>
+                                    <td className="border border-gray-300 px-3 py-2 text-center">
+                                      {item.lensDetail.prescription.rightEye.cylinder || 0}
+                                    </td>
+                                    <td className="border border-gray-300 px-3 py-2 text-center">
+                                      {item.lensDetail.prescription.rightEye.axis || 0}°
+                                    </td>
+                                    <td className="border border-gray-300 px-3 py-2 text-center">
+                                      {item.lensDetail.prescription.addRight || 0}
+                                    </td>
+                                    <td className="border border-gray-300 px-3 py-2 text-center">
+                                      {item.lensDetail.prescription.pdRight || 0}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="border border-gray-300 px-3 py-2 font-medium">Trái</td>
+                                    <td className="border border-gray-300 px-3 py-2 text-center">
+                                      {item.lensDetail.prescription.leftEye.sphere || 0}
+                                    </td>
+                                    <td className="border border-gray-300 px-3 py-2 text-center">
+                                      {item.lensDetail.prescription.leftEye.cylinder || 0}
+                                    </td>
+                                    <td className="border border-gray-300 px-3 py-2 text-center">
+                                      {item.lensDetail.prescription.leftEye.axis || 0}°
+                                    </td>
+                                    <td className="border border-gray-300 px-3 py-2 text-center">
+                                      {item.lensDetail.prescription.addLeft || 0}
+                                    </td>
+                                    <td className="border border-gray-300 px-3 py-2 text-center">
+                                      {item.lensDetail.prescription.pdLeft || 0}
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -669,14 +772,24 @@ const CheckoutPage: React.FC = () => {
                 )}
                 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Ship</span>
-                  <span>{formatPrice(shippingCost)}</span>
+                  <span className="text-gray-600">
+                    Ship
+                    {hasLenses && (
+                      <span className="text-green-600 text-xs ml-1">(Miễn phí)</span>
+                    )}
+                    {!hasLenses && (
+                      <span className="text-orange-600 text-xs ml-1">(Chỉ có gọng)</span>
+                    )}
+                  </span>
+                  <span className={hasLenses ? "text-green-600" : ""}>
+                    {hasLenses ? "Miễn phí" : formatPrice(shippingCost)}
+                  </span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Hình thức thanh toán</span>
                   <span className="text-blue-600">
-                    {selectedPaymentMethod === PaymentMethod.CASH ? '💵 COD' : 
+                    {selectedPaymentMethod === PaymentMethod.CASH ? 'Thanh toán khi nhận hàng' : 
                      selectedPaymentMethod === PaymentMethod.PAYOS ? '💳 PayOS' : '🏦 Chuyển khoản'}
                   </span>
                 </div>
