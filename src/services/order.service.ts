@@ -75,6 +75,103 @@ export interface OrderResponse {
   ward: string;
   addressDetail: string;
   notes?: string;
+  orderItems?: OrderItem[];
+}
+
+export interface OrderItem {
+  id: number;
+  orderId: number;
+  productId: number;
+  quantity: number;
+  framePrice: number;
+  totalPrice: number;
+  discount: number;
+  selectedColorId?: number;
+  productInfo?: {
+    productName: string;
+    productPrice: number;
+    productDescription: string;
+    brandName: string;
+    colorInfo?: {
+      colorName: string;
+      productVariantName: string;
+      productNumber: number;
+    };
+  };
+  lensDetails?: EnrichedLensDetail[];
+  // Legacy fields for backward compatibility
+  product?: {
+    id: number;
+    product_name: string;
+    price: number;
+    image_url?: string;
+  };
+  orderLensDetails?: OrderLensDetail[];
+}
+
+export interface EnrichedLensDetail {
+  id: number;
+  orderItemId: number;
+  lensVariantId: number;
+  rightEyeSphere: number;
+  rightEyeCylinder?: number;
+  rightEyeAxis?: number;
+  leftEyeSphere: number;
+  leftEyeCylinder?: number;
+  leftEyeAxis?: number;
+  pdLeft?: number;
+  pdRight?: number;
+  addLeft?: number;
+  addRight?: number;
+  lensPrice: number;
+  selectedCoatingIds?: string;
+  selectedTintColorId?: number;
+  prescriptionNotes?: string;
+  lensNotes?: string;
+  manufacturingNotes?: string;
+  lensInfo?: {
+    lensName: string;
+    lensType: string;
+    lensDescription: string;
+    brandLens: string;
+    lensVariant: {
+      design: string;
+      material: string;
+      price: number;
+    };
+    lensThickness?: {
+      name: string;
+      indexValue: number;
+      price: number;
+      description: string;
+    };
+    lensCoatings?: Array<{
+      name: string;
+      price: number;
+      description: string;
+    }>;
+    tintColor?: {
+      name: string;
+      colorCode: string;
+    };
+  };
+}
+
+export interface OrderLensDetail {
+  id: number;
+  orderItemId: number;
+  eye: 'left' | 'right';
+  sph: number;
+  cyl: number;
+  axis: number;
+  pd: number;
+  add?: number;
+  lensId: number;
+  lens: {
+    id: number;
+    lens_name: string;
+    price: number;
+  };
 }
 
 export interface GetOrdersParams {
@@ -84,6 +181,28 @@ export interface GetOrdersParams {
   status?: OrderStatus;
   paymentStatus?: PaymentStatus;
   userId?: number;
+  startDate?: string;
+  endDate?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: 'orderDate' | 'totalPrice' | 'status' | 'id';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface UpdateTrackingRequest {
+  trackingNumber?: string;
+  deliveryDate?: string;
+}
+
+export interface OrderReport {
+  totalOrders: number;
+  totalRevenue: number;
+  ordersByStatus: Record<string, number>;
+  ordersByDate: Array<{
+    date: string;
+    count: number;
+    revenue: number;
+  }>;
 }
 
 export interface OrdersResponse {
@@ -137,6 +256,24 @@ class OrderService {
     }
   }
 
+  async getOrderDetails(orderId: number): Promise<OrderResponse> {
+    try {
+      console.log(
+        'OrderService.getOrderDetails: Fetching order details for ID:',
+        orderId,
+      );
+
+      const response = await apiService.get<{ data: OrderResponse }>(
+        `/api/v1/orders/${orderId}/details`,
+      );
+      console.log('OrderService.getOrderDetails: Success', response);
+      return response.data;
+    } catch (error) {
+      console.error('OrderService.getOrderDetails: Error', error);
+      throw error;
+    }
+  }
+
   // Admin methods
   async getOrders(params: GetOrdersParams): Promise<OrdersResponse> {
     try {
@@ -153,6 +290,14 @@ class OrderService {
       if (params.paymentStatus)
         queryParams.append('paymentStatus', params.paymentStatus);
       if (params.userId) queryParams.append('userId', params.userId.toString());
+      if (params.startDate) queryParams.append('startDate', params.startDate);
+      if (params.endDate) queryParams.append('endDate', params.endDate);
+      if (params.minPrice)
+        queryParams.append('minPrice', params.minPrice.toString());
+      if (params.maxPrice)
+        queryParams.append('maxPrice', params.maxPrice.toString());
+      if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+      if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
 
       const response = await apiService.get<OrdersResponse>(
         `/api/v1/orders?${queryParams.toString()}`,
@@ -161,6 +306,41 @@ class OrderService {
       return response;
     } catch (error) {
       console.error('OrderService.getOrders: Error', error);
+      throw error;
+    }
+  }
+
+  async getOrdersWithDetails(params: GetOrdersParams): Promise<OrdersResponse> {
+    try {
+      console.log(
+        'OrderService.getOrdersWithDetails: Fetching detailed orders with params:',
+        params,
+      );
+
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.append('page', params.page.toString());
+      if (params.limit) queryParams.append('limit', params.limit.toString());
+      if (params.search) queryParams.append('search', params.search);
+      if (params.status) queryParams.append('status', params.status);
+      if (params.paymentStatus)
+        queryParams.append('paymentStatus', params.paymentStatus);
+      if (params.userId) queryParams.append('userId', params.userId.toString());
+      if (params.startDate) queryParams.append('startDate', params.startDate);
+      if (params.endDate) queryParams.append('endDate', params.endDate);
+      if (params.minPrice)
+        queryParams.append('minPrice', params.minPrice.toString());
+      if (params.maxPrice)
+        queryParams.append('maxPrice', params.maxPrice.toString());
+      if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+      if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+
+      const response = await apiService.get<OrdersResponse>(
+        `/api/v1/orders/detailed?${queryParams.toString()}`,
+      );
+      console.log('OrderService.getOrdersWithDetails: Success', response);
+      return response;
+    } catch (error) {
+      console.error('OrderService.getOrdersWithDetails: Error', error);
       throw error;
     }
   }
@@ -218,6 +398,124 @@ class OrderService {
       return true;
     } catch (error) {
       console.error('OrderService.deleteOrder: Error', error);
+      throw error;
+    }
+  }
+
+  async updateTrackingInfo(
+    id: number,
+    trackingInfo: UpdateTrackingRequest,
+  ): Promise<OrderResponse> {
+    try {
+      console.log('OrderService.updateTrackingInfo: Updating tracking info', {
+        id,
+        trackingInfo,
+      });
+
+      const response = await apiService.put<{ data: OrderResponse }>(
+        `/api/v1/orders/${id}/tracking`,
+        trackingInfo,
+      );
+      console.log('OrderService.updateTrackingInfo: Success', response);
+      return response.data;
+    } catch (error) {
+      console.error('OrderService.updateTrackingInfo: Error', error);
+      throw error;
+    }
+  }
+
+  async exportOrdersPDF(params: GetOrdersParams): Promise<Blob> {
+    try {
+      console.log(
+        'OrderService.exportOrdersPDF: Exporting orders to PDF',
+        params,
+      );
+
+      const queryParams = new URLSearchParams();
+      if (params.search) queryParams.append('search', params.search);
+      if (params.status) queryParams.append('status', params.status);
+      if (params.paymentStatus)
+        queryParams.append('paymentStatus', params.paymentStatus);
+      if (params.startDate) queryParams.append('startDate', params.startDate);
+      if (params.endDate) queryParams.append('endDate', params.endDate);
+
+      const response = await apiService.get<Blob>(
+        `/api/v1/orders/export/pdf?${queryParams.toString()}`,
+        { responseType: 'blob' },
+      );
+      console.log('OrderService.exportOrdersPDF: Success');
+      return response;
+    } catch (error) {
+      console.error('OrderService.exportOrdersPDF: Error', error);
+      throw error;
+    }
+  }
+
+  async exportOrdersExcel(params: GetOrdersParams): Promise<Blob> {
+    try {
+      console.log(
+        'OrderService.exportOrdersExcel: Exporting orders to Excel',
+        params,
+      );
+
+      const queryParams = new URLSearchParams();
+      if (params.search) queryParams.append('search', params.search);
+      if (params.status) queryParams.append('status', params.status);
+      if (params.paymentStatus)
+        queryParams.append('paymentStatus', params.paymentStatus);
+      if (params.startDate) queryParams.append('startDate', params.startDate);
+      if (params.endDate) queryParams.append('endDate', params.endDate);
+
+      const response = await apiService.get<Blob>(
+        `/api/v1/orders/export/excel?${queryParams.toString()}`,
+        { responseType: 'blob' },
+      );
+      console.log('OrderService.exportOrdersExcel: Success');
+      return response;
+    } catch (error) {
+      console.error('OrderService.exportOrdersExcel: Error', error);
+      throw error;
+    }
+  }
+
+  async getOrderReport(
+    startDate: string,
+    endDate: string,
+  ): Promise<OrderReport> {
+    try {
+      console.log('OrderService.getOrderReport: Fetching order report', {
+        startDate,
+        endDate,
+      });
+
+      const response = await apiService.get<{ data: OrderReport }>(
+        `/api/v1/orders/reports?startDate=${startDate}&endDate=${endDate}`,
+      );
+      console.log('OrderService.getOrderReport: Success', response);
+      return response.data;
+    } catch (error) {
+      console.error('OrderService.getOrderReport: Error', error);
+      throw error;
+    }
+  }
+
+  async sendOrderNotification(
+    orderId: number,
+    type: 'status_update' | 'tracking_update',
+  ): Promise<boolean> {
+    try {
+      console.log('OrderService.sendOrderNotification: Sending notification', {
+        orderId,
+        type,
+      });
+
+      await apiService.post(`/api/v1/orders/${orderId}/notifications`, {
+        type,
+      });
+      console.log('OrderService.sendOrderNotification: Success');
+      return true;
+    } catch (error) {
+      console.error('OrderService.sendOrderNotification: Error', error);
       throw error;
     }
   }

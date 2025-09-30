@@ -17,7 +17,9 @@ import {
   XCircle,
   Clock,
   Truck,
-  AlertCircle
+  AlertCircle,
+  Download,
+  FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import orderService, { 
@@ -25,7 +27,8 @@ import orderService, {
   OrderStatus, 
   PaymentStatus, 
   GetOrdersParams,
-  OrdersResponse 
+  OrdersResponse,
+  UpdateTrackingRequest
 } from '../services/order.service';
 
 interface OrderManagementProps {}
@@ -43,9 +46,23 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
   const [showOrderDetail, setShowOrderDetail] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showPaymentStatusModal, setShowPaymentStatusModal] = useState(false);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [editingOrder, setEditingOrder] = useState<OrderResponse | null>(null);
   const [newStatus, setNewStatus] = useState<OrderStatus>(OrderStatus.PENDING);
   const [newPaymentStatus, setNewPaymentStatus] = useState<PaymentStatus>(PaymentStatus.PENDING);
+  
+  // Advanced filter states
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [sortBy, setSortBy] = useState<'orderDate' | 'totalPrice' | 'status' | 'id'>('orderDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  
+  // Tracking info
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
 
   const itemsPerPage = 10;
 
@@ -59,9 +76,16 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
         search: searchTerm || undefined,
         status: statusFilter || undefined,
         paymentStatus: paymentStatusFilter || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        minPrice: minPrice ? parseFloat(minPrice) : undefined,
+        maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+        sortBy,
+        sortOrder,
       };
 
-      const response: OrdersResponse = await orderService.getOrders(params);
+      // Use the new API endpoint with detailed information
+      const response: OrdersResponse = await orderService.getOrdersWithDetails(params);
       setOrders(response.data);
       setTotalOrders(response.total);
       setTotalPages(Math.ceil(response.total / itemsPerPage));
@@ -71,7 +95,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, statusFilter, paymentStatusFilter]);
+  }, [currentPage, searchTerm, statusFilter, paymentStatusFilter, startDate, endDate, minPrice, maxPrice, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchOrders();
@@ -95,9 +119,20 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
   };
 
   // Handle view order detail
-  const handleViewOrder = (order: OrderResponse) => {
-    setSelectedOrder(order);
-    setShowOrderDetail(true);
+  const handleViewOrder = async (order: OrderResponse) => {
+    try {
+      // For now, use basic order info since /details endpoint may not be fully implemented
+      // You can uncomment the line below once backend endpoint is ready
+      // const detailedOrder = await orderService.getOrderDetails(order.id);
+      setSelectedOrder(order);
+      setShowOrderDetail(true);
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      toast.error('Không thể tải chi tiết đơn hàng');
+      // Fallback to basic order info
+      setSelectedOrder(order);
+      setShowOrderDetail(true);
+    }
   };
 
   // Handle update order status
@@ -144,6 +179,98 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
       console.error('Error updating payment status:', error);
       toast.error('Không thể cập nhật trạng thái thanh toán');
     }
+  };
+
+  // Handle update tracking info
+  const handleUpdateTracking = (order: OrderResponse) => {
+    setEditingOrder(order);
+    setTrackingNumber(order.trackingNumber || '');
+    setDeliveryDate(order.deliveryDate || '');
+    setShowTrackingModal(true);
+  };
+
+  // Submit tracking update
+  const submitTrackingUpdate = async () => {
+    if (!editingOrder) return;
+
+    try {
+      const trackingInfo: UpdateTrackingRequest = {
+        trackingNumber: trackingNumber || undefined,
+        deliveryDate: deliveryDate || undefined,
+      };
+      
+      await orderService.updateTrackingInfo(editingOrder.id, trackingInfo);
+      toast.success('Cập nhật thông tin vận chuyển thành công');
+      setShowTrackingModal(false);
+      setEditingOrder(null);
+      fetchOrders();
+    } catch (error) {
+      console.error('Error updating tracking info:', error);
+      toast.error('Không thể cập nhật thông tin vận chuyển');
+    }
+  };
+
+  // Handle export functions
+  const handleExportPDF = async () => {
+    try {
+      const params: GetOrdersParams = {
+        search: searchTerm || undefined,
+        status: statusFilter || undefined,
+        paymentStatus: paymentStatusFilter || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      };
+      
+      const blob = await orderService.exportOrdersPDF(params);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `orders_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Xuất PDF thành công');
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast.error('Không thể xuất PDF');
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const params: GetOrdersParams = {
+        search: searchTerm || undefined,
+        status: statusFilter || undefined,
+        paymentStatus: paymentStatusFilter || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      };
+      
+      const blob = await orderService.exportOrdersExcel(params);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `orders_${new Date().toISOString().split('T')[0]}.xlsx`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Xuất Excel thành công');
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      toast.error('Không thể xuất Excel');
+    }
+  };
+
+  // Clear filters
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('');
+    setPaymentStatusFilter('');
+    setStartDate('');
+    setEndDate('');
+    setMinPrice('');
+    setMaxPrice('');
+    setSortBy('orderDate');
+    setSortOrder('desc');
+    setCurrentPage(1);
   };
 
   // Handle delete order
@@ -267,17 +394,115 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
 
           {/* Clear Filters */}
           <button
-            onClick={() => {
-              setSearchTerm('');
-              setStatusFilter('');
-              setPaymentStatusFilter('');
-              setCurrentPage(1);
-            }}
+            onClick={clearFilters}
             className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
           >
             Xóa bộ lọc
           </button>
         </div>
+
+        {/* Advanced Filters Toggle */}
+        <div className="mt-4 flex justify-between items-center">
+          <button
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2"
+          >
+            <Filter className="w-4 h-4" />
+            {showAdvancedFilters ? 'Ẩn bộ lọc nâng cao' : 'Hiện bộ lọc nâng cao'}
+          </button>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleExportPDF}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Xuất PDF
+            </button>
+            <button
+              onClick={handleExportExcel}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Xuất Excel
+            </button>
+          </div>
+        </div>
+
+        {/* Advanced Filters */}
+        {showAdvancedFilters && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Date Range */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Từ ngày</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Đến ngày</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Price Range */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Giá từ (₫)</label>
+                <input
+                  type="number"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Giá đến (₫)</label>
+                <input
+                  type="number"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Sort Options */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sắp xếp theo</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="orderDate">Ngày đặt</option>
+                  <option value="totalPrice">Tổng giá</option>
+                  <option value="status">Trạng thái</option>
+                  <option value="id">Mã đơn hàng</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Thứ tự</label>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="desc">Giảm dần</option>
+                  <option value="asc">Tăng dần</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Orders Table */}
@@ -291,6 +516,9 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Khách hàng
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Sản phẩm
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Ngày đặt
@@ -320,6 +548,36 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                     <div className="text-sm font-medium text-gray-900">{order.fullName}</div>
                     <div className="text-sm text-gray-500">{order.phone}</div>
                     <div className="text-sm text-gray-500">{order.email}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900 max-w-xs">
+                      {order.orderItems && order.orderItems.length > 0 ? (
+                        <div className="space-y-1">
+                          {order.orderItems.slice(0, 2).map((item, index) => (
+                            <div key={item.id || index} className="text-xs">
+                              <div className="font-medium">
+                                {item.productInfo?.productName || `Sản phẩm #${item.productId}`}
+                              </div>
+                              <div className="text-gray-500">
+                                {item.productInfo?.brandName && `${item.productInfo.brandName} • `}
+                                {item.productInfo?.colorInfo?.colorName && `${item.productInfo.colorInfo.colorName} • `}
+                                SL: {item.quantity}
+                                {item.lensDetails && item.lensDetails.length > 0 && (
+                                  <span className="ml-1 text-blue-600">+ Tròng</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          {order.orderItems.length > 2 && (
+                            <div className="text-xs text-gray-500">
+                              +{order.orderItems.length - 2} sản phẩm khác
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs">Chưa có sản phẩm</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{formatDate(order.orderDate)}</div>
@@ -369,6 +627,13 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                         title="Cập nhật thanh toán"
                       >
                         <CreditCard className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleUpdateTracking(order)}
+                        className="text-orange-600 hover:text-orange-900"
+                        title="Cập nhật vận chuyển"
+                      >
+                        <Truck className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteOrder(order)}
@@ -538,6 +803,176 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                 </div>
               </div>
 
+              {/* Order Items */}
+              {selectedOrder.orderItems && selectedOrder.orderItems.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-medium text-gray-900 mb-3">Sản phẩm đã đặt</h4>
+                  <div className="space-y-4">
+                    {selectedOrder.orderItems.map((item) => (
+                      <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            {/* Product Information */}
+                            <div className="mb-3">
+                              <h5 className="font-medium text-gray-900 text-lg">
+                                {item.productInfo?.productName || 'Sản phẩm không xác định'}
+                              </h5>
+                              <div className="text-sm text-gray-600 space-y-1">
+                                <div>Thương hiệu: <span className="font-medium">{item.productInfo?.brandName || 'N/A'}</span></div>
+                                <div>Số lượng: <span className="font-medium">{item.quantity}</span></div>
+                                <div>Giá khung: <span className="font-medium">{formatCurrency(item.framePrice)}</span></div>
+                                {item.productInfo?.colorInfo && (
+                                  <div>
+                                    Màu sắc: <span className="font-medium">{item.productInfo.colorInfo.colorName}</span>
+                                    {item.productInfo.colorInfo.productNumber && (
+                                      <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
+                                        #{item.productInfo.colorInfo.productNumber}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                                <div>Tổng giá: <span className="font-semibold text-green-600">{formatCurrency(item.totalPrice)}</span></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Lens Details */}
+                        {item.lensDetails && item.lensDetails.length > 0 && (
+                          <div className="mt-4 bg-blue-50 rounded-lg p-4">
+                            <h6 className="font-medium text-blue-900 mb-3">Chi tiết tròng kính:</h6>
+                            {item.lensDetails.map((lensDetail, index) => (
+                              <div key={lensDetail.id || index} className="mb-4 last:mb-0">
+                                {/* Lens Basic Info */}
+                                {lensDetail.lensInfo && (
+                                  <div className="mb-3 p-3 bg-white rounded border">
+                                    <div className="font-medium text-blue-800 text-base">
+                                      {lensDetail.lensInfo.lensName || 'Tròng kính'}
+                                    </div>
+                                    <div className="text-sm text-blue-700 mt-1 space-y-1">
+                                      <div>Loại: <span className="font-medium">{lensDetail.lensInfo.lensType || 'N/A'}</span></div>
+                                      <div>Thương hiệu: <span className="font-medium">{lensDetail.lensInfo.brandLens || 'N/A'}</span></div>
+                                      {lensDetail.lensInfo.lensVariant && (
+                                        <div>
+                                          Chất liệu: <span className="font-medium">{lensDetail.lensInfo.lensVariant.material || 'N/A'}</span>
+                                          {lensDetail.lensInfo.lensVariant.price > 0 && (
+                                            <span className="ml-2">- Giá: {formatCurrency(lensDetail.lensInfo.lensVariant.price)}</span>
+                                          )}
+                                        </div>
+                                      )}
+                                      {lensDetail.lensInfo.lensThickness && (
+                                        <div>
+                                          Độ dày: <span className="font-medium">{lensDetail.lensInfo.lensThickness.name}</span>
+                                          <span className="ml-2 text-xs bg-blue-100 px-2 py-1 rounded">
+                                            Chỉ số: {lensDetail.lensInfo.lensThickness.indexValue}
+                                          </span>
+                                          {lensDetail.lensInfo.lensThickness.price > 0 && (
+                                            <span className="ml-2">+ {formatCurrency(lensDetail.lensInfo.lensThickness.price)}</span>
+                                          )}
+                                        </div>
+                                      )}
+                                      {lensDetail.lensInfo.lensCoatings && lensDetail.lensInfo.lensCoatings.length > 0 && (
+                                        <div>
+                                          Lớp phủ: 
+                                          {lensDetail.lensInfo.lensCoatings.map((coating: any, idx: number) => (
+                                            <span key={idx} className="ml-2 text-xs bg-green-100 px-2 py-1 rounded">
+                                              {coating.name}
+                                              {coating.price > 0 && ` (+${formatCurrency(coating.price)})`}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+                                      {lensDetail.lensInfo.tintColor && (
+                                        <div>
+                                          Màu tint: <span className="font-medium">{lensDetail.lensInfo.tintColor.name}</span>
+                                          <span 
+                                            className="ml-2 inline-block w-4 h-4 rounded-full border border-gray-300"
+                                            title={`Màu: ${lensDetail.lensInfo.tintColor.colorCode}`}
+                                          ></span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Prescription Details */}
+                                <div className="grid grid-cols-2 gap-4 mb-3">
+                                  <div className="bg-white p-3 rounded border">
+                                    <div className="font-medium text-gray-800 text-sm">Mắt phải (OD)</div>
+                                    <div className="text-xs text-gray-600 mt-1 space-y-1">
+                                      <div>SPH: <span className="font-medium">{lensDetail.rightEyeSphere || 0}</span></div>
+                                      <div>CYL: <span className="font-medium">{lensDetail.rightEyeCylinder || 0}</span></div>
+                                      <div>Axis: <span className="font-medium">{lensDetail.rightEyeAxis || 0}°</span></div>
+                                      <div>PD: <span className="font-medium">{lensDetail.pdRight || 0}</span></div>
+                                      {lensDetail.addRight && <div>ADD: <span className="font-medium">{lensDetail.addRight}</span></div>}
+                                    </div>
+                                  </div>
+                                  <div className="bg-white p-3 rounded border">
+                                    <div className="font-medium text-gray-800 text-sm">Mắt trái (OS)</div>
+                                    <div className="text-xs text-gray-600 mt-1 space-y-1">
+                                      <div>SPH: <span className="font-medium">{lensDetail.leftEyeSphere || 0}</span></div>
+                                      <div>CYL: <span className="font-medium">{lensDetail.leftEyeCylinder || 0}</span></div>
+                                      <div>Axis: <span className="font-medium">{lensDetail.leftEyeAxis || 0}°</span></div>
+                                      <div>PD: <span className="font-medium">{lensDetail.pdLeft || 0}</span></div>
+                                      {lensDetail.addLeft && <div>ADD: <span className="font-medium">{lensDetail.addLeft}</span></div>}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Additional Notes */}
+                                {(lensDetail.prescriptionNotes || lensDetail.lensNotes || lensDetail.manufacturingNotes) && (
+                                  <div className="bg-yellow-50 p-3 rounded border">
+                                    <div className="font-medium text-yellow-800 text-sm">Ghi chú:</div>
+                                    <div className="text-xs text-yellow-700 mt-1 space-y-1">
+                                      {lensDetail.prescriptionNotes && (
+                                        <div><strong>Đơn thuốc:</strong> {lensDetail.prescriptionNotes}</div>
+                                      )}
+                                      {lensDetail.lensNotes && (
+                                        <div><strong>Tròng kính:</strong> {lensDetail.lensNotes}</div>
+                                      )}
+                                      {lensDetail.manufacturingNotes && (
+                                        <div><strong>Sản xuất:</strong> {lensDetail.manufacturingNotes}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="mt-2 text-right">
+                                  <span className="text-sm font-medium text-blue-800">
+                                    Giá tròng: {formatCurrency(lensDetail.lensPrice || 0)}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tracking Info */}
+              {(selectedOrder.trackingNumber || selectedOrder.deliveryDate) && (
+                <div className="mt-6 p-4 bg-green-50 rounded-lg">
+                  <h4 className="font-medium text-green-900 mb-3">Thông tin vận chuyển</h4>
+                  <div className="space-y-2 text-sm text-green-800">
+                    {selectedOrder.trackingNumber && (
+                      <div className="flex justify-between">
+                        <span>Số theo dõi:</span>
+                        <span className="font-medium">{selectedOrder.trackingNumber}</span>
+                      </div>
+                    )}
+                    {selectedOrder.deliveryDate && (
+                      <div className="flex justify-between">
+                        <span>Ngày giao dự kiến:</span>
+                        <span className="font-medium">{formatDate(selectedOrder.deliveryDate)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Price Info */}
               <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-3">Thông tin giá</h4>
@@ -652,6 +1087,69 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                 <button
                   onClick={submitPaymentStatusUpdate}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Cập nhật
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tracking Modal */}
+      {showTrackingModal && editingOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Cập nhật thông tin vận chuyển
+                </h3>
+                <button
+                  onClick={() => setShowTrackingModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Số theo dõi
+                  </label>
+                  <input
+                    type="text"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    placeholder="Nhập số theo dõi vận chuyển"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ngày giao dự kiến
+                  </label>
+                  <input
+                    type="date"
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 mt-6">
+                <button
+                  onClick={() => setShowTrackingModal(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={submitTrackingUpdate}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
                 >
                   Cập nhật
                 </button>

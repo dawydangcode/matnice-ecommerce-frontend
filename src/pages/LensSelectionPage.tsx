@@ -546,8 +546,8 @@ const LensSelectionPage: React.FC = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!selectedProduct || !selectedLens || !lensFullDetails?.variants?.[0]) {
-      alert('Vui lòng đảm bảo đã chọn đầy đủ sản phẩm và tròng kính');
+    if (!selectedProduct || !selectedLens || !selectedLensOptions.variant) {
+      alert('Vui lòng đảm bảo đã chọn đầy đủ sản phẩm, tròng kính và loại tròng');
       return;
     }
 
@@ -585,8 +585,8 @@ const LensSelectionPage: React.FC = () => {
           selectedColorId: selectedColorIdParam ? Number(selectedColorIdParam) : undefined
         },
         lensData: {
-          lensVariantId: Number(lensFullDetails.variants[0].id),
-          lensPrice: selectedLens.basePrice,
+          lensVariantId: Number(selectedLensOptions.variant?.id),
+          lensPrice: selectedLensOptions.variant ? Number(selectedLensOptions.variant.price) : 0,
           prescriptionValues: {
             rightEyeSphere: parseValue(prescriptionData.sphereR),
             leftEyeSphere: parseValue(prescriptionData.sphereL),
@@ -1649,9 +1649,9 @@ const LensSelectionPage: React.FC = () => {
                 <div className="mt-8 border-t pt-6">
                   <button
                     onClick={handleAddToCart}
-                    disabled={isAddingToCart || !selectedProduct || !selectedLens || !isPrescriptionComplete()}
+                    disabled={isAddingToCart || !selectedProduct || !selectedLens || !isPrescriptionComplete() || !selectedLensOptions.variant}
                     className={`w-full py-2 px-6 rounded-lg font-semibold text-lg transition-colors ${
-                      isAddingToCart || !selectedProduct || !selectedLens || !isPrescriptionComplete()
+                      isAddingToCart || !selectedProduct || !selectedLens || !isPrescriptionComplete() || !selectedLensOptions.variant
                         ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                         : 'bg-green-700 text-white hover:bg-green-800'
                     }`}
@@ -1664,6 +1664,15 @@ const LensSelectionPage: React.FC = () => {
                     <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <p className="text-sm text-yellow-700">
                         Vui lòng hoàn thành thông tin đơn thuốc để có thể thêm vào giỏ hàng
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Validation message for lens variant selection */}
+                  {!selectedLensOptions.variant && selectedProduct && selectedLens && isPrescriptionComplete() && (
+                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-700">
+                        Vui lòng chọn loại tròng và độ dày để có thể thêm vào giỏ hàng
                       </p>
                     </div>
                   )}
