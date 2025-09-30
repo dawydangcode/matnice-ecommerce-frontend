@@ -64,8 +64,27 @@ const CartPage: React.FC = () => {
   // Helper function to check if ADD values should be displayed
   const hasAddValues = (prescription: any) => {
     if (!prescription) return false;
-    return (prescription.rightEye?.add !== undefined && prescription.rightEye?.add !== null) ||
-           (prescription.leftEye?.add !== undefined && prescription.leftEye?.add !== null);
+    return (prescription.addLeft !== undefined && prescription.addLeft !== null) ||
+           (prescription.addRight !== undefined && prescription.addRight !== null);
+  };
+
+  // Translation helpers
+  const translateLensType = (lensType: string) => {
+    const translations: { [key: string]: string } = {
+      'PROGRESSIVE': 'Đa tròng',
+      'SINGLE_VISION': 'Đơn tròng',
+      'BIFOCAL': 'Hai tròng'
+    };
+    return translations[lensType] || lensType;
+  };
+
+  const translateDesign = (design: string) => {
+    const translations: { [key: string]: string } = {
+      'NONE': 'Không',
+      'STANDARD': 'Tiêu chuẩn',
+      'PREMIUM': 'Cao cấp'
+    };
+    return translations[design] || design;
   };
 
   const safeParseNumber = (value: string | number | undefined): number => {
@@ -205,33 +224,15 @@ const CartPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <div className="space-y-4">
               {cartSummary.items.map((item) => {
-                const lensDetail = item.lensDetail;
-                const prescription = lensDetail ? {
-                  rightEye: {
-                    sphere: lensDetail.prescription.rightEye.sphere,
-                    cylinder: lensDetail.prescription.rightEye.cylinder,
-                    axis: lensDetail.prescription.rightEye.axis,
-                    add: (lensDetail.prescription.rightEye as any)?.add,
-                  },
-                  leftEye: {
-                    sphere: lensDetail.prescription.leftEye.sphere,
-                    cylinder: lensDetail.prescription.leftEye.cylinder,
-                    axis: lensDetail.prescription.leftEye.axis,
-                    add: (lensDetail.prescription.leftEye as any)?.add,
-                  },
-                  pdLeft: lensDetail.prescription.pdLeft,
-                  pdRight: lensDetail.prescription.pdRight,
-                } : null;
-                
                 return (
-                  <div key={item.cartFrameId} className="bg-white rounded-lg shadow-sm border p-6">
-                    <div className="flex items-start gap-4">
+                  <div key={item.cartFrameId} className="bg-white rounded-lg shadow-sm border p-10">
+                    <div className="flex items-start gap-8">
                       {/* Product Image */}
                       <div className="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden">
                         {item.productImage ? (
@@ -281,20 +282,17 @@ const CartPage: React.FC = () => {
                                 {formatPrice((() => {
                                   let total = safeParseNumber(item.totalPrice) + safeParseNumber(item.lensDetail?.lensPrice);
                                   
-                                  // TODO: Add coating and tint prices when backend provides the data
                                   // Add coating prices
-                                  /*
-                                  if ((item.lensDetail as any)?.selectedCoatings) {
-                                    const coatingTotal = (item.lensDetail as any).selectedCoatings.reduce((sum: number, coating: any) => 
+                                  if (item.lensDetail?.selectedCoatings) {
+                                    const coatingTotal = item.lensDetail.selectedCoatings.reduce((sum: number, coating: any) => 
                                       sum + safeParseNumber(coating.price), 0);
                                     total += coatingTotal;
                                   }
                                   
                                   // Add tint color price
-                                  if ((item.lensDetail as any)?.selectedTintColor) {
-                                    total += safeParseNumber((item.lensDetail as any).selectedTintColor.price);
+                                  if (item.lensDetail?.selectedTintColor) {
+                                    total += safeParseNumber(item.lensDetail.selectedTintColor.price);
                                   }
-                                  */
                                   
                                   return total;
                                 })())}
@@ -325,7 +323,7 @@ const CartPage: React.FC = () => {
                                   <div className="flex-1">
                                     <h5 className="font-medium text-gray-900 mb-1">{item.lensInfo.name}</h5>
                                     <div className="text-sm text-gray-600 space-y-1">
-                                      <p><span className="font-medium">Loại:</span> {item.lensInfo.lensType}</p>
+                                      <p><span className="font-medium">Loại:</span> {translateLensType(item.lensInfo.lensType)}</p>
                                       {item.lensInfo.origin && (
                                         <p><span className="font-medium">Xuất xứ:</span> {item.lensInfo.origin}</p>
                                       )}
@@ -341,7 +339,7 @@ const CartPage: React.FC = () => {
                                   <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
                                       <span className="font-medium text-gray-700">Thiết kế:</span>
-                                      <span className="ml-2 text-gray-600">{item.lensVariantInfo.design}</span>
+                                      <span className="ml-2 text-gray-600">{translateDesign(item.lensVariantInfo.design)}</span>
                                     </div>
                                     <div>
                                       <span className="font-medium text-gray-700">Chất liệu:</span>
@@ -392,7 +390,7 @@ const CartPage: React.FC = () => {
                                       {item.lensDetail.selectedTintColor.colorCode && (
                                         <div 
                                           className="w-4 h-4 rounded-full border border-gray-300 mr-2"
-                                          style={{ backgroundColor: item.lensDetail.selectedTintColor.colorCode }}
+                                          title={`Màu: ${item.lensDetail.selectedTintColor.colorCode}`}
                                         ></div>
                                       )}
                                       <span className="font-medium text-gray-700">{item.lensDetail.selectedTintColor.name}</span>
@@ -405,6 +403,71 @@ const CartPage: React.FC = () => {
                                   </div>
                                 </div>
                               )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Prescription Information */}
+                        {item.lensDetail?.prescription && (
+                          <div className="border-t border-gray-200 pt-4 mt-4">
+                            <h6 className="text-sm font-medium text-gray-800 mb-3">Thông tin đơn thuốc</h6>
+                            <div className="overflow-x-auto bg-gray-50 p-4 rounded-lg">
+                              <table className="min-w-full text-sm">
+                                <thead>
+                                  <tr className="border-b border-gray-300">
+                                    <th className="text-left py-3 px-3 font-medium text-gray-700">Mắt</th>
+                                    <th className="text-center py-3 px-3 font-medium text-gray-700">SPH</th>
+                                    <th className="text-center py-3 px-3 font-medium text-gray-700">CYL</th>
+                                    <th className="text-center py-3 px-3 font-medium text-gray-700">AXIS</th>
+                                    {hasAddValues(item.lensDetail.prescription) && (
+                                      <th className="text-center py-3 px-3 font-medium text-gray-700">ADD</th>
+                                    )}
+                                    <th className="text-center py-3 px-3 font-medium text-gray-700">PD</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr className="border-b border-gray-200">
+                                    <td className="py-3 px-3 font-medium text-gray-700">Phải</td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.rightEye.sphere)}
+                                    </td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.rightEye.cylinder)}
+                                    </td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.rightEye.axis, '°')}
+                                    </td>
+                                    {hasAddValues(item.lensDetail.prescription) && (
+                                      <td className="text-center py-3 px-3 text-gray-600">
+                                        {formatPrescriptionValue(item.lensDetail.prescription.addRight)}
+                                      </td>
+                                    )}
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.pdRight)}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="py-3 px-3 font-medium text-gray-700">Trái</td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.leftEye.sphere)}
+                                    </td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.leftEye.cylinder)}
+                                    </td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.leftEye.axis, '°')}
+                                    </td>
+                                    {hasAddValues(item.lensDetail.prescription) && (
+                                      <td className="text-center py-3 px-3 text-gray-600">
+                                        {formatPrescriptionValue(item.lensDetail.prescription.addLeft)}
+                                      </td>
+                                    )}
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.pdLeft)}
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
                             </div>
                           </div>
                         )}
@@ -460,7 +523,7 @@ const CartPage: React.FC = () => {
                 onClick={handleCheckout}
                 className="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
-                Đặt hàng (COD)
+                Thanh toán
               </button>
               
               <Link
