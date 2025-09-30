@@ -108,6 +108,19 @@ export interface CartItemSummary {
     lensQuality: string;
     lensPrice: number | string; // API might return string
     totalUpgradesPrice: number | string; // API might return string
+    selectedCoatings?: {
+      id: number;
+      name: string;
+      price: number;
+      description?: string;
+    }[];
+    selectedTintColor?: {
+      id: number;
+      name: string;
+      colorCode?: string;
+      price?: number;
+      description?: string;
+    } | null;
     prescription: {
       rightEye: {
         sphere: number | undefined;

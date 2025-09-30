@@ -6,6 +6,7 @@ import cartService, { CartSummary } from '../services/cart.service';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import '../styles/modal-animations.css';
 
 // Simple icon components
 const TrashIcon = () => <span className="text-lg">X</span>;
@@ -16,11 +17,14 @@ const CartPage: React.FC = () => {
   
   const [cartSummary, setCartSummary] = useState<CartSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   const loadCartData = useCallback(async () => {
     try {
       setLoading(true);
       const summary = await cartService.getMyCartSummary();
+      console.log('Cart summary data:', summary);
       setCartSummary(summary);
     } catch (error: any) {
       console.error('Error loading cart data:', error);
@@ -35,6 +39,13 @@ const CartPage: React.FC = () => {
       loadCartData();
     }
   }, [isLoggedIn, loadCartData]);
+
+  // Cleanup: restore body scroll on component unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   const formatPrice = (price: string | number): string => {
     const numPrice = typeof price === 'string' ? parseFloat(price) : price;
@@ -66,15 +77,35 @@ const CartPage: React.FC = () => {
     return 0;
   };
 
-  const handleDeleteItem = async (cartFrameId: number) => {
+  const handleDeleteItem = async () => {
+    if (!itemToDelete) return;
+    
     try {
-      await cartService.deleteCartItem(cartFrameId);
+      await cartService.deleteCartItem(parseInt(itemToDelete));
       toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
       await loadCartData();
+      setShowDeleteModal(false);
+      setItemToDelete(null);
+      // Restore body scroll
+      document.body.style.overflow = 'unset';
     } catch (error: any) {
       console.error('Error deleting cart item:', error);
       toast.error('Không thể xóa sản phẩm');
     }
+  };
+
+  const handleDeleteClick = (cartFrameId: number) => {
+    setItemToDelete(cartFrameId.toString());
+    setShowDeleteModal(true);
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setItemToDelete(null);
+    // Restore body scroll
+    document.body.style.overflow = 'unset';
   };
 
   const handleCheckout = () => {
@@ -247,10 +278,26 @@ const CartPage: React.FC = () => {
                             <p><strong>Giảm giá:</strong> {formatPrice(item.discount)}</p>
                             <p><strong>Tổng tiền:</strong> 
                               <span className="text-blue-600 font-semibold">
-                                {formatPrice(
-                                  safeParseNumber(item.totalPrice) + 
-                                  safeParseNumber(item.lensDetail?.lensPrice)
-                                )}
+                                {formatPrice((() => {
+                                  let total = safeParseNumber(item.totalPrice) + safeParseNumber(item.lensDetail?.lensPrice);
+                                  
+                                  // TODO: Add coating and tint prices when backend provides the data
+                                  // Add coating prices
+                                  /*
+                                  if ((item.lensDetail as any)?.selectedCoatings) {
+                                    const coatingTotal = (item.lensDetail as any).selectedCoatings.reduce((sum: number, coating: any) => 
+                                      sum + safeParseNumber(coating.price), 0);
+                                    total += coatingTotal;
+                                  }
+                                  
+                                  // Add tint color price
+                                  if ((item.lensDetail as any)?.selectedTintColor) {
+                                    total += safeParseNumber((item.lensDetail as any).selectedTintColor.price);
+                                  }
+                                  */
+                                  
+                                  return total;
+                                })())}
                               </span>
                             </p>
                           </div>
@@ -281,9 +328,6 @@ const CartPage: React.FC = () => {
                                       <p><span className="font-medium">Loại:</span> {item.lensInfo.lensType}</p>
                                       {item.lensInfo.origin && (
                                         <p><span className="font-medium">Xuất xứ:</span> {item.lensInfo.origin}</p>
-                                      )}
-                                      {item.lensInfo.description && (
-                                        <p><span className="font-medium">Mô tả:</span> {item.lensInfo.description}</p>
                                       )}
                                     </div>
                                   </div>
@@ -316,57 +360,62 @@ const CartPage: React.FC = () => {
                                   </div>
                                 </div>
                               )}
+
+                              {/* Lens Coating Info */}
+                              {item.lensDetail?.selectedCoatings && item.lensDetail.selectedCoatings.length > 0 && (
+                                <div className="border-t border-gray-200 pt-3 mt-3">
+                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Lớp phủ</h6>
+                                  <div className="space-y-2">
+                                    {item.lensDetail.selectedCoatings.map((coating, index) => (
+                                      <div key={index} className="flex justify-between items-center text-sm">
+                                        <div>
+                                          <span className="font-medium text-gray-700">{coating.name}</span>
+                                          {coating.description && (
+                                            <p className="text-xs text-gray-500">{coating.description}</p>
+                                          )}
+                                        </div>
+                                        <span className="text-gray-600 font-medium">
+                                          +{formatPrice(coating.price)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Lens Tint Color Info */}
+                              {item.lensDetail?.selectedTintColor && (
+                                <div className="border-t border-gray-200 pt-3 mt-3">
+                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Màu tông</h6>
+                                  <div className="flex justify-between items-center text-sm">
+                                    <div className="flex items-center">
+                                      {item.lensDetail.selectedTintColor.colorCode && (
+                                        <div 
+                                          className="w-4 h-4 rounded-full border border-gray-300 mr-2"
+                                          style={{ backgroundColor: item.lensDetail.selectedTintColor.colorCode }}
+                                        ></div>
+                                      )}
+                                      <span className="font-medium text-gray-700">{item.lensDetail.selectedTintColor.name}</span>
+                                    </div>
+                                    {item.lensDetail.selectedTintColor.price && (
+                                      <span className="text-gray-600 font-medium">
+                                        +{formatPrice(item.lensDetail.selectedTintColor.price)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
 
-                        {/* Prescription Information */}
-                        {prescription && (
-                          <div className="mt-4">
-                            <h4 className="text-sm font-semibold text-gray-800 mb-3">Thông tin đơn thuốc</h4>
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                  <thead>
-                                    <tr className="border-b border-gray-200">
-                                      <th className="text-left py-2 px-1 font-medium text-gray-700">Mắt</th>
-                                      <th className="text-center py-2 px-1 font-medium text-gray-700">SPH</th>
-                                      <th className="text-center py-2 px-1 font-medium text-gray-700">CYL</th>
-                                      <th className="text-center py-2 px-1 font-medium text-gray-700">AXIS</th>
-                                      {hasAddValues(prescription) && <th className="text-center py-2 px-1 font-medium text-gray-700">ADD</th>}
-                                      <th className="text-center py-2 px-1 font-medium text-gray-700">PD</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="text-xs">
-                                    <tr className="border-b border-gray-100">
-                                      <td className="py-2 px-1 font-medium text-gray-600">Mắt phải</td>
-                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.rightEye.sphere)}</td>
-                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.rightEye.cylinder)}</td>
-                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.rightEye.axis, '°')}</td>
-                                      {hasAddValues(prescription) && <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.rightEye.add)}</td>}
-                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.pdRight)}</td>
-                                    </tr>
-                                    <tr>
-                                      <td className="py-2 px-1 font-medium text-gray-600">Mắt trái</td>
-                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.leftEye.sphere)}</td>
-                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.leftEye.cylinder)}</td>
-                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.leftEye.axis, '°')}</td>
-                                      {hasAddValues(prescription) && <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.leftEye.add)}</td>}
-                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.pdLeft)}</td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-                              </div>
-                            </div>
-                          </div>
-                        )}
                       </div>
 
                       {/* Delete Button */}
                       <div className="flex-shrink-0">
                         <button
                           className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                          onClick={() => handleDeleteItem(item.cartFrameId)}
+                          onClick={() => handleDeleteClick(item.cartFrameId)}
                         >
                           <TrashIcon />
                         </button>
@@ -424,6 +473,80 @@ const CartPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 backdrop-fade-in"
+            onClick={handleCancelDelete}
+          ></div>
+          
+          {/* Modal Container */}
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div 
+              className={`relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all duration-300 w-full max-w-lg modal-slide-up ${
+                showDeleteModal 
+                  ? 'translate-y-0 opacity-100 sm:scale-100' 
+                  : 'translate-y-4 opacity-0 sm:scale-95'
+              }`}
+            >
+              {/* Modal Content */}
+              <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  {/* Warning Icon */}
+                  <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg 
+                      className="h-6 w-6 text-red-600" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      strokeWidth="1.5" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" 
+                      />
+                    </svg>
+                  </div>
+                  
+                  {/* Modal Text */}
+                  <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                    <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                      Xác nhận xóa sản phẩm
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng? Hành động này không thể hoàn tác.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Modal Actions */}
+              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                <button
+                  type="button"
+                  className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition-colors duration-200"
+                  onClick={handleDeleteItem}
+                >
+                  Xóa sản phẩm
+                </button>
+                <button
+                  type="button"
+                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto transition-colors duration-200"
+                  onClick={handleCancelDelete}
+                >
+                  Hủy bỏ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <Footer />
     </div>
