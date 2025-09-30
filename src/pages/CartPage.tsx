@@ -250,35 +250,62 @@ const CartPage: React.FC = () => {
 
                       {/* Product Details */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {(() => {
-                            let displayName = item.productName || `Sản phẩm #${item.productId}`;
-                            if (item.selectedColor?.productVariantName) {
-                              displayName += ` ${item.selectedColor.productVariantName}`;
-                            }
-                            return displayName;
-                          })()}
-                        </h3>
-                        
-                        {/* Display selected color if available */}
-                        {item.selectedColor && (
-                          <p className="text-sm text-gray-600 mb-2">
-                            <strong>Màu:</strong> {item.selectedColor.colorName}
-                          </p>
-                        )}
-                        
-                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
-                          <div>
-                            <p><strong>Số lượng:</strong> {item.quantity}</p>
-                            <p><strong>Giá gọng:</strong> {formatPrice(item.framePrice)}</p>
-                            {item.lensDetail && (
-                              <p><strong>Giá tròng:</strong> {formatPrice(item.lensDetail.lensPrice)}</p>
+                        <div className="flex justify-between items-start mb-4">
+                          {/* Left side - Product Info */}
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                              {(() => {
+                                let displayName = item.productName || `Sản phẩm #${item.productId}`;
+                                if (item.selectedColor?.productVariantName) {
+                                  displayName += ` ${item.selectedColor.productVariantName}`;
+                                }
+                                return displayName;
+                              })()}
+                            </h3>
+                            
+                            {/* Display selected color if available */}
+                            {item.selectedColor && (
+                              <p className="text-sm text-gray-600 mb-2">
+                                <strong>Màu:</strong> {item.selectedColor.colorName}
+                              </p>
                             )}
+                            
+                            <p className="text-sm text-gray-600">
+                              <strong>Số lượng:</strong> {item.quantity}
+                            </p>
                           </div>
-                          <div>
-                            <p><strong>Giảm giá:</strong> {formatPrice(item.discount)}</p>
-                            <p><strong>Tổng tiền:</strong> 
-                              <span className="text-blue-600 font-semibold">
+
+                          {/* Right side - Price Information */}
+                          <div className="text-right space-y-1">
+                            <div className="text-sm text-gray-600">
+                              <p><strong>Giá gọng:</strong> {formatPrice(item.framePrice)}</p>
+                              {item.lensDetail && (
+                                <p><strong>Giá tròng:</strong> {formatPrice(item.lensDetail.lensPrice)}</p>
+                              )}
+                              
+                              {/* Coating prices */}
+                              {item.lensDetail?.selectedCoatings && item.lensDetail.selectedCoatings.length > 0 && (
+                                <div>
+                                  {item.lensDetail.selectedCoatings.map((coating, index) => (
+                                    <p key={index}><strong>Lớp phủ ({coating.name}):</strong> +{formatPrice(coating.price)}</p>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {/* Tint color price */}
+                              {item.lensDetail?.selectedTintColor?.price && (
+                                <p><strong>Màu tông ({item.lensDetail.selectedTintColor.name}):</strong> +{formatPrice(item.lensDetail.selectedTintColor.price)}</p>
+                              )}
+                              
+                              {safeParseNumber(item.discount) > 0 && (
+                                <p><strong>Giảm giá:</strong> -{formatPrice(item.discount)}</p>
+                              )}
+                            </div>
+                            
+                            {/* Total Price */}
+                            <div className="border-t border-gray-200 pt-2 mt-2">
+                              <p className="text-lg font-bold text-blue-600">
+                                <strong>Tổng tiền:</strong> 
                                 {formatPrice((() => {
                                   let total = safeParseNumber(item.totalPrice) + safeParseNumber(item.lensDetail?.lensPrice);
                                   
@@ -296,8 +323,8 @@ const CartPage: React.FC = () => {
                                   
                                   return total;
                                 })())}
-                              </span>
-                            </p>
+                              </p>
+                            </div>
                           </div>
                         </div>
 
@@ -365,16 +392,13 @@ const CartPage: React.FC = () => {
                                   <h6 className="text-sm font-medium text-gray-800 mb-2">Lớp phủ</h6>
                                   <div className="space-y-2">
                                     {item.lensDetail.selectedCoatings.map((coating, index) => (
-                                      <div key={index} className="flex justify-between items-center text-sm">
+                                      <div key={index} className="text-sm">
                                         <div>
                                           <span className="font-medium text-gray-700">{coating.name}</span>
                                           {coating.description && (
                                             <p className="text-xs text-gray-500">{coating.description}</p>
                                           )}
                                         </div>
-                                        <span className="text-gray-600 font-medium">
-                                          +{formatPrice(coating.price)}
-                                        </span>
                                       </div>
                                     ))}
                                   </div>
@@ -385,7 +409,7 @@ const CartPage: React.FC = () => {
                               {item.lensDetail?.selectedTintColor && (
                                 <div className="border-t border-gray-200 pt-3 mt-3">
                                   <h6 className="text-sm font-medium text-gray-800 mb-2">Màu tông</h6>
-                                  <div className="flex justify-between items-center text-sm">
+                                  <div className="text-sm">
                                     <div className="flex items-center">
                                       {item.lensDetail.selectedTintColor.colorCode && (
                                         <div 
@@ -395,11 +419,6 @@ const CartPage: React.FC = () => {
                                       )}
                                       <span className="font-medium text-gray-700">{item.lensDetail.selectedTintColor.name}</span>
                                     </div>
-                                    {item.lensDetail.selectedTintColor.price && (
-                                      <span className="text-gray-600 font-medium">
-                                        +{formatPrice(item.lensDetail.selectedTintColor.price)}
-                                      </span>
-                                    )}
                                   </div>
                                 </div>
                               )}
