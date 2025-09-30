@@ -143,6 +143,40 @@ class PayOSService {
       throw error;
     }
   }
+
+  async createOrderFromPayment(
+    transactionId: string,
+    customerInfo: {
+      fullName: string;
+      phone: string;
+      email: string;
+      province: string;
+      district: string;
+      ward: string;
+      addressDetail: string;
+      notes?: string;
+    },
+  ): Promise<any> {
+    try {
+      console.log('Creating order from payment:', {
+        transactionId,
+        customerInfo,
+      });
+
+      const response = await apiService.post<any>(
+        '/api/payment/payos/create-order-from-payment',
+        {
+          transactionId,
+          customerInfo,
+        },
+      );
+
+      return response;
+    } catch (error: any) {
+      console.error('Error creating order from payment:', error);
+      throw error;
+    }
+  }
 }
 
 const payosService = new PayOSService();

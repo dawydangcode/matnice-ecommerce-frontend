@@ -178,6 +178,18 @@ const CheckoutPage: React.FC = () => {
 
     // If PayOS is selected, show PayOS payment interface
     if (selectedPaymentMethod === PaymentMethod.PAYOS) {
+      // Save customer info for order creation after successful payment
+      localStorage.setItem('checkoutCustomerInfo', JSON.stringify({
+        fullName: customerInfo.fullName,
+        phone: customerInfo.phone,
+        email: customerInfo.email,
+        province: customerInfo.province,
+        district: customerInfo.district,
+        ward: customerInfo.ward,
+        addressDetail: customerInfo.address,
+        notes: customerInfo.notes,
+      }));
+      
       setShowPayOSPayment(true);
       return;
     }

@@ -1,13 +1,54 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import payosService from '../services/payos.service';
+import toast from 'react-hot-toast';
 
 const PaymentSuccessPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [paymentInfo, setPaymentInfo] = useState<any>(null);
+  const [orderCreated, setOrderCreated] = useState(false);
+  const [orderCreating, setOrderCreating] = useState(false);
+  const [orderCreationAttempted, setOrderCreationAttempted] = useState(false);
+
+  const createOrderFromPayment = useCallback(async (orderCode: string) => {
+    if (orderCreationAttempted) {
+      console.log('Order creation already attempted, skipping...');
+      return;
+    }
+
+    try {
+      setOrderCreating(true);
+      setOrderCreationAttempted(true);
+
+      // Get customer info from localStorage (saved from checkout page)
+      const customerInfoStr = localStorage.getItem('checkoutCustomerInfo');
+      if (!customerInfoStr) {
+        console.error('No customer info found in localStorage');
+        toast.error('Thông tin khách hàng không được tìm thấy');
+        return;
+      }
+
+      const customerInfo = JSON.parse(customerInfoStr);
+
+      await payosService.createOrderFromPayment(orderCode, customerInfo);
+      
+      setOrderCreated(true);
+      toast.success('Đơn hàng đã được tạo thành công!');
+
+      // Clear customer info after successful order creation
+      localStorage.removeItem('checkoutCustomerInfo');
+    } catch (error) {
+      console.error('Error creating order from payment:', error);
+      toast.error('Có lỗi xảy ra khi tạo đơn hàng. Vui lòng liên hệ hỗ trợ.');
+      setOrderCreationAttempted(false); // Allow retry on error
+    } finally {
+      setOrderCreating(false);
+    }
+  }, [orderCreationAttempted]);
 
   useEffect(() => {
     // Parse URL parameters
@@ -18,21 +59,17 @@ const PaymentSuccessPage: React.FC = () => {
     const status = params.get('status');
     const orderCode = params.get('orderCode');
 
-    setPaymentInfo({
+    const paymentData = {
       code,
       id,
       cancel: cancel === 'true',
       status,
       orderCode,
-    });
+    };
 
-    console.log('Payment return params:', {
-      code,
-      id,
-      cancel,
-      status,
-      orderCode,
-    });
+    setPaymentInfo(paymentData);
+
+    console.log('Payment return params:', paymentData);
 
     // Auto redirect to home after 10 seconds
     const timer = setTimeout(() => {
@@ -41,6 +78,20 @@ const PaymentSuccessPage: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, [location.search, navigate]);
+
+  // Separate useEffect for creating order to avoid infinite loop
+  useEffect(() => {
+    if (
+      paymentInfo?.code === '00' && 
+      paymentInfo?.status === 'PAID' && 
+      paymentInfo?.orderCode && 
+      !orderCreated && 
+      !orderCreating &&
+      !orderCreationAttempted
+    ) {
+      createOrderFromPayment(paymentInfo.orderCode);
+    }
+  }, [paymentInfo, orderCreated, orderCreating, orderCreationAttempted, createOrderFromPayment]);
 
   const getStatusDisplay = () => {
     if (!paymentInfo) {
@@ -62,10 +113,28 @@ const PaymentSuccessPage: React.FC = () => {
     }
 
     if (paymentInfo.code === '00' && paymentInfo.status === 'PAID') {
+      if (orderCreating) {
+        return {
+          icon: '⏳',
+          title: 'Đang tạo đơn hàng...',
+          message: 'Thanh toán thành công! Hệ thống đang tạo đơn hàng cho bạn.',
+          className: 'text-blue-600',
+        };
+      }
+
+      if (orderCreated) {
+        return {
+          icon: '✅',
+          title: 'Thanh toán và đặt hàng thành công!',
+          message: 'Cảm ơn bạn đã đặt hàng. Chúng tôi sẽ xử lý đơn hàng và giao hàng trong thời gian sớm nhất.',
+          className: 'text-green-600',
+        };
+      }
+
       return {
         icon: '✅',
         title: 'Thanh toán thành công!',
-        message: 'Cảm ơn bạn đã đặt hàng. Chúng tôi sẽ xử lý đơn hàng và giao hàng trong thời gian sớm nhất.',
+        message: 'Thanh toán đã được xử lý thành công. Đang tiến hành tạo đơn hàng...',
         className: 'text-green-600',
       };
     }
