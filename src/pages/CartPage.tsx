@@ -8,7 +8,7 @@ import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 
 // Simple icon components
-const TrashIcon = () => <span className="text-lg">🗑️</span>;
+const TrashIcon = () => <span className="text-lg">X</span>;
 
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
@@ -48,6 +48,13 @@ const CartPage: React.FC = () => {
     if (value === undefined || value === null || value === '') return '-';
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     return isNaN(numValue) ? '-' : `${numValue}${suffix}`;
+  };
+
+  // Helper function to check if ADD values should be displayed
+  const hasAddValues = (prescription: any) => {
+    if (!prescription) return false;
+    return (prescription.rightEye?.add !== undefined && prescription.rightEye?.add !== null) ||
+           (prescription.leftEye?.add !== undefined && prescription.leftEye?.add !== null);
   };
 
   const safeParseNumber = (value: string | number | undefined): number => {
@@ -179,11 +186,13 @@ const CartPage: React.FC = () => {
                     sphere: lensDetail.prescription.rightEye.sphere,
                     cylinder: lensDetail.prescription.rightEye.cylinder,
                     axis: lensDetail.prescription.rightEye.axis,
+                    add: (lensDetail.prescription.rightEye as any)?.add,
                   },
                   leftEye: {
                     sphere: lensDetail.prescription.leftEye.sphere,
                     cylinder: lensDetail.prescription.leftEye.cylinder,
                     axis: lensDetail.prescription.leftEye.axis,
+                    add: (lensDetail.prescription.leftEye as any)?.add,
                   },
                   pdLeft: lensDetail.prescription.pdLeft,
                   pdRight: lensDetail.prescription.pdRight,
@@ -247,42 +256,6 @@ const CartPage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Prescription Information */}
-                        {prescription && (
-                          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Thông tin đơn thuốc</h4>
-                            <div className="overflow-x-auto">
-                              <table className="min-w-full text-xs">
-                                <thead>
-                                  <tr className="border-b border-gray-300">
-                                    <th className="py-2 px-3 text-left font-semibold text-gray-600">Mắt</th>
-                                    <th className="py-2 px-3 text-center font-semibold text-gray-600">SPH</th>
-                                    <th className="py-2 px-3 text-center font-semibold text-gray-600">CYL</th>
-                                    <th className="py-2 px-3 text-center font-semibold text-gray-600">AXIS</th>
-                                    <th className="py-2 px-3 text-center font-semibold text-gray-600">PD</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr className="border-b border-gray-200">
-                                    <td className="py-2 px-3 font-medium text-gray-700">Mắt phải</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.rightEye.sphere)}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.rightEye.cylinder)}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.rightEye.axis)}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.pdRight)}</td>
-                                  </tr>
-                                  <tr>
-                                    <td className="py-2 px-3 font-medium text-gray-700">Mắt trái</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.leftEye.sphere)}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.leftEye.cylinder)}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.leftEye.axis)}</td>
-                                    <td className="py-2 px-3 text-center">{formatPrescriptionValue(prescription.pdLeft)}</td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        )}
-
                         {/* Lens Information */}
                         {(item.lensInfo || item.lensVariantInfo) && (
                           <div className="mt-4">
@@ -343,6 +316,47 @@ const CartPage: React.FC = () => {
                                   </div>
                                 </div>
                               )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Prescription Information */}
+                        {prescription && (
+                          <div className="mt-4">
+                            <h4 className="text-sm font-semibold text-gray-800 mb-3">Thông tin đơn thuốc</h4>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                  <thead>
+                                    <tr className="border-b border-gray-200">
+                                      <th className="text-left py-2 px-1 font-medium text-gray-700">Mắt</th>
+                                      <th className="text-center py-2 px-1 font-medium text-gray-700">SPH</th>
+                                      <th className="text-center py-2 px-1 font-medium text-gray-700">CYL</th>
+                                      <th className="text-center py-2 px-1 font-medium text-gray-700">AXIS</th>
+                                      {hasAddValues(prescription) && <th className="text-center py-2 px-1 font-medium text-gray-700">ADD</th>}
+                                      <th className="text-center py-2 px-1 font-medium text-gray-700">PD</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="text-xs">
+                                    <tr className="border-b border-gray-100">
+                                      <td className="py-2 px-1 font-medium text-gray-600">Mắt phải</td>
+                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.rightEye.sphere)}</td>
+                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.rightEye.cylinder)}</td>
+                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.rightEye.axis, '°')}</td>
+                                      {hasAddValues(prescription) && <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.rightEye.add)}</td>}
+                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.pdRight)}</td>
+                                    </tr>
+                                    <tr>
+                                      <td className="py-2 px-1 font-medium text-gray-600">Mắt trái</td>
+                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.leftEye.sphere)}</td>
+                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.leftEye.cylinder)}</td>
+                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.leftEye.axis, '°')}</td>
+                                      {hasAddValues(prescription) && <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.leftEye.add)}</td>}
+                                      <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescription.pdLeft)}</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
                             </div>
                           </div>
                         )}

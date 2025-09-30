@@ -1554,7 +1554,7 @@ const LensSelectionPage: React.FC = () => {
                     {/* Coatings Selection */}
                     {lensFullDetails.coatings.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-3">Chọn lớp phủ (chỉ được chọn 1)</h4>
+                        <h4 className="font-semibold text-gray-900 mb-3">Chọn lớp phủ</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {lensFullDetails.coatings.map((coating) => (
                             <div 
@@ -1650,10 +1650,10 @@ const LensSelectionPage: React.FC = () => {
                   <button
                     onClick={handleAddToCart}
                     disabled={isAddingToCart || !selectedProduct || !selectedLens || !isPrescriptionComplete()}
-                    className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-colors ${
+                    className={`w-full py-2 px-6 rounded-lg font-semibold text-lg transition-colors ${
                       isAddingToCart || !selectedProduct || !selectedLens || !isPrescriptionComplete()
                         ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-green-700 text-white hover:bg-green-800'
                     }`}
                   >
                     {isAddingToCart ? 'Đang thêm vào giỏ hàng...' : 'Thêm vào giỏ hàng'}
@@ -1794,6 +1794,47 @@ const LensSelectionPage: React.FC = () => {
                   </>
                 )}
               </div>
+
+              {/* Prescription Information */}
+              {showPrescriptionStep && prescriptionOption === 'manual' && (
+                <div className="mb-8">
+                  <h3 className="font-semibold text-gray-900 mb-4 text-lg">Thông tin đơn thuốc</h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-gray-200">
+                            <th className="text-left py-2 px-1 font-medium text-gray-700">Mắt</th>
+                            <th className="text-center py-2 px-1 font-medium text-gray-700">SPH</th>
+                            <th className="text-center py-2 px-1 font-medium text-gray-700">CYL</th>
+                            <th className="text-center py-2 px-1 font-medium text-gray-700">AXIS</th>
+                            {needsAddValue() && <th className="text-center py-2 px-1 font-medium text-gray-700">ADD</th>}
+                            <th className="text-center py-2 px-1 font-medium text-gray-700">PD</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-xs">
+                          <tr className="border-b border-gray-100">
+                            <td className="py-2 px-1 font-medium text-gray-600">Mắt phải</td>
+                            <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescriptionData.sphereR)}</td>
+                            <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescriptionData.cylinderR)}</td>
+                            <td className="text-center py-2 px-1 text-gray-800">{formatAxisValue(prescriptionData.axisR)}</td>
+                            {needsAddValue() && <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescriptionData.addR)}</td>}
+                            <td className="text-center py-2 px-1 text-gray-800">{formatPDValue(true)}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-1 font-medium text-gray-600">Mắt trái</td>
+                            <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescriptionData.sphereL)}</td>
+                            <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescriptionData.cylinderL)}</td>
+                            <td className="text-center py-2 px-1 text-gray-800">{formatAxisValue(prescriptionData.axisL)}</td>
+                            {needsAddValue() && <td className="text-center py-2 px-1 text-gray-800">{formatPrescriptionValue(prescriptionData.addL)}</td>}
+                            <td className="text-center py-2 px-1 text-gray-800">{formatPDValue(false)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Price Details */}
               <div className="mb-8">
