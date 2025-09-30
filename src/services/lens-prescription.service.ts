@@ -19,6 +19,10 @@ export interface FilteredLens {
   origin: string;
   status: string;
   basePrice: number;
+  priceRange: {
+    min: number;
+    max: number;
+  };
   brandLens: {
     id: string;
     name: string;

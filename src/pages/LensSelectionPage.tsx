@@ -1350,7 +1350,7 @@ const LensSelectionPage: React.FC = () => {
                           <div className="flex justify-between items-start mb-2">
                             <h4 className="font-medium text-gray-900">{lens.name}</h4>
                             <span className="text-lg font-semibold text-green-600">
-                              {lens.basePrice.toLocaleString('vi-VN')}₫
+                              {lens.priceRange.min.toLocaleString('vi-VN')}₫ - {lens.priceRange.max.toLocaleString('vi-VN')}₫
                             </span>
                           </div>
                           <p className="text-sm text-gray-600 mb-2">
@@ -1365,11 +1365,11 @@ const LensSelectionPage: React.FC = () => {
                             <p className="text-xs text-gray-500 mb-2 line-clamp-2">{lens.description}</p>
                           )}
                           {lens.imageUrl && (
-                            <div className="mb-2">
+                            <div className="mb-2 flex justify-center">
                               <img 
                                 src={lens.imageUrl} 
                                 alt={lens.name}
-                                className="w-full h-32 object-cover rounded"
+                                className="max-w-full max-h-80 object-contain rounded bg-gray-50"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = 'none';
@@ -1385,16 +1385,6 @@ const LensSelectionPage: React.FC = () => {
                               {lens.status === 'IN_STOCK' ? 'Còn hàng' : 'Hết hàng'}
                             </span>
                           </div>
-                          
-                          {/* Selection indicator */}
-                          {selectedLens?.id === lens.id && (
-                            <div className="mt-3 flex items-center text-blue-600">
-                              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                              </svg>
-                              <span className="text-sm font-medium">Đã chọn</span>
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -1485,10 +1475,10 @@ const LensSelectionPage: React.FC = () => {
                 disabled={!selectedLens}
                 className={`w-full py-3 px-6 rounded-lg font-medium transition-colors ${
                   selectedLens 
-                    ? 'bg-green-700 text-white hover:bg-blue-700' 
+                    ? 'bg-green-700 text-white hover:bg-green-800' 
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
-              >
+              > 
                 {selectedLens 
                   ? 'Tiếp tục với tùy chọn cho tròng kính' 
                   : 'Tiếp tục với tùy chọn cho tròng kính'
@@ -1598,14 +1588,6 @@ const LensSelectionPage: React.FC = () => {
                                 </span>
                               </div>
                               <p className="text-sm text-gray-600">{coating.description}</p>
-                              {selectedLensOptions.coatings.some(c => c.id === coating.id) && (
-                                <div className="mt-2 flex items-center text-black-600">
-                                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                  </svg>
-                                  <span className="text-sm font-medium">Đã chọn</span>
-                                </div>
-                              )}
                             </div>
                           ))}
                         </div>
@@ -1832,32 +1814,27 @@ const LensSelectionPage: React.FC = () => {
                   
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600 text-base">Loại tròng</span>
-                    <span className="font-semibold text-lg">
-                      {selectedLens ? `${selectedLens.basePrice.toLocaleString('vi-VN')}₫` :
-                       selectedLensType === 'SINGLE_VISION' ? 'Miễn phí' :
-                       selectedLensType === 'PROGRESSIVE' ? '1.800.000₫' :
-                       selectedLensType === 'OFFICE' ? '2.300.000₫' :
-                       selectedLensType === 'DRIVE_SAFE' ? '2.100.000₫' :
-                       'Miễn phí'}
+                    <span className="font-medium text-base">
+                      {selectedLens && showLensOptionsStep ? `${selectedLens.basePrice.toLocaleString('vi-VN')}₫` :
+                       selectedLens && !showLensOptionsStep ? 
+                         `${selectedLens.priceRange.min.toLocaleString('vi-VN')}₫ - ${selectedLens.priceRange.max.toLocaleString('vi-VN')}₫` :
+                       selectedLensType === 'SINGLE_VISION' ? 'Tròng đơn tròng' :
+                       selectedLensType === 'PROGRESSIVE' ? 'Tròng đa tròng' :
+                       selectedLensType === 'OFFICE' ? 'Tròng văn phòng' :
+                       selectedLensType === 'DRIVE_SAFE' ? 'Tròng lái xe an toàn' :
+                       selectedLensType === 'NON_PRESCRIPTION' ? 'Không có độ' :
+                       'Chọn loại tròng kính'}
                     </span>
                   </div>
-                  <div className="text-sm text-gray-500 pl-0">
-                    {selectedLens ? (
-                      <>
-                        <div>{selectedLens.name}</div>
-                        {selectedLens.brandLens && (
-                          <div className="text-xs text-gray-400 mt-1">{selectedLens.brandLens.name}</div>
-                        )}
-                      </>
-                    ) : (
-                      selectedLensType === 'SINGLE_VISION' ? 'Tròng đơn tròng' :
-                      selectedLensType === 'PROGRESSIVE' ? 'Tròng đa tròng' :
-                      selectedLensType === 'OFFICE' ? 'Tròng văn phòng' :
-                      selectedLensType === 'DRIVE_SAFE' ? 'Tròng lái xe an toàn' :
-                      selectedLensType === 'NON_PRESCRIPTION' ? 'Không có độ' :
-                      'Chọn loại tròng kính'
-                    )}
-                  </div>
+                  
+                  {selectedLens && (
+                    <div className="text-sm text-gray-500 pl-0">
+                      <div>{selectedLens.name}</div>
+                      {selectedLens.brandLens && (
+                        <div className="text-xs text-gray-400 mt-1">{selectedLens.brandLens.name}</div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Lens Variant Option */}
                   {selectedLensOptions.variant && (
@@ -1917,12 +1894,7 @@ const LensSelectionPage: React.FC = () => {
                   <span className="font-bold text-2xl text-gray-800">
                     {(() => {
                       const framePrice = Number(selectedProduct?.price) || 0;
-                      const lensPrice = selectedLens ? selectedLens.basePrice : (
-                        selectedLensType === 'PROGRESSIVE' ? 1800000 :
-                        selectedLensType === 'OFFICE' ? 2300000 :
-                        selectedLensType === 'DRIVE_SAFE' ? 2100000 :
-                        0
-                      );
+                      const lensPrice = (selectedLens && showLensOptionsStep) ? selectedLens.basePrice : 0;
                       
                       // Add lens options prices
                       const variantPrice = selectedLensOptions.variant ? Number(selectedLensOptions.variant.price) : 0;
