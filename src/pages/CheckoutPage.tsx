@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
@@ -257,6 +257,14 @@ const CheckoutPage: React.FC = () => {
     setShowPayOSPayment(false);
     toast('Thanh toán đã bị hủy');
   };
+
+  // Memoize customer info to prevent unnecessary re-renders
+  const memoizedCustomerInfo = useMemo(() => ({
+    fullName: customerInfo.fullName,
+    phone: customerInfo.phone,
+    email: customerInfo.email,
+    address: `${customerInfo.address}, ${customerInfo.ward}, ${customerInfo.district}, ${customerInfo.province}`,
+  }), [customerInfo.fullName, customerInfo.phone, customerInfo.email, customerInfo.address, customerInfo.ward, customerInfo.district, customerInfo.province]);
 
   if (!cartSummary || cartSummary.items.length === 0) {
     return null; // Will redirect in useEffect
@@ -849,12 +857,7 @@ const CheckoutPage: React.FC = () => {
                 isVisible={showPayOSPayment}
                 onSuccess={handlePayOSSuccess}
                 onCancel={handlePayOSCancel}
-                customerInfo={{
-                  fullName: customerInfo.fullName,
-                  phone: customerInfo.phone,
-                  email: customerInfo.email,
-                  address: `${customerInfo.address}, ${customerInfo.ward}, ${customerInfo.district}, ${customerInfo.province}`,
-                }}
+                customerInfo={memoizedCustomerInfo}
               />
             </div>
           </div>
