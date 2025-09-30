@@ -282,6 +282,70 @@ const CartPage: React.FC = () => {
                             </div>
                           </div>
                         )}
+
+                        {/* Lens Information */}
+                        {(item.lensInfo || item.lensVariantInfo) && (
+                          <div className="mt-4">
+                            <h4 className="text-sm font-semibold text-gray-800 mb-3">Thông tin tròng kính</h4>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              {item.lensInfo && (
+                                <div className="flex items-start space-x-4 mb-4">
+                                  {/* Lens Image */}
+                                  {item.lensInfo.image && (
+                                    <div className="flex-shrink-0">
+                                      <img
+                                        src={item.lensInfo.image}
+                                        alt={item.lensInfo.name}
+                                        className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                                      />
+                                    </div>
+                                  )}
+                                  
+                                  {/* Lens Details */}
+                                  <div className="flex-1">
+                                    <h5 className="font-medium text-gray-900 mb-1">{item.lensInfo.name}</h5>
+                                    <div className="text-sm text-gray-600 space-y-1">
+                                      <p><span className="font-medium">Loại:</span> {item.lensInfo.lensType}</p>
+                                      {item.lensInfo.origin && (
+                                        <p><span className="font-medium">Xuất xứ:</span> {item.lensInfo.origin}</p>
+                                      )}
+                                      {item.lensInfo.description && (
+                                        <p><span className="font-medium">Mô tả:</span> {item.lensInfo.description}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Lens Variant Info */}
+                              {item.lensVariantInfo && (
+                                <div className="border-t border-gray-200 pt-3">
+                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Tùy chọn</h6>
+                                  <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                      <span className="font-medium text-gray-700">Thiết kế:</span>
+                                      <span className="ml-2 text-gray-600">{item.lensVariantInfo.design}</span>
+                                    </div>
+                                    <div>
+                                      <span className="font-medium text-gray-700">Chất liệu:</span>
+                                      <span className="ml-2 text-gray-600">{item.lensVariantInfo.material}</span>
+                                    </div>
+                                    <div>
+                                      <span className="font-medium text-gray-700">Giá:</span>
+                                      <span className="ml-2 text-gray-600">{formatPrice(item.lensVariantInfo.price)}</span>
+                                    </div>
+                                    {item.lensVariantInfo.lensThickness && (
+                                      <div>
+                                        <span className="font-medium text-gray-700">Độ dày:</span>
+                                        <span className="ml-2 text-gray-600">{item.lensVariantInfo.lensThickness.name} (Chỉ số: {item.lensVariantInfo.lensThickness.indexValue})</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Delete Button */}

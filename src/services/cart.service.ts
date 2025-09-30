@@ -122,17 +122,27 @@ export interface CartItemSummary {
       pdLeft: number | undefined;
       pdRight: number | undefined;
     };
-    upgrades: {
-      hardCoating: boolean;
-      antiReflection: boolean;
-      uvProtection: boolean;
-      blueLight: boolean;
-      lotusEffect: boolean;
-      smartFocus: boolean;
-      transition: boolean;
-      progressive: boolean;
-    };
   };
+  lensInfo?: {
+    id: string;
+    name: string;
+    lensType: string;
+    description?: string;
+    origin?: string;
+    image?: string;
+  } | null;
+  lensVariantInfo?: {
+    id: number;
+    design: string;
+    material: string;
+    price: string;
+    lensThickness?: {
+      id: number;
+      name: string;
+      indexValue: number;
+      description: string;
+    };
+  } | null;
 }
 
 export interface CartItemWithDetails {
