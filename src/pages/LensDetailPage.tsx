@@ -98,10 +98,14 @@ const LensDetailPage: React.FC = () => {
   // Option selections
   const [selectedThickness, setSelectedThickness] = useState<string>('');
   const [selectedCoating, setSelectedCoating] = useState<string>('');
-  const [selectedVangPhu, setSelectedVangPhu] = useState<string>('');
 
   // Tab state
   const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'articles' | 'care'>('description');
+
+  // Computed values
+  const sortedVariants = data?.variants ? 
+    [...data.variants].sort((a, b) => a.lensThickness.indexValue - b.lensThickness.indexValue) : 
+    [];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,9 +126,6 @@ const LensDetailPage: React.FC = () => {
         }
         if (json.coatings && json.coatings.length > 0) {
           setSelectedCoating(json.coatings[0].id);
-        }
-        if (json.coatings && json.coatings.length > 0) {
-          setSelectedVangPhu(json.coatings[0].name);
         }
       } catch (err: any) {
         setError(err.message || 'Lỗi tải dữ liệu');
@@ -201,7 +202,7 @@ const LensDetailPage: React.FC = () => {
               <div className="flex items-center gap-4 mb-4">
                 <span className="min-w-[120px] font-medium text-gray-700">Chiết suất</span>
                 <div className="flex gap-2">
-                  {variants.map(v => (
+                  {sortedVariants.map(v => (
                     <button 
                       key={v.lensThickness.id} 
                       className={`px-4 py-2 rounded-lg border text-sm transition-colors ${
@@ -234,26 +235,6 @@ const LensDetailPage: React.FC = () => {
                           : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300'
                       }`}
                       onClick={() => setSelectedCoating(c.id)}
-                    >
-                      {c.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Váng phủ */}
-              <div className="flex items-center gap-4 mb-4">
-                <span className="min-w-[120px] font-medium text-gray-700">Váng Phủ</span>
-                <div className="flex gap-2">
-                  {coatings.map(c => (
-                    <button 
-                      key={`vang-${c.id}`} 
-                      className={`px-4 py-2 rounded-lg border text-sm transition-colors ${
-                        selectedVangPhu === c.name 
-                          ? 'bg-blue-600 text-white border-blue-600' 
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300'
-                      }`}
-                      onClick={() => setSelectedVangPhu(c.name)}
                     >
                       {c.name}
                     </button>
@@ -310,9 +291,6 @@ const LensDetailPage: React.FC = () => {
                 </div>
                 {selectedCoating && (
                   <div><strong>Lớp phủ:</strong> {coatings.find(c => c.id === selectedCoating)?.name} - {formatVNDLocal(coatings.find(c => c.id === selectedCoating)?.price || 0)}</div>
-                )}
-                {selectedVangPhu && (
-                  <div><strong>Váng phủ:</strong> {selectedVangPhu}</div>
                 )}
               </div>
             </div>
@@ -404,7 +382,7 @@ const LensDetailPage: React.FC = () => {
                   <div className="flex py-3 border-b border-gray-100">
                     <span className="w-48 font-medium text-gray-700">Chiết suất</span>
                     <span className="text-gray-900">
-                      {variants.map(v => v.lensThickness.indexValue).join(', ')}
+                      {sortedVariants.map(v => v.lensThickness.indexValue).join(', ')}
                     </span>
                   </div>
                   
@@ -436,7 +414,7 @@ const LensDetailPage: React.FC = () => {
                   <div className="flex py-3 border-b border-gray-100">
                     <span className="w-48 font-medium text-gray-700">Chất liệu</span>
                     <span className="text-gray-900">
-                      {variants.map(v => v.material).filter((value, index, self) => self.indexOf(value) === index).join(', ')}
+                      {sortedVariants.map(v => v.material).filter((value, index, self) => self.indexOf(value) === index).join(', ')}
                     </span>
                   </div>
 

@@ -43,6 +43,19 @@ class LensCardService {
         `/api/v1/lens/cards${params.toString() ? `?${params.toString()}` : ''}`,
       );
       console.log('Lens cards response:', response);
+
+      // Debug: Check for duplicate IDs
+      if (response.data) {
+        const ids = response.data.map((lens: any) => lens.id);
+        const duplicateIds = ids.filter(
+          (id: any, index: number) => ids.indexOf(id) !== index,
+        );
+        if (duplicateIds.length > 0) {
+          console.error('Duplicate lens IDs found:', duplicateIds);
+          console.log('Full data with duplicates:', response.data);
+        }
+      }
+
       return response;
     } catch (error) {
       console.error('Error fetching lens cards:', error);
