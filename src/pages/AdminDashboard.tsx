@@ -42,6 +42,7 @@ import LensDetailPage from './admin/LensDetailPage';
 import LensBrandForm from '../components/admin/LensBrandForm';
 import LensCategoryForm from '../components/admin/LensCategoryForm';
 import Product3DModelManagement from '../components/admin/Product3DModelManagement';
+import OrderManagement from '../components/OrderManagement';
 import { Product } from '../types/product.types';
 import { Brand } from '../types/brand.types';
 import { Category } from '../types/category.types';
@@ -49,7 +50,7 @@ import { Lens } from '../types/lens.types';
 import { LensBrand } from '../types/lensBrand.types';
 import { LensCategory } from '../types/lensCategory.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-detail' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-detail' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form' | 'orders';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -386,6 +387,8 @@ const AdminDashboard: React.FC = () => {
                           setCurrentView('brands');
                         } else if (item.id === 'categories') {
                           setCurrentView('categories');
+                        } else if (item.id === 'orders') {
+                          setCurrentView('orders');
                         }
                         // Handle other menu items later
                       }
@@ -496,6 +499,7 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'create-lens' && 'Tạo Lens Mới'}
                 {currentView === 'lens-thickness' && 'Lens Thickness Management'}
                 {currentView === 'lens-tints' && 'Lens Tints & Colors Management'}
+                {currentView === 'orders' && 'Quản lý đơn hàng'}
               </h1>
             </div>
             
@@ -655,6 +659,7 @@ const AdminDashboard: React.FC = () => {
           )}
           {currentView === 'lens-thickness' && <LensThicknessPage />}
           {currentView === 'lens-tints' && <div className="p-4 bg-yellow-100 rounded">Lens Tints Page - Coming Soon</div>}
+          {currentView === 'orders' && <OrderManagement />}
         </main>
       </div>
     </div>

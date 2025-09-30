@@ -71,12 +71,7 @@ const PaymentSuccessPage: React.FC = () => {
 
     console.log('Payment return params:', paymentData);
 
-    // Auto redirect to home after 10 seconds
-    const timer = setTimeout(() => {
-      navigate('/');
-    }, 10000);
-
-    return () => clearTimeout(timer);
+    // Removed auto redirect - user will use button instead
   }, [location.search, navigate]);
 
   // Separate useEffect for creating order to avoid infinite loop
@@ -124,7 +119,6 @@ const PaymentSuccessPage: React.FC = () => {
 
       if (orderCreated) {
         return {
-          icon: '✅',
           title: 'Thanh toán và đặt hàng thành công!',
           message: 'Cảm ơn bạn đã đặt hàng. Chúng tôi sẽ xử lý đơn hàng và giao hàng trong thời gian sớm nhất.',
           className: 'text-green-600',
@@ -132,7 +126,6 @@ const PaymentSuccessPage: React.FC = () => {
       }
 
       return {
-        icon: '✅',
         title: 'Thanh toán thành công!',
         message: 'Thanh toán đã được xử lý thành công. Đang tiến hành tạo đơn hàng...',
         className: 'text-green-600',
@@ -225,8 +218,13 @@ const PaymentSuccessPage: React.FC = () => {
             )}
           </div>
 
-          <div className="mt-6 text-sm text-gray-500">
-            Trang này sẽ tự động chuyển về trang chủ sau 10 giây
+          <div className="mt-6">
+            <button
+              onClick={() => navigate('/')}
+              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 font-medium transition-colors"
+            >
+              Trở về trang chủ
+            </button>
           </div>
         </div>
 
