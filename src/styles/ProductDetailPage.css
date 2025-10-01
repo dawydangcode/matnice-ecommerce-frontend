@@ -59,7 +59,7 @@
 }
 
 .virtual-tryon-btn {
-  background-color: #4f46e5;
+  background-color: #353332;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -74,7 +74,7 @@
 }
 
 .virtual-tryon-btn:hover {
-  background-color: #4338ca;
+  background-color: #4e4d4c;
 }
 
 /* Product Info */
@@ -141,7 +141,7 @@
 }
 
 .color-option.selected {
-  border-color: #4f46e5;
+  border-color: #11832C;
   box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
 }
 
@@ -274,7 +274,7 @@
 }
 
 .text-link {
-  color: #4f46e5;
+  color: #11832C;
   text-decoration: none;
   background: none;
   border: none;
@@ -321,7 +321,7 @@
 
 .btn-primary {
   width: 100%;
-  background-color: #4f46e5;
+  background-color: #11832C;
   color: white;
   border: none;
   padding: 1rem 1.5rem;
@@ -334,14 +334,14 @@
 }
 
 .btn-primary:hover {
-  background-color: #4338ca;
+  background-color: #15a136;
 }
 
 .btn-secondary {
   width: 100%;
   background-color: white;
-  color: #4f46e5;
-  border: 2px solid #4f46e5;
+  color: #11832C;
+  border: 2px solid #11832C;
   padding: 1rem 1.5rem;
   border-radius: 8px;
   font-size: 1rem;
@@ -352,7 +352,7 @@
 }
 
 .btn-secondary:hover {
-  background-color: #4f46e5;
+  background-color: #11832C;
   color: white;
 }
 
@@ -396,7 +396,7 @@
 .btn-link {
   background: none;
   border: none;
-  color: #4f46e5;
+  color: #11832C;
   font-size: 0.875rem;
   cursor: pointer;
   text-decoration: underline;
