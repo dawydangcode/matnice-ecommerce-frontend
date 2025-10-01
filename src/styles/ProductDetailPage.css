@@ -127,8 +127,8 @@
 
 .color-option {
   width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  height: 80px;
+  border-radius: 10px;
   border: 2px solid #e5e7eb;
   background: none;
   cursor: pointer;
@@ -141,8 +141,7 @@
 }
 
 .color-option.selected {
-  border-color: #11832C;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+  border-color: #292b29;
 }
 
 .color-swatch {
@@ -155,24 +154,24 @@
 .color-image-preview {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: 10px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f8f9fa;
+  /* Remove background color to eliminate padding effect */
 }
 
 .color-preview-img {
-  width: 130%;
-  height: 130%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  transform: scale(0.75);
+  /* Remove transform scale to show full image without padding */
   transition: transform 0.2s ease;
 }
 
 .color-option:hover .color-preview-img {
-  transform: scale(0.8);
+  transform: scale(1.05);
 }
 
 .color-option[title*="Black"] .color-swatch {
@@ -458,6 +457,7 @@
 
 .trust-icon {
   font-size: 1.125rem;
+  color: rgb(89, 90, 89);
 }
 
 .trust-text {

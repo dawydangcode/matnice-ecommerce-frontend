@@ -9,7 +9,7 @@ import productService, { ProductDetail } from '../services/productService';
 import { product3DModelService, Product3DModel, Model3DConfig } from '../services/product3dModel.service';
 import cartService from '../services/cart.service';
 import '../styles/ProductDetailPage.css';
-import { Glasses, Handbag, ShoppingCart, X, Video } from 'lucide-react';
+import { Glasses, Handbag, ShoppingCart, X, Video, RefreshCcw, Package } from 'lucide-react';
 
 
 
@@ -497,15 +497,11 @@ const ProductDetailPage: React.FC = () => {
             {/* Trust Badges */}
             <div className="trust-badges">
               <div className="trust-badge">
-                <span className="trust-icon">🏆</span>
-                <span className="trust-text">Over 15 years of optical expertise</span>
-              </div>
-              <div className="trust-badge">
-                <span className="trust-icon">💰</span>
+                <span className="trust-icon"><RefreshCcw /></span>
                 <span className="trust-text">30-Day Money Back Guarantee</span>
               </div>
               <div className="trust-badge">
-                <span className="trust-icon">📦</span>
+                <span className="trust-icon"><Package /></span>
                 <span className="trust-text">All available products are currently in stock</span>
               </div>
             </div>
