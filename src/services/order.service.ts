@@ -14,7 +14,7 @@ export enum PaymentMethod {
   DEBIT_CARD = 'debit_card',
   BANK_TRANSFER = 'bank_transfer',
   PAYPAL = 'paypal',
-  VNPAY = 'vnpay',
+  PAYOS = 'payos',
   MOMO = 'momo',
 }
 
@@ -39,7 +39,7 @@ export interface CreateOrderRequest {
     | 'credit_card'
     | 'debit_card'
     | 'paypal'
-    | 'vnpay'
+    | 'payos'
     | 'momo';
   fullName: string;
   phone: string;
@@ -551,7 +551,7 @@ class OrderService {
       debit_card: 'Thẻ ghi nợ',
       bank_transfer: 'Chuyển khoản',
       paypal: 'PayPal',
-      vnpay: 'VNPay',
+      payos: 'PayOS',
       momo: 'MoMo',
     };
     return methodMap[method] || method;

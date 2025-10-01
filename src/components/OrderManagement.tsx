@@ -533,7 +533,8 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Image</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" colSpan={2}>Product & Lens Details</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Details</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lens Details</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                       </tr>
@@ -546,77 +547,73 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                               <Package className="w-8 h-8 text-gray-400" />
                             </div>
                           </td>
-                          <td className="px-4 py-4" colSpan={2}>
-                            <div className="space-y-4">
-                              {/* Product and Lens Information Row */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Product Information */}
-                                <div className="bg-gray-50 rounded-lg p-3">
-                                  <div className="text-sm font-medium text-gray-800 mb-2">Product Details</div>
-                                  <div className="space-y-1">
-                                    <div className="text-sm font-medium text-gray-900">
-                                      {item.productInfo?.productName || 'Sản phẩm không xác định'}
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      Brand: {item.productInfo?.brandName || 'N/A'}
-                                    </div>
-                                    {item.productInfo?.colorInfo && (
-                                      <div className="text-xs text-gray-600">
-                                        Color: {item.productInfo.colorInfo.colorName}
-                                        {item.productInfo.colorInfo.productNumber && (
-                                          <span className="ml-2 bg-gray-200 px-2 py-1 rounded text-xs">
-                                            #{item.productInfo.colorInfo.productNumber}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
+                          <td className="px-4 py-4">
+                            <div className="h-full flex items-center justify-center">
+                              {/* Product Information - Vertically Centered */}
+                              <div className="bg-gray-50 rounded-lg p-3 w-full">
+                                <div className="space-y-1">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {item.productInfo?.productName || 'Sản phẩm không xác định'}
                                   </div>
-                                </div>
-
-                                {/* Lens Details */}
-                                <div className="bg-blue-50 rounded-lg p-3">
-                                  <div className="text-sm font-medium text-gray-800 mb-2">Lens Details</div>
-                                  {item.lensDetails && item.lensDetails.length > 0 ? (
-                                    <div className="space-y-2">
-                                      {item.lensDetails.map((lensDetail: any, lensIndex: number) => (
-                                        <div key={lensDetail.id || lensIndex}>
-                                          {lensDetail.lensInfo && (
-                                            <div className="space-y-1">
-                                              <div className="text-sm font-medium text-blue-800">
-                                                {lensDetail.lensInfo.lensName || 'Lens'}
-                                              </div>
-                                              <div className="text-xs text-gray-600 space-y-0.5">
-                                                {/* Show lens coatings if available */}
-                                                {lensDetail.lensInfo.lensCoatings && lensDetail.lensInfo.lensCoatings.length > 0 && (
-                                                  <div className="text-xs">
-                                                    <div className="font-medium text-gray-700">Coatings:</div>
-                                                    {lensDetail.lensInfo.lensCoatings.map((coating: any, coatingIndex: number) => (
-                                                      <div key={coatingIndex} className="text-purple-600">
-                                                        • {coating.name} (+{formatCurrency(coating.price || 0)})
-                                                      </div>
-                                                    ))}
-                                                  </div>
-                                                )}
-                                                {/* Show tint color if available */}
-                                                {lensDetail.lensInfo.tintColor && (
-                                                  <div className="text-xs">
-                                                    <span className="font-medium text-gray-700">Tint: </span>
-                                                    <span className="text-orange-600">{lensDetail.lensInfo.tintColor.name}</span>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      ))}
+                                  <div className="text-sm text-gray-600">
+                                    Brand: {item.productInfo?.brandName || 'N/A'}
+                                  </div>
+                                  {item.productInfo?.colorInfo && (
+                                    <div className="text-xs text-gray-600">
+                                      Color: {item.productInfo.colorInfo.colorName}
+                                      {item.productInfo.colorInfo.productNumber && (
+                                        <span className="ml-2 bg-gray-200 px-2 py-1 rounded text-xs">
+                                          #{item.productInfo.colorInfo.productNumber}
+                                        </span>
+                                      )}
                                     </div>
-                                  ) : (
-                                    <div className="text-sm text-gray-500">No lens details</div>
                                   )}
                                 </div>
                               </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            {/* Lens Details */}
+                            <div className="space-y-4">
+                              {item.lensDetails && item.lensDetails.length > 0 ? (
+                                <div className="space-y-2">
+                                  {item.lensDetails.map((lensDetail: any, lensIndex: number) => (
+                                    <div key={lensDetail.id || lensIndex} className="bg-blue-50 rounded-lg p-3">
+                                      {lensDetail.lensInfo && (
+                                        <div className="space-y-1">
+                                          <div className="text-sm font-medium text-blue-800">
+                                            {lensDetail.lensInfo.lensName || 'Lens'}
+                                          </div>
+                                          <div className="text-xs text-gray-600 space-y-0.5">
+                                            {/* Show lens coatings if available */}
+                                            {lensDetail.lensInfo.lensCoatings && lensDetail.lensInfo.lensCoatings.length > 0 && (
+                                              <div className="text-xs">
+                                                <div className="font-medium text-gray-700">Coatings:</div>
+                                                {lensDetail.lensInfo.lensCoatings.map((coating: any, coatingIndex: number) => (
+                                                  <div key={coatingIndex} className="text-purple-600">
+                                                    • {coating.name} (+{formatCurrency(coating.price || 0)})
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                            {/* Show tint color if available */}
+                                            {lensDetail.lensInfo.tintColor && (
+                                              <div className="text-xs">
+                                                <span className="font-medium text-gray-700">Tint: </span>
+                                                <span className="text-orange-600">{lensDetail.lensInfo.tintColor.name}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-sm text-gray-500">No lens details</div>
+                              )}
 
-                              {/* Prescription Values - Full Width */}
+                              {/* Prescription Values - Moved to Lens Details Column */}
                               {item.lensDetails && item.lensDetails.length > 0 && (
                                 <div className="border-t border-gray-200 pt-4 mt-4">
                                   <h6 className="text-sm font-medium text-gray-800 mb-3">Thông tin đơn thuốc</h6>
@@ -634,7 +631,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                                         </thead>
                                         <tbody>
                                           <tr className="border-b border-gray-200">
-                                            <td className="py-3 px-3 font-medium text-gray-700">Phải (OD)</td>
+                                            <td className="py-3 px-3 font-medium text-gray-700">Phải</td>
                                             <td className="text-center py-3 px-3 text-gray-600">
                                               {formatPrescriptionValue(lensDetail.rightEyeSphere)}
                                             </td>
@@ -649,7 +646,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                                             </td>
                                           </tr>
                                           <tr>
-                                            <td className="py-3 px-3 font-medium text-gray-700">Trái (OS)</td>
+                                            <td className="py-3 px-3 font-medium text-gray-700">Trái</td>
                                             <td className="text-center py-3 px-3 text-gray-600">
                                               {formatPrescriptionValue(lensDetail.leftEyeSphere)}
                                             </td>
@@ -671,24 +668,50 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {item.quantity}
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                            <span className="inline-block px-3 py-1 border border-gray-300 rounded-md font-medium">
+                              {item.quantity}
+                            </span>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">
-                              {formatCurrency(item.productInfo?.price || 0)}
+                              {formatCurrency(Number(item.framePrice) || 0)}
                             </div>
                             {/* Show lens price breakdown if exists */}
                             {item.lensDetails && item.lensDetails.length > 0 && (
                               <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-                                {item.lensDetails.map((lensDetail: any, idx: number) => (
-                                  <div key={idx} className="flex justify-between">
-                                    <span>+ Lens:</span>
-                                    <span>{formatCurrency(lensDetail.lensInfo?.lensVariant?.price || 0)}</span>
-                                  </div>
-                                ))}
+                                {item.lensDetails.map((lensDetail: any, idx: number) => {
+                                  const lensPrice = Number(lensDetail.lensInfo?.lensVariant?.price) || 0;
+                                  const coatingPrice = lensDetail.lensInfo?.lensCoatings?.reduce((coatingSum: number, coating: any) => {
+                                    return coatingSum + (Number(coating.price) || 0);
+                                  }, 0) || 0;
+                                  
+                                  return (
+                                    <div key={idx}>
+                                      <div className="flex justify-between">
+                                        <span>+ Lens:</span>
+                                        <span>{formatCurrency(lensPrice)}</span>
+                                      </div>
+                                      {coatingPrice > 0 && (
+                                        <div className="flex justify-between">
+                                          <span>+ Coatings:</span>
+                                          <span>{formatCurrency(coatingPrice)}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
                                 <div className="border-t pt-1 font-medium text-gray-900">
-                                  Total: {formatCurrency(item.totalPrice)}
+                                  Total: {formatCurrency(
+                                    ((Number(item.framePrice) || 0) + 
+                                    (item.lensDetails?.reduce((sum: number, lensDetail: any) => {
+                                      const lensPrice = Number(lensDetail.lensInfo?.lensVariant?.price) || 0;
+                                      const coatingPrice = lensDetail.lensInfo?.lensCoatings?.reduce((coatingSum: number, coating: any) => {
+                                        return coatingSum + (Number(coating.price) || 0);
+                                      }, 0) || 0;
+                                      return sum + lensPrice + coatingPrice;
+                                    }, 0) || 0)) * item.quantity
+                                  )}
                                 </div>
                               </div>
                             )}

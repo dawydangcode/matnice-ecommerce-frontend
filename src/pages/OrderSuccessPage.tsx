@@ -35,7 +35,7 @@ const OrderSuccessPage: React.FC = () => {
             Đặt hàng thành công!
           </h1>
           <p className="text-lg text-gray-600">
-            Cảm ơn bạn đã mua hàng. Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.
+            Cảm ơn bạn đã mua hàng. Đơn hàng của bạn đã được tiếp nhận và đang xử lý.
           </p>
         </div>
 

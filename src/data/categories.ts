@@ -27,15 +27,6 @@ export const glassesCategories = [
     title: 'Materials',
     items: ['Acetate', 'Metal', 'Titanium', 'Plastic', 'Wood', 'Carbon Fiber'],
   },
-  {
-    title: 'Features',
-    items: [
-      'Blue Light Blocking',
-      'Progressive Lenses',
-      'Anti-Glare',
-      'Photochromic',
-    ],
-  },
 ];
 
 export const sunglassesCategories = [
