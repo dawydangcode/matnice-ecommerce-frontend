@@ -119,6 +119,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
     try {
       // Fetch detailed order information
       const detailedOrder = await orderService.getOrderDetails(order.id);
+      console.log('Detailed Order Data:', detailedOrder); // Debug log
       setSelectedOrder(detailedOrder);
       setShowOrderDetail(true);
     } catch (error) {
@@ -300,6 +301,31 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
     }).format(amount);
   };
 
+  // Format address
+  const formatAddress = (order: OrderResponse) => {
+    if (order.address) return order.address;
+    
+    const addressParts = [
+      order.addressDetail,
+      order.ward,
+      order.district,
+      order.province
+    ].filter(part => part && part.trim());
+    
+    return addressParts.length > 0 ? addressParts.join(', ') : 'Chưa có địa chỉ';
+  };
+
+  // Format prescription value
+  const formatPrescriptionValue = (value: any, suffix: string = '') => {
+    if (value === null || value === undefined || value === 0) return '-';
+    return `${value}${suffix}`;
+  };
+
+  // Check if prescription has ADD values
+  const hasAddValues = (lensDetail: any) => {
+    return lensDetail && (lensDetail.addRight || lensDetail.addLeft);
+  };
+
   // Get status icon
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -428,7 +454,9 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 font-medium">Full Address:</span>
-                  <span className="font-semibold text-gray-900 text-right max-w-48">{selectedOrder.address || 'N/A'}</span>
+                  <span className="font-semibold text-gray-900 text-right max-w-48">
+                    {formatAddress(selectedOrder)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 font-medium">Phone:</span>
@@ -505,7 +533,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Image</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" colSpan={2}>Product & Lens Details</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                       </tr>
@@ -518,22 +546,119 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                               <Package className="w-8 h-8 text-gray-400" />
                             </div>
                           </td>
-                          <td className="px-4 py-4">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {item.productInfo?.productName || 'Sản phẩm không xác định'}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {item.productInfo?.brandName || 'N/A'}
-                              </div>
-                              {item.productInfo?.colorInfo && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  Màu: {item.productInfo.colorInfo.colorName}
-                                  {item.productInfo.colorInfo.productNumber && (
-                                    <span className="ml-2 bg-gray-100 px-2 py-1 rounded">
-                                      #{item.productInfo.colorInfo.productNumber}
-                                    </span>
+                          <td className="px-4 py-4" colSpan={2}>
+                            <div className="space-y-4">
+                              {/* Product and Lens Information Row */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Product Information */}
+                                <div className="bg-gray-50 rounded-lg p-3">
+                                  <div className="text-sm font-medium text-gray-800 mb-2">Product Details</div>
+                                  <div className="space-y-1">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {item.productInfo?.productName || 'Sản phẩm không xác định'}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      Brand: {item.productInfo?.brandName || 'N/A'}
+                                    </div>
+                                    {item.productInfo?.colorInfo && (
+                                      <div className="text-xs text-gray-600">
+                                        Color: {item.productInfo.colorInfo.colorName}
+                                        {item.productInfo.colorInfo.productNumber && (
+                                          <span className="ml-2 bg-gray-200 px-2 py-1 rounded text-xs">
+                                            #{item.productInfo.colorInfo.productNumber}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Lens Details */}
+                                <div className="bg-blue-50 rounded-lg p-3">
+                                  <div className="text-sm font-medium text-gray-800 mb-2">Lens Details</div>
+                                  {item.lensDetails && item.lensDetails.length > 0 ? (
+                                    <div className="space-y-2">
+                                      {item.lensDetails.map((lensDetail: any, lensIndex: number) => (
+                                        <div key={lensDetail.id || lensIndex}>
+                                          {lensDetail.lensInfo && (
+                                            <div className="space-y-1">
+                                              <div className="text-sm font-medium text-blue-800">
+                                                {lensDetail.lensInfo.lensName || 'Lens'}
+                                              </div>
+                                              <div className="text-xs text-gray-600 space-y-0.5">
+                                                <div>Type: {lensDetail.lensInfo.lensType || 'N/A'}</div>
+                                                <div>Brand: {lensDetail.lensInfo.brandLens || 'N/A'}</div>
+                                                {lensDetail.lensInfo.lensVariant && (
+                                                  <>
+                                                    <div>Material: {lensDetail.lensInfo.lensVariant.material || 'N/A'}</div>
+                                                    <div className="text-green-600 font-medium">
+                                                      Price: {formatCurrency(lensDetail.lensInfo.lensVariant.price || 0)}
+                                                    </div>
+                                                  </>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm text-gray-500">No lens details</div>
                                   )}
+                                </div>
+                              </div>
+
+                              {/* Prescription Values - Full Width */}
+                              {item.lensDetails && item.lensDetails.length > 0 && (
+                                <div className="border-t border-gray-200 pt-4 mt-4">
+                                  <h6 className="text-sm font-medium text-gray-800 mb-3">Thông tin đơn thuốc</h6>
+                                  {item.lensDetails.map((lensDetail: any, lensIndex: number) => (
+                                    <div key={lensDetail.id || lensIndex} className="overflow-x-auto bg-gray-50 p-4 rounded-lg mb-3">
+                                      <table className="min-w-full text-sm">
+                                        <thead>
+                                          <tr className="border-b border-gray-300">
+                                            <th className="text-left py-3 px-3 font-medium text-gray-700">Mắt</th>
+                                            <th className="text-center py-3 px-3 font-medium text-gray-700">SPH</th>
+                                            <th className="text-center py-3 px-3 font-medium text-gray-700">CYL</th>
+                                            <th className="text-center py-3 px-3 font-medium text-gray-700">AXIS</th>
+                                            <th className="text-center py-3 px-3 font-medium text-gray-700">PD</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          <tr className="border-b border-gray-200">
+                                            <td className="py-3 px-3 font-medium text-gray-700">Phải (OD)</td>
+                                            <td className="text-center py-3 px-3 text-gray-600">
+                                              {formatPrescriptionValue(lensDetail.rightEyeSphere)}
+                                            </td>
+                                            <td className="text-center py-3 px-3 text-gray-600">
+                                              {formatPrescriptionValue(lensDetail.rightEyeCylinder)}
+                                            </td>
+                                            <td className="text-center py-3 px-3 text-gray-600">
+                                              {formatPrescriptionValue(lensDetail.rightEyeAxis, '°')}
+                                            </td>
+                                            <td className="text-center py-3 px-3 text-gray-600">
+                                              {formatPrescriptionValue(lensDetail.pdRight)}
+                                            </td>
+                                          </tr>
+                                          <tr>
+                                            <td className="py-3 px-3 font-medium text-gray-700">Trái (OS)</td>
+                                            <td className="text-center py-3 px-3 text-gray-600">
+                                              {formatPrescriptionValue(lensDetail.leftEyeSphere)}
+                                            </td>
+                                            <td className="text-center py-3 px-3 text-gray-600">
+                                              {formatPrescriptionValue(lensDetail.leftEyeCylinder)}
+                                            </td>
+                                            <td className="text-center py-3 px-3 text-gray-600">
+                                              {formatPrescriptionValue(lensDetail.leftEyeAxis, '°')}
+                                            </td>
+                                            <td className="text-center py-3 px-3 text-gray-600">
+                                              {formatPrescriptionValue(lensDetail.pdLeft)}
+                                            </td>
+                                          </tr>
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  ))}
                                 </div>
                               )}
                             </div>
@@ -541,8 +666,24 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                           <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                             {item.quantity}
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {formatCurrency(item.totalPrice)}
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {formatCurrency(item.productInfo?.price || 0)}
+                            </div>
+                            {/* Show lens price breakdown if exists */}
+                            {item.lensDetails && item.lensDetails.length > 0 && (
+                              <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                                {item.lensDetails.map((lensDetail: any, idx: number) => (
+                                  <div key={idx} className="flex justify-between">
+                                    <span>+ Lens:</span>
+                                    <span>{formatCurrency(lensDetail.lensInfo?.lensVariant?.price || 0)}</span>
+                                  </div>
+                                ))}
+                                <div className="border-t pt-1 font-medium text-gray-900">
+                                  Total: {formatCurrency(item.totalPrice)}
+                                </div>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -564,81 +705,12 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                     <span className="text-gray-600">Discount (-):</span>
                     <span className="font-medium">$0.00</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Tax (18%):</span>
-                    <span className="font-medium">{formatCurrency(selectedOrder.totalPrice * 0.18)}</span>
-                  </div>
                   <div className="flex justify-between text-lg font-semibold border-t pt-2">
                     <span className="text-gray-900">Total Payable:</span>
                     <span className="text-gray-900">{formatCurrency(selectedOrder.totalPrice)}</span>
                   </div>
                 </div>
               </div>
-
-              {/* Lens Details */}
-              {selectedOrder.orderItems && selectedOrder.orderItems.some((item: any) => item.lensDetails && item.lensDetails.length > 0) && (
-                <div className="mt-6 bg-blue-50 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-4">Lens Details</h3>
-                  {selectedOrder.orderItems.map((item: any) => (
-                    item.lensDetails && item.lensDetails.length > 0 && (
-                      <div key={item.id} className="mb-4">
-                        <h4 className="font-medium text-blue-800 mb-3">
-                          Lens for: {item.productInfo?.productName}
-                        </h4>
-                        {item.lensDetails.map((lensDetail: any, lensIndex: number) => (
-                          <div key={lensDetail.id || lensIndex} className="bg-white rounded p-4 mb-3">
-                            {lensDetail.lensInfo && (
-                              <div className="mb-3">
-                                <div className="font-medium text-blue-800 mb-2">
-                                  {lensDetail.lensInfo.lensName || 'Tròng kính'}
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                  <div>Type: {lensDetail.lensInfo.lensType || 'N/A'}</div>
-                                  <div>Brand: {lensDetail.lensInfo.brandLens || 'N/A'}</div>
-                                  {lensDetail.lensInfo.lensVariant && (
-                                    <>
-                                      <div>Material: {lensDetail.lensInfo.lensVariant.material || 'N/A'}</div>
-                                      <div>Price: {formatCurrency(lensDetail.lensInfo.lensVariant.price || 0)}</div>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Prescription */}
-                            <div className="grid grid-cols-2 gap-4 mb-3">
-                              <div className="bg-gray-50 p-3 rounded">
-                                <div className="font-medium text-gray-800 text-sm mb-2">Right Eye (OD)</div>
-                                <div className="text-xs space-y-1">
-                                  <div>SPH: {lensDetail.rightEyeSphere || 0}</div>
-                                  <div>CYL: {lensDetail.rightEyeCylinder || 0}</div>
-                                  <div>Axis: {lensDetail.rightEyeAxis || 0}°</div>
-                                  <div>PD: {lensDetail.pdRight || 0}</div>
-                                </div>
-                              </div>
-                              <div className="bg-gray-50 p-3 rounded">
-                                <div className="font-medium text-gray-800 text-sm mb-2">Left Eye (OS)</div>
-                                <div className="text-xs space-y-1">
-                                  <div>SPH: {lensDetail.leftEyeSphere || 0}</div>
-                                  <div>CYL: {lensDetail.leftEyeCylinder || 0}</div>
-                                  <div>Axis: {lensDetail.leftEyeAxis || 0}°</div>
-                                  <div>PD: {lensDetail.pdLeft || 0}</div>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="text-right">
-                              <span className="text-sm font-medium text-blue-800">
-                                Lens Price: {formatCurrency(lensDetail.lensPrice || 0)}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Right Column - Status Orders (positioned below Invoice Detail) */}
