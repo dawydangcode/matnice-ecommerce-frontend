@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, Heart, User, Menu } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import smallEyeLogo from '../assets/small_eye_logo.png';
 import CartDropdown from './CartDropdown';
 
@@ -14,6 +14,9 @@ interface HeaderProps {
 
 // Desktop Header Component
 const DesktopHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => {
+  const location = useLocation();
+  const isAccountPage = location.pathname === '/account';
+
   return (
     <div className="hidden md:block bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 py-4">
@@ -37,15 +40,15 @@ const DesktopHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) =>
             {/* User Menu */}
             {isLoggedIn ? (
               <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <User className="w-6 h-6" />
+                <Link to="/account" className="flex items-center space-x-2">
+                  <User className={`w-6 h-6 ${isAccountPage ? 'text-black font-bold' : 'hover:text-gray-600'} transition-colors`} />
                   <span className="text-sm font-medium">{user?.username}</span>
-                  {(user?.role?.name === 'admin' || user?.role?.type === 'admin') && (
-                    <Link to="/admin" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                      Admin
-                    </Link>
-                  )}
-                </div>
+                </Link>
+                {(user?.role?.name === 'admin' || user?.role?.type === 'admin') && (
+                  <Link to="/admin" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    Admin
+                  </Link>
+                )}
                 <button
                   onClick={onLogout}
                   className="text-sm text-red-600 hover:text-red-800 font-medium"
@@ -74,6 +77,9 @@ const DesktopHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) =>
 
 // Mobile Header Component
 const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => {
+  const location = useLocation();
+  const isAccountPage = location.pathname === '/account';
+
   return (
     <div className="block md:hidden bg-white shadow-sm border-b">
       <div className="max-w-full mx-auto px-4 py-4">
@@ -106,7 +112,9 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
             
             {/* User Icon Only */}
             {isLoggedIn ? (
-              <User className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
+              <Link to="/account">
+                <User className={`w-6 h-6 cursor-pointer ${isAccountPage ? 'text-black font-bold' : 'hover:text-gray-600'} transition-colors`} />
+              </Link>
             ) : (
               <Link to="/login">
                 <User className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />

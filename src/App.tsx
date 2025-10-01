@@ -23,6 +23,7 @@ import AIAnalysisPage from './pages/AIAnalysisPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import MyAccountPage from './pages/MyAccountPage';
 
 // Protected Route Component for Admin
 interface AdminRouteProps {
@@ -196,6 +197,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <OrderSuccessPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* My Account Page - requires login */}
+          <Route 
+            path="/account" 
+            element={
+              <ProtectedRoute>
+                <MyAccountPage />
               </ProtectedRoute>
             } 
           />
