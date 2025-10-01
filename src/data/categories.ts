@@ -120,6 +120,15 @@ export const legacySunglassesCategories = [
   { name: 'Sunglasses Accessories', href: '/sunglasses/accessories' },
 ];
 
+export const legacyLensCategories = [
+  { name: 'Single Vision Lenses', href: '/lenses?type=single-vision' },
+  { name: 'Progressive Lenses', href: '/lenses?type=progressive' },
+  { name: 'Drive Safe Lenses', href: '/lenses?type=drive-safe' },
+  { name: 'Office Lenses', href: '/lenses?type=office' },
+  { name: 'Blue Light Protection', href: '/lenses?feature=blue-light' },
+  { name: 'Anti-Reflective', href: '/lenses?feature=anti-reflective' },
+];
+
 export const legacyBrandsCategories = [
   { name: 'Ray-Ban', href: '/brands/ray-ban' },
   { name: 'Oakley', href: '/brands/oakley' },

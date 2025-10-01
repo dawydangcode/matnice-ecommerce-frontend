@@ -22,6 +22,10 @@ class ProductCardService {
       // Add search
       if (params.search) queryParams.append('search', params.search);
 
+      // Add product type filter
+      if (params.productType)
+        queryParams.append('productType', params.productType);
+
       // Add filters
       if (params.productTypeIds && params.productTypeIds.length > 0) {
         params.productTypeIds.forEach((id) =>

@@ -39,9 +39,14 @@ class UserAddressService {
   // Get all addresses of current user
   async getUserAddresses(userId: number): Promise<UserAddress[]> {
     try {
-      console.log('UserAddressService.getUserAddresses: Fetching addresses for user:', userId);
-      
-      const response = await apiService.get<UserAddress[]>(`/api/v1/user-address/${userId}/user`);
+      console.log(
+        'UserAddressService.getUserAddresses: Fetching addresses for user:',
+        userId,
+      );
+
+      const response = await apiService.get<UserAddress[]>(
+        `/api/v1/user-address/${userId}/user`,
+      );
 
       console.log('UserAddressService.getUserAddresses: Success', response);
       return response;
@@ -54,9 +59,14 @@ class UserAddressService {
   // Get address by ID
   async getUserAddressById(addressId: number): Promise<UserAddress> {
     try {
-      console.log('UserAddressService.getUserAddressById: Fetching address:', addressId);
-      
-      const response = await apiService.get<UserAddress>(`/api/v1/user-address/${addressId}/detail`);
+      console.log(
+        'UserAddressService.getUserAddressById: Fetching address:',
+        addressId,
+      );
+
+      const response = await apiService.get<UserAddress>(
+        `/api/v1/user-address/${addressId}/detail`,
+      );
 
       console.log('UserAddressService.getUserAddressById: Success', response);
       return response;
@@ -67,11 +77,21 @@ class UserAddressService {
   }
 
   // Create new address
-  async createUserAddress(userId: number, addressData: CreateUserAddressRequest): Promise<UserAddress> {
+  async createUserAddress(
+    userId: number,
+    addressData: CreateUserAddressRequest,
+  ): Promise<UserAddress> {
     try {
-      console.log('UserAddressService.createUserAddress: Creating address for user:', userId, addressData);
-      
-      const response = await apiService.post<UserAddress>(`/api/v1/user-address/create?userId=${userId}`, addressData);
+      console.log(
+        'UserAddressService.createUserAddress: Creating address for user:',
+        userId,
+        addressData,
+      );
+
+      const response = await apiService.post<UserAddress>(
+        `/api/v1/user-address/create?userId=${userId}`,
+        addressData,
+      );
 
       console.log('UserAddressService.createUserAddress: Success', response);
       return response;
@@ -82,11 +102,21 @@ class UserAddressService {
   }
 
   // Update address
-  async updateUserAddress(addressId: number, addressData: UpdateUserAddressRequest): Promise<UserAddress> {
+  async updateUserAddress(
+    addressId: number,
+    addressData: UpdateUserAddressRequest,
+  ): Promise<UserAddress> {
     try {
-      console.log('UserAddressService.updateUserAddress: Updating address:', addressId, addressData);
-      
-      const response = await apiService.put<UserAddress>(`/api/v1/user-address/${addressId}/update`, addressData);
+      console.log(
+        'UserAddressService.updateUserAddress: Updating address:',
+        addressId,
+        addressData,
+      );
+
+      const response = await apiService.put<UserAddress>(
+        `/api/v1/user-address/${addressId}/update`,
+        addressData,
+      );
 
       console.log('UserAddressService.updateUserAddress: Success', response);
       return response;
@@ -99,8 +129,11 @@ class UserAddressService {
   // Delete address
   async deleteUserAddress(addressId: number): Promise<boolean> {
     try {
-      console.log('UserAddressService.deleteUserAddress: Deleting address:', addressId);
-      
+      console.log(
+        'UserAddressService.deleteUserAddress: Deleting address:',
+        addressId,
+      );
+
       await apiService.delete(`/api/v1/user-address/${addressId}/delete`);
 
       console.log('UserAddressService.deleteUserAddress: Success');
@@ -114,9 +147,14 @@ class UserAddressService {
   // Set address as default
   async setDefaultAddress(addressId: number): Promise<UserAddress> {
     try {
-      console.log('UserAddressService.setDefaultAddress: Setting default address:', addressId);
-      
-      const response = await apiService.put<UserAddress>(`/api/v1/user-address/${addressId}/set-default`);
+      console.log(
+        'UserAddressService.setDefaultAddress: Setting default address:',
+        addressId,
+      );
+
+      const response = await apiService.put<UserAddress>(
+        `/api/v1/user-address/${addressId}/set-default`,
+      );
 
       console.log('UserAddressService.setDefaultAddress: Success', response);
       return response;
@@ -132,9 +170,9 @@ class UserAddressService {
       address.addressDetail,
       address.ward,
       address.district,
-      address.province
-    ].filter(part => part && part.trim());
-    
+      address.province,
+    ].filter((part) => part && part.trim());
+
     return parts.join(', ');
   }
 }

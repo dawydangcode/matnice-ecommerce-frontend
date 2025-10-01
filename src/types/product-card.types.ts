@@ -28,6 +28,7 @@ export interface ProductCardQueryParams {
   page?: number;
   limit?: number;
   search?: string;
+  productType?: string;
   productTypeIds?: number[];
   brandIds?: number[];
   categoryIds?: number[];

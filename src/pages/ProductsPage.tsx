@@ -236,6 +236,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
           maxPrice: maxPrice < 1000000 ? maxPrice : undefined,
           sortBy: backendSortBy,
           sortOrder: sortOrder,
+          productType: productType,
           brandIds: selectedBrands.length > 0 ? selectedBrands : undefined,
           gender: selectedGenders.length > 0 ? selectedGenders : undefined,
           frameType: selectedFrameTypes.length > 0 ? selectedFrameTypes.map(f => f.toLowerCase()) : undefined,
@@ -268,7 +269,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     };
 
     fetchData();
-  }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, selectedGlassesWidths, isMultifocalSelected]);
+  }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, selectedGlassesWidths, isMultifocalSelected, productType]);
 
   // Helper function to get selected filter labels
   const getSelectedFilters = () => {

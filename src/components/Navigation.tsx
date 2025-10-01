@@ -245,10 +245,57 @@ const Navigation: React.FC = () => {
             )}
 
             {activeDropdown === 'lens' && (
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-3 gap-8">
+                {/* Lens Types */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Danh mục</h3>
+                  <ul className="space-y-2">
+                    <li>
+                      <Link 
+                        to="/lenses?type=single-vision"
+                        className="text-sm text-gray-600 hover:text-gray-900 block"
+                      >
+                        Single Vision
+                      </Link>
+                    </li>
+                    <li>
+                      <Link 
+                        to="/lenses?type=drive-safe"
+                        className="text-sm text-gray-600 hover:text-gray-900 block"
+                      >
+                        Drive Safe
+                      </Link>
+                    </li>
+                    <li>
+                      <Link 
+                        to="/lenses?type=progressive"
+                        className="text-sm text-gray-600 hover:text-gray-900 block"
+                      >
+                        Progressive
+                      </Link>
+                    </li>
+                    <li>
+                      <Link 
+                        to="/lenses?type=office"
+                        className="text-sm text-gray-600 hover:text-gray-900 block"
+                      >
+                        Office
+                      </Link>
+                    </li>
+                    <li>
+                      <Link 
+                        to="/lenses?type=non-prescription"
+                        className="text-sm text-gray-600 hover:text-gray-900 block"
+                      >
+                        Non-Prescription
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+
                 {/* Lens Categories */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Danh mục tròng kính</h3>
+                  <h3 className="font-semibold text-gray-900 mb-3">Chức năng</h3>
                   {isLoadingLensData ? (
                     <div className="text-sm text-gray-500">Đang tải...</div>
                   ) : (
@@ -256,7 +303,7 @@ const Navigation: React.FC = () => {
                       {lensCategories.map((category) => (
                         <li key={category.id}>
                           <Link 
-                            to={`/lenses/category/${category.name.toLowerCase().replace(/\s+/g, '-')}`}
+                            to={`/lenses?category=${category.name.toLowerCase().replace(/\s+/g, '-')}`}
                             className="text-sm text-gray-600 hover:text-gray-900 block"
                             title={category.description}
                           >
@@ -281,7 +328,7 @@ const Navigation: React.FC = () => {
                       {lensBrands.map((brand) => (
                         <li key={brand.id}>
                           <Link 
-                            to={`/lenses/brand/${brand.name.toLowerCase().replace(/\s+/g, '-')}`}
+                            to={`/lenses?brand=${brand.name.toLowerCase().replace(/\s+/g, '-')}`}
                             className="text-sm text-gray-600 hover:text-gray-900 block"
                             title={brand.description}
                           >
