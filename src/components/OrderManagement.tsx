@@ -7,10 +7,6 @@ import {
   Filter, 
   ChevronLeft, 
   ChevronRight,
-  User,
-  Phone,
-  Mail,
-  MapPin,
   Package,
   CreditCard,
   CheckCircle,
@@ -42,12 +38,12 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus | ''>('');
-  const [selectedOrder, setSelectedOrder] = useState<OrderResponse | null>(null);
-  const [showOrderDetail, setShowOrderDetail] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showPaymentStatusModal, setShowPaymentStatusModal] = useState(false);
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showOrderDetail, setShowOrderDetail] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<OrderResponse | null>(null);
   const [editingOrder, setEditingOrder] = useState<OrderResponse | null>(null);
   const [newStatus, setNewStatus] = useState<OrderStatus>(OrderStatus.PENDING);
   const [newPaymentStatus, setNewPaymentStatus] = useState<PaymentStatus>(PaymentStatus.PENDING);
@@ -121,17 +117,13 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
   // Handle view order detail
   const handleViewOrder = async (order: OrderResponse) => {
     try {
-      // For now, use basic order info since /details endpoint may not be fully implemented
-      // You can uncomment the line below once backend endpoint is ready
-      // const detailedOrder = await orderService.getOrderDetails(order.id);
-      setSelectedOrder(order);
+      // Fetch detailed order information
+      const detailedOrder = await orderService.getOrderDetails(order.id);
+      setSelectedOrder(detailedOrder);
       setShowOrderDetail(true);
     } catch (error) {
       console.error('Error fetching order details:', error);
-      toast.error('Không thể tải chi tiết đơn hàng');
-      // Fallback to basic order info
-      setSelectedOrder(order);
-      setShowOrderDetail(true);
+      toast.error('Có lỗi khi tải chi tiết đơn hàng');
     }
   };
 
@@ -143,7 +135,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
   };
 
   // Handle update payment status
-  const handleUpdatePaymentStatus = (order: OrderResponse) => {
+  const handleOpenPaymentStatusModal = (order: OrderResponse) => {
     setEditingOrder(order);
     setNewPaymentStatus(order.paymentStatus as PaymentStatus);
     setShowPaymentStatusModal(true);
@@ -326,10 +318,408 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
     }
   };
 
+  // Handle update order status
+  const handleUpdateOrderStatus = async (newStatus: OrderStatus) => {
+    if (selectedOrder) {
+      try {
+        await orderService.updateOrderStatus(selectedOrder.id, newStatus);
+        setSelectedOrder({ ...selectedOrder, status: newStatus });
+        toast.success('Cập nhật trạng thái thành công!');
+      } catch (error) {
+        console.error('Error updating order status:', error);
+        toast.error('Có lỗi khi cập nhật trạng thái');
+      }
+    }
+  };
+
+  // Handle update payment status
+  const handleUpdatePaymentStatus = async (newPaymentStatus: PaymentStatus) => {
+    if (selectedOrder) {
+      try {
+        await orderService.updatePaymentStatus(selectedOrder.id, newPaymentStatus);
+        setSelectedOrder({ ...selectedOrder, paymentStatus: newPaymentStatus });
+        toast.success('Cập nhật trạng thái thanh toán thành công!');
+      } catch (error) {
+        console.error('Error updating payment status:', error);
+        toast.error('Có lỗi khi cập nhật trạng thái thanh toán');
+      }
+    }
+  };
+
+  // Handle update notes
+  const handleUpdateNotes = (newNotes: string) => {
+    if (selectedOrder) {
+      setSelectedOrder({ ...selectedOrder, notes: newNotes });
+    }
+  };
+
+  // Handle submit changes
+  const handleSubmitChanges = () => {
+    toast.success('Thay đổi đã được lưu!');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Conditional rendering based on view state
+  if (showOrderDetail && selectedOrder) {
+    return (
+      <div className="p-6">
+        {/* Header with back button */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setShowOrderDetail(false)}
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <span>Quay lại danh sách</span>
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Chi tiết đơn hàng #{selectedOrder.id}
+            </h1>
+          </div>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            <FileText className="w-4 h-4" />
+            <span>In hóa đơn</span>
+          </button>
+        </div>
+
+        {/* Order Detail Content */}
+        <div className="bg-white border border-gray-200 rounded-lg p-8">
+          {/* Order Header */}
+          <div className="border-b pb-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Order Created</h3>
+                <p className="text-gray-900">{formatDate(selectedOrder.orderDate)}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Name</h3>
+                <p className="text-gray-900">{selectedOrder.fullName}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Email</h3>
+                <p className="text-gray-900">{selectedOrder.email}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Contact</h3>
+                <p className="text-gray-900">{selectedOrder.phone}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 3 Info Cards - Delivery Address, Customer Info, Invoice Detail */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {/* Delivery Address */}
+            <div className="bg-white border rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Delivery Address</h3>
+                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Full Address:</span>
+                  <span className="font-semibold text-gray-900 text-right max-w-48">{selectedOrder.address || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Phone:</span>
+                  <span className="font-semibold text-gray-900">{selectedOrder.phone || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Customer Info */}
+            <div className="bg-white border rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Customer Info</h3>
+                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Name:</span>
+                  <span className="font-semibold text-gray-900">{selectedOrder.fullName || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-start">
+                  <span className="text-gray-600 font-medium">Email:</span>
+                  <span className="font-semibold text-gray-900 text-right max-w-48 break-words">{selectedOrder.email || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Contact:</span>
+                  <span className="font-semibold text-gray-900">{selectedOrder.phone || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Payment:</span>
+                  <span className={`font-semibold px-2 py-1 rounded text-xs ${orderService.getPaymentStatusColor(selectedOrder.paymentStatus)}`}>
+                    {orderService.getPaymentStatusDisplayName(selectedOrder.paymentStatus)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Invoice Detail */}
+            <div className="bg-white border rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Invoice Detail</h3>
+                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">Download</button>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Order ID:</span>
+                  <span className="font-semibold text-gray-900">#{selectedOrder.id}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Cart ID:</span>
+                  <span className="font-semibold text-gray-900">#{selectedOrder.cartId}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Payment Method:</span>
+                  <span className="font-semibold text-gray-900">{orderService.getPaymentMethodDisplayName(selectedOrder.paymentMethod)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Total Amount:</span>
+                  <span className="font-semibold text-gray-900 text-green-600">{formatCurrency(selectedOrder.totalPrice)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Left Column - Order Summary (spans 2 columns) */}
+            <div className="md:col-span-2">
+              <div className="bg-white border rounded-lg">
+                <div className="p-4 border-b">
+                  <h3 className="text-lg font-semibold text-gray-900">Order Summary</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Image</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {selectedOrder.orderItems && selectedOrder.orderItems.map((item: any, index: number) => (
+                        <tr key={item.id}>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                              <Package className="w-8 h-8 text-gray-400" />
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {item.productInfo?.productName || 'Sản phẩm không xác định'}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {item.productInfo?.brandName || 'N/A'}
+                              </div>
+                              {item.productInfo?.colorInfo && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Màu: {item.productInfo.colorInfo.colorName}
+                                  {item.productInfo.colorInfo.productNumber && (
+                                    <span className="ml-2 bg-gray-100 px-2 py-1 rounded">
+                                      #{item.productInfo.colorInfo.productNumber}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.quantity}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {formatCurrency(item.totalPrice)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Order Totals */}
+                <div className="border-t p-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal Price:</span>
+                    <span className="font-medium">{formatCurrency(selectedOrder.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Shipping Cost (+):</span>
+                    <span className="font-medium">{formatCurrency(selectedOrder.shippingCost)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Discount (-):</span>
+                    <span className="font-medium">$0.00</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Tax (18%):</span>
+                    <span className="font-medium">{formatCurrency(selectedOrder.totalPrice * 0.18)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-semibold border-t pt-2">
+                    <span className="text-gray-900">Total Payable:</span>
+                    <span className="text-gray-900">{formatCurrency(selectedOrder.totalPrice)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lens Details */}
+              {selectedOrder.orderItems && selectedOrder.orderItems.some((item: any) => item.lensDetails && item.lensDetails.length > 0) && (
+                <div className="mt-6 bg-blue-50 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-blue-900 mb-4">Lens Details</h3>
+                  {selectedOrder.orderItems.map((item: any) => (
+                    item.lensDetails && item.lensDetails.length > 0 && (
+                      <div key={item.id} className="mb-4">
+                        <h4 className="font-medium text-blue-800 mb-3">
+                          Lens for: {item.productInfo?.productName}
+                        </h4>
+                        {item.lensDetails.map((lensDetail: any, lensIndex: number) => (
+                          <div key={lensDetail.id || lensIndex} className="bg-white rounded p-4 mb-3">
+                            {lensDetail.lensInfo && (
+                              <div className="mb-3">
+                                <div className="font-medium text-blue-800 mb-2">
+                                  {lensDetail.lensInfo.lensName || 'Tròng kính'}
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div>Type: {lensDetail.lensInfo.lensType || 'N/A'}</div>
+                                  <div>Brand: {lensDetail.lensInfo.brandLens || 'N/A'}</div>
+                                  {lensDetail.lensInfo.lensVariant && (
+                                    <>
+                                      <div>Material: {lensDetail.lensInfo.lensVariant.material || 'N/A'}</div>
+                                      <div>Price: {formatCurrency(lensDetail.lensInfo.lensVariant.price || 0)}</div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Prescription */}
+                            <div className="grid grid-cols-2 gap-4 mb-3">
+                              <div className="bg-gray-50 p-3 rounded">
+                                <div className="font-medium text-gray-800 text-sm mb-2">Right Eye (OD)</div>
+                                <div className="text-xs space-y-1">
+                                  <div>SPH: {lensDetail.rightEyeSphere || 0}</div>
+                                  <div>CYL: {lensDetail.rightEyeCylinder || 0}</div>
+                                  <div>Axis: {lensDetail.rightEyeAxis || 0}°</div>
+                                  <div>PD: {lensDetail.pdRight || 0}</div>
+                                </div>
+                              </div>
+                              <div className="bg-gray-50 p-3 rounded">
+                                <div className="font-medium text-gray-800 text-sm mb-2">Left Eye (OS)</div>
+                                <div className="text-xs space-y-1">
+                                  <div>SPH: {lensDetail.leftEyeSphere || 0}</div>
+                                  <div>CYL: {lensDetail.leftEyeCylinder || 0}</div>
+                                  <div>Axis: {lensDetail.leftEyeAxis || 0}°</div>
+                                  <div>PD: {lensDetail.pdLeft || 0}</div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="text-right">
+                              <span className="text-sm font-medium text-blue-800">
+                                Lens Price: {formatCurrency(lensDetail.lensPrice || 0)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Right Column - Status Orders (positioned below Invoice Detail) */}
+            <div className="md:col-span-1">
+              <div className="bg-white border rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Orders</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Order ID</label>
+                    <input
+                      type="text"
+                      value={selectedOrder.id}
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Order Status</label>
+                    <select
+                      value={selectedOrder.status}
+                      onChange={(e) => handleUpdateOrderStatus(e.target.value as OrderStatus)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                    <input
+                      type="text"
+                      value={selectedOrder.orderItems?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0}
+                      disabled
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Order Transaction</label>
+                    <select
+                      value={selectedOrder.paymentStatus}
+                      onChange={(e) => handleUpdatePaymentStatus(e.target.value as PaymentStatus)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="completed">Completed</option>
+                      <option value="failed">Failed</option>
+                      <option value="cancelled">Cancelled</option>
+                      <option value="refunded">Refunded</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Comment</label>
+                    <textarea
+                      value={selectedOrder.notes || ''}
+                      onChange={(e) => handleUpdateNotes(e.target.value)}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Add your comment..."
+                    />
+                  </div>
+                  
+                  <button 
+                    onClick={handleSubmitChanges}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    SUBMIT
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -518,9 +908,6 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                   Khách hàng
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sản phẩm
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Ngày đặt
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -548,36 +935,6 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                     <div className="text-sm font-medium text-gray-900">{order.fullName}</div>
                     <div className="text-sm text-gray-500">{order.phone}</div>
                     <div className="text-sm text-gray-500">{order.email}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 max-w-xs">
-                      {order.orderItems && order.orderItems.length > 0 ? (
-                        <div className="space-y-1">
-                          {order.orderItems.slice(0, 2).map((item, index) => (
-                            <div key={item.id || index} className="text-xs">
-                              <div className="font-medium">
-                                {item.productInfo?.productName || `Sản phẩm #${item.productId}`}
-                              </div>
-                              <div className="text-gray-500">
-                                {item.productInfo?.brandName && `${item.productInfo.brandName} • `}
-                                {item.productInfo?.colorInfo?.colorName && `${item.productInfo.colorInfo.colorName} • `}
-                                SL: {item.quantity}
-                                {item.lensDetails && item.lensDetails.length > 0 && (
-                                  <span className="ml-1 text-blue-600">+ Tròng</span>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                          {order.orderItems.length > 2 && (
-                            <div className="text-xs text-gray-500">
-                              +{order.orderItems.length - 2} sản phẩm khác
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-xs">Chưa có sản phẩm</span>
-                      )}
-                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{formatDate(order.orderDate)}</div>
@@ -622,7 +979,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleUpdatePaymentStatus(order)}
+                        onClick={() => handleOpenPaymentStatusModal(order)}
                         className="text-purple-600 hover:text-purple-900"
                         title="Cập nhật thanh toán"
                       >
@@ -718,292 +1075,6 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
           </div>
         )}
       </div>
-
-      {/* Order Detail Modal */}
-      {showOrderDetail && selectedOrder && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Chi tiết đơn hàng #{selectedOrder.id}
-                </h3>
-                <button
-                  onClick={() => setShowOrderDetail(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <XCircle className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Order Info */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Thông tin đơn hàng</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Mã đơn hàng:</span>
-                      <span className="font-medium">#{selectedOrder.id}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Ngày đặt:</span>
-                      <span>{formatDate(selectedOrder.orderDate)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Trạng thái:</span>
-                      <span className={`px-2 py-1 rounded-full text-xs ${orderService.getStatusColor(selectedOrder.status)}`}>
-                        {orderService.getStatusDisplayName(selectedOrder.status)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Thanh toán:</span>
-                      <span className={`px-2 py-1 rounded-full text-xs ${orderService.getPaymentStatusColor(selectedOrder.paymentStatus)}`}>
-                        {orderService.getPaymentStatusDisplayName(selectedOrder.paymentStatus)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Phương thức:</span>
-                      <span>{orderService.getPaymentMethodDisplayName(selectedOrder.paymentMethod)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Customer Info */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Thông tin khách hàng</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <User className="w-4 h-4 text-gray-400" />
-                      <span>{selectedOrder.fullName}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Phone className="w-4 h-4 text-gray-400" />
-                      <span>{selectedOrder.phone}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Mail className="w-4 h-4 text-gray-400" />
-                      <span>{selectedOrder.email}</span>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                      <div>
-                        <div>{selectedOrder.addressDetail}</div>
-                        <div className="text-gray-600">
-                          {selectedOrder.ward}, {selectedOrder.district}, {selectedOrder.province}
-                        </div>
-                      </div>
-                    </div>
-                    {selectedOrder.notes && (
-                      <div className="mt-2">
-                        <span className="text-gray-600">Ghi chú: </span>
-                        <span>{selectedOrder.notes}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Items */}
-              {selectedOrder.orderItems && selectedOrder.orderItems.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="font-medium text-gray-900 mb-3">Sản phẩm đã đặt</h4>
-                  <div className="space-y-4">
-                    {selectedOrder.orderItems.map((item) => (
-                      <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex-1">
-                            {/* Product Information */}
-                            <div className="mb-3">
-                              <h5 className="font-medium text-gray-900 text-lg">
-                                {item.productInfo?.productName || 'Sản phẩm không xác định'}
-                              </h5>
-                              <div className="text-sm text-gray-600 space-y-1">
-                                <div>Thương hiệu: <span className="font-medium">{item.productInfo?.brandName || 'N/A'}</span></div>
-                                <div>Số lượng: <span className="font-medium">{item.quantity}</span></div>
-                                <div>Giá khung: <span className="font-medium">{formatCurrency(item.framePrice)}</span></div>
-                                {item.productInfo?.colorInfo && (
-                                  <div>
-                                    Màu sắc: <span className="font-medium">{item.productInfo.colorInfo.colorName}</span>
-                                    {item.productInfo.colorInfo.productNumber && (
-                                      <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
-                                        #{item.productInfo.colorInfo.productNumber}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                                <div>Tổng giá: <span className="font-semibold text-green-600">{formatCurrency(item.totalPrice)}</span></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Lens Details */}
-                        {item.lensDetails && item.lensDetails.length > 0 && (
-                          <div className="mt-4 bg-blue-50 rounded-lg p-4">
-                            <h6 className="font-medium text-blue-900 mb-3">Chi tiết tròng kính:</h6>
-                            {item.lensDetails.map((lensDetail, index) => (
-                              <div key={lensDetail.id || index} className="mb-4 last:mb-0">
-                                {/* Lens Basic Info */}
-                                {lensDetail.lensInfo && (
-                                  <div className="mb-3 p-3 bg-white rounded border">
-                                    <div className="font-medium text-blue-800 text-base">
-                                      {lensDetail.lensInfo.lensName || 'Tròng kính'}
-                                    </div>
-                                    <div className="text-sm text-blue-700 mt-1 space-y-1">
-                                      <div>Loại: <span className="font-medium">{lensDetail.lensInfo.lensType || 'N/A'}</span></div>
-                                      <div>Thương hiệu: <span className="font-medium">{lensDetail.lensInfo.brandLens || 'N/A'}</span></div>
-                                      {lensDetail.lensInfo.lensVariant && (
-                                        <div>
-                                          Chất liệu: <span className="font-medium">{lensDetail.lensInfo.lensVariant.material || 'N/A'}</span>
-                                          {lensDetail.lensInfo.lensVariant.price > 0 && (
-                                            <span className="ml-2">- Giá: {formatCurrency(lensDetail.lensInfo.lensVariant.price)}</span>
-                                          )}
-                                        </div>
-                                      )}
-                                      {lensDetail.lensInfo.lensThickness && (
-                                        <div>
-                                          Độ dày: <span className="font-medium">{lensDetail.lensInfo.lensThickness.name}</span>
-                                          <span className="ml-2 text-xs bg-blue-100 px-2 py-1 rounded">
-                                            Chỉ số: {lensDetail.lensInfo.lensThickness.indexValue}
-                                          </span>
-                                          {lensDetail.lensInfo.lensThickness.price > 0 && (
-                                            <span className="ml-2">+ {formatCurrency(lensDetail.lensInfo.lensThickness.price)}</span>
-                                          )}
-                                        </div>
-                                      )}
-                                      {lensDetail.lensInfo.lensCoatings && lensDetail.lensInfo.lensCoatings.length > 0 && (
-                                        <div>
-                                          Lớp phủ: 
-                                          {lensDetail.lensInfo.lensCoatings.map((coating: any, idx: number) => (
-                                            <span key={idx} className="ml-2 text-xs bg-green-100 px-2 py-1 rounded">
-                                              {coating.name}
-                                              {coating.price > 0 && ` (+${formatCurrency(coating.price)})`}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      )}
-                                      {lensDetail.lensInfo.tintColor && (
-                                        <div>
-                                          Màu tint: <span className="font-medium">{lensDetail.lensInfo.tintColor.name}</span>
-                                          <span 
-                                            className="ml-2 inline-block w-4 h-4 rounded-full border border-gray-300"
-                                            title={`Màu: ${lensDetail.lensInfo.tintColor.colorCode}`}
-                                          ></span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Prescription Details */}
-                                <div className="grid grid-cols-2 gap-4 mb-3">
-                                  <div className="bg-white p-3 rounded border">
-                                    <div className="font-medium text-gray-800 text-sm">Mắt phải (OD)</div>
-                                    <div className="text-xs text-gray-600 mt-1 space-y-1">
-                                      <div>SPH: <span className="font-medium">{lensDetail.rightEyeSphere || 0}</span></div>
-                                      <div>CYL: <span className="font-medium">{lensDetail.rightEyeCylinder || 0}</span></div>
-                                      <div>Axis: <span className="font-medium">{lensDetail.rightEyeAxis || 0}°</span></div>
-                                      <div>PD: <span className="font-medium">{lensDetail.pdRight || 0}</span></div>
-                                      {lensDetail.addRight && <div>ADD: <span className="font-medium">{lensDetail.addRight}</span></div>}
-                                    </div>
-                                  </div>
-                                  <div className="bg-white p-3 rounded border">
-                                    <div className="font-medium text-gray-800 text-sm">Mắt trái (OS)</div>
-                                    <div className="text-xs text-gray-600 mt-1 space-y-1">
-                                      <div>SPH: <span className="font-medium">{lensDetail.leftEyeSphere || 0}</span></div>
-                                      <div>CYL: <span className="font-medium">{lensDetail.leftEyeCylinder || 0}</span></div>
-                                      <div>Axis: <span className="font-medium">{lensDetail.leftEyeAxis || 0}°</span></div>
-                                      <div>PD: <span className="font-medium">{lensDetail.pdLeft || 0}</span></div>
-                                      {lensDetail.addLeft && <div>ADD: <span className="font-medium">{lensDetail.addLeft}</span></div>}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Additional Notes */}
-                                {(lensDetail.prescriptionNotes || lensDetail.lensNotes || lensDetail.manufacturingNotes) && (
-                                  <div className="bg-yellow-50 p-3 rounded border">
-                                    <div className="font-medium text-yellow-800 text-sm">Ghi chú:</div>
-                                    <div className="text-xs text-yellow-700 mt-1 space-y-1">
-                                      {lensDetail.prescriptionNotes && (
-                                        <div><strong>Đơn thuốc:</strong> {lensDetail.prescriptionNotes}</div>
-                                      )}
-                                      {lensDetail.lensNotes && (
-                                        <div><strong>Tròng kính:</strong> {lensDetail.lensNotes}</div>
-                                      )}
-                                      {lensDetail.manufacturingNotes && (
-                                        <div><strong>Sản xuất:</strong> {lensDetail.manufacturingNotes}</div>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-
-                                <div className="mt-2 text-right">
-                                  <span className="text-sm font-medium text-blue-800">
-                                    Giá tròng: {formatCurrency(lensDetail.lensPrice || 0)}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Tracking Info */}
-              {(selectedOrder.trackingNumber || selectedOrder.deliveryDate) && (
-                <div className="mt-6 p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-medium text-green-900 mb-3">Thông tin vận chuyển</h4>
-                  <div className="space-y-2 text-sm text-green-800">
-                    {selectedOrder.trackingNumber && (
-                      <div className="flex justify-between">
-                        <span>Số theo dõi:</span>
-                        <span className="font-medium">{selectedOrder.trackingNumber}</span>
-                      </div>
-                    )}
-                    {selectedOrder.deliveryDate && (
-                      <div className="flex justify-between">
-                        <span>Ngày giao dự kiến:</span>
-                        <span className="font-medium">{formatDate(selectedOrder.deliveryDate)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Price Info */}
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium text-gray-900 mb-3">Thông tin giá</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tạm tính:</span>
-                    <span>{formatCurrency(selectedOrder.subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Phí vận chuyển:</span>
-                    <span>{formatCurrency(selectedOrder.shippingCost)}</span>
-                  </div>
-                  <div className="flex justify-between border-t pt-2 font-medium">
-                    <span>Tổng cộng:</span>
-                    <span>{formatCurrency(selectedOrder.totalPrice)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => setShowOrderDetail(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-                >
-                  Đóng
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Status Update Modal */}
       {showStatusModal && editingOrder && (
