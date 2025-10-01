@@ -25,6 +25,8 @@ import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import orderService, { OrderResponse } from '../services/order.service';
+import userAddressService, { UserAddress, CreateUserAddressRequest } from '../services/user-address.service';
+import userDetailService, { UserDetail, GenderType, UpdateUserDetailRequest } from '../services/user-detail.service';
 import toast from 'react-hot-toast';
 
 const MyAccountPage: React.FC = () => {
@@ -34,32 +36,226 @@ const MyAccountPage: React.FC = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<OrderResponse[]>([]);
-  const [profileData, setProfileData] = useState({
-    username: user?.username || '',
-    email: user?.email || '',
+  const [addresses, setAddresses] = useState<UserAddress[]>([]);
+  const [userDetail, setUserDetail] = useState<UserDetail | null>(null);
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
+  const [isCreatingAddress, setIsCreatingAddress] = useState(false);
+  const [addressFormData, setAddressFormData] = useState<CreateUserAddressRequest>({
+    province: '',
+    district: '',
+    ward: '',
+    addressDetail: '',
+    isDefault: false,
+    notes: ''
+  });
+  const [detailFormData, setDetailFormData] = useState<{
+    name?: string;
+    dob?: string;
+    gender?: GenderType;
+  }>({
+    name: '',
+    dob: undefined,
+    gender: undefined
   });
 
-  // Load user orders
+    // Load data
   useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+    
     const loadOrders = async () => {
-      if ((activeTab === 'orders' || activeTab === 'overview') && isLoggedIn) {
-        try {
-          setLoading(true);
-          const userOrders = await orderService.getUserOrders();
-          setOrders(userOrders);
-        } catch (error) {
-          console.error('Error loading orders:', error);
-          if (activeTab === 'orders') {
-            toast.error('Không thể tải lịch sử đơn hàng');
-          }
-        } finally {
-          setLoading(false);
-        }
+      try {
+        const orderData = await orderService.getUserOrders();
+        setOrders(orderData);
+      } catch (error) {
+        console.error('Failed to load orders:', error);
       }
     };
 
-    loadOrders();
-  }, [activeTab, isLoggedIn]);
+    const loadAddresses = async () => {
+      try {
+        if (user?.id) {
+          const addressData = await userAddressService.getUserAddresses(user.id);
+          setAddresses(addressData);
+        }
+      } catch (error) {
+        console.error('Failed to load addresses:', error);
+      }
+    };
+
+    const loadUserDetail = async () => {
+      try {
+        if (user?.id) {
+          const detailData = await userDetailService.getUserDetailByUserId(user.id);
+          setUserDetail(detailData);
+          if (detailData) {
+            setDetailFormData({
+              name: detailData.name || '',
+              dob: detailData.dob ? detailData.dob.toISOString().split('T')[0] : undefined,
+              gender: detailData.gender || undefined
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load user detail:', error);
+      }
+    };
+
+    const loadInitialData = async () => {
+      try {
+        setLoading(true);
+        await Promise.all([
+          loadOrders(),
+          loadAddresses(),
+          loadUserDetail()
+        ]);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, [isLoggedIn, navigate, user?.id]);
+
+  // Standalone reload functions for individual use
+  const reloadOrders = async () => {
+    try {
+      const orderData = await orderService.getUserOrders();
+      setOrders(orderData);
+    } catch (error) {
+      console.error('Failed to load orders:', error);
+    }
+  };
+
+  const reloadAddresses = async () => {
+    try {
+      if (user?.id) {
+        const addressData = await userAddressService.getUserAddresses(user.id);
+        setAddresses(addressData);
+      }
+    } catch (error) {
+      console.error('Failed to load addresses:', error);
+    }
+  };
+
+  const reloadUserDetail = async () => {
+    try {
+      if (user?.id) {
+        const detailData = await userDetailService.getUserDetailByUserId(user.id);
+        setUserDetail(detailData);
+        if (detailData) {
+          setDetailFormData({
+            name: detailData.name || '',
+            dob: detailData.dob ? detailData.dob.toISOString().split('T')[0] : undefined,
+            gender: detailData.gender || undefined
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load user detail:', error);
+    }
+  };
+
+  const handleCreateAddress = async () => {
+    try {
+      if (user?.id) {
+        await userAddressService.createUserAddress(user.id, addressFormData);
+        await reloadAddresses();
+        setIsCreatingAddress(false);
+        setAddressFormData({
+          province: '',
+          district: '',
+          ward: '',
+          addressDetail: '',
+          isDefault: false,
+          notes: ''
+        });
+      }
+    } catch (error) {
+      console.error('Failed to create address:', error);
+    }
+  };
+
+  const handleUpdateAddress = async (addressId: number) => {
+    try {
+      await userAddressService.updateUserAddress(addressId, addressFormData);
+      await reloadAddresses();
+      setIsEditingAddress(false);
+      setEditingAddressId(null);
+      setAddressFormData({
+        province: '',
+        district: '',
+        ward: '',
+        addressDetail: '',
+        isDefault: false,
+        notes: ''
+      });
+    } catch (error) {
+      console.error('Failed to update address:', error);
+    }
+  };
+
+  const handleDeleteAddress = async (addressId: number) => {
+    try {
+      await userAddressService.deleteUserAddress(addressId);
+      await reloadAddresses();
+    } catch (error) {
+      console.error('Failed to delete address:', error);
+    }
+  };
+
+  const handleSetDefaultAddress = async (addressId: number) => {
+    try {
+      await userAddressService.setDefaultAddress(addressId);
+      await reloadAddresses();
+    } catch (error) {
+      console.error('Failed to set default address:', error);
+    }
+  };
+
+  const handleUpdateUserDetail = async () => {
+    try {
+      if (user?.id) {
+        // Convert string date to Date object for API
+        const apiData: UpdateUserDetailRequest = {
+          name: detailFormData.name,
+          dob: detailFormData.dob ? new Date(detailFormData.dob) : undefined,
+          gender: detailFormData.gender
+        };
+
+        if (userDetail) {
+          await userDetailService.updateUserDetail(user.id, apiData);
+        } else {
+          await userDetailService.createUserDetail({
+            userId: user.id,
+            ...apiData
+          });
+        }
+        await reloadUserDetail();
+        setIsEditingProfile(false);
+      }
+    } catch (error) {
+      console.error('Failed to update user detail:', error);
+    }
+  };
+
+  const handleEditAddress = (address: UserAddress) => {
+    setAddressFormData({
+      province: address.province,
+      district: address.district,
+      ward: address.ward,
+      addressDetail: address.addressDetail,
+      isDefault: address.isDefault,
+      notes: address.notes || ''
+    });
+    setEditingAddressId(address.id);
+    setIsEditingAddress(true);
+  };
 
   // Redirect if not logged in
   if (!isLoggedIn) {
@@ -72,11 +268,14 @@ const MyAccountPage: React.FC = () => {
     navigate('/');
   };
 
-  const handleSaveProfile = () => {
-    // TODO: Implement API call to update profile
-    console.log('Saving profile:', profileData);
-    setIsEditingProfile(false);
-    toast.success('Cập nhật hồ sơ thành công!');
+  const handleSaveProfile = async () => {
+    try {
+      await handleUpdateUserDetail();
+      toast.success('Cập nhật hồ sơ thành công!');
+    } catch (error) {
+      toast.error('Không thể cập nhật hồ sơ');
+      console.error('Error updating profile:', error);
+    }
   };
 
   // Format date
@@ -236,21 +435,13 @@ const MyAccountPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Account Information */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <User className="w-4 h-4 inline mr-2" />
             Username
           </label>
-          {isEditingProfile ? (
-            <input
-              type="text"
-              value={profileData.username}
-              onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          ) : (
-            <p className="text-gray-900">{user?.username || 'Not provided'}</p>
-          )}
+          <p className="text-gray-900">{user?.username || 'Not provided'}</p>
         </div>
 
         <div>
@@ -258,16 +449,77 @@ const MyAccountPage: React.FC = () => {
             <Mail className="w-4 h-4 inline mr-2" />
             Email
           </label>
+          <p className="text-gray-900">{user?.email || 'Not provided'}</p>
+        </div>
+
+        {/* Personal Information */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Full Name
+          </label>
           {isEditingProfile ? (
             <input
-              type="email"
-              value={profileData.email}
-              onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+              type="text"
+              value={detailFormData.name || ''}
+              onChange={(e) => setDetailFormData({ ...detailFormData, name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter your full name"
+            />
+          ) : (
+            <p className="text-gray-900">{userDetail?.name || 'Not provided'}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Date of Birth
+          </label>
+          {isEditingProfile ? (
+            <input
+              type="date"
+              value={detailFormData.dob || ''}
+              onChange={(e) => setDetailFormData({ ...detailFormData, dob: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           ) : (
-            <p className="text-gray-900">{user?.email || 'Not provided'}</p>
+            <p className="text-gray-900">
+              {userDetail?.dob ? new Date(userDetail.dob).toLocaleDateString('vi-VN') : 'Not provided'}
+            </p>
           )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Gender
+          </label>
+          {isEditingProfile ? (
+            <select
+              value={detailFormData.gender || ''}
+              onChange={(e) => setDetailFormData({ 
+                ...detailFormData, 
+                gender: e.target.value ? e.target.value as GenderType : undefined
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select gender</option>
+              <option value={GenderType.MALE}>Male</option>
+              <option value={GenderType.FEMALE}>Female</option>
+              <option value={GenderType.OTHER}>Other</option>
+            </select>
+          ) : (
+            <p className="text-gray-900">
+              {userDetail?.gender ? userDetailService.getGenderDisplayName(userDetail.gender) : 'Not provided'}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Age
+          </label>
+          <p className="text-gray-900">
+            {userDetail?.dob ? userDetailService.calculateAge(userDetail.dob) + ' years old' : 'Not provided'}
+          </p>
         </div>
 
         <div>
@@ -374,8 +626,277 @@ const MyAccountPage: React.FC = () => {
       case 'addresses':
         return (
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">My Addresses</h3>
-            <p className="text-gray-600">No addresses saved.</p>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">My Addresses</h3>
+              <button
+                onClick={() => setIsCreatingAddress(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
+              >
+                <MapPin size={16} />
+                Add Address
+              </button>
+            </div>
+
+            {/* Create Address Form */}
+            {isCreatingAddress && (
+              <div className="mb-6 border rounded-lg p-4 bg-gray-50">
+                <h4 className="font-medium mb-4">Add New Address</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Province
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFormData.province}
+                      onChange={(e) => setAddressFormData({...addressFormData, province: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Enter province"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      District
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFormData.district}
+                      onChange={(e) => setAddressFormData({...addressFormData, district: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Enter district"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ward
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFormData.ward}
+                      onChange={(e) => setAddressFormData({...addressFormData, ward: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Enter ward"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Address Detail
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFormData.addressDetail}
+                      onChange={(e) => setAddressFormData({...addressFormData, addressDetail: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Enter detailed address"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Notes (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFormData.notes}
+                      onChange={(e) => setAddressFormData({...addressFormData, notes: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Enter notes"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={addressFormData.isDefault}
+                        onChange={(e) => setAddressFormData({...addressFormData, isDefault: e.target.checked})}
+                        className="mr-2"
+                      />
+                      Set as default address
+                    </label>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={handleCreateAddress}
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                  >
+                    Save Address
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsCreatingAddress(false);
+                      setAddressFormData({
+                        province: '',
+                        district: '',
+                        ward: '',
+                        addressDetail: '',
+                        isDefault: false,
+                        notes: ''
+                      });
+                    }}
+                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Address List */}
+            {addresses.length === 0 ? (
+              <p className="text-gray-600">No addresses saved.</p>
+            ) : (
+              <div className="space-y-4">
+                {addresses.map((address) => (
+                  <div key={address.id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MapPin size={16} className="text-gray-500" />
+                          <span className="font-medium">
+                            {userAddressService.formatFullAddress(address)}
+                          </span>
+                          {address.isDefault && (
+                            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                              Default
+                            </span>
+                          )}
+                        </div>
+                        {address.notes && (
+                          <p className="text-gray-600 text-sm">Notes: {address.notes}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        {!address.isDefault && (
+                          <button
+                            onClick={() => handleSetDefaultAddress(address.id)}
+                            className="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded text-sm"
+                          >
+                            Set Default
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleEditAddress(address)}
+                          className="text-green-600 hover:bg-green-50 px-2 py-1 rounded text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteAddress(address.id)}
+                          className="text-red-600 hover:bg-red-50 px-2 py-1 rounded text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Edit Address Form */}
+            {isEditingAddress && editingAddressId && (
+              <div className="mt-6 border rounded-lg p-4 bg-gray-50">
+                <h4 className="font-medium mb-4">Edit Address</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Province
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFormData.province}
+                      onChange={(e) => setAddressFormData({...addressFormData, province: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Enter province"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      District
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFormData.district}
+                      onChange={(e) => setAddressFormData({...addressFormData, district: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Enter district"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ward
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFormData.ward}
+                      onChange={(e) => setAddressFormData({...addressFormData, ward: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Enter ward"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Address Detail
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFormData.addressDetail}
+                      onChange={(e) => setAddressFormData({...addressFormData, addressDetail: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Enter detailed address"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Notes (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={addressFormData.notes}
+                      onChange={(e) => setAddressFormData({...addressFormData, notes: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2"
+                      placeholder="Enter notes"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={addressFormData.isDefault}
+                        onChange={(e) => setAddressFormData({...addressFormData, isDefault: e.target.checked})}
+                        className="mr-2"
+                      />
+                      Set as default address
+                    </label>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={() => handleUpdateAddress(editingAddressId)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                  >
+                    Update Address
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingAddress(false);
+                      setEditingAddressId(null);
+                      setAddressFormData({
+                        province: '',
+                        district: '',
+                        ward: '',
+                        addressDetail: '',
+                        isDefault: false,
+                        notes: ''
+                      });
+                    }}
+                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         );
       case 'prescriptions':
