@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Camera, Upload, User, Palette, Sparkles, Brain, Eye, Zap } from 'lucide-react';
+import Header from '../components/Header';
+import Navigation from '../components/Navigation';
+import Footer from '../components/Footer';
 import AIFaceAnalysisModal from '../components/AIFaceAnalysisModal';
 
 const AIAnalysisPage: React.FC = () => {
@@ -34,32 +37,16 @@ const AIAnalysisPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <Brain className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">AI Face Analysis</h1>
-            </div>
-            <nav className="flex space-x-4">
-              <a href="/" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                Home
-              </a>
-              <a href="/products" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                Products
-              </a>
-            </nav>
-          </div>
-        </div>
-      </div>
+      <Header />
+      <Navigation />
 
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Discover Your Perfect Look with AI
-          </h2>
+          <div className="flex items-center justify-center mb-6">
+            <Brain className="h-12 w-12 text-blue-600 mr-4" />
+            <h1 className="text-4xl font-bold text-gray-900">AI Face Analysis</h1>
+          </div>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Our advanced AI technology analyzes your facial features to provide personalized recommendations
             for glasses and sunglasses that complement your unique style.
@@ -140,27 +127,7 @@ const AIAnalysisPage: React.FC = () => {
         title="AI Face Analysis"
       />
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <Brain className="h-8 w-8 text-blue-400 mr-3" />
-              <span className="text-xl font-bold">Matnice AI</span>
-            </div>
-            <p className="text-gray-400 mb-4">
-              Powered by advanced machine learning and computer vision technology
-            </p>
-            <div className="flex justify-center space-x-6 text-sm text-gray-400">
-              <span>Privacy Protected</span>
-              <span>•</span>
-              <span>Secure Processing</span>
-              <span>•</span>
-              <span>Instant Results</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
