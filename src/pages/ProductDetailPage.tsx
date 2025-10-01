@@ -94,6 +94,8 @@ const ProductDetailPage: React.FC = () => {
         // Fallback data nếu API không trả về đủ dữ liệu
         const mockProductData = {
           ...productData,
+          // Keep original productType from API, don't override with default
+          product_type: productData.product_type || productData.productType || 'glasses',
           productColors: (productData.productColors && productData.productColors.length > 0) ? productData.productColors : [
             { id: 5, colorName: 'Havana', productVariantName: '002', productNumber: '6514022', stock: 10, isThumbnail: true },
             { id: 6, colorName: 'Black', productVariantName: '001', productNumber: '6514021', stock: 5, isThumbnail: false },
@@ -203,6 +205,17 @@ const ProductDetailPage: React.FC = () => {
     return getPrice() + 600000; // Adding prescription fee in VND (~24.95 USD * 24000)
   };
 
+  const isGlasses = () => {
+    // Check both productType (camelCase from API) and product_type (snake_case)
+    const result = product?.productType === 'glasses' || product?.product_type === 'glasses';
+    console.log('isGlasses check:', {
+      productType: product?.productType,
+      product_type: product?.product_type,
+      result: result
+    });
+    return result;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -287,7 +300,7 @@ const ProductDetailPage: React.FC = () => {
           <div className="product-info">
             {/* Category and Brand Breadcrumb */}
             <div className="product-category">
-              Glasses / {product.brand?.name} Glasses
+              {isGlasses() ? 'Glasses' : 'Sunglasses'} / {product.brand?.name} {isGlasses() ? 'Glasses' : 'Sunglasses'}
             </div>
 
             {/* Brand and Product Name */}
@@ -365,35 +378,67 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="action-buttons">
-              <button 
-                className="btn-primary"
-                onClick={() => navigate(`/lens-selection?productId=${id}&selectedColorId=${selectedColorId}`)}
-              >
-                <Handbag className="icon-inline" size={24} />
-                With prescription from {formatVND(getPrescriptionPrice())}
-              </button>
-              <button className="btn-secondary">
-                Buy frame only
-              </button>
-              <div className="divider">or</div>
-              <button className="btn-outline">
-                Try at home
-              </button>
+              {isGlasses() ? (
+                <>
+                  <button 
+                    className="btn-primary"
+                    onClick={() => navigate(`/lens-selection?productId=${id}&selectedColorId=${selectedColorId}`)}
+                  >
+                    <Handbag className="icon-inline" size={24} />
+                    With prescription from {formatVND(getPrescriptionPrice())}
+                  </button>
+                  <button className="btn-secondary">
+                    Buy frame only
+                  </button>
+                  <div className="divider">or</div>
+                  <button className="btn-outline">
+                    Try at home
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="btn-primary">
+                    <ShoppingCart className="icon-inline" size={24} />
+                    Add to basket
+                  </button>
+                  <div className="divider">or</div>
+                  <button className="btn-outline">
+                    Try at home
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Delivery Times */}
             <div className="delivery-info">
               <h3 className="delivery-title">Delivery times</h3>
-              <div className="delivery-option">
-                <Glasses className="inline-icon" />                
-                <span className="delivery-text">With prescription / Tint</span>
-                <span className="delivery-time">7 - 15 days</span>
-              </div>
-              <div className="delivery-option">
-                <span className="delivery-icon">👓</span>
-                <span className="delivery-text">Try at home / Frame only</span>
-                <span className="delivery-time">3 - 5 days</span>
-              </div>
+              {isGlasses() ? (
+                <>
+                  <div className="delivery-option">
+                    <Glasses className="inline-icon" />                
+                    <span className="delivery-text">With prescription / Tint</span>
+                    <span className="delivery-time">7 - 15 days</span>
+                  </div>
+                  <div className="delivery-option">
+                    <span className="delivery-icon">👓</span>
+                    <span className="delivery-text">Try at home / Frame only</span>
+                    <span className="delivery-time">3 - 5 days</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="delivery-option">
+                    <span className="delivery-icon">🕶️</span>
+                    <span className="delivery-text">Sunglasses delivery</span>
+                    <span className="delivery-time">3 - 5 days</span>
+                  </div>
+                  <div className="delivery-option">
+                    <span className="delivery-icon">👓</span>
+                    <span className="delivery-text">Try at home</span>
+                    <span className="delivery-time">3 - 5 days</span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Trust Badges */}

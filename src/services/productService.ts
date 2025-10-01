@@ -6,6 +6,8 @@ export interface ProductDetail {
   description: string;
   price: number;
   brandId: number;
+  product_type?: string;
+  productType?: string; // API returns this field in camelCase
   brand?: {
     id: number;
     name: string;
