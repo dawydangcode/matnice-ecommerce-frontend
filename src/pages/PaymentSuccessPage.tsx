@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import payosService from '../services/payos.service';
+import cartService from '../services/cart.service';
 import toast from 'react-hot-toast';
 
 const PaymentSuccessPage: React.FC = () => {
@@ -39,8 +40,19 @@ const PaymentSuccessPage: React.FC = () => {
       setOrderCreated(true);
       toast.success('Đơn hàng đã được tạo thành công!');
 
-      // Clear customer info after successful order creation
+      // Clear cart from database after successful order creation
+      try {
+        const cartData = await cartService.getOrCreateCart();
+        await cartService.clearCart(cartData.cartId);
+        console.log('Cart cleared from database after PayOS order creation');
+      } catch (cartError) {
+        console.error('Error clearing cart from database after PayOS order:', cartError);
+        // Don't block the flow if cart clearing fails
+      }
+
+      // Clear customer info and cart from localStorage after successful order creation
       localStorage.removeItem('checkoutCustomerInfo');
+      localStorage.removeItem('cart');
     } catch (error) {
       console.error('Error creating order from payment:', error);
       toast.error('Có lỗi xảy ra khi tạo đơn hàng. Vui lòng liên hệ hỗ trợ.');

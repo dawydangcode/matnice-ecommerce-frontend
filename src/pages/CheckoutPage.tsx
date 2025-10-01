@@ -227,7 +227,18 @@ const CheckoutPage: React.FC = () => {
       
       console.log('Order created successfully:', createdOrder);
       
-      // Clear cart after successful order
+      // Clear cart from both localStorage and database after successful order
+      try {
+        // Get current cart ID before clearing
+        const cartData = await cartService.getOrCreateCart();
+        await cartService.clearCart(cartData.cartId);
+        console.log('Cart cleared from database successfully');
+      } catch (cartError) {
+        console.error('Error clearing cart from database:', cartError);
+        // Don't block the flow if cart clearing fails
+      }
+      
+      // Clear cart from localStorage
       localStorage.removeItem('cart');
       
       if (selectedPaymentMethod === PaymentMethod.BANK_TRANSFER) {
@@ -245,8 +256,19 @@ const CheckoutPage: React.FC = () => {
     }
   };
 
-  const handlePayOSSuccess = (orderCode: number) => {
+  const handlePayOSSuccess = async (orderCode: number) => {
     // Handle successful PayOS payment
+    try {
+      // Clear cart from database
+      const cartData = await cartService.getOrCreateCart();
+      await cartService.clearCart(cartData.cartId);
+      console.log('Cart cleared from database after PayOS payment');
+    } catch (cartError) {
+      console.error('Error clearing cart from database after PayOS payment:', cartError);
+      // Don't block the flow if cart clearing fails
+    }
+    
+    // Clear cart from localStorage
     localStorage.removeItem('cart');
     toast.success('Thanh toán thành công! Đơn hàng sẽ được xử lý sớm nhất.');
     navigate(`/order-success?payment=payos&order=${orderCode}`);
