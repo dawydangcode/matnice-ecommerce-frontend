@@ -586,15 +586,23 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                                                 {lensDetail.lensInfo.lensName || 'Lens'}
                                               </div>
                                               <div className="text-xs text-gray-600 space-y-0.5">
-                                                <div>Type: {lensDetail.lensInfo.lensType || 'N/A'}</div>
-                                                <div>Brand: {lensDetail.lensInfo.brandLens || 'N/A'}</div>
-                                                {lensDetail.lensInfo.lensVariant && (
-                                                  <>
-                                                    <div>Material: {lensDetail.lensInfo.lensVariant.material || 'N/A'}</div>
-                                                    <div className="text-green-600 font-medium">
-                                                      Price: {formatCurrency(lensDetail.lensInfo.lensVariant.price || 0)}
-                                                    </div>
-                                                  </>
+                                                {/* Show lens coatings if available */}
+                                                {lensDetail.lensInfo.lensCoatings && lensDetail.lensInfo.lensCoatings.length > 0 && (
+                                                  <div className="text-xs">
+                                                    <div className="font-medium text-gray-700">Coatings:</div>
+                                                    {lensDetail.lensInfo.lensCoatings.map((coating: any, coatingIndex: number) => (
+                                                      <div key={coatingIndex} className="text-purple-600">
+                                                        • {coating.name} (+{formatCurrency(coating.price || 0)})
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                )}
+                                                {/* Show tint color if available */}
+                                                {lensDetail.lensInfo.tintColor && (
+                                                  <div className="text-xs">
+                                                    <span className="font-medium text-gray-700">Tint: </span>
+                                                    <span className="text-orange-600">{lensDetail.lensInfo.tintColor.name}</span>
+                                                  </div>
                                                 )}
                                               </div>
                                             </div>
@@ -703,7 +711,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Discount (-):</span>
-                    <span className="font-medium">$0.00</span>
+                    <span className="font-medium">{formatCurrency(0)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-semibold border-t pt-2">
                     <span className="text-gray-900">Total Payable:</span>
