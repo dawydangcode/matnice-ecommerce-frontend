@@ -579,6 +579,25 @@ class OrderService {
     };
     return colorMap[status] || 'bg-gray-100 text-gray-800';
   }
+
+  // Get user's own orders
+  async getUserOrders(): Promise<OrderResponse[]> {
+    try {
+      console.log('OrderService.getUserOrders: Fetching user orders');
+
+      const response = await apiService.get<{
+        statusCode: number;
+        message: string;
+        data: OrderResponse[];
+      }>('/api/v1/orders/my-orders');
+
+      console.log('OrderService.getUserOrders: Success', response);
+      return response.data;
+    } catch (error) {
+      console.error('OrderService.getUserOrders: Error', error);
+      throw error;
+    }
+  }
 }
 
 const orderService = new OrderService();

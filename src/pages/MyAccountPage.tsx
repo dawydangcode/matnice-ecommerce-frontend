@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   Package, 
@@ -11,23 +11,55 @@ import {
   Calendar,
   Edit3,
   Save,
-  X
+  X,
+  Eye,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Truck,
+  AlertCircle
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import orderService, { OrderResponse } from '../services/order.service';
+import toast from 'react-hot-toast';
 
 const MyAccountPage: React.FC = () => {
   const { user, isLoggedIn, logout } = useAuthStore();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [profileData, setProfileData] = useState({
     username: user?.username || '',
     email: user?.email || '',
   });
+
+  // Load user orders
+  useEffect(() => {
+    const loadOrders = async () => {
+      if ((activeTab === 'orders' || activeTab === 'overview') && isLoggedIn) {
+        try {
+          setLoading(true);
+          const userOrders = await orderService.getUserOrders();
+          setOrders(userOrders);
+        } catch (error) {
+          console.error('Error loading orders:', error);
+          if (activeTab === 'orders') {
+            toast.error('Không thể tải lịch sử đơn hàng');
+          }
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadOrders();
+  }, [activeTab, isLoggedIn]);
 
   // Redirect if not logged in
   if (!isLoggedIn) {
@@ -44,6 +76,44 @@ const MyAccountPage: React.FC = () => {
     // TODO: Implement API call to update profile
     console.log('Saving profile:', profileData);
     setIsEditingProfile(false);
+    toast.success('Cập nhật hồ sơ thành công!');
+  };
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(amount);
+  };
+
+  // Get status icon
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="w-4 h-4" />;
+      case 'processing':
+        return <Package className="w-4 h-4" />;
+      case 'shipped':
+        return <Truck className="w-4 h-4" />;
+      case 'delivered':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'cancelled':
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <AlertCircle className="w-4 h-4" />;
+    }
   };
 
   const menuItems = [
@@ -90,13 +160,45 @@ const MyAccountPage: React.FC = () => {
       {/* Order Overview */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Overview</h3>
-        <p className="text-gray-600 mb-4">You have not placed an order with MATNICE EYEWEAR yet.</p>
-        <Link 
-          to="/products" 
-          className="inline-flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
-        >
-          View All Products
-        </Link>
+        {orders.length === 0 ? (
+          <>
+            <p className="text-gray-600 mb-4">You have not placed an order with MATNICE EYEWEAR yet.</p>
+            <Link 
+              to="/products" 
+              className="inline-flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+            >
+              View All Products
+            </Link>
+          </>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-gray-600">You have placed {orders.length} order{orders.length > 1 ? 's' : ''} with us.</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <div className="font-medium text-gray-900">{orders.filter(o => o.status === 'pending').length}</div>
+                <div className="text-gray-600">Pending</div>
+              </div>
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <div className="font-medium text-blue-900">{orders.filter(o => o.status === 'processing').length}</div>
+                <div className="text-blue-600">Processing</div>
+              </div>
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <div className="font-medium text-green-900">{orders.filter(o => o.status === 'delivered').length}</div>
+                <div className="text-green-600">Delivered</div>
+              </div>
+              <div className="text-center p-3 bg-red-50 rounded-lg">
+                <div className="font-medium text-red-900">{orders.filter(o => o.status === 'cancelled').length}</div>
+                <div className="text-red-600">Cancelled</div>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveTab('orders')}
+              className="inline-flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+            >
+              View All Orders
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -197,7 +299,76 @@ const MyAccountPage: React.FC = () => {
         return (
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Order History</h3>
-            <p className="text-gray-600">No orders found.</p>
+            
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-gray-600">Loading orders...</span>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="text-center py-8">
+                <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-4">You haven't placed any orders yet.</p>
+                <Link 
+                  to="/products" 
+                  className="inline-flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+                >
+                  Start Shopping
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <div key={order.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <span className="font-medium text-gray-900">Order #{order.id}</span>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${orderService.getStatusColor(order.status)}`}
+                        >
+                          {getStatusIcon(order.status)}
+                          <span className="ml-1">{orderService.getStatusDisplayName(order.status)}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-500">{formatDate(order.orderDate)}</span>
+                        <button
+                          onClick={() => navigate(`/orders/${order.id}`)}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Total: </span>
+                        <span className="font-medium text-gray-900">{formatCurrency(order.totalPrice)}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Payment: </span>
+                        <span className={`font-medium px-2 py-1 rounded text-xs ${orderService.getPaymentStatusColor(order.paymentStatus)}`}>
+                          {orderService.getPaymentStatusDisplayName(order.paymentStatus)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Method: </span>
+                        <span className="font-medium text-gray-900">{orderService.getPaymentMethodDisplayName(order.paymentMethod)}</span>
+                      </div>
+                    </div>
+
+                    {order.trackingNumber && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <span className="text-sm text-gray-600">Tracking: </span>
+                        <span className="text-sm font-medium text-gray-900">{order.trackingNumber}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       case 'addresses':
