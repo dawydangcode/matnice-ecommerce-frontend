@@ -4,8 +4,10 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
 import VirtualTryOnModal from '../components/VirtualTryOnModal';
+import SuccessModal from '../components/SuccessModal';
 import productService, { ProductDetail } from '../services/productService';
 import { product3DModelService, Product3DModel, Model3DConfig } from '../services/product3dModel.service';
+import cartService from '../services/cart.service';
 import '../styles/ProductDetailPage.css';
 import { Glasses, Handbag, ShoppingCart, X, Video } from 'lucide-react';
 
@@ -20,6 +22,8 @@ const ProductDetailPage: React.FC = () => {
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
   const [isVirtualTryOnOpen, setIsVirtualTryOnOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   
   // 3D Model states
   const [product3DModel, setProduct3DModel] = useState<Product3DModel | null>(null);
@@ -76,6 +80,13 @@ const ProductDetailPage: React.FC = () => {
   };
 
   useEffect(() => {
+    // Scroll to top when component mounts or product ID changes
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+    
     const fetchProduct = async () => {
       if (!id) {
         setError('Product ID not found');
@@ -214,6 +225,48 @@ const ProductDetailPage: React.FC = () => {
       result: result
     });
     return result;
+  };
+
+  const handleAddFrameToCart = async () => {
+    if (!product || !selectedColorId) {
+      alert('Please select a color first');
+      return;
+    }
+
+    try {
+      // Get or create cart
+      const cartData = await cartService.getOrCreateCart();
+      
+      const framePrice = getPrice();
+      const frameData = {
+        cartId: cartData.cartId,
+        productId: product.id,
+        quantity: 1,
+        framePrice: framePrice,
+        totalPrice: framePrice, // For frame only, total price = frame price
+        discount: 0,
+        selectedColorId: selectedColorId,
+      };
+
+      console.log('Adding frame to cart:', frameData);
+      
+      const response = await cartService.addFrameOnlyToCart(frameData);
+      console.log('Frame added successfully:', response);
+      
+      // Show success modal
+      setSuccessMessage(`${isGlasses() ? 'Frame' : 'Sunglasses'} added to cart successfully!`);
+      setIsSuccessModalOpen(true);
+      
+    } catch (error) {
+      console.error('Error adding frame to cart:', error);
+      alert('Failed to add to cart. Please try again.');
+    }
+  };
+
+  const handleSuccessModalClose = () => {
+    setIsSuccessModalOpen(false);
+    // Reload page to update cart count
+    window.location.reload();
   };
 
   if (loading) {
@@ -387,7 +440,7 @@ const ProductDetailPage: React.FC = () => {
                     <Handbag className="icon-inline" size={24} />
                     With prescription from {formatVND(getPrescriptionPrice())}
                   </button>
-                  <button className="btn-secondary">
+                  <button className="btn-secondary" onClick={handleAddFrameToCart}>
                     Buy frame only
                   </button>
                   <div className="divider">or</div>
@@ -397,7 +450,7 @@ const ProductDetailPage: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <button className="btn-primary">
+                  <button className="btn-primary" onClick={handleAddFrameToCart}>
                     <ShoppingCart className="icon-inline" size={24} />
                     Add to basket
                   </button>
@@ -475,6 +528,15 @@ const ProductDetailPage: React.FC = () => {
           positionOffsetZ: model3DConfig.positionOffsetZ,
           initialScale: model3DConfig.initialScale
         } : undefined}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={handleSuccessModalClose}
+        title="Added to Cart!"
+        message={successMessage}
+        onConfirm={handleSuccessModalClose}
       />
     </div>
   );

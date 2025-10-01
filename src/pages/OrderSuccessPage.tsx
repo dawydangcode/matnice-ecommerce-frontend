@@ -4,8 +4,12 @@ import { CheckCircle, Package, Truck, Calendar } from 'lucide-react';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import { useScrollToTop } from '../hooks/useScrollToTop';
 
 const OrderSuccessPage: React.FC = () => {
+  // Scroll to top when component mounts
+  useScrollToTop();
+  
   const estimatedDelivery = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
   
   // Get order info from URL params

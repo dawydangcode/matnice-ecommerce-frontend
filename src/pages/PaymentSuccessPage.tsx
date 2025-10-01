@@ -51,6 +51,13 @@ const PaymentSuccessPage: React.FC = () => {
   }, [orderCreationAttempted]);
 
   useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+    
     // Parse URL parameters
     const params = new URLSearchParams(location.search);
     const code = params.get('code');

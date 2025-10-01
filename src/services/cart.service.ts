@@ -1,5 +1,34 @@
 import { apiService } from './api.service';
 
+export interface AddFrameOnlyToCartRequest {
+  cartId: number;
+  productId: number;
+  quantity?: number;
+  framePrice: number;
+  totalPrice: number;
+  discount?: number;
+  selectedColorId?: number;
+}
+
+export interface AddFrameOnlyToCartResponse {
+  frame: {
+    id: number;
+    cartId: number;
+    productId: number;
+    quantity: number;
+    framePrice: number;
+    totalPrice: number;
+    discount: number;
+    addedAt: string;
+    createdAt: string;
+    createdBy: number;
+    updatedAt: string;
+    updatedBy: number;
+    deletedAt?: string;
+    deletedBy?: number;
+  };
+}
+
 export interface AddLensProductToCartRequest {
   cartId: number;
   frameData: {
@@ -214,6 +243,39 @@ export interface CartItemWithDetails {
 }
 
 class CartService {
+  async addFrameOnlyToCart(
+    data: AddFrameOnlyToCartRequest,
+  ): Promise<AddFrameOnlyToCartResponse> {
+    try {
+      console.log('Sending frame only data:', JSON.stringify(data, null, 2));
+      const frameData = {
+        frame: {
+          cartId: data.cartId,
+          productId: data.productId,
+          quantity: data.quantity || 1,
+          framePrice: data.framePrice,
+          totalPrice: data.totalPrice,
+          discount: data.discount || 0,
+          selectedColorId: data.selectedColorId,
+        },
+        // lensDetail is optional, so we don't include it for frame only
+      };
+
+      const response = await apiService.post<AddFrameOnlyToCartResponse>(
+        `/api/v1/cart-combined/item/create-complete`,
+        frameData,
+      );
+      return response;
+    } catch (error: any) {
+      console.error('Error adding frame only to cart:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      throw error;
+    }
+  }
+
   async addLensProductToCart(
     data: AddLensProductToCartRequest,
   ): Promise<AddLensProductToCartResponse> {
