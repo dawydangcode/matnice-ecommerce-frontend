@@ -30,43 +30,11 @@ const ProductColorRecommendationModal: React.FC<ProductColorRecommendationModalP
 }) => {
   const [productColors, setProductColors] = useState<ProductColor[]>([]);
   const [recommendations, setRecommendations] = useState<Map<number, SkinColorType[]>>(new Map());
+  const [originalRecommendations, setOriginalRecommendations] = useState<Map<number, SkinColorType[]>>(new Map());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Function to get color code based on color name (fallback for display)
-  const getColorCode = (colorName: string): string => {
-    const colorMap: { [key: string]: string } = {
-      'đen': '#000000',
-      'black': '#000000',
-      'đỏ': '#FF0000',
-      'red': '#FF0000',
-      'xanh': '#0000FF',
-      'blue': '#0000FF',
-      'vàng': '#FFFF00',
-      'yellow': '#FFFF00',
-      'hồng': '#FFC0CB',
-      'pink': '#FFC0CB',
-      'nâu': '#8B4513',
-      'brown': '#8B4513',
-      'xám': '#808080',
-      'gray': '#808080',
-      'grey': '#808080',
-      'trắng': '#FFFFFF',
-      'white': '#FFFFFF',
-      'cam': '#FFA500',
-      'orange': '#FFA500',
-      'tím': '#800080',
-      'purple': '#800080',
-      'xanh lá': '#008000',
-      'green': '#008000',
-      'xanh navy': '#000080',
-      'navy': '#000080',
-    };
-    
-    const key = colorName.toLowerCase();
-    return colorMap[key] || '#CCCCCC'; // Default gray if color not found
-  };
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Load product colors and existing recommendations
   const loadData = React.useCallback(async () => {
@@ -93,6 +61,7 @@ const ProductColorRecommendationModal: React.FC<ProductColorRecommendationModalP
       }
       
       setRecommendations(recommendationsMap);
+      setOriginalRecommendations(new Map(recommendationsMap)); // Store original state for comparison
     } catch (err) {
       console.error('Error loading data:', err);
       setError('Không thể tải dữ liệu sản phẩm và màu sắc');
@@ -104,6 +73,29 @@ const ProductColorRecommendationModal: React.FC<ProductColorRecommendationModalP
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Check if there are any changes compared to original recommendations
+  const hasChanges = React.useMemo(() => {
+    if (originalRecommendations.size === 0) return false;
+    
+    const recommendationEntries = Array.from(recommendations.entries());
+    
+    for (const [productColorId, currentTypes] of recommendationEntries) {
+      const originalTypes = originalRecommendations.get(productColorId) || [];
+      
+      // Check if arrays are different
+      if (currentTypes.length !== originalTypes.length) return true;
+      
+      const sortedCurrent = [...currentTypes].sort();
+      const sortedOriginal = [...originalTypes].sort();
+      
+      for (let i = 0; i < sortedCurrent.length; i++) {
+        if (sortedCurrent[i] !== sortedOriginal[i]) return true;
+      }
+    }
+    
+    return false;
+  }, [recommendations, originalRecommendations]);
 
   const handleSkinColorToggle = (productColorId: number, skinColorType: SkinColorType) => {
     setRecommendations(prev => {
@@ -157,8 +149,11 @@ const ProductColorRecommendationModal: React.FC<ProductColorRecommendationModalP
         }
       }
 
-      // Show success message
-      alert('Lưu gợi ý màu da thành công!');
+      // Update original recommendations after successful save
+      setOriginalRecommendations(new Map(recommendations));
+      
+      // Show success modal
+      setShowSuccessModal(true);
       
     } catch (err) {
       console.error('Error saving recommendations:', err);
@@ -217,19 +212,12 @@ const ProductColorRecommendationModal: React.FC<ProductColorRecommendationModalP
               <div key={color.id} className="border border-gray-200 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
-                    <div
-                      className="color-swatch"
-                      data-color={getColorCode(color.colorName)}
-                    />
                     <div>
                       <h3 className="font-semibold text-gray-900">{color.colorName}</h3>
                       <p className="text-sm text-gray-500">Kho: {color.stock}</p>
                       <p className="text-xs text-gray-400">Mã: {color.productNumber}</p>
                     </div>
                   </div>
-                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                    {getColorCode(color.colorName)}
-                  </span>
                 </div>
 
                 <div>
@@ -278,7 +266,7 @@ const ProductColorRecommendationModal: React.FC<ProductColorRecommendationModalP
           </button>
           <button
             onClick={handleSaveRecommendations}
-            disabled={saving}
+            disabled={saving || !hasChanges}
             className="flex items-center px-4 py-2 bg-[#43AC78] text-white rounded-lg hover:bg-[#3a9268] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {saving ? (
@@ -295,6 +283,31 @@ const ProductColorRecommendationModal: React.FC<ProductColorRecommendationModalP
           </button>
         </div>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <Check className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Thành công!
+              </h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Đã lưu gợi ý màu da cho sản phẩm thành công.
+              </p>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full px-4 py-2 bg-[#43AC78] text-white rounded-lg hover:bg-[#3a9268] transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
