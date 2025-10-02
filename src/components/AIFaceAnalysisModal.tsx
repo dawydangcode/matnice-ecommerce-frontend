@@ -16,6 +16,10 @@ interface AnalysisResult {
       detected: string;
       confidence: number;
     };
+    faceShape: {
+      detected: string;
+      confidence: number;
+    };
     overall: {
       confidence: number;
       processingTime: number;

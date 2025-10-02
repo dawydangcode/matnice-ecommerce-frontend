@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Download, RotateCcw, User, Palette } from 'lucide-react';
+import { X, Download, RotateCcw, User, Palette, Circle } from 'lucide-react';
 import '../styles/AnalysisResultsModal.css';
 
 interface AnalysisResult {
@@ -11,6 +11,10 @@ interface AnalysisResult {
       confidence: number;
     };
     SkinColor: {
+      detected: string;
+      confidence: number;
+    };
+    faceShape: {
       detected: string;
       confidence: number;
     };
@@ -53,6 +57,7 @@ const AnalysisResultsModal: React.FC<AnalysisResultsModalProps> = ({
     if (result && isOpen) {
       const genderBars = document.querySelectorAll('.gender-fill[data-width]');
       const skinBars = document.querySelectorAll('.skin-tone-fill[data-width]');
+      const faceShapeBars = document.querySelectorAll('.face-shape-fill[data-width]');
       
       genderBars.forEach((bar) => {
         (bar as HTMLElement).style.setProperty('--target-width', `${result.analysis.gender.confidence * 100}%`);
@@ -60,6 +65,10 @@ const AnalysisResultsModal: React.FC<AnalysisResultsModalProps> = ({
       
       skinBars.forEach((bar) => {
         (bar as HTMLElement).style.setProperty('--target-width', `${result.analysis.SkinColor.confidence * 100}%`);
+      });
+
+      faceShapeBars.forEach((bar) => {
+        (bar as HTMLElement).style.setProperty('--target-width', `${result.analysis.faceShape.confidence * 100}%`);
       });
     }
   }, [result, isOpen]);
@@ -135,6 +144,28 @@ const AnalysisResultsModal: React.FC<AnalysisResultsModalProps> = ({
                   <div 
                     className="confidence-fill skin-tone-fill"
                     data-width={`${result.analysis.SkinColor.confidence * 100}%`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Face Shape Result */}
+            <div className="result-card face-shape-card">
+              <div className="result-icon">
+                <Circle size={32} />
+              </div>
+              <div className="result-content">
+                <h3>Face Shape Analysis</h3>
+                <div className="result-value">
+                  {result.analysis.faceShape.detected}
+                </div>
+                <div className="result-confidence">
+                  Confidence: {(result.analysis.faceShape.confidence * 100).toFixed(1)}%
+                </div>
+                <div className="confidence-bar">
+                  <div 
+                    className="confidence-fill face-shape-fill"
+                    data-width={`${result.analysis.faceShape.confidence * 100}%`}
                   />
                 </div>
               </div>
