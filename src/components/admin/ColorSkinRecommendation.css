@@ -1,0 +1,43 @@
+/* Color swatches for ColorSkinRecommendationModal */
+.color-swatch {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  margin-right: 0.75rem;
+}
+
+.skin-color-swatch {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  margin-right: 0.5rem;
+}
+
+/* Color values */
+.color-swatch[data-color="#000000"] { background-color: #000000; }
+.color-swatch[data-color="#8B4513"] { background-color: #8B4513; }
+.color-swatch[data-color="#000080"] { background-color: #000080; }
+.color-swatch[data-color="#FF0000"] { background-color: #FF0000; }
+.color-swatch[data-color="#0000FF"] { background-color: #0000FF; }
+.color-swatch[data-color="#FFFF00"] { background-color: #FFFF00; }
+.color-swatch[data-color="#FFC0CB"] { background-color: #FFC0CB; }
+.color-swatch[data-color="#808080"] { background-color: #808080; }
+.color-swatch[data-color="#FFFFFF"] { background-color: #FFFFFF; border: 2px solid #d1d5db; }
+.color-swatch[data-color="#FFA500"] { background-color: #FFA500; }
+.color-swatch[data-color="#800080"] { background-color: #800080; }
+.color-swatch[data-color="#008000"] { background-color: #008000; }
+.color-swatch[data-color="#CCCCCC"] { background-color: #CCCCCC; }
+
+.skin-color-swatch[data-color="#F5D5B8"] {
+  background-color: #F5D5B8;
+}
+
+.skin-color-swatch[data-color="#D4A574"] {
+  background-color: #D4A574;
+}
+
+.skin-color-swatch[data-color="#8B4513"] {
+  background-color: #8B4513;
+}

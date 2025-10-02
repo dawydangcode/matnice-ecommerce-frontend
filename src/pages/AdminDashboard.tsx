@@ -27,6 +27,7 @@ import { useLensCategoryStore } from '../stores/lensCategory.store';
 import ProductListPage from './admin/ProductListPage';
 import ProductEditPage from './admin/ProductEditPage';
 import EnhancedProductForm from '../components/admin/EnhancedProductForm';
+import ColorSkinRecommendationPage from '../components/admin/ColorSkinRecommendationPage';
 import BrandListPage from './admin/BrandListPage';
 import CategoryListPage from './admin/CategoryListPage';
 import LensListPage from './admin/LensListPage';
@@ -50,7 +51,7 @@ import { Lens } from '../types/lens.types';
 import { LensBrand } from '../types/lensBrand.types';
 import { LensCategory } from '../types/lensCategory.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-detail' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form' | 'orders';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'color-skin-recommendation' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-detail' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form' | 'orders';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -316,6 +317,7 @@ const AdminDashboard: React.FC = () => {
       children: [
         { id: 'product-list', label: 'Danh sách sản phẩm', icon: Package },
         { id: 'product-3d-models', label: '3D Models', icon: Eye },
+        { id: 'color-skin-recommendation', label: 'Color Skin Recommendation', icon: Palette },
       ]
     },
 
@@ -361,6 +363,7 @@ const AdminDashboard: React.FC = () => {
                              (currentView === 'enhanced-product-form' && item.id === 'products') ||
                              (currentView === 'product-list' && item.id === 'products') ||
                              (currentView === 'product-3d-models' && item.id === 'products') ||
+                             (currentView === 'color-skin-recommendation' && item.id === 'products') ||
                              (currentView === 'brand-form' && item.id === 'brands') ||
                              (currentView === 'category-form' && item.id === 'categories') ||
                              (currentView === 'lens-form' && item.id === 'lenses') ||
@@ -433,6 +436,8 @@ const AdminDashboard: React.FC = () => {
                                 setCurrentView('product-list');
                               } else if (child.id === 'product-3d-models') {
                                 setCurrentView('product-3d-models');
+                              } else if (child.id === 'color-skin-recommendation') {
+                                setCurrentView('color-skin-recommendation');
                               } else if (child.id === 'lens-management') {
                                 setCurrentView('lens-management');
                               } else if (child.id === 'lens-brands') {
@@ -488,6 +493,7 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'products' && 'Quản lý sản phẩm'}
                 {currentView === 'product-list' && 'Danh sách sản phẩm'}
                 {currentView === 'product-3d-models' && 'Quản lý 3D Models'}
+                {currentView === 'color-skin-recommendation' && 'Color Skin Recommendation'}
                 {currentView === 'product-edit' && 'Chỉnh sửa sản phẩm'}
                 {currentView === 'brands' && 'Quản lý thương hiệu'}
                 {currentView === 'brand-form' && 'Thêm/Sửa thương hiệu'}
@@ -570,6 +576,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           )}
           {currentView === 'product-3d-models' && <Product3DModelManagement />}
+          {currentView === 'color-skin-recommendation' && <ColorSkinRecommendationPage />}
           {currentView === 'product-edit' && editingProduct && (
             <ProductEditPage
               product={editingProduct}
