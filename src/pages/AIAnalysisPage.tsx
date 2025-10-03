@@ -121,7 +121,9 @@ const AIAnalysisPage: React.FC = () => {
           const ctx = canvas.getContext('2d');
 
           if (ctx) {
-            const sourceSize = Math.min(video.videoWidth, video.videoHeight);
+            // Zoom in more to focus on face area (crop center 70% of the frame)
+            const zoomFactor = 0.7;
+            const sourceSize = Math.min(video.videoWidth, video.videoHeight) * zoomFactor;
             const sourceX = (video.videoWidth - sourceSize) / 2;
             const sourceY = (video.videoHeight - sourceSize) / 2;
 
@@ -284,12 +286,27 @@ const AIAnalysisPage: React.FC = () => {
           
           // Define the frame area for face detection (center area of video)
           const videoRect = videoRef.current.getBoundingClientRect();
-          const frameArea = {
-            x: videoRect.width * 0.25,
-            y: videoRect.height * 0.25,
-            width: videoRect.width * 0.5,
-            height: videoRect.height * 0.5
+          
+          // Face detection area settings - Customize these values:
+          const DETECTION_AREA = {
+            // Option 1: Compact (40% area) - Stricter detection
+            // x: videoRect.width * 0.3, y: videoRect.height * 0.3, 
+            // width: videoRect.width * 0.4, height: videoRect.height * 0.4
+            
+            // Option 2: Standard (50% area) - Balanced detection [CURRENT]
+            x: videoRect.width * 0.25, y: videoRect.height * 0.25,
+            width: videoRect.width * 0.5, height: videoRect.height * 0.5
+            
+            // Option 3: Generous (60% area) - More forgiving detection
+            // x: videoRect.width * 0.2, y: videoRect.height * 0.2,
+            // width: videoRect.width * 0.6, height: videoRect.height * 0.6
+            
+            // Option 4: Full frame (80% area) - Very loose detection
+            // x: videoRect.width * 0.1, y: videoRect.height * 0.1,
+            // width: videoRect.width * 0.8, height: videoRect.height * 0.8
           };
+          
+          const frameArea = DETECTION_AREA;
           
           const faceDetected = isFaceInFrame(detection, videoRef.current, frameArea);
 
@@ -343,21 +360,7 @@ const AIAnalysisPage: React.FC = () => {
 
 
 
-  // Handle confidence bar animations
-  useEffect(() => {
-    if (analysisResult) {
-      const confidenceBars = document.querySelectorAll('.confidence-bar[data-width]');
-      
-      confidenceBars.forEach((bar, index) => {
-        const element = bar as HTMLElement;
-        const width = element.getAttribute('data-width');
-        
-        setTimeout(() => {
-          element.style.width = width || '0%';
-        }, index * 200); // Stagger the animations
-      });
-    }
-  }, [analysisResult]);
+
 
   const features = [
     {
@@ -427,7 +430,9 @@ const AIAnalysisPage: React.FC = () => {
 
     if (!ctx) return;
 
-    const sourceSize = Math.min(video.videoWidth, video.videoHeight);
+    // Zoom in more to focus on face area (crop center 70% of the frame)
+    const zoomFactor = 0.7;
+    const sourceSize = Math.min(video.videoWidth, video.videoHeight) * zoomFactor;
     const sourceX = (video.videoWidth - sourceSize) / 2;
     const sourceY = (video.videoHeight - sourceSize) / 2;
 
@@ -622,42 +627,9 @@ const AIAnalysisPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  // Render different steps
-  const renderIntroStep = () => (
+  // Render Features Section
+  const renderFeaturesSection = () => (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div className="text-center mb-16">
-        <div className="flex items-center justify-center mb-6">
-          <Brain className="h-12 w-12 text-blue-600 mr-4" />
-          <h1 className="text-4xl font-bold text-gray-900">AI Face Analysis</h1>
-        </div>
-        <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-          Our advanced AI technology analyzes your facial features to provide personalized recommendations
-          for glasses and sunglasses that complement your unique style.
-        </p>
-        {!showCameraAndResults && (
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => {
-                setShowCameraAndResults(true);
-                startCamera();
-                scrollToLiveAnalysis();
-              }}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center"
-            >
-              <Camera className="mr-3 h-6 w-6" />
-              Take Photo
-            </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="bg-white text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center"
-            >
-              <Upload className="mr-3 h-6 w-6" />
-              Upload Image
-            </button>
-          </div>
-        )}
-      </div>
-
       {/* Features Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
         {features.map((feature, index) => (
@@ -701,6 +673,46 @@ const AIAnalysisPage: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
+  );
+
+  // Render different steps
+  const renderIntroStep = () => (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="text-center mb-16">
+        <div className="flex items-center justify-center mb-6">
+          <Brain className="h-12 w-12 text-blue-600 mr-4" />
+          <h1 className="text-4xl font-bold text-gray-900">AI Face Analysis</h1>
+        </div>
+        <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          Our advanced AI technology analyzes your facial features to provide personalized recommendations
+          for glasses and sunglasses that complement your unique style.
+        </p>
+        {!showCameraAndResults && (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => {
+                setShowCameraAndResults(true);
+                startCamera();
+                scrollToLiveAnalysis();
+              }}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center"
+            >
+              <Camera className="mr-3 h-6 w-6" />
+              Take Photo
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-white text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center"
+            >
+              <Upload className="mr-3 h-6 w-6" />
+              Upload Image
+            </button>
+          </div>
+        )}
+      </div>
+
+
 
       <input
         ref={fileInputRef}
@@ -751,7 +763,7 @@ const AIAnalysisPage: React.FC = () => {
                 autoPlay
                 playsInline
                 muted
-                className="w-full rounded-lg mirror-video"
+                className="camera-video mirror-video"
               />
               <div className="absolute top-4 left-4 right-4 bg-green-500 bg-opacity-90 text-white text-sm p-2 rounded text-center">
                 ✓ Analysis Complete - Live Preview
@@ -774,13 +786,26 @@ const AIAnalysisPage: React.FC = () => {
                     autoPlay
                     playsInline
                     muted
-                    className="w-full rounded-lg mirror-video"
+                    className="camera-video mirror-video"
                   />
                   
                   {/* Face detection guide overlay */}
                   {autoCapture.showGuide && (
                     <div className="absolute inset-0 pointer-events-none">
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-white border-dashed rounded-full opacity-70"></div>
+                      {/* 
+                        Visual Guide Size Options:
+                        - w-32 h-32 (128px) - Small circle
+                        - w-40 h-40 (160px) - Medium-small circle  
+                        - w-48 h-48 (192px) - Standard circle [CURRENT]
+                        - w-56 h-56 (224px) - Large circle
+                        - w-64 h-64 (256px) - Extra large circle
+                        
+                        Shape Options:
+                        - rounded-full - Circle shape [CURRENT]
+                        - rounded-2xl - Rounded rectangle
+                        - rounded-lg - Slightly rounded rectangle
+                      */}
+                      <div className="face-detection-guide"></div>
                       <div className="absolute top-4 left-4 right-4 bg-black bg-opacity-50 text-white text-sm p-2 rounded text-center">
                         Position your face in the circle
                       </div>
@@ -861,24 +886,15 @@ const AIAnalysisPage: React.FC = () => {
               )}
 
               {/* Results Grid */}
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Gender Result */}
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
                   <div className="flex items-center mb-3">
                     <User className="h-6 w-6 text-blue-600 mr-2" />
                     <h4 className="font-semibold text-gray-900">Gender</h4>
                   </div>
-                  <div className="text-xl font-bold text-blue-600 mb-1 capitalize">
+                  <div className="text-xl font-bold text-blue-600 capitalize">
                     {analysisResult.analysis.gender.detected}
-                  </div>
-                  <div className="text-sm text-gray-600 mb-2">
-                    Confidence: {(analysisResult.analysis.gender.confidence * 100).toFixed(1)}%
-                  </div>
-                  <div className="w-full bg-blue-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-1000 confidence-bar"
-                      data-width={`${analysisResult.analysis.gender.confidence * 100}%`}
-                    />
                   </div>
                 </div>
 
@@ -888,17 +904,8 @@ const AIAnalysisPage: React.FC = () => {
                     <Palette className="h-6 w-6 text-purple-600 mr-2" />
                     <h4 className="font-semibold text-gray-900">Skin Tone</h4>
                   </div>
-                  <div className="text-xl font-bold text-purple-600 mb-1 capitalize">
+                  <div className="text-xl font-bold text-purple-600 capitalize">
                     {analysisResult.analysis.SkinColor.detected}
-                  </div>
-                  <div className="text-sm text-gray-600 mb-2">
-                    Confidence: {(analysisResult.analysis.SkinColor.confidence * 100).toFixed(1)}%
-                  </div>
-                  <div className="w-full bg-purple-200 rounded-full h-2">
-                    <div 
-                      className="bg-purple-600 h-2 rounded-full transition-all duration-1000 confidence-bar"
-                      data-width={`${analysisResult.analysis.SkinColor.confidence * 100}%`}
-                    />
                   </div>
                 </div>
 
@@ -908,26 +915,9 @@ const AIAnalysisPage: React.FC = () => {
                     <Circle className="h-6 w-6 text-green-600 mr-2" />
                     <h4 className="font-semibold text-gray-900">Face Shape</h4>
                   </div>
-                  <div className="text-xl font-bold text-green-600 mb-1 capitalize">
+                  <div className="text-xl font-bold text-green-600 capitalize">
                     {analysisResult.analysis.faceShape.detected}
                   </div>
-                  <div className="text-sm text-gray-600 mb-2">
-                    Confidence: {(analysisResult.analysis.faceShape.confidence * 100).toFixed(1)}%
-                  </div>
-                  <div className="w-full bg-green-200 rounded-full h-2">
-                    <div 
-                      className="bg-green-600 h-2 rounded-full transition-all duration-1000 confidence-bar"
-                      data-width={`${analysisResult.analysis.faceShape.confidence * 100}%`}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Analysis Info */}
-              <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600">
-                <div className="space-y-1">
-                  <div><strong>Session ID:</strong> {analysisResult.sessionId}</div>
-                  <div><strong>Analysis Date:</strong> {new Date(analysisResult.analyzedAt).toLocaleString()}</div>
                 </div>
               </div>
 
@@ -952,10 +942,54 @@ const AIAnalysisPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="text-center py-12">
-              <Brain className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Analysis results will appear here</p>
-              <p className="text-sm text-gray-500 mt-2">Take a photo to start the analysis</p>
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                {/* Gender Result - Empty State */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
+                  <div className="flex items-center mb-3">
+                    <User className="h-6 w-6 text-blue-600 mr-2" />
+                    <h4 className="font-semibold text-gray-900">Gender</h4>
+                  </div>
+                  <div className="text-lg text-gray-400 mb-1">
+                    Waiting for analysis...
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div className="bg-blue-300 h-2 rounded-full w-0 transition-all duration-300" />
+                  </div>
+                </div>
+
+                {/* Skin Tone Result - Empty State */}
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
+                  <div className="flex items-center mb-3">
+                    <Palette className="h-6 w-6 text-purple-600 mr-2" />
+                    <h4 className="font-semibold text-gray-900">Skin Tone</h4>
+                  </div>
+                  <div className="text-lg text-gray-400 mb-1">
+                    Waiting for analysis...
+                  </div>
+                  <div className="w-full bg-purple-200 rounded-full h-2">
+                    <div className="bg-purple-300 h-2 rounded-full w-0 transition-all duration-300" />
+                  </div>
+                </div>
+
+                {/* Face Shape Result - Empty State */}
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4">
+                  <div className="flex items-center mb-3">
+                    <Circle className="h-6 w-6 text-green-600 mr-2" />
+                    <h4 className="font-semibold text-gray-900">Face Shape</h4>
+                  </div>
+                  <div className="text-lg text-gray-400 mb-1">
+                    Waiting for analysis...
+                  </div>
+                  <div className="w-full bg-green-200 rounded-full h-2">
+                    <div className="bg-green-300 h-2 rounded-full w-0 transition-all duration-300" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-500">Take a photo to start the analysis</p>
+              </div>
             </div>
           )}
         </div>
@@ -978,8 +1012,11 @@ const AIAnalysisPage: React.FC = () => {
       {/* Always show intro section */}
       {renderIntroStep()}
       
-      {/* Show camera and results when needed */}
+      {/* Show camera and results when needed - positioned above features */}
       {showCameraAndResults && renderCameraStep()}
+
+      {/* Features section - below Live Analysis */}
+      {renderFeaturesSection()}
 
       <Footer />
     </div>

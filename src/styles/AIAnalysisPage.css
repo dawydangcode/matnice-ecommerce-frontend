@@ -9,6 +9,50 @@
   transform: scaleX(-1);
 }
 
+/* Camera video sizing options */
+.camera-video {
+  aspect-ratio: 1/1;
+  max-width: 40rem; /* 320px - Medium size */
+  margin: 0 auto;
+  border-radius: 0.5rem;
+}
+
+/* Face detection guide customization */
+.face-detection-guide {
+  /* Size options - uncomment one: */
+  width: 12rem; height: 16rem;     /* w-48 h-48 - Standard (192px) */
+  /* width: 8rem; height: 8rem;     /* w-32 h-32 - Small (128px) */
+  /* width: 10rem; height: 10rem;   /* w-40 h-40 - Medium-small (160px) */  
+  /* width: 14rem; height: 14rem;   /* w-56 h-56 - Large (224px) */
+  /* width: 16rem; height: 16rem;   /* w-64 h-64 - Extra large (256px) */
+  
+  /* Position */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  
+  /* Style */
+  border: 2px dashed white;
+  border-radius: 50%;           /* Circle - change to 1rem for rounded rectangle */
+  opacity: 0.7;
+  pointer-events: none;
+  
+  /* Animation (optional) */
+  animation: pulse-guide 2s ease-in-out infinite;
+}
+
+@keyframes pulse-guide {
+  0%, 100% { 
+    opacity: 0.7; 
+    transform: translate(-50%, -50%) scale(1); 
+  }
+  50% { 
+    opacity: 0.9; 
+    transform: translate(-50%, -50%) scale(1.02); 
+  }
+}
+
 /* Confidence bars */
 .confidence-bar {
   width: 0%;
