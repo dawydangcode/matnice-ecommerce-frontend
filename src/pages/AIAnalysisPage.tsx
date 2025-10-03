@@ -45,6 +45,7 @@ const AIAnalysisPage: React.FC = () => {
   // Face detection states
   const [faceQualityWarning, setFaceQualityWarning] = useState(false);
   const [showManualCaptureHint, setShowManualCaptureHint] = useState(false);
+  const [countdownCancelled, setCountdownCancelled] = useState(false);
   const [autoCapture, setAutoCapture] = useState({
     isEnabled: true,
     countdown: 3,
@@ -96,16 +97,199 @@ const AIAnalysisPage: React.FC = () => {
     }
   }, []);
 
+  // Monitor face during countdown
+  const startFaceMonitoringDuringCountdown = useCallback(() => {
+    console.log('🔍 Starting face monitoring during countdown...');
+    
+    // Clear any existing timer first
+    if (faceDetectionTimerRef.current) {
+      clearTimeout(faceDetectionTimerRef.current);
+      faceDetectionTimerRef.current = null;
+    }
+    
+    // Recursive face monitoring function
+    const monitorFace = async () => {
+      console.log('🔍 ===== MONITOR FACE TICK =====');
+      console.log('🔍 isCountingDownRef.current:', isCountingDownRef.current);
+      console.log('🔍 cameraActive:', cameraActive);
+      
+      // Check current state
+      if (!isCountingDownRef.current || !cameraActive) {
+        console.log('🔍 Stopping face monitoring - countdown ended or camera inactive');
+        faceDetectionTimerRef.current = null;
+        return;
+      }
+
+      try {
+        if (!videoRef.current || !videoRef.current.srcObject || videoRef.current.readyState < 2) {
+          console.log('🔍 Video not ready, skipping...');
+          // Schedule next check
+          faceDetectionTimerRef.current = setTimeout(monitorFace, 200);
+          return;
+        }
+
+        console.log('🔍 Video element found, initializing face-api...');
+        // Initialize face-api if needed
+        await initializeFaceAPI();
+        
+        console.log('🔍 Detecting face...');
+        let detection = null;
+        try {
+          detection = await detectFace(videoRef.current, 0.3); // Lower threshold for stability
+        } catch (detectionError) {
+          console.error('🔍 Face detection error:', detectionError);
+          // Treat detection error as no face detected but don't crash
+        }
+        
+        if (!detection) {
+          missedDetectionsRef.current += 1;
+          console.log('🚨 No face detected during countdown. Missed count:', missedDetectionsRef.current);
+          
+          // Only cancel after 2 consecutive misses for stability
+          if (missedDetectionsRef.current >= 2) {
+            console.log('🚨 Too many missed detections, cancelling capture...');
+            
+            // Cancel all timers
+            if (countdownTimerRef.current) {
+              clearInterval(countdownTimerRef.current);
+              countdownTimerRef.current = null;
+            }
+            
+            if (faceDetectionTimerRef.current) {
+              clearTimeout(faceDetectionTimerRef.current);
+              faceDetectionTimerRef.current = null;
+            }
+
+            // Update ref first
+            isCountingDownRef.current = false;
+            missedDetectionsRef.current = 0; // Reset missed count
+
+            // Reset state
+            setAutoCapture(prev => ({ ...prev, isCountingDown: false, countdown: 3 }));
+            
+            // Show cancellation notification
+            setCountdownCancelled(true);
+            setTimeout(() => {
+              setCountdownCancelled(false);
+            }, 1500);
+            
+            return; // Don't schedule next check
+          } else {
+            // Continue monitoring without cancelling
+            if (isCountingDownRef.current && cameraActive) {
+              faceDetectionTimerRef.current = setTimeout(monitorFace, 200);
+            }
+            return;
+          }
+        } else {
+          // Reset missed count when detection is successful
+          if (missedDetectionsRef.current > 0) {
+            console.log('✅ Face detected again, resetting missed count from', missedDetectionsRef.current, 'to 0');
+            missedDetectionsRef.current = 0;
+          }
+        }
+        
+        // Check if face is in frame
+        const videoRect = videoRef.current.getBoundingClientRect();
+        const frameArea = {
+          x: videoRect.width * 0.25,
+          y: videoRect.height * 0.25,
+          width: videoRect.width * 0.5,
+          height: videoRect.height * 0.5
+        };
+
+        const faceInFrame = isFaceInFrame(detection, videoRef.current, frameArea);
+        console.log('🔍 Face monitoring check - Face in frame:', faceInFrame, 'Detection:', !!detection);
+        
+        if (!faceInFrame) {
+          console.log('🔥 Face moved out of frame during countdown, cancelling capture...');
+          
+          // Cancel all timers
+          if (countdownTimerRef.current) {
+            clearInterval(countdownTimerRef.current);
+            countdownTimerRef.current = null;
+          }
+          
+          if (faceDetectionTimerRef.current) {
+            clearTimeout(faceDetectionTimerRef.current);
+            faceDetectionTimerRef.current = null;
+          }
+
+          // Update ref first
+          isCountingDownRef.current = false;
+
+          // Reset state
+          setAutoCapture(prev => ({ ...prev, isCountingDown: false, countdown: 3 }));
+          
+          // Show cancellation notification
+          setCountdownCancelled(true);
+          setTimeout(() => {
+            setCountdownCancelled(false);
+          }, 1500);
+          
+          return; // Don't schedule next check
+        } else {
+          console.log('✅ Face still in frame, continuing countdown...');
+        }
+        
+        // Schedule next check if still counting down
+        if (isCountingDownRef.current && cameraActive) {
+          faceDetectionTimerRef.current = setTimeout(monitorFace, 200);
+        }
+        
+      } catch (error) {
+        console.error('🔍 Face monitoring error during countdown:', error);
+        // Schedule next check even if error occurred
+        if (isCountingDownRef.current && cameraActive) {
+          faceDetectionTimerRef.current = setTimeout(monitorFace, 200);
+        }
+      }
+    };
+
+    // Start the monitoring with a delay to avoid immediate cancellation
+    setTimeout(() => {
+      if (isCountingDownRef.current && cameraActive) {
+        console.log('🔍 Starting monitoring after delay...');
+        monitorFace();
+      } else {
+        console.log('🔍 Countdown already ended, skipping monitoring');
+      }
+    }, 300); // Delay 300ms
+  }, [cameraActive, initializeFaceAPI, detectFace, isFaceInFrame]);
+
   // Start auto capture countdown
   const startAutoCapture = useCallback(() => {
     if (isCountingDownRef.current) return;
 
+    console.log('Starting auto-capture countdown...');
+    
+    // Clear any existing timers first to prevent multiple countdowns
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+
+    // Update both state and ref
     isCountingDownRef.current = true;
+    missedDetectionsRef.current = 0; // Reset missed count at start
     setAutoCapture(prev => ({ ...prev, isCountingDown: true, countdown: 3 }));
 
     let countdown = 3;
     countdownTimerRef.current = setInterval(() => {
+      // Check if countdown was cancelled
+      if (!isCountingDownRef.current) {
+        console.log('⏹️ Countdown was cancelled, stopping interval. Current count:', countdown);
+        if (countdownTimerRef.current) {
+          clearInterval(countdownTimerRef.current);
+          countdownTimerRef.current = null;
+        }
+        // Ensure countdown is reset to 3
+        setAutoCapture(prev => ({ ...prev, countdown: 3 }));
+        return;
+      }
+
       countdown--;
+      console.log('⏰ Countdown timer tick:', countdown);
       setAutoCapture(prev => ({ ...prev, countdown }));
 
       if (countdown <= 0) {
@@ -263,7 +447,11 @@ const AIAnalysisPage: React.FC = () => {
         }
       }
     }, 1000);
-  }, []);
+
+    // Start face monitoring during countdown
+    console.log('🚀 About to call startFaceMonitoringDuringCountdown...');
+    startFaceMonitoringDuringCountdown();
+  }, [startFaceMonitoringDuringCountdown]);
 
   // Start face detection
   const startFaceDetection = useCallback(() => {
@@ -817,6 +1005,16 @@ const AIAnalysisPage: React.FC = () => {
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="bg-black bg-opacity-70 text-white text-6xl font-bold rounded-full w-24 h-24 flex items-center justify-center">
                         {autoCapture.countdown}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Countdown cancelled notification */}
+                  {countdownCancelled && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="bg-red-600 bg-opacity-90 text-white text-lg font-semibold px-6 py-3 rounded-lg text-center">
+                        <X size={20} className="inline mr-2" />
+                        Cancelled! Keep face in frame
                       </div>
                     </div>
                   )}
