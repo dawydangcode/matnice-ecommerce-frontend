@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Download, RotateCcw, User, Palette, Circle } from 'lucide-react';
+import ProductRecommendations from './ProductRecommendations';
 import '../styles/AnalysisResultsModal.css';
 
 interface AnalysisResult {
@@ -181,6 +182,11 @@ const AnalysisResultsModal: React.FC<AnalysisResultsModalProps> = ({
               <strong>Analysis Date:</strong> {new Date(result.analyzedAt).toLocaleString()}
             </div>
           </div>
+
+          {/* Product Recommendations */}
+          {result.status === 'completed' && (
+            <ProductRecommendations analysisResult={result.analysis} />
+          )}
         </div>
 
         {/* Footer Actions */}
