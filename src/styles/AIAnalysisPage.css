@@ -4,6 +4,30 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+/* Mirror video for camera */
+.mirror-video {
+  transform: scaleX(-1);
+}
+
+/* Confidence bars */
+.confidence-bar {
+  width: 0%;
+  transition: width 1s ease-out;
+}
+
+.confidence-bar[data-width] {
+  animation: fillBar 1s ease-out forwards;
+}
+
+@keyframes fillBar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: attr(data-width);
+  }
+}
+
 /* Hero Section */
 .hero-section {
   padding: 4rem 2rem;

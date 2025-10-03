@@ -1,12 +1,311 @@
-import React, { useState } from 'react';
-import { Camera, Upload, User, Palette, Sparkles, Brain, Eye, Zap } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Camera, Upload, User, Palette, Sparkles, Brain, Eye, Zap, RotateCcw, X, Download, Circle } from 'lucide-react';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
-import AIFaceAnalysisModal from '../components/AIFaceAnalysisModal';
+import ProductRecommendations from '../components/ProductRecommendations';
+import { useFaceDetection } from '../hooks/useFaceDetection';
+import '../styles/AIAnalysisPage.css';
+
+interface AnalysisResult {
+  analysisId: number;
+  sessionId: string;
+  analysis: {
+    gender: {
+      detected: string;
+      confidence: number;
+    };
+    SkinColor: {
+      detected: string;
+      confidence: number;
+    };
+    faceShape: {
+      detected: string;
+      confidence: number;
+    };
+    overall: {
+      confidence: number;
+      processingTime: number;
+    };
+  };
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  s3Url?: string;
+  analyzedAt: string;
+}
 
 const AIAnalysisPage: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // States for analysis flow
+  const [showCameraAndResults, setShowCameraAndResults] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  
+  // Face detection states
+  const [faceQualityWarning, setFaceQualityWarning] = useState(false);
+  const [showManualCaptureHint, setShowManualCaptureHint] = useState(false);
+  const [autoCapture, setAutoCapture] = useState({
+    isEnabled: true,
+    countdown: 3,
+    isCountingDown: false,
+    showGuide: true
+  });
+
+  // Refs
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const liveAnalysisRef = useRef<HTMLDivElement>(null);
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const faceDetectionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isCountingDownRef = useRef(false);
+  const missedDetectionsRef = useRef(0);
+
+  const { initializeFaceAPI, detectFace, isFaceInFrame } = useFaceDetection();
+
+  // API base URL
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+
+  // Start auto capture countdown
+  const startAutoCapture = useCallback(() => {
+    if (isCountingDownRef.current) return;
+
+    isCountingDownRef.current = true;
+    setAutoCapture(prev => ({ ...prev, isCountingDown: true, countdown: 3 }));
+
+    let countdown = 3;
+    countdownTimerRef.current = setInterval(() => {
+      countdown--;
+      setAutoCapture(prev => ({ ...prev, countdown }));
+
+      if (countdown <= 0) {
+        if (countdownTimerRef.current) {
+          clearInterval(countdownTimerRef.current);
+        }
+        isCountingDownRef.current = false;
+        setAutoCapture(prev => ({ ...prev, isCountingDown: false }));
+        // Auto capture and analyze
+        if (videoRef.current && canvasRef.current) {
+          const canvas = canvasRef.current;
+          const video = videoRef.current;
+          const ctx = canvas.getContext('2d');
+
+          if (ctx) {
+            const sourceSize = Math.min(video.videoWidth, video.videoHeight);
+            const sourceX = (video.videoWidth - sourceSize) / 2;
+            const sourceY = (video.videoHeight - sourceSize) / 2;
+
+            canvas.width = 640;
+            canvas.height = 640;
+            
+            ctx.save();
+            ctx.scale(-1, 1);
+            ctx.translate(-640, 0);
+            
+            ctx.drawImage(
+              video, 
+              sourceX, sourceY, sourceSize, sourceSize,
+              0, 0, 640, 640
+            );
+            
+            ctx.restore();
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            setCapturedImage(dataUrl);
+            
+            // Stop camera and face detection
+            if (streamRef.current) {
+              streamRef.current.getTracks().forEach(track => track.stop());
+              streamRef.current = null;
+            }
+            if (videoRef.current) {
+              videoRef.current.srcObject = null;
+            }
+            setCameraActive(false);
+            
+            // Stop face detection
+            if (detectionIntervalRef.current) {
+              clearInterval(detectionIntervalRef.current);
+              detectionIntervalRef.current = null;
+            }
+            if (countdownTimerRef.current) {
+              clearInterval(countdownTimerRef.current);
+              countdownTimerRef.current = null;
+            }
+            if (faceDetectionTimerRef.current) {
+              clearTimeout(faceDetectionTimerRef.current);
+              faceDetectionTimerRef.current = null;
+            }
+            isCountingDownRef.current = false;
+            setAutoCapture(prev => ({ ...prev, isCountingDown: false }));
+
+            // Start analysis automatically
+            setTimeout(() => {
+              setIsAnalyzing(true);
+              setError(null);
+
+              const file = dataURLtoFile(dataUrl, 'face-analysis.jpg');
+              
+              const formData = new FormData();
+              formData.append('image', file);
+
+              const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+              fetch(`${API_URL}/api/v1/ai/analyze-face`, {
+                method: 'POST',
+                body: formData,
+              })
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error(`Analysis failed: ${response.status}`);
+                }
+                return response.json();
+              })
+              .then(data => {
+                if (data.success) {
+                  // Start polling for results
+                  const pollResults = async (sessionId: string) => {
+                    const maxAttempts = 30;
+                    let attempts = 0;
+
+                    const poll = async () => {
+                      try {
+                        const response = await fetch(`${API_URL}/api/v1/ai/analysis/${sessionId}/result/`);
+                        
+                        if (!response.ok) {
+                          throw new Error(`Failed to get results: ${response.status}`);
+                        }
+
+                        const resultData = await response.json();
+                        
+                        if (resultData.success && resultData.data) {
+                          if (resultData.data.status === 'completed') {
+                            setAnalysisResult(resultData.data);
+                            setIsAnalyzing(false);
+                            return;
+                          } else if (resultData.data.status === 'failed') {
+                            setError('Analysis failed. Please try again.');
+                            setIsAnalyzing(false);
+                            return;
+                          }
+                        }
+
+                        attempts++;
+                        if (attempts < maxAttempts) {
+                          setTimeout(poll, 2000);
+                        } else {
+                          setError('Analysis timeout. Please try again.');
+                          setIsAnalyzing(false);
+                        }
+                      } catch (error) {
+                        console.error('Polling error:', error);
+                        setError('Failed to get analysis results');
+                        setIsAnalyzing(false);
+                      }
+                    };
+
+                    poll();
+                  };
+
+                  pollResults(data.sessionId);
+                } else {
+                  throw new Error(data.message || 'Analysis failed');
+                }
+              })
+              .catch(error => {
+                console.error('Analysis error:', error);
+                setError(error instanceof Error ? error.message : 'Analysis failed');
+                setIsAnalyzing(false);
+              });
+            }, 500);
+          }
+        }
+      }
+    }, 1000);
+  }, []);
+
+  // Start face detection
+  const startFaceDetection = useCallback(() => {
+    if (!videoRef.current) return;
+
+    // Clear any existing intervals
+    if (detectionIntervalRef.current) {
+      clearInterval(detectionIntervalRef.current);
+    }
+
+    detectionIntervalRef.current = setInterval(async () => {
+      if (videoRef.current && cameraActive && !isCountingDownRef.current) {
+        try {
+          const detection = await detectFace(videoRef.current);
+          
+          // Define the frame area for face detection (center area of video)
+          const videoRect = videoRef.current.getBoundingClientRect();
+          const frameArea = {
+            x: videoRect.width * 0.25,
+            y: videoRect.height * 0.25,
+            width: videoRect.width * 0.5,
+            height: videoRect.height * 0.5
+          };
+          
+          const faceDetected = isFaceInFrame(detection, videoRef.current, frameArea);
+
+          if (faceDetected) {
+            setFaceQualityWarning(false);
+            setShowManualCaptureHint(false);
+            missedDetectionsRef.current = 0;
+
+            if (autoCapture.isEnabled && !isCountingDownRef.current) {
+              startAutoCapture();
+            }
+          } else {
+            missedDetectionsRef.current++;
+            if (missedDetectionsRef.current > 5) {
+              setFaceQualityWarning(true);
+              if (missedDetectionsRef.current > 15) {
+                setShowManualCaptureHint(true);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Face detection error:', error);
+        }
+      }
+    }, 500);
+  }, [cameraActive, autoCapture.isEnabled, detectFace, isFaceInFrame, startAutoCapture]);
+
+  // Initialize face detection when camera becomes active
+  useEffect(() => {
+    if (cameraActive && videoRef.current) {
+      const initFaceDetection = async () => {
+        await initializeFaceAPI();
+        // Small delay to ensure video is fully loaded
+        setTimeout(() => {
+          startFaceDetection();
+        }, 1000);
+      };
+      initFaceDetection();
+    }
+  }, [cameraActive, initializeFaceAPI, startFaceDetection]);
+
+
+
+  // Handle confidence bar animations
+  useEffect(() => {
+    if (analysisResult) {
+      const confidenceBars = document.querySelectorAll('.confidence-bar[data-width]');
+      
+      confidenceBars.forEach((bar, index) => {
+        const element = bar as HTMLElement;
+        const width = element.getAttribute('data-width');
+        
+        setTimeout(() => {
+          element.style.width = width || '0%';
+        }, index * 200); // Stagger the animations
+      });
+    }
+  }, [analysisResult]);
 
   const features = [
     {
@@ -35,97 +334,593 @@ const AIAnalysisPage: React.FC = () => {
     }
   ];
 
+  // Start camera
+  const startCamera = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1920, max: 1920 },
+          height: { ideal: 1080, max: 1080 },
+          facingMode: 'user'
+        }
+      });
+
+      setCameraActive(true);
+      setError(null);
+      streamRef.current = stream;
+
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 50);
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      setError(`Cannot access camera: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setCameraActive(false);
+    }
+  }, []);
+
+  // Stop camera
+  const stopCamera = useCallback(() => {
+    stopFaceDetection(); // Stop face detection first
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraActive(false);
+  }, []);
+
+  // Stop face detection
+  const stopFaceDetection = useCallback(() => {
+    if (detectionIntervalRef.current) {
+      clearInterval(detectionIntervalRef.current);
+      detectionIntervalRef.current = null;
+    }
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    if (faceDetectionTimerRef.current) {
+      clearTimeout(faceDetectionTimerRef.current);
+      faceDetectionTimerRef.current = null;
+    }
+    isCountingDownRef.current = false;
+    setAutoCapture(prev => ({ ...prev, isCountingDown: false }));
+  }, []);
+
+  // Capture photo
+  const capturePhoto = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) return;
+
+    const sourceSize = Math.min(video.videoWidth, video.videoHeight);
+    const sourceX = (video.videoWidth - sourceSize) / 2;
+    const sourceY = (video.videoHeight - sourceSize) / 2;
+
+    canvas.width = 640;
+    canvas.height = 640;
+    
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.translate(-640, 0);
+    
+    ctx.drawImage(
+      video, 
+      sourceX, sourceY, sourceSize, sourceSize,
+      0, 0, 640, 640
+    );
+    
+    ctx.restore();
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    setCapturedImage(dataUrl);
+    stopCamera();
+    stopFaceDetection(); // Stop face detection after capture
+  }, [stopCamera, stopFaceDetection]);
+
+  // Convert data URL to File
+  const dataURLtoFile = (dataurl: string, filename: string): File => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)![1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  // Poll for analysis results
+  const pollForResults = useCallback(async (sessionId: string) => {
+    const maxAttempts = 30;
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/ai/analysis/${sessionId}/result/`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to get results: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+          if (data.data.status === 'completed') {
+            setAnalysisResult(data.data);
+            setIsAnalyzing(false);
+            return;
+          } else if (data.data.status === 'failed') {
+            setError('Analysis failed. Please try again.');
+            setIsAnalyzing(false);
+            return;
+          }
+        }
+
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 2000);
+        } else {
+          setError('Analysis timeout. Please try again.');
+          setIsAnalyzing(false);
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+        setError('Failed to get analysis results');
+        setIsAnalyzing(false);
+      }
+    };
+
+    poll();
+  }, [API_BASE_URL]);
+
+  // Analyze image
+  const analyzeImage = useCallback(async (imageData: string) => {
+    setIsAnalyzing(true);
+    setError(null);
+
+    try {
+      const file = dataURLtoFile(imageData, 'face-analysis.jpg');
+      
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/ai/analyze-face`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Analysis failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        pollForResults(data.sessionId);
+      } else {
+        throw new Error(data.message || 'Analysis failed');
+      }
+    } catch (error) {
+      console.error('Analysis error:', error);
+      setError(error instanceof Error ? error.message : 'Analysis failed');
+      setIsAnalyzing(false);
+    }
+  }, [API_BASE_URL, pollForResults]);
+
+  // Scroll to Live Analysis section
+  const scrollToLiveAnalysis = useCallback(() => {
+    setTimeout(() => {
+      if (liveAnalysisRef.current) {
+        liveAnalysisRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100); // Small delay to ensure the section is rendered
+  }, []);
+
+  // Handle file upload
+  const handleFileSelect = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setError('Please select a valid image file');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File size must be less than 10MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        const imageData = e.target.result as string;
+        setCapturedImage(imageData);
+        setShowCameraAndResults(true);
+        scrollToLiveAnalysis();
+        analyzeImage(imageData);
+      }
+    };
+    reader.readAsDataURL(file);
+  }, [analyzeImage, scrollToLiveAnalysis]);
+
+  // Reset analysis
+  const resetAnalysis = useCallback(() => {
+    setCapturedImage(null);
+    setAnalysisResult(null);
+    setShowCameraAndResults(false);
+    setError(null);
+    setIsAnalyzing(false);
+    stopCamera();
+  }, [stopCamera]);
+
+  // Handle download
+  const handleDownload = () => {
+    if (!analysisResult?.s3Url) return;
+    
+    const link = document.createElement('a');
+    link.href = analysisResult.s3Url;
+    link.download = `face-analysis-${analysisResult.sessionId}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Render different steps
+  const renderIntroStep = () => (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="text-center mb-16">
+        <div className="flex items-center justify-center mb-6">
+          <Brain className="h-12 w-12 text-blue-600 mr-4" />
+          <h1 className="text-4xl font-bold text-gray-900">AI Face Analysis</h1>
+        </div>
+        <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          Our advanced AI technology analyzes your facial features to provide personalized recommendations
+          for glasses and sunglasses that complement your unique style.
+        </p>
+        {!showCameraAndResults && (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => {
+                setShowCameraAndResults(true);
+                startCamera();
+                scrollToLiveAnalysis();
+              }}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center"
+            >
+              <Camera className="mr-3 h-6 w-6" />
+              Take Photo
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-white text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center"
+            >
+              <Upload className="mr-3 h-6 w-6" />
+              Upload Image
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Features Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+        {features.map((feature, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+          >
+            <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg bg-gray-50 ${feature.color} mb-4`}>
+              <feature.icon className="h-6 w-6" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
+            <p className="text-gray-600 text-sm">{feature.description}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* How It Works */}
+      <div className="bg-white rounded-2xl shadow-xl p-8">
+        <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">How It Works</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
+              <Camera className="h-8 w-8" />
+            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">1. Capture or Upload</h4>
+            <p className="text-gray-600">Take a photo using your camera or upload an existing image</p>
+          </div>
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 text-purple-600 mb-4">
+              <Brain className="h-8 w-8" />
+            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">2. AI Analysis</h4>
+            <p className="text-gray-600">Our AI analyzes your facial features and skin tone</p>
+          </div>
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-4">
+              <Sparkles className="h-8 w-8" />
+            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">3. Get Results</h4>
+            <p className="text-gray-600">Receive personalized recommendations instantly</p>
+          </div>
+        </div>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            handleFileSelect(file);
+          }
+        }}
+        className="hidden"
+      />
+    </div>
+  );
+
+  const renderCameraStep = () => (
+    <div ref={liveAnalysisRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header with close button */}
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold text-gray-900">Live Analysis</h2>
+        <button
+          onClick={resetAnalysis}
+          className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"
+          title="Close analysis"
+        >
+          <X size={24} />
+        </button>
+      </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
+
+      {/* Main Content - Camera and Results Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Left Column - Camera */}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <h3 className="text-xl font-semibold text-gray-900 mb-6">Camera</h3>
+          
+          {capturedImage && !cameraActive ? (
+            <div className="text-center">
+              <img
+                src={capturedImage}
+                alt="Captured"
+                className="mx-auto rounded-lg shadow-lg max-w-full w-full"
+              />
+            </div>
+          ) : (
+            <div className="relative">
+              {cameraActive ? (
+                <div className="relative">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full rounded-lg mirror-video"
+                  />
+                  
+                  {/* Face detection guide overlay */}
+                  {autoCapture.showGuide && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-white border-dashed rounded-full opacity-70"></div>
+                      <div className="absolute top-4 left-4 right-4 bg-black bg-opacity-50 text-white text-sm p-2 rounded text-center">
+                        Position your face in the circle
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Auto capture countdown */}
+                  {autoCapture.isCountingDown && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="bg-black bg-opacity-70 text-white text-6xl font-bold rounded-full w-24 h-24 flex items-center justify-center">
+                        {autoCapture.countdown}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Face quality warning */}
+                  {faceQualityWarning && (
+                    <div className="absolute top-4 left-4 right-4 bg-yellow-500 bg-opacity-90 text-white text-sm p-2 rounded text-center">
+                      <Eye size={16} className="inline mr-1" />
+                      Please look directly at the camera
+                    </div>
+                  )}
+
+                  {/* Manual capture hint */}
+                  {showManualCaptureHint && (
+                    <div className="absolute top-16 left-4 right-4 bg-blue-500 bg-opacity-90 text-white text-sm p-2 rounded text-center">
+                      <Camera size={16} className="inline mr-1" />
+                      Having trouble? Tap the camera button to capture manually
+                    </div>
+                  )}
+
+                  <button
+                    onClick={capturePhoto}
+                    aria-label="capture"
+                    className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-blue-600 p-4 rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Camera size={24} />
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Camera className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-4">Camera is not active</p>
+                  <button
+                    onClick={startCamera}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    Start Camera
+                  </button>
+                </div>
+              )}
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
+          )}
+        </div>
+
+        {/* Right Column - Results */}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <h3 className="text-xl font-semibold text-gray-900 mb-6">Analysis Results</h3>
+          
+          {isAnalyzing ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Analyzing Your Face...</h4>
+              <p className="text-gray-600">This may take a few seconds</p>
+            </div>
+          ) : analysisResult ? (
+            <div className="space-y-6">
+              {/* Analysis Image */}
+              {analysisResult.s3Url && (
+                <div className="text-center">
+                  <img 
+                    src={analysisResult.s3Url} 
+                    alt="Analysis Result" 
+                    className="mx-auto rounded-lg shadow-lg max-w-xs"
+                  />
+                </div>
+              )}
+
+              {/* Results Grid */}
+              <div className="space-y-4">
+                {/* Gender Result */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
+                  <div className="flex items-center mb-3">
+                    <User className="h-6 w-6 text-blue-600 mr-2" />
+                    <h4 className="font-semibold text-gray-900">Gender</h4>
+                  </div>
+                  <div className="text-xl font-bold text-blue-600 mb-1 capitalize">
+                    {analysisResult.analysis.gender.detected}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    Confidence: {(analysisResult.analysis.gender.confidence * 100).toFixed(1)}%
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-1000 confidence-bar"
+                      data-width={`${analysisResult.analysis.gender.confidence * 100}%`}
+                    />
+                  </div>
+                </div>
+
+                {/* Skin Tone Result */}
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
+                  <div className="flex items-center mb-3">
+                    <Palette className="h-6 w-6 text-purple-600 mr-2" />
+                    <h4 className="font-semibold text-gray-900">Skin Tone</h4>
+                  </div>
+                  <div className="text-xl font-bold text-purple-600 mb-1 capitalize">
+                    {analysisResult.analysis.SkinColor.detected}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    Confidence: {(analysisResult.analysis.SkinColor.confidence * 100).toFixed(1)}%
+                  </div>
+                  <div className="w-full bg-purple-200 rounded-full h-2">
+                    <div 
+                      className="bg-purple-600 h-2 rounded-full transition-all duration-1000 confidence-bar"
+                      data-width={`${analysisResult.analysis.SkinColor.confidence * 100}%`}
+                    />
+                  </div>
+                </div>
+
+                {/* Face Shape Result */}
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4">
+                  <div className="flex items-center mb-3">
+                    <Circle className="h-6 w-6 text-green-600 mr-2" />
+                    <h4 className="font-semibold text-gray-900">Face Shape</h4>
+                  </div>
+                  <div className="text-xl font-bold text-green-600 mb-1 capitalize">
+                    {analysisResult.analysis.faceShape.detected}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    Confidence: {(analysisResult.analysis.faceShape.confidence * 100).toFixed(1)}%
+                  </div>
+                  <div className="w-full bg-green-200 rounded-full h-2">
+                    <div 
+                      className="bg-green-600 h-2 rounded-full transition-all duration-1000 confidence-bar"
+                      data-width={`${analysisResult.analysis.faceShape.confidence * 100}%`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Analysis Info */}
+              <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600">
+                <div className="space-y-1">
+                  <div><strong>Session ID:</strong> {analysisResult.sessionId}</div>
+                  <div><strong>Analysis Date:</strong> {new Date(analysisResult.analyzedAt).toLocaleString()}</div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={resetAnalysis}
+                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-flex items-center justify-center"
+                >
+                  <RotateCcw size={16} className="mr-2" />
+                  New Analysis
+                </button>
+                {analysisResult.s3Url && (
+                  <button
+                    onClick={handleDownload}
+                    className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors inline-flex items-center justify-center"
+                  >
+                    <Download size={16} className="mr-2" />
+                    Download
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Brain className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Analysis results will appear here</p>
+              <p className="text-sm text-gray-500 mt-2">Take a photo to start the analysis</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Product Recommendations - Full Width Below */}
+      {analysisResult?.status === 'completed' && (
+        <ProductRecommendations analysisResult={analysisResult.analysis} />
+      )}
+    </div>
+  );
+
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Header />
       <Navigation />
 
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-16">
-          <div className="flex items-center justify-center mb-6">
-            <Brain className="h-12 w-12 text-blue-600 mr-4" />
-            <h1 className="text-4xl font-bold text-gray-900">AI Face Analysis</h1>
-          </div>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Our advanced AI technology analyzes your facial features to provide personalized recommendations
-            for glasses and sunglasses that complement your unique style.
-          </p>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center"
-          >
-            <Sparkles className="mr-3 h-6 w-6" />
-            Start AI Analysis
-          </button>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
-            >
-              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg bg-gray-50 ${feature.color} mb-4`}>
-                <feature.icon className="h-6 w-6" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-              <p className="text-gray-600 text-sm">{feature.description}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* How It Works */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-16">
-          <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">How It Works</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
-                <Camera className="h-8 w-8" />
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">1. Capture or Upload</h4>
-              <p className="text-gray-600">Take a photo using your camera or upload an existing image</p>
-            </div>
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 text-purple-600 mb-4">
-                <Brain className="h-8 w-8" />
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">2. AI Analysis</h4>
-              <p className="text-gray-600">Our AI analyzes your facial features and skin tone</p>
-            </div>
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-4">
-                <Sparkles className="h-8 w-8" />
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">3. Get Results</h4>
-              <p className="text-gray-600">Receive personalized recommendations instantly</p>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-12 text-white">
-          <h3 className="text-3xl font-bold mb-4">Ready to Find Your Perfect Match?</h3>
-          <p className="text-xl mb-8 opacity-90">
-            Join thousands of satisfied customers who found their ideal eyewear with our AI technology
-          </p>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors duration-300 shadow-lg inline-flex items-center"
-          >
-            <Upload className="mr-3 h-6 w-6" />
-            Try AI Analysis Now
-          </button>
-        </div>
-      </div>
-
-      {/* AI Analysis Modal */}
-      <AIFaceAnalysisModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="AI Face Analysis"
-      />
+      {/* Always show intro section */}
+      {renderIntroStep()}
+      
+      {/* Show camera and results when needed */}
+      {showCameraAndResults && renderCameraStep()}
 
       <Footer />
     </div>
