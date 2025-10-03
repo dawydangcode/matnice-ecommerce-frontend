@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Eye, ShoppingCart, Heart } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Eye, ShoppingCart, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiService } from '../services/api.service';
 import '../styles/ProductRecommendations.css';
 
@@ -80,6 +80,34 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Check scroll position and update button states
+  const checkScrollButtons = useCallback(() => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
+    }
+  }, []);
+
+  // Scroll functions
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      const cardWidth = 280; // Width of one card + gap
+      scrollContainerRef.current.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      const cardWidth = 280; // Width of one card + gap
+      scrollContainerRef.current.scrollBy({ left: cardWidth, behavior: 'smooth' });
+    }
+  };
 
   const fetchRecommendations = useCallback(async (page: number = 1) => {
     setLoading(true);
@@ -91,7 +119,7 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
         skinColor: analysisResult.SkinColor.detected,
         faceShape: analysisResult.faceShape.detected,
         page: page.toString(),
-        limit: '6', // Show 6 products per page
+        limit: '12', // Show more products in carousel
       };
 
       console.log('Fetching recommendations with params:', params);
@@ -99,7 +127,12 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
       console.log('API response:', response);
       
       if (response.success) {
-        setProducts(response.data.products);
+        // If it's page 1, replace products; otherwise append
+        if (page === 1) {
+          setProducts(response.data.products);
+        } else {
+          setProducts(prev => [...prev, ...response.data.products]);
+        }
         setTotalPages(response.data.totalPages);
         setTotal(response.data.total);
         setCurrentPage(page);
@@ -119,6 +152,24 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
       fetchRecommendations(1);
     }
   }, [analysisResult, fetchRecommendations]);
+
+  // Add scroll event listener and initial check
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      checkScrollButtons();
+      container.addEventListener('scroll', checkScrollButtons);
+      
+      // Check on window resize
+      const handleResize = () => checkScrollButtons();
+      window.addEventListener('resize', handleResize);
+      
+      return () => {
+        container.removeEventListener('scroll', checkScrollButtons);
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [checkScrollButtons, products]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -143,17 +194,7 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
     return '/placeholder-product.jpg';
   };
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      fetchRecommendations(currentPage + 1);
-    }
-  };
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      fetchRecommendations(currentPage - 1);
-    }
-  };
 
   if (loading && products.length === 0) {
     return (
@@ -162,17 +203,19 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
           <h3>Recommended Products</h3>
           <p>Finding products perfect for you...</p>
         </div>
-        <div className="loading-skeleton">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="product-card-skeleton">
-              <div className="skeleton-image"></div>
-              <div className="skeleton-content">
-                <div className="skeleton-title"></div>
-                <div className="skeleton-price"></div>
-                <div className="skeleton-description"></div>
+        <div className="products-carousel-container">
+          <div className="products-carousel">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="product-card-skeleton carousel-card">
+                <div className="skeleton-image"></div>
+                <div className="skeleton-content">
+                  <div className="skeleton-title"></div>
+                  <div className="skeleton-price"></div>
+                  <div className="skeleton-description"></div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -216,9 +259,19 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
         <span className="results-count">{total} products found</span>
       </div>
 
-      <div className="products-grid">
-        {products.map((product) => (
-          <div key={product.id} className="product-card">
+      <div className="products-carousel-container">
+        {/* Navigation Arrows */}
+        <button 
+          className={`carousel-nav-button prev-button ${!canScrollLeft ? 'disabled' : ''}`}
+          onClick={scrollLeft}
+          disabled={!canScrollLeft}
+        >
+          <ChevronLeft size={24} />
+        </button>
+        
+        <div className="products-carousel" ref={scrollContainerRef}>
+          {products.map((product) => (
+            <div key={product.id} className="product-card carousel-card">
             <div className="product-image-container">
               <img
                 src={getMainImage(product)}
@@ -291,30 +344,28 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                 Add to Cart
               </button>
             </div>
-          </div>
-        ))}
+            </div>
+          ))}
+        </div>
+        
+        <button 
+          className={`carousel-nav-button next-button ${!canScrollRight ? 'disabled' : ''}`}
+          onClick={scrollRight}
+          disabled={!canScrollRight}
+        >
+          <ChevronRight size={24} />
+        </button>
       </div>
 
-      {totalPages > 1 && (
-        <div className="pagination">
+      {/* Load More Button for Carousel */}
+      {totalPages > 1 && currentPage < totalPages && (
+        <div className="load-more-section">
           <button
-            onClick={handlePrevPage}
-            disabled={currentPage === 1 || loading}
-            className="pagination-button"
+            onClick={() => fetchRecommendations(currentPage + 1)}
+            disabled={loading}
+            className="load-more-button"
           >
-            Previous
-          </button>
-          
-          <span className="pagination-info">
-            Page {currentPage} of {totalPages}
-          </span>
-          
-          <button
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages || loading}
-            className="pagination-button"
-          >
-            Next
+            {loading ? 'Loading...' : `Load More Products (${total - products.length} more)`}
           </button>
         </div>
       )}

@@ -116,6 +116,9 @@ const TechnicalDetailsTab: React.FC<TechnicalDetailsTabProps> = ({
             <option value={FrameShapeType.RECTANGLE}>Chữ nhật</option>
             <option value={FrameShapeType.OVAL}>Oval</option>
             <option value={FrameShapeType.AVIATOR}>Phi công</option>
+            <option value={FrameShapeType.BROWLINE}>Browline</option>
+            <option value={FrameShapeType.BUTTERFLY}>Butterfly</option>
+            <option value={FrameShapeType.NARROW}>Narrow</option>
           </select>
         </div>
 
