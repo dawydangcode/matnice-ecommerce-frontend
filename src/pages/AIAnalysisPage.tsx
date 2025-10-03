@@ -69,6 +69,33 @@ const AIAnalysisPage: React.FC = () => {
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
+  // Start camera
+  const startCamera = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 1920, max: 1920 },
+          height: { ideal: 1080, max: 1080 },
+          facingMode: 'user'
+        }
+      });
+
+      setCameraActive(true);
+      setError(null);
+      streamRef.current = stream;
+
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 50);
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      setError(`Cannot access camera: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setCameraActive(false);
+    }
+  }, []);
+
   // Start auto capture countdown
   const startAutoCapture = useCallback(() => {
     if (isCountingDownRef.current) return;
@@ -184,6 +211,16 @@ const AIAnalysisPage: React.FC = () => {
                           if (resultData.data.status === 'completed') {
                             setAnalysisResult(resultData.data);
                             setIsAnalyzing(false);
+                            // Reset face detection states when analysis is complete
+                            setFaceQualityWarning(false);
+                            setShowManualCaptureHint(false);
+                            setAutoCapture(prev => ({ ...prev, isCountingDown: false, showGuide: false }));
+                            missedDetectionsRef.current = 0;
+                            // Stop face detection
+                            if (detectionIntervalRef.current) {
+                              clearInterval(detectionIntervalRef.current);
+                              detectionIntervalRef.current = null;
+                            }
                             return;
                           } else if (resultData.data.status === 'failed') {
                             setError('Analysis failed. Please try again.');
@@ -229,6 +266,11 @@ const AIAnalysisPage: React.FC = () => {
   // Start face detection
   const startFaceDetection = useCallback(() => {
     if (!videoRef.current) return;
+    
+    // Don't start face detection if analysis is already completed
+    if (analysisResult && analysisResult.status === 'completed') {
+      return;
+    }
 
     // Clear any existing intervals
     if (detectionIntervalRef.current) {
@@ -236,7 +278,7 @@ const AIAnalysisPage: React.FC = () => {
     }
 
     detectionIntervalRef.current = setInterval(async () => {
-      if (videoRef.current && cameraActive && !isCountingDownRef.current) {
+      if (videoRef.current && cameraActive && !isCountingDownRef.current && (!analysisResult || analysisResult.status !== 'completed')) {
         try {
           const detection = await detectFace(videoRef.current);
           
@@ -273,11 +315,11 @@ const AIAnalysisPage: React.FC = () => {
         }
       }
     }, 500);
-  }, [cameraActive, autoCapture.isEnabled, detectFace, isFaceInFrame, startAutoCapture]);
+  }, [cameraActive, autoCapture.isEnabled, detectFace, isFaceInFrame, startAutoCapture, analysisResult]);
 
-  // Initialize face detection when camera becomes active
+  // Initialize face detection when camera becomes active (only if analysis not completed)
   useEffect(() => {
-    if (cameraActive && videoRef.current) {
+    if (cameraActive && videoRef.current && (!analysisResult || analysisResult.status !== 'completed')) {
       const initFaceDetection = async () => {
         await initializeFaceAPI();
         // Small delay to ensure video is fully loaded
@@ -287,7 +329,17 @@ const AIAnalysisPage: React.FC = () => {
       };
       initFaceDetection();
     }
-  }, [cameraActive, initializeFaceAPI, startFaceDetection]);
+  }, [cameraActive, initializeFaceAPI, startFaceDetection, analysisResult]);
+
+  // Auto start camera when analysis is completed
+  useEffect(() => {
+    if (analysisResult && analysisResult.status === 'completed' && !cameraActive) {
+      // Small delay to ensure UI is updated
+      setTimeout(() => {
+        startCamera();
+      }, 500);
+    }
+  }, [analysisResult, cameraActive, startCamera]);
 
 
 
@@ -334,46 +386,6 @@ const AIAnalysisPage: React.FC = () => {
     }
   ];
 
-  // Start camera
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1920, max: 1920 },
-          height: { ideal: 1080, max: 1080 },
-          facingMode: 'user'
-        }
-      });
-
-      setCameraActive(true);
-      setError(null);
-      streamRef.current = stream;
-
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      }, 50);
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      setError(`Cannot access camera: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setCameraActive(false);
-    }
-  }, []);
-
-  // Stop camera
-  const stopCamera = useCallback(() => {
-    stopFaceDetection(); // Stop face detection first
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setCameraActive(false);
-  }, []);
-
   // Stop face detection
   const stopFaceDetection = useCallback(() => {
     if (detectionIntervalRef.current) {
@@ -391,6 +403,19 @@ const AIAnalysisPage: React.FC = () => {
     isCountingDownRef.current = false;
     setAutoCapture(prev => ({ ...prev, isCountingDown: false }));
   }, []);
+
+  // Stop camera
+  const stopCamera = useCallback(() => {
+    stopFaceDetection(); // Stop face detection first
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraActive(false);
+  }, [stopFaceDetection]);
 
   // Capture photo
   const capturePhoto = useCallback(() => {
@@ -459,6 +484,16 @@ const AIAnalysisPage: React.FC = () => {
           if (data.data.status === 'completed') {
             setAnalysisResult(data.data);
             setIsAnalyzing(false);
+            // Reset face detection states when analysis is complete
+            setFaceQualityWarning(false);
+            setShowManualCaptureHint(false);
+            setAutoCapture(prev => ({ ...prev, isCountingDown: false, showGuide: false }));
+            missedDetectionsRef.current = 0;
+            // Stop face detection
+            if (detectionIntervalRef.current) {
+              clearInterval(detectionIntervalRef.current);
+              detectionIntervalRef.current = null;
+            }
             return;
           } else if (data.data.status === 'failed') {
             setError('Analysis failed. Please try again.');
@@ -562,6 +597,16 @@ const AIAnalysisPage: React.FC = () => {
     setShowCameraAndResults(false);
     setError(null);
     setIsAnalyzing(false);
+    // Reset face detection states
+    setFaceQualityWarning(false);
+    setShowManualCaptureHint(false);
+    setAutoCapture({
+      isEnabled: true,
+      countdown: 3,
+      isCountingDown: false,
+      showGuide: true
+    });
+    missedDetectionsRef.current = 0;
     stopCamera();
   }, [stopCamera]);
 
@@ -698,7 +743,21 @@ const AIAnalysisPage: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-6">Camera</h3>
           
-          {capturedImage && !cameraActive ? (
+          {analysisResult && analysisResult.status === 'completed' ? (
+            // After analysis is complete, show live video without face detection features
+            <div className="relative">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full rounded-lg mirror-video"
+              />
+              <div className="absolute top-4 left-4 right-4 bg-green-500 bg-opacity-90 text-white text-sm p-2 rounded text-center">
+                ✓ Analysis Complete - Live Preview
+              </div>
+            </div>
+          ) : capturedImage && !cameraActive ? (
             <div className="text-center">
               <img
                 src={capturedImage}
