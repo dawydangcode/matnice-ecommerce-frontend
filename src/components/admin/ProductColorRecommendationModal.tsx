@@ -178,7 +178,7 @@ const ProductColorRecommendationModal: React.FC<ProductColorRecommendationModalP
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
@@ -199,7 +199,7 @@ const ProductColorRecommendationModal: React.FC<ProductColorRecommendationModalP
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <div className="flex-1 p-6 overflow-y-auto">
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center">
               <AlertCircle className="w-5 h-5 text-red-500 mr-3" />
@@ -207,7 +207,123 @@ const ProductColorRecommendationModal: React.FC<ProductColorRecommendationModalP
             </div>
           )}
 
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Left Guide Table */}
+            <div className="xl:col-span-1">
+              <div className="color-guide-section">
+                <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                  <Palette className="w-4 h-4 mr-2 text-blue-600" />
+                  Hướng dẫn chọn màu
+                </h3>
+                
+                <div className="space-y-4 text-sm">
+                  {/* Light Skin */}
+                  <div className="color-guide-card">
+                    <div className="flex items-center mb-2">
+                      <div className="guide-skin-swatch light mr-2"></div>
+                      <span className="font-medium text-gray-800">Da sáng</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="guide-label suitable">Phù hợp:</span>
+                        <span className="text-gray-600 ml-1">Trắng, Xám, Xanh dương, Tím nhạt, Vàng nhạt, Đỏ nhạt</span>
+                      </div>
+                      <div>
+                        <span className="guide-label reason">Lý do:</span>
+                        <span className="text-gray-600 ml-1">Màu lạnh (xanh dương, tím) làm nổi bật da sáng, tạo cảm giác tươi mới</span>
+                      </div>
+                      <div>
+                        <span className="guide-label avoid">Tránh:</span>
+                        <span className="text-gray-600 ml-1">Màu quá đậm như đen, nâu đậm, xanh lá đậm</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Medium Skin */}
+                  <div className="color-guide-card">
+                    <div className="flex items-center mb-2">
+                      <div className="guide-skin-swatch medium mr-2"></div>
+                      <span className="font-medium text-gray-800">Da trung bình</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="guide-label suitable">Phù hợp:</span>
+                        <span className="text-gray-600 ml-1">Xám, Xanh dương, Xanh lá, Tím, Đen, Nâu, Vàng, Cam, Đỏ</span>
+                      </div>
+                      <div>
+                        <span className="guide-label reason">Lý do:</span>
+                        <span className="text-gray-600 ml-1">Da linh hoạt với cả màu lạnh (xanh dương, tím) và ấm (cam, vàng)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dark Skin */}
+                  <div className="color-guide-card">
+                    <div className="flex items-center mb-2">
+                      <div className="guide-skin-swatch dark mr-2"></div>
+                      <span className="font-medium text-gray-800">Da tối</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="guide-label suitable">Phù hợp:</span>
+                        <span className="text-gray-600 ml-1">Đen, Nâu, Vàng đậm, Cam, Đỏ, Tím đậm, Xanh dương đậm, Xanh lá đậm</span>
+                      </div>
+                      <div>
+                        <span className="guide-label reason">Lý do:</span>
+                        <span className="text-gray-600 ml-1">Màu đậm tạo tương phản mạnh, cả lạnh (xanh dương) và ấm (xanh lá) đều đẹp</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Color Distinction Guide */}
+                <div className="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                  <h4 className="font-semibold text-indigo-900 mb-3 text-sm">
+                    🎨 Phân biệt Xanh dương vs Xanh lá
+                  </h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-start">
+                      <div className="w-3 h-3 bg-blue-600 rounded-full mr-2 mt-0.5 flex-shrink-0"></div>
+                      <div>
+                        <span className="font-medium text-blue-900">Xanh dương (Blue):</span>
+                        <span className="text-gray-700 ml-1">Màu lạnh, thanh lịch, phù hợp undertone lạnh (hồng)</span>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="w-3 h-3 bg-green-600 rounded-full mr-2 mt-0.5 flex-shrink-0"></div>
+                      <div>
+                        <span className="font-medium text-green-900">Xanh lá (Green):</span>
+                        <span className="text-gray-700 ml-1">Màu ấm, tươi tắn, phù hợp undertone ấm (vàng)</span>
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-2 border-t border-indigo-200 space-y-1">
+                      <div>
+                        <span className="font-medium text-indigo-900">💡 Ví dụ cụ thể:</span>
+                      </div>
+                      <div className="pl-4 space-y-1">
+                        <div className="text-gray-700">• <strong>Xanh dương:</strong> Navy, Royal Blue, Sky Blue</div>
+                        <div className="text-gray-700">• <strong>Xanh lá:</strong> Forest Green, Emerald, Olive</div>
+                      </div>
+                      <div className="mt-2">
+                        <span className="font-medium text-indigo-900">🔍 Cách nhận biết:</span>
+                        <span className="text-gray-700 ml-1">Quan sát mạch máu ở cổ tay - xanh là undertone lạnh, xanh lá là undertone ấm</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="guide-note">
+                  <p>
+                    <strong>Lưu ý:</strong> Đây là gợi ý chung. Mỗi người có undertone khác nhau, 
+                    nên thử nghiệm để tìm màu phù hợp nhất.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Product Colors */}
+            <div className="xl:col-span-2">
+              <div className="space-y-6">
             {productColors.map((color) => (
               <div key={color.id} className="border border-gray-200 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -253,11 +369,13 @@ const ProductColorRecommendationModal: React.FC<ProductColorRecommendationModalP
                 </div>
               </div>
             ))}
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
+        <div className="flex-shrink-0 flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50 shadow-lg">
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"

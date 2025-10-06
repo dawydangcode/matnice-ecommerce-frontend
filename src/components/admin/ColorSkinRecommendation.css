@@ -41,3 +41,119 @@
 .skin-color-swatch[data-color="#8B4513"] {
   background-color: #8B4513;
 }
+
+/* Guide table skin color swatches */
+.guide-skin-swatch {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.guide-skin-swatch.light {
+  background-color: #F5D5B8;
+}
+
+.guide-skin-swatch.medium {
+  background-color: #D4A574;
+}
+
+.guide-skin-swatch.dark {
+  background-color: #8B4513;
+}
+
+/* Guide table styling */
+.color-guide-section {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 1279px) {
+  .color-guide-section {
+    position: static;
+    max-height: 400px;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.color-guide-card {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #e0f2fe;
+  transition: all 0.2s ease;
+}
+
+.color-guide-card:hover {
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+}
+
+.guide-label {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.guide-label.suitable {
+  color: #065f46;
+}
+
+.guide-label.reason {
+  color: #1e40af;
+}
+
+.guide-label.avoid {
+  color: #991b1b;
+}
+
+.guide-note {
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 1rem;
+}
+
+.guide-note p {
+  color: #92400e;
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+/* Color distinction section */
+.color-distinction-guide {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.color-sample {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.color-sample.blue {
+  background-color: #2563eb;
+}
+
+.color-sample.green {
+  background-color: #16a34a;
+}
