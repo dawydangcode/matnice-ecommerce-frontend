@@ -365,13 +365,13 @@ const ProductDetailPage: React.FC = () => {
             {/* Color Selection */}
             <div className="color-section">
               <label className="section-label">Colour: {selectedColor}</label>
-              <div className="color-options">
+              <div className="product-color-options">
                 {product.productColors?.slice(0, 6).map((color: any) => {
                   const previewImage = getColorPreviewImage(color.id);
                   return (
                     <button
                       key={color.id}
-                      className={`color-option ${selectedColor === color.colorName ? 'selected' : ''}`}
+                      className={`product-color-option ${selectedColor === color.colorName ? 'selected' : ''}`}
                       onClick={() => {
                         setSelectedColor(color.colorName);
                         setSelectedColorId(color.id);

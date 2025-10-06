@@ -118,14 +118,14 @@
   margin-bottom: 1rem;
 }
 
-.color-options {
+.product-color-options {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
   margin-bottom: 0.5rem;
 }
 
-.color-option {
+.product-color-option {
   width: 60px;
   height: 80px;
   border-radius: 10px;
@@ -136,11 +136,11 @@
   transition: all 0.2s ease;
 }
 
-.color-option:hover {
+.product-color-option:hover {
   border-color: #9ca3af;
 }
 
-.color-option.selected {
+.product-color-option.selected {
   border-color: #292b29;
 }
 
@@ -170,33 +170,33 @@
   transition: transform 0.2s ease;
 }
 
-.color-option:hover .color-preview-img {
+.product-color-option:hover .color-preview-img {
   transform: scale(1.05);
 }
 
-.color-option[title*="Black"] .color-swatch {
+.product-color-option[title*="Black"] .color-swatch {
   background-color: #1f2937;
 }
 
-.color-option[title*="Brown"] .color-swatch,
-.color-option[title*="Havana"] .color-swatch {
+.product-color-option[title*="Brown"] .color-swatch,
+.product-color-option[title*="Havana"] .color-swatch {
   background-color: #92400e;
 }
 
-.color-option[title*="Green"] .color-swatch {
+.product-color-option[title*="Green"] .color-swatch {
   background-color: #059669;
 }
 
-.color-option[title*="Blue"] .color-swatch {
+.product-color-option[title*="Blue"] .color-swatch {
   background-color: #2563eb;
 }
 
-.color-option[title*="Red"] .color-swatch {
+.product-color-option[title*="Red"] .color-swatch {
   background-color: #dc2626;
 }
 
-.color-option[title*="Gray"] .color-swatch,
-.color-option[title*="Grey"] .color-swatch {
+.product-color-option[title*="Gray"] .color-swatch,
+.product-color-option[title*="Grey"] .color-swatch {
   background-color: #6b7280;
 }
 

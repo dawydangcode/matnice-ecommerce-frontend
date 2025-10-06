@@ -67,7 +67,6 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
   });
 
   const [productColors, setProductColors] = useState<ProductColor[]>([]);
-  const [productDetail, setProductDetail] = useState<ProductDetailType | null>(null);
   const [editableProductDetail, setEditableProductDetail] = useState<ProductDetailType | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
@@ -77,7 +76,6 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
   const [colorImages, setColorImages] = useState<{ [colorId: number]: ProductImageModel[] }>({});
   const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
   const [isLoadingColors, setIsLoadingColors] = useState(true);
-  const [isLoadingDetail, setIsLoadingDetail] = useState(true);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isLoadingLensThickness, setIsLoadingLensThickness] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -144,19 +142,14 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
 
   const loadProductDetail = useCallback(async () => {
     try {
-      setIsLoadingDetail(true);
       if (product.productDetail) {
         const detail = product.productDetail as ProductDetailType;
-        setProductDetail(detail);
         setEditableProductDetail(detail);
       } else {
-        setProductDetail(null);
         setEditableProductDetail(null);
       }
     } catch (error) {
       console.error('Failed to load product detail:', error);
-    } finally {
-      setIsLoadingDetail(false);
     }
   }, [product.productDetail]);
 
@@ -329,50 +322,81 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
     setEditableProductDetail(prev => prev ? { ...prev, [field]: value } : null);
   };
 
-  const handleImageSelect = (colorId: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    if (files.length === 0) return;
+  const handleImageSelectForOrder = (colorId: number, order: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    // Validate file types and sizes
-    const validFiles = files.filter(file => {
-      if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} không phải là file hình ảnh`);
-        return false;
-      }
-      if (file.size > 5 * 1024 * 1024) { // 5MB
-        toast.error(`${file.name} quá lớn (tối đa 5MB)`);
-        return false;
-      }
-      return true;
-    });
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      toast.error(`${file.name} không phải là file hình ảnh`);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      toast.error(`${file.name} quá lớn (tối đa 5MB)`);
+      return;
+    }
 
-    setNewImages(prev => ({
-      ...prev,
-      [colorId]: [...(prev[colorId] || []), ...validFiles]
-    }));
+    // Create a new file with order information in name
+    const newFile = new File([file], `${order}_${file.name}`, { type: file.type });
 
-    // Create preview URLs
-    validFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreviewUrls(prev => ({
-          ...prev,
-          [colorId]: [...(prev[colorId] || []), e.target?.result as string]
-        }));
+    // Remove existing file for this order if any
+    setNewImages(prev => {
+      const existingFiles = prev[colorId] || [];
+      const filteredFiles = existingFiles.filter(f => !f.name.includes(`${order}_`));
+      return {
+        ...prev,
+        [colorId]: [...filteredFiles, newFile]
       };
-      reader.readAsDataURL(file);
     });
+
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreviewUrls(prev => {
+        const existingUrls = prev[colorId] || [];
+        const filteredUrls = existingUrls.filter((_, index) => {
+          const correspondingFile = (newImages[colorId] || [])[index];
+          return correspondingFile && !correspondingFile.name.includes(`${order}_`);
+        });
+        return {
+          ...prev,
+          [colorId]: [...filteredUrls, e.target?.result as string]
+        };
+      });
+    };
+    reader.readAsDataURL(newFile);
+
+    // Clear the input
+    event.target.value = '';
   };
 
-  const removeNewImage = (colorId: number, index: number) => {
-    setNewImages(prev => ({
-      ...prev,
-      [colorId]: (prev[colorId] || []).filter((_, i) => i !== index)
-    }));
-    setImagePreviewUrls(prev => ({
-      ...prev,
-      [colorId]: (prev[colorId] || []).filter((_, i) => i !== index)
-    }));
+  const removeNewImageByOrder = (colorId: number, order: string) => {
+    setNewImages(prev => {
+      const existingFiles = prev[colorId] || [];
+      const filteredFiles = existingFiles.filter(f => !f.name.includes(`${order}_`));
+      return {
+        ...prev,
+        [colorId]: filteredFiles
+      };
+    });
+
+    setImagePreviewUrls(prev => {
+      const existingUrls = prev[colorId] || [];
+      const existingFiles = newImages[colorId] || [];
+      
+      // Find the index of the file to remove
+      const fileIndexToRemove = existingFiles.findIndex(f => f.name.includes(`${order}_`));
+      
+      if (fileIndexToRemove >= 0) {
+        const filteredUrls = existingUrls.filter((_, index) => index !== fileIndexToRemove);
+        return {
+          ...prev,
+          [colorId]: filteredUrls
+        };
+      }
+      
+      return prev;
+    });
   };
 
   const removeExistingImage = async (colorId: number, image: ProductImageModel) => {
@@ -481,10 +505,11 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
         const colorId = parseInt(colorIdStr);
         if (files.length > 0) {
           try {
-            // Upload images using productColorImageService
-            for (let fileIndex = 0; fileIndex < files.length; fileIndex++) {
-              const file = files[fileIndex];
-              const imageOrder = ["a", "b", "c", "d", "e"][fileIndex] as "a" | "b" | "c" | "d" | "e";
+            // Upload images using productColorImageService with specific order
+            for (const file of files) {
+              // Extract order from filename
+              const orderMatch = file.name.match(/^([a-e])_/);
+              const imageOrder = orderMatch ? orderMatch[1] as "a" | "b" | "c" | "d" | "e" : "a";
               
               await productColorImageService.uploadProductColorImage({
                 productId: product.productId,
@@ -515,29 +540,7 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
-  };
 
-  const getProductTypeLabel = (type: ProductType) => {
-    switch (type) {
-      case ProductType.GLASSES: return 'Kính mắt';
-      case ProductType.SUNGLASSES: return 'Kính râm';
-      default: return type;
-    }
-  };
-
-  const getGenderLabel = (gender: ProductGenderType) => {
-    switch (gender) {
-      case ProductGenderType.MALE: return 'Nam';
-      case ProductGenderType.FEMALE: return 'Nữ';
-      case ProductGenderType.UNISEX: return 'Unisex';
-      default: return gender;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -888,66 +891,90 @@ const ProductEditPage: React.FC<ProductEditPageProps> = ({
                       Hình ảnh cho màu: {productColors.find(c => c.id === selectedColorId)?.colorName}
                     </h4>
 
-                    {/* Upload New Images */}
-                    <div className="mb-6">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Upload className="w-8 h-8 mb-2 text-gray-500" />
-                          <p className="text-sm text-gray-500">
-                            <span className="font-semibold">Nhấp để tải lên</span> hình ảnh mới
-                          </p>
-                          <p className="text-xs text-gray-500">PNG, JPG hoặc JPEG (tối đa 5MB)</p>
-                        </div>
-                        <input
-                          type="file"
-                          className="hidden"
-                          multiple
-                          accept="image/*"
-                          onChange={(e) => handleImageSelect(selectedColorId, e)}
-                        />
-                      </label>
-                    </div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Nhấp vào ô trống để tải lên hình ảnh cho vị trí đó. Thứ tự: A (chính), B, C, D, E
+                    </p>
 
-                    {/* Image Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {/* Existing Images */}
-                      {(colorImages[selectedColorId] || []).map((image) => (
-                        <div key={image.id} className="relative group">
-                          <img
-                            src={image.imageUrl}
-                            alt="Product"
-                            className="w-full h-32 object-cover rounded-lg border"
-                          />
-                          <button
-                            onClick={() => removeExistingImage(selectedColorId, image)}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
-                            title="Xóa hình ảnh"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
+                    {/* Image Grid with Order */}
+                    <div className="grid grid-cols-5 gap-4">
+                      {['a', 'b', 'c', 'd', 'e'].map((order) => {
+                        const existingImage = (colorImages[selectedColorId] || []).find(img => img.imageOrder === order);
+                        const newImageIndex = newImages[selectedColorId]?.findIndex((file) => 
+                          file?.name.includes(`${order}_`)
+                        );
+                        const hasNewImage = newImageIndex !== undefined && newImageIndex >= 0;
+                        const newImageUrl = hasNewImage ? imagePreviewUrls[selectedColorId]?.[newImageIndex] : null;
 
-                      {/* New Image Previews */}
-                      {(imagePreviewUrls[selectedColorId] || []).map((url, index) => (
-                        <div key={`new-${index}`} className="relative group">
-                          <img
-                            src={url}
-                            alt="Preview"
-                            className="w-full h-32 object-cover rounded-lg border border-blue-300"
-                          />
-                          <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 rounded">
-                            Mới
+                        return (
+                          <div key={order} className="space-y-2">
+                            {/* Order Label */}
+                            <div className="text-center">
+                              <span className="inline-block bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded uppercase">
+                                {order}
+                              </span>
+                            </div>
+
+                            {/* Image Slot */}
+                            <div className="relative group">
+                              {existingImage ? (
+                                // Existing Image
+                                <div className="relative">
+                                  <img
+                                    src={existingImage.imageUrl}
+                                    alt={`Product ${order}`}
+                                    className="w-full h-32 object-cover rounded-lg border"
+                                  />
+                                  <button
+                                    onClick={() => removeExistingImage(selectedColorId, existingImage)}
+                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                                    title="Xóa hình ảnh"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                  <div className="absolute bottom-1 left-1 bg-green-500 text-white text-xs px-1 rounded">
+                                    Hiện tại
+                                  </div>
+                                </div>
+                              ) : hasNewImage && newImageUrl ? (
+                                // New Image Preview
+                                <div className="relative">
+                                  <img
+                                    src={newImageUrl}
+                                    alt={`Preview ${order}`}
+                                    className="w-full h-32 object-cover rounded-lg border border-blue-300"
+                                  />
+                                  <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 rounded">
+                                    Mới
+                                  </div>
+                                  <button
+                                    onClick={() => removeNewImageByOrder(selectedColorId, order)}
+                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                                    title="Xóa hình ảnh"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                // Empty Slot
+                                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                                  <div className="flex flex-col items-center justify-center">
+                                    <Upload className="w-6 h-6 mb-1 text-gray-400" />
+                                    <p className="text-xs text-gray-500 text-center">
+                                      Tải lên<br />hình {order.toUpperCase()}
+                                    </p>
+                                  </div>
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={(e) => handleImageSelectForOrder(selectedColorId, order, e)}
+                                  />
+                                </label>
+                              )}
+                            </div>
                           </div>
-                          <button
-                            onClick={() => removeNewImage(selectedColorId, index)}
-                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
-                            title="Xóa hình ảnh"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     {/* Upload Summary */}
