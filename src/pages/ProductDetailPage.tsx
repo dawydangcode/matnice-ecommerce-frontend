@@ -10,6 +10,7 @@ import { product3DModelService, Product3DModel, Model3DConfig } from '../service
 import cartService from '../services/cart.service';
 import '../styles/ProductDetailPage.css';
 import { Glasses, Handbag, ShoppingCart, X, Video, RefreshCcw, Package } from 'lucide-react';
+import { FrameMeasurement, LensMeasurement, TempleMeasurement } from '../components/icons/Dimensions';
 
 
 
@@ -24,6 +25,13 @@ const ProductDetailPage: React.FC = () => {
   const [isVirtualTryOnOpen, setIsVirtualTryOnOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [accordionOpen, setAccordionOpen] = useState({
+    dimensions: false,
+    properties: false,
+    description: false,
+    manufacturer: false,
+    safety: false
+  });
   
   // 3D Model states
   const [product3DModel, setProduct3DModel] = useState<Product3DModel | null>(null);
@@ -566,7 +574,218 @@ const ProductDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Product Details Section */}
+        <div className="product-details-section">
+          <div className="product-details-container-full">
+            <header className="product-details-header">
+              <h2 className="product-details-title">Product details</h2>
+            </header>
+            
+            <div className="product-details-accordions">
+              {/* Dimensions Accordion */}
+              <div className="accordion-item">
+                <button 
+                  className="accordion-button"
+                  onClick={() => setAccordionOpen(prev => ({ ...prev, dimensions: !prev.dimensions }))}
+                  aria-expanded={accordionOpen.dimensions}
+                >
+                  <div className="accordion-label">
+                    <h3>Dimensions</h3>
+                  </div>
+                  <div className="accordion-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3.5 12h17M12 20.5v-17" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                </button>
+                {accordionOpen.dimensions && (
+                  <div className="accordion-content">
+                    <div className="dimensions-content">
+                      {product.productDetail && (
+                        <div className="dimensions-wrapper">
+                          <div className="dimension-visual-row">
+                            {/* SVG 1: Frame measurements with Bridge width (top center) and Frame width (bottom center) */}
+                            <div className="dimension-svg-container">
+                              <div className="dimension-label-top-center">
+                                Bridge width: {product.productDetail.bridgeWidth} mm
+                              </div>
+                              <FrameMeasurement className="dimension-svg" />
+                              <div className="dimension-label-bottom-center">
+                                Frame width: {product.productDetail.frameWidth} mm
+                              </div>
+                            </div>
+
+                            {/* SVG 2: Lens measurements with Lens height (top left) and Lens width (bottom right) */}
+                            <div className="dimension-svg-container">
+                              <div className="dimension-label-top-left">
+                                Lens height: {product.productDetail.lensHeight} mm
+                              </div>
+                              <LensMeasurement className="dimension-svg" />
+                              <div className="dimension-label-bottom-right">
+                                Lens width: {product.productDetail.lensWidth} mm
+                              </div>
+                            </div>
+
+                            {/* SVG 3: Temple measurements with Temple length (bottom center) */}
+                            <div className="dimension-svg-container">
+                              <TempleMeasurement className="dimension-svg" />
+                              <div className="dimension-label-bottom-center">
+                                Temple length: {product.productDetail.templeLength} mm
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Properties Accordion */}
+              <div className="accordion-item">
+                <button 
+                  className="accordion-button"
+                  onClick={() => setAccordionOpen(prev => ({ ...prev, properties: !prev.properties }))}
+                  aria-expanded={accordionOpen.properties}
+                >
+                  <div className="accordion-label">
+                    <h3>Properties</h3>
+                  </div>
+                  <div className="accordion-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3.5 12h17M12 20.5v-17" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                </button>
+                {accordionOpen.properties && (
+                  <div className="accordion-content">
+                    <div className="properties-content">
+                      <dl className="properties-list">
+                        <dt>Brand:</dt>
+                        <dd>{product.brand?.name}</dd>
+                        
+                        {product.productDetail && (
+                          <>
+                            <dt>Frame material:</dt>
+                            <dd>{product.productDetail.frameMaterial}</dd>
+                            
+                            <dt>Frame shape:</dt>
+                            <dd>{product.productDetail.frameShape}</dd>
+                            
+                            <dt>Frame type:</dt>
+                            <dd>{product.productDetail.frameType}</dd>
+                            
+                            <dt>Spring hinges:</dt>
+                            <dd>{product.productDetail.springHinges ? 'Yes' : 'No'}</dd>
+                            
+                            <dt>Weight:</dt>
+                            <dd>{product.productDetail.weight} g</dd>
+                            
+                            <dt>Multifocal:</dt>
+                            <dd>{product.productDetail.multifocal ? 'Yes' : 'No'}</dd>
+                          </>
+                        )}
+                      </dl>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Product Description Accordion */}
+              <div className="accordion-item">
+                <button 
+                  className="accordion-button"
+                  onClick={() => setAccordionOpen(prev => ({ ...prev, description: !prev.description }))}
+                  aria-expanded={accordionOpen.description}
+                >
+                  <div className="accordion-label">
+                    <h3>Product description</h3>
+                  </div>
+                  <div className="accordion-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3.5 12h17M12 20.5v-17" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                </button>
+                {accordionOpen.description && (
+                  <div className="accordion-content">
+                    <div className="description-content">
+                      <h3>{product.brand?.name} {product.productName}</h3>
+                      {product.description && <p>{product.description}</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Manufacturer Information Accordion */}
+              <div className="accordion-item">
+                <button 
+                  className="accordion-button"
+                  onClick={() => setAccordionOpen(prev => ({ ...prev, manufacturer: !prev.manufacturer }))}
+                  aria-expanded={accordionOpen.manufacturer}
+                >
+                  <div className="accordion-label">
+                    <h3>Manufacturer Information</h3>
+                  </div>
+                  <div className="accordion-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3.5 12h17M12 20.5v-17" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                </button>
+                {accordionOpen.manufacturer && (
+                  <div className="accordion-content">
+                    <div className="manufacturer-content">
+                      <p>Manufacturer details in accordance with the EU Product Safety Regulation (GPSR):</p>
+                      <p>Brand: {product.brand?.name}</p>
+                      <p>Manufacturer: {product.brand?.name}</p>
+                      <p>Contact: support@matnice.com</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Safety Information Accordion */}
+              <div className="accordion-item">
+                <button 
+                  className="accordion-button"
+                  onClick={() => setAccordionOpen(prev => ({ ...prev, safety: !prev.safety }))}
+                  aria-expanded={accordionOpen.safety}
+                >
+                  <div className="accordion-label">
+                    <h3>Safety Information</h3>
+                  </div>
+                  <div className="accordion-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3.5 12h17M12 20.5v-17" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                </button>
+                {accordionOpen.safety && (
+                  <div className="accordion-content">
+                    <div className="safety-content">
+                      <p>
+                        You can find the{' '}
+                        <a 
+                          href="/safety-information" 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="safety-link"
+                        >
+                          safety information
+                        </a>{' '}
+                        here.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
+      
       <Footer />
 
       {/* Virtual Try-On Modal */}

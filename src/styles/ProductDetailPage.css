@@ -35,8 +35,24 @@
 }
 
 .gallery-row-1 {
-  /* Single item aligned to left (same as A and C) */
-  justify-content: flex-start;
+  /* Single item centered */
+  justify-content: center;
+}
+
+.dimension-svg-container svg {
+  width: 100%;
+  height: 400px;
+  flex-shrink: 0;
+  max-width: 500px;
+}
+
+.dimension-svg {
+  margin: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
 
 .gallery-grid {
@@ -547,4 +563,372 @@
   margin-right: 8px;
   vertical-align: middle;
   font-size: 0.25rem;
+}
+
+/* Product Details Section */
+.product-details-section {
+  background-color: #f8f9fa;
+  padding: 4rem 3rem;
+}
+
+.product-details-container-full {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.product-details-header {
+  margin-bottom: 2rem;
+}
+
+.product-details-title {
+  font-size: 2rem;
+  font-weight: 300;
+  color: #374151;
+  border-bottom: 1px solid #d1d5db;
+  padding-bottom: 1rem;
+}
+
+.product-details-accordions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.accordion-item {
+  border-bottom: 1px solid #d1d5db;
+}
+
+.accordion-button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.accordion-button:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.accordion-label h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.accordion-icon {
+  width: 24px;
+  height: 24px;
+  color: #6b7280;
+  transition: transform 0.2s ease;
+}
+
+.accordion-button[aria-expanded="true"] .accordion-icon {
+  transform: rotate(45deg);
+}
+
+.accordion-content {
+  padding: 0 0 2rem 0;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dimensions Content */
+.dimensions-content {
+  padding: 1rem 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.dimensions-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.dimension-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dimension-visual {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.dimension-visual svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.dimension-visual-row {
+  display: flex;
+  gap: 3.5rem;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 0;
+  flex-wrap: wrap;
+}
+
+.dimension-svg-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  min-width: 280px;
+  max-width: 350px;
+  height: 250px;
+  justify-content: space-between;
+  border: 1px solid transparent;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+.dimension-svg-container svg {
+  max-width: 100%;
+  height: 300px;
+  flex-shrink: 0;
+}
+
+.dimension-svg {
+  margin: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Label positioning styles */
+.dimension-label-top-center {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 100;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.dimension-label-bottom-center {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 100;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.dimension-label-top-left {
+  text-align: left;
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 100;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.dimension-label-bottom-right {
+  text-align: right;
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 100;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.dimension-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.dimension-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 100;
+}
+
+/* Properties Content */
+.properties-content {
+  padding: 1rem 0;
+}
+
+.properties-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 2rem;
+  margin: 0;
+}
+
+.properties-list dt {
+  font-size: 1rem;
+  color: #374151;
+  font-weight: 300;
+}
+
+.properties-list dd {
+  font-size: 1rem;
+  color: #374151;
+  font-weight: 300;
+  margin: 0;
+}
+
+/* Description Content */
+.description-content {
+  padding: 1rem 0;
+}
+
+.description-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.description-content p {
+  font-size: 1rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Manufacturer Content */
+.manufacturer-content {
+  padding: 1rem 0;
+}
+
+.manufacturer-content p {
+  font-size: 1rem;
+  color: #374151;
+  font-weight: 300;
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}
+
+.manufacturer-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Safety Content */
+.safety-content {
+  padding: 1rem 0;
+}
+
+.safety-content p {
+  font-size: 1rem;
+  color: #374151;
+  font-weight: 300;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.safety-link {
+  color: #11832C;
+  text-decoration: underline;
+}
+
+.safety-link:hover {
+  color: #0f7024;
+}
+
+/* Responsive Design for Product Details */
+@media (max-width: 768px) {
+  .product-details-section {
+    padding: 2rem 1rem;
+  }
+
+  .product-details-title {
+    font-size: 1.5rem;
+  }
+
+  .accordion-button {
+    padding: 1rem 0;
+  }
+
+  .accordion-label h3 {
+    font-size: 1.125rem;
+  }
+
+  .dimension-visual-row {
+    flex-direction: column;
+    gap: 2rem;
+    align-items: center;
+    padding: 1rem 0;
+  }
+
+  .dimension-svg-container {
+    min-width: 100%;
+    max-width: 350px;
+    height: auto;
+  }
+
+  .properties-list {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .dimensions-grid {
+    gap: 0.75rem;
+  }
+}
+
+/* Tablet screens optimization */
+@media (min-width: 769px) and (max-width: 1199px) {
+  .dimension-svg-container svg {
+    height: 350px;
+    max-width: 450px;
+  }
+}
+
+/* Large screens optimization */
+@media (min-width: 1200px) {
+  .product-details-section {
+    padding: 5rem 4rem;
+  }
+  
+  .product-details-container-full {
+    max-width: 1600px;
+  }
+
+  .dimension-svg-container svg {
+    height: 450px;
+    max-width: 600px;
+  }
+
+  .dimension-visual-row {
+    gap: 3rem;
+  }
 }
