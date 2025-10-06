@@ -546,6 +546,41 @@ const AIAnalysisPage: React.FC = () => {
     }
   }, [analysisResult, cameraActive, startCamera]);
 
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      // Clean up when component unmounts
+      console.log('🧹 AIAnalysisPage unmounting, cleaning up camera and timers...');
+      
+      // Stop all timers
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current);
+        detectionIntervalRef.current = null;
+      }
+      if (faceDetectionTimerRef.current) {
+        clearTimeout(faceDetectionTimerRef.current);
+        faceDetectionTimerRef.current = null;
+      }
+      
+      // Stop camera stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
+          console.log('🧹 Stopping camera track:', track.kind);
+          track.stop();
+        });
+        streamRef.current = null;
+      }
+      
+      // Reset refs and states
+      isCountingDownRef.current = false;
+      missedDetectionsRef.current = 0;
+    };
+  }, []); // Empty dependency array means this runs only on unmount
+
 
 
 

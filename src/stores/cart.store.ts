@@ -26,7 +26,6 @@ export interface ApiLensDetail {
   leftEyeAxis: number;
   pdLeft: number;
   pdRight: number;
-  lensQuality: string;
   totalUpgradesPrice: number;
   lensPrice: number;
   prescriptionNotes: string;
@@ -51,7 +50,6 @@ export interface CartItem {
   lensPrice: number;
   totalPrice: number;
   quantity: number;
-  lensQuality?: string;
   lensNotes?: string;
   prescriptionNotes?: string;
 }
@@ -85,7 +83,6 @@ const transformApiCartItem = (apiItem: ApiCartItem): CartItem => {
     lensPrice: lensDetail?.lensPrice || 0,
     totalPrice: frame.framePrice + (lensDetail?.lensPrice || 0),
     quantity: frame.quantity,
-    lensQuality: lensDetail?.lensQuality,
     lensNotes: lensDetail?.lensNotes,
     prescriptionNotes: lensDetail?.prescriptionNotes,
   };
@@ -210,7 +207,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
           leftEyeAxis: 0,
           pdLeft: 31.5,
           pdRight: 31.5,
-          lensQuality: 'Standard',
           totalUpgradesPrice: 0,
           lensPrice: 0,
           prescriptionNotes: 'Từ trang Lens Selection',
@@ -245,7 +241,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
           leftEyeAxis: 0,
           pdLeft: 31.5,
           pdRight: 31.5,
-          lensQuality: 'Standard',
           totalUpgradesPrice: 0,
           lensPrice: 200000,
           prescriptionNotes: 'Từ trang Lens Selection',

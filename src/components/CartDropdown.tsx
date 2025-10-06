@@ -7,7 +7,7 @@ import { useAuthStore } from '../stores/auth.store';
 const CartDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const { items, totalItems, totalPrice, isLoading, error, fetchCartItems, updateQuantity, removeItem } = useCartStore();
+  const { items, totalItems, totalPrice, fetchCartItems, updateQuantity, removeItem } = useCartStore();
   const { user } = useAuthStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -148,11 +148,6 @@ const CartDropdown: React.FC = () => {
                         {item.lensPrice > 0 && (
                           <p className="text-xs text-gray-500">
                             Lens: {formatVND(item.lensPrice)}
-                          </p>
-                        )}
-                        {item.lensQuality && (
-                          <p className="text-xs text-gray-500">
-                            Quality: {item.lensQuality}
                           </p>
                         )}
 

@@ -304,7 +304,7 @@ const CartPage: React.FC = () => {
                             
                             {/* Total Price */}
                             <div className="border-t border-gray-200 pt-2 mt-2">
-                              <p className="text-lg font-bold text-blue-600">
+                              <p className="text-lg font-bold text-black">
                                 <strong>Tổng tiền:</strong> 
                                 {formatPrice((() => {
                                   let total = safeParseNumber(item.totalPrice) + safeParseNumber(item.lensDetail?.lensPrice);
@@ -533,14 +533,14 @@ const CartPage: React.FC = () => {
                 <div className="border-t pt-4">
                   <div className="flex justify-between items-center text-lg font-semibold">
                     <span>Tổng cộng</span>
-                    <span className="text-blue-600">{formatPrice(cartSummary.grandTotal)}</span>
+                    <span className="text-black-600">{formatPrice(cartSummary.grandTotal)}</span>
                   </div>
                 </div>
               </div>
               
               <button
                 onClick={handleCheckout}
-                className="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="w-full mt-6 bg-green-700 text-white py-3 px-4 rounded-lg hover:bg-green-800 transition-colors font-medium"
               >
                 Thanh toán
               </button>

@@ -7,6 +7,7 @@ import Footer from '../components/Footer';
 import PayOSPayment from '../components/PayOSPayment';
 import cartService, { CartSummary } from '../services/cart.service';
 import orderService from '../services/order.service';
+import { CreditCard, HandCoins } from 'lucide-react';
 
 interface CustomerInfo {
   fullName: string;
@@ -21,7 +22,6 @@ interface CustomerInfo {
 
 enum PaymentMethod {
   CASH = 'cash',
-  BANK_TRANSFER = 'bank_transfer',
   PAYOS = 'payos'
 }
 
@@ -96,6 +96,13 @@ const CheckoutPage: React.FC = () => {
       navigate('/cart');
     }
   }, [cartSummary, navigate, loading]);
+
+  // Auto switch to PayOS if COD is selected but cart has lenses
+  useEffect(() => {
+    if (hasLenses && selectedPaymentMethod === PaymentMethod.CASH) {
+      setSelectedPaymentMethod(PaymentMethod.PAYOS);
+    }
+  }, [hasLenses, selectedPaymentMethod]);
 
   const calculateTotal = () => {
     const discount = appliedPromo?.discount || 0;
@@ -241,11 +248,7 @@ const CheckoutPage: React.FC = () => {
       // Clear cart from localStorage
       localStorage.removeItem('cart');
       
-      if (selectedPaymentMethod === PaymentMethod.BANK_TRANSFER) {
-        toast.success('Đặt hàng thành công! Vui lòng chuyển khoản theo thông tin đã cung cấp.');
-      } else {
-        toast.success('Đặt hàng thành công! Đơn hàng sẽ được giao trong 3-5 ngày làm việc.');
-      }
+      toast.success('Đặt hàng thành công! Đơn hàng sẽ được giao trong 3-5 ngày làm việc.');
       
       navigate(`/order-success?payment=${selectedPaymentMethod}&order=${createdOrder.id}`);
     } catch (error) {
@@ -517,35 +520,20 @@ const CheckoutPage: React.FC = () => {
                     value={PaymentMethod.CASH}
                     checked={selectedPaymentMethod === PaymentMethod.CASH}
                     onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    disabled={hasLenses}
+                    className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 ${hasLenses ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
-                  <label htmlFor="cash" className="ml-3 block text-sm font-medium text-gray-700">
+                  <label htmlFor="cash" className={`ml-3 block text-sm font-medium ${hasLenses ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700'}`}>
                     <div className="flex items-center">
-                      <span className="mr-3">💵</span>
+                      <span className="mr-3"><HandCoins /></span>
                       <div>
                         <div className="font-semibold">Thanh toán khi nhận hàng (COD)</div>
                         <div className="text-gray-500 text-sm">Thanh toán bằng tiền mặt khi nhận hàng</div>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    id="bank-transfer"
-                    name="payment-method"
-                    type="radio"
-                    value={PaymentMethod.BANK_TRANSFER}
-                    checked={selectedPaymentMethod === PaymentMethod.BANK_TRANSFER}
-                    onChange={(e) => setSelectedPaymentMethod(e.target.value as PaymentMethod)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <label htmlFor="bank-transfer" className="ml-3 block text-sm font-medium text-gray-700">
-                    <div className="flex items-center">
-                      <span className="mr-3">🏦</span>
-                      <div>
-                        <div className="font-semibold">Chuyển khoản ngân hàng</div>
-                        <div className="text-gray-500 text-sm">Chuyển khoản trước khi nhận hàng</div>
+                        {hasLenses && (
+                          <div className="text-red-500 text-xs mt-1">
+                            Không khả dụng cho đơn hàng có tròng kính
+                          </div>
+                        )}
                       </div>
                     </div>
                   </label>
@@ -563,7 +551,7 @@ const CheckoutPage: React.FC = () => {
                   />
                   <label htmlFor="payos" className="ml-3 block text-sm font-medium text-gray-700">
                     <div className="flex items-center">
-                      <span className="mr-3">💳</span>
+                      <span className="mr-3"><CreditCard /></span>
                       <div>
                         <div className="font-semibold">Thanh toán trực tuyến (PayOS)</div>
                         <div className="text-gray-500 text-sm">Thanh toán qua thẻ ATM, Internet Banking, QR Code</div>
@@ -572,18 +560,22 @@ const CheckoutPage: React.FC = () => {
                   </label>
                 </div>
               </div>
-
-              {selectedPaymentMethod === PaymentMethod.BANK_TRANSFER && (
+              
+              {/* Notice for lens orders */}
+              {hasLenses && (
                 <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h4 className="font-semibold text-blue-900 mb-2">Thông tin chuyển khoản:</h4>
-                  <div className="space-y-1 text-sm text-blue-800">
-                    <p><strong>Ngân hàng:</strong> Vietcombank</p>
-                    <p><strong>Số tài khoản:</strong> 1234567890</p>
-                    <p><strong>Chủ tài khoản:</strong> CÔNG TY MATNICE</p>
-                    <p><strong>Nội dung:</strong> [Họ tên] - [Số điện thoại] - Thanh toán đơn hàng</p>
-                  </div>
-                  <div className="mt-2 text-xs text-blue-600">
-                    * Vui lòng chuyển khoản đúng số tiền và nội dung để đơn hàng được xử lý nhanh chóng
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <span className="text-blue-500 text-lg">💎</span>
+                    </div>
+                    <div className="ml-3">
+                      <h4 className="text-sm font-medium text-blue-900">
+                        Thông báo đặc biệt
+                      </h4>
+                      <p className="mt-1 text-sm text-blue-700">
+                        Với đơn hàng có tròng kính đi kèm vui lòng thanh toán trước để đảm bảo chất lượng và độ chính xác của sản phẩm.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -617,10 +609,6 @@ const CheckoutPage: React.FC = () => {
                               <span className="font-medium text-gray-700">Màu:</span>
                               {item.selectedColor && (
                                 <>
-                                  <span
-                                    className="w-4 h-4 rounded-full border border-gray-300"
-                                    style={{ backgroundColor: item.selectedColor.colorCode || '#ccc' }}
-                                  />
                                   <span className="text-gray-900">{item.selectedColor.colorName}</span>
                                 </>
                               )}
@@ -661,7 +649,7 @@ const CheckoutPage: React.FC = () => {
                               </>
                             )}
                             <div className="border-t pt-2 mt-2">
-                              <span className="text-lg font-bold text-blue-600">
+                              <span className="text-lg font-bold text-black">
                                 Tổng tiền: {formatPrice(Number(item.totalPrice))}
                               </span>
                             </div>
@@ -679,10 +667,6 @@ const CheckoutPage: React.FC = () => {
                                   <span className="ml-2 text-gray-900">{item.lensDetail.lensType}</span>
                                 </div>
                                 <div>
-                                  <span className="font-medium text-gray-700">Chất lượng:</span>
-                                  <span className="ml-2 text-gray-900">{item.lensDetail.lensQuality}</span>
-                                </div>
-                                <div>
                                   <span className="font-medium text-gray-700">Giá:</span>
                                   <span className="ml-2 text-gray-900">{formatPrice(Number(item.lensDetail.lensPrice))}</span>
                                 </div>
@@ -693,7 +677,7 @@ const CheckoutPage: React.FC = () => {
                                 <div>
                                   <h5 className="font-medium text-gray-700 mb-2">Lớp phủ</h5>
                                   {item.lensDetail.selectedCoatings.map((coating, index) => (
-                                    <div key={index} className="bg-blue-50 p-2 rounded mb-2">
+                                    <div key={index} className="bg-gray-50 p-2 rounded mb-2">
                                       <div className="font-medium text-blue-900">{coating.name}</div>
                                       {coating.description && (
                                         <div className="text-sm text-blue-700">{coating.description}</div>
@@ -784,7 +768,7 @@ const CheckoutPage: React.FC = () => {
                 />
                 <button
                   onClick={handleApplyPromo}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
                 >
                   Sử dụng
                 </button>
@@ -831,8 +815,7 @@ const CheckoutPage: React.FC = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Hình thức thanh toán</span>
                   <span className="text-blue-600">
-                    {selectedPaymentMethod === PaymentMethod.CASH ? 'Thanh toán khi nhận hàng' : 
-                     selectedPaymentMethod === PaymentMethod.PAYOS ? '💳 PayOS' : '🏦 Chuyển khoản'}
+                    {selectedPaymentMethod === PaymentMethod.CASH ? 'Thanh toán khi nhận hàng' : '💳 PayOS'}
                   </span>
                 </div>
                 
@@ -840,18 +823,17 @@ const CheckoutPage: React.FC = () => {
                 
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Tổng đơn</span>
-                  <span className="text-blue-600">{formatPrice(calculateTotal())}</span>
+                  <span className="text-black">{formatPrice(calculateTotal())}</span>
                 </div>
               </div>
               
               <button
                 onClick={handleSubmitOrder}
                 disabled={isSubmitting}
-                className="w-full mt-6 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-6 bg-green-700 text-white py-3 px-4 rounded-lg hover:bg-green-800 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Đang xử lý...' : 
-                 selectedPaymentMethod === PaymentMethod.CASH ? 'Đặt hàng (COD)' : 
-                 selectedPaymentMethod === PaymentMethod.PAYOS ? 'Thanh toán trực tuyến' : 'Đặt hàng & Chuyển khoản'}
+                 selectedPaymentMethod === PaymentMethod.CASH ? 'Đặt hàng (COD)' : 'Thanh toán trực tuyến'}
               </button>
             </div>
           </div>

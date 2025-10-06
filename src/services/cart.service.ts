@@ -134,7 +134,6 @@ export interface CartItemSummary {
     id: number;
     lensId: number | undefined;
     lensType: string | undefined;
-    lensQuality: string;
     lensPrice: number | string; // API might return string
     totalUpgradesPrice: number | string; // API might return string
     selectedCoatings?: {
