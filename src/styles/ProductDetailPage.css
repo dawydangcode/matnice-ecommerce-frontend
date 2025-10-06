@@ -186,6 +186,36 @@
   border-color: #292b29;
 }
 
+/* Out of stock styles */
+.product-color-option.out-of-stock {
+  opacity: 0.6;
+  position: relative;
+}
+
+.product-color-option.out-of-stock::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -16px;
+  right: -16px;
+  height: 1px;
+  background-color: #969596;
+  transform: translateY(-50%) rotate(-55deg);
+  border-radius: 2px;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+.product-color-option.out-of-stock:hover {
+  border-color: black;
+  opacity: 0.8;
+}
+
+.product-color-option.out-of-stock.selected {
+  border-color: black;
+  opacity: 0.8;
+}
+
 .color-swatch {
   width: 100%;
   height: 100%;
@@ -395,6 +425,37 @@
 .btn-secondary:hover {
   background-color: #11832C;
   color: white;
+}
+
+/* Disabled button styles */
+.btn-primary.disabled,
+.btn-primary:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-primary.disabled:hover,
+.btn-primary:disabled:hover {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+}
+
+.btn-secondary.disabled,
+.btn-secondary:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
+  border-color: #e5e7eb;
+}
+
+.btn-secondary.disabled:hover,
+.btn-secondary:disabled:hover {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+  border-color: #e5e7eb;
 }
 
 .divider {
@@ -783,27 +844,42 @@
 
 /* Properties Content */
 .properties-content {
-  padding: 1rem 0;
+  padding: 1.5rem 0;
 }
 
 .properties-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem 2rem;
+  gap: 0.75rem 3rem;
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .properties-list dt {
-  font-size: 1rem;
-  color: #374151;
-  font-weight: 300;
+  font-size: 0.95rem;
+  color: #4a5568;
+  font-weight: 400;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
 }
 
 .properties-list dd {
-  font-size: 1rem;
-  color: #374151;
-  font-weight: 300;
-  margin: 0;
+  font-size: 0.95rem;
+  color: #2d3748;
+  font-weight: 400;
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+.properties-list dd a {
+  color: #3182ce;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.properties-list dd a:hover {
+  color: #2c5282;
 }
 
 /* Description Content */
@@ -897,7 +973,17 @@
 
   .properties-list {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
+    gap: 0.5rem 1rem;
+  }
+
+  .properties-list dt {
+    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .properties-list dd {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
   }
 
   .dimensions-grid {
@@ -910,6 +996,19 @@
   .dimension-svg-container svg {
     height: 350px;
     max-width: 450px;
+  }
+
+  .properties-list {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 2.5rem;
+  }
+
+  .properties-list dt {
+    font-size: 0.9rem;
+  }
+
+  .properties-list dd {
+    font-size: 0.9rem;
   }
 }
 

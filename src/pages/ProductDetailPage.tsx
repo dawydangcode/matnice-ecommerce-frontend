@@ -117,8 +117,11 @@ const ProductDetailPage: React.FC = () => {
           product_type: productData.product_type || productData.productType || 'glasses',
           productColors: (productData.productColors && productData.productColors.length > 0) ? productData.productColors : [
             { id: 5, colorName: 'Havana', productVariantName: '002', productNumber: '6514022', stock: 10, isThumbnail: true },
-            { id: 6, colorName: 'Black', productVariantName: '001', productNumber: '6514021', stock: 5, isThumbnail: false },
-            { id: 7, colorName: 'Green', productVariantName: '003', productNumber: '6514023', stock: 8, isThumbnail: false }
+            { id: 6, colorName: 'Black', productVariantName: '001', productNumber: '6514021', stock: 0, isThumbnail: false },
+            { id: 7, colorName: 'Green', productVariantName: '003', productNumber: '6514023', stock: 8, isThumbnail: false },
+            { id: 8, colorName: 'Blue', productVariantName: '004', productNumber: '6514024', stock: 0, isThumbnail: false },
+            { id: 9, colorName: 'Red', productVariantName: '005', productNumber: '6514025', stock: 3, isThumbnail: false },
+            { id: 10, colorName: 'Brown', productVariantName: '006', productNumber: '6514026', stock: 0, isThumbnail: false }
           ],
           productImages: (productData.productImages && productData.productImages.length > 0) ? productData.productImages : [
             { id: 13, imageUrl: 'https://testbucket21045081.s3.ap-southeast-2.amazonaws.com/product_images/6514022_ft-5313v/6514022_a.png', imageOrder: 'a', productColorId: 5 },
@@ -435,16 +438,17 @@ const ProductDetailPage: React.FC = () => {
               <div className="product-color-options">
                 {product.productColors?.slice(0, 6).map((color: any) => {
                   const previewImage = getColorPreviewImage(color.id);
+                  const isOutOfStock = color.stock <= 0;
                   return (
                     <button
                       key={color.id}
-                      className={`product-color-option ${selectedColor === color.colorName ? 'selected' : ''}`}
+                      className={`product-color-option ${selectedColor === color.colorName ? 'selected' : ''} ${isOutOfStock ? 'out-of-stock' : ''}`}
                       onClick={() => {
                         setSelectedColor(color.colorName);
                         setSelectedColorId(color.id);
                         console.log('Selected color:', color.colorName, 'ID:', color.id);
                       }}
-                      title={color.colorName}
+                      title={`${color.colorName}${isOutOfStock ? ' (Out of stock)' : ''}`}
                     >
                       {previewImage ? (
                         <div className="color-image-preview">
@@ -501,14 +505,23 @@ const ProductDetailPage: React.FC = () => {
               {isGlasses() ? (
                 <>
                   <button 
-                    className="btn-primary"
-                    onClick={() => navigate(`/lens-selection?productId=${id}&selectedColorId=${selectedColorId}`)}
+                    className={`btn-primary ${getStockStatus().status === 'Out of stock' ? 'disabled' : ''}`}
+                    onClick={() => {
+                      if (getStockStatus().status !== 'Out of stock') {
+                        navigate(`/lens-selection?productId=${id}&selectedColorId=${selectedColorId}`);
+                      }
+                    }}
+                    disabled={getStockStatus().status === 'Out of stock'}
                   >
                     <Handbag className="icon-inline" size={24} />
-                    With prescription from {formatVND(getPrescriptionPrice())}
+                    {getStockStatus().status === 'Out of stock' ? 'Out of stock' : `With prescription from ${formatVND(getPrescriptionPrice())}`}
                   </button>
-                  <button className="btn-secondary" onClick={handleAddFrameToCart}>
-                    Buy frame only
+                  <button 
+                    className={`btn-secondary ${getStockStatus().status === 'Out of stock' ? 'disabled' : ''}`} 
+                    onClick={getStockStatus().status === 'Out of stock' ? undefined : handleAddFrameToCart}
+                    disabled={getStockStatus().status === 'Out of stock'}
+                  >
+                    {getStockStatus().status === 'Out of stock' ? 'Out of stock' : 'Buy frame only'}
                   </button>
                   <div className="divider">or</div>
                   <button className="btn-outline">
@@ -517,9 +530,13 @@ const ProductDetailPage: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <button className="btn-primary" onClick={handleAddFrameToCart}>
+                  <button 
+                    className={`btn-primary ${getStockStatus().status === 'Out of stock' ? 'disabled' : ''}`} 
+                    onClick={getStockStatus().status === 'Out of stock' ? undefined : handleAddFrameToCart}
+                    disabled={getStockStatus().status === 'Out of stock'}
+                  >
                     <ShoppingCart className="icon-inline" size={24} />
-                    Add to basket
+                    {getStockStatus().status === 'Out of stock' ? 'Out of stock' : 'Add to basket'}
                   </button>
                   <div className="divider">or</div>
                   <button className="btn-outline">
