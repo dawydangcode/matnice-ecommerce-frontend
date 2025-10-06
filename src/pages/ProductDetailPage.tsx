@@ -302,50 +302,109 @@ const ProductDetailPage: React.FC = () => {
         <div className="product-detail-container">
           {/* Product Gallery */}
           <div className="product-gallery">
-            <div className="gallery-grid">
-              {getImagesByColor().map((image: any, index: number) => (
-                <div key={index} className="gallery-item">
-                  <img 
-                    src={image.imageUrl} 
-                    alt={`${product.brand?.name} ${product.productName}`}
-                    className="gallery-image"
-                    width="400"
-                    height="300"
-                    loading={index === 0 ? "eager" : "lazy"}
-                    draggable="false"
-                  />
-                  {index === 0 && (
-                    <div className="virtual-tryon-overlay">
-                      <button 
-                        className={`virtual-tryon-btn ${!product3DModel ? 'disabled' : ''}`}
-                        onClick={() => product3DModel && setIsVirtualTryOnOpen(true)}
-                        disabled={!product3DModel || model3DLoading}
-                        title={
-                          model3DLoading ? 'Loading 3D model...' :
-                          !product3DModel ? 'No 3D model available' :
-                          model3DError ? 'Error loading 3D model' :
-                          'Try on virtually with AR'
-                        }
-                      >
-                        {model3DLoading ? '⏳ Loading...' : 
-                         !product3DModel ? (
-                           <>
-                             <X size={16} className="inline mr-1" />
-                             No 3D Model
-                           </>
-                         ) :
-                         model3DError ? '⚠️ Error' :
-                         (
-                           <>
-                             <Video size={20} className="inline mr-1" />
-                             Virtual try-on
-                           </>
-                         )}
-                      </button>
+            <div className="gallery-custom-layout">
+              {(() => {
+                const images = getImagesByColor();
+                const imageMap = images.reduce((acc: any, img: any) => {
+                  acc[img.imageOrder] = img;
+                  return acc;
+                }, {});
+
+                return (
+                  <>
+                    {/* Row 1: Images A and B */}
+                    <div className="gallery-row gallery-row-2">
+                      {['a', 'b'].map((order) => {
+                        const image = imageMap[order];
+                        if (!image) return null;
+                        
+                        return (
+                          <div key={order} className="gallery-item">
+                            <img 
+                              src={image.imageUrl} 
+                              alt={`${product.brand?.name} ${product.productName}`}
+                              className="gallery-image"
+                              width="400"
+                              height="300"
+                              loading={order === 'a' ? "eager" : "lazy"}
+                              draggable="false"
+                            />
+                            {order === 'a' && (
+                              <div className="virtual-tryon-overlay">
+                                <button 
+                                  className={`virtual-tryon-btn ${!product3DModel ? 'disabled' : ''}`}
+                                  onClick={() => product3DModel && setIsVirtualTryOnOpen(true)}
+                                  disabled={!product3DModel || model3DLoading}
+                                  title={
+                                    model3DLoading ? 'Loading 3D model...' :
+                                    !product3DModel ? 'No 3D model available' :
+                                    model3DError ? 'Error loading 3D model' :
+                                    'Try on virtually with AR'
+                                  }
+                                >
+                                  {model3DLoading ? '⏳ Loading...' : 
+                                   !product3DModel ? (
+                                     <>
+                                       <X size={16} className="inline mr-1" />
+                                       No 3D Model
+                                     </>
+                                   ) :
+                                   model3DError ? '⚠️ Error' :
+                                   (
+                                     <>
+                                       <Video size={20} className="inline mr-1" />
+                                       Virtual try-on
+                                     </>
+                                   )}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
-              ))}
+
+                    {/* Row 2: Images C and D */}
+                    <div className="gallery-row gallery-row-2">
+                      {['c', 'd'].map((order) => {
+                        const image = imageMap[order];
+                        if (!image) return null;
+                        
+                        return (
+                          <div key={order} className="gallery-item">
+                            <img 
+                              src={image.imageUrl} 
+                              alt={`${product.brand?.name} ${product.productName}`}
+                              className="gallery-image"
+                              width="400"
+                              height="300"
+                              loading="lazy"
+                              draggable="false"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Row 3: Image E (centered) */}
+                    {imageMap['e'] && (
+                      <div className="gallery-row gallery-row-1">
+                        <div className="gallery-item">
+                          <img 
+                            src={imageMap['e'].imageUrl} 
+                            alt={`${product.brand?.name} ${product.productName}`}
+                            className="gallery-image"
+                            width="400"
+                            height="300"
+                            loading="lazy"
+                            draggable="false"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
 
