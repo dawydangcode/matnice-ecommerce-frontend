@@ -953,9 +953,6 @@ const AIAnalysisPage: React.FC = () => {
                 muted
                 className="camera-video mirror-video"
               />
-              <div className="absolute top-4 left-4 right-4 bg-green-500 bg-opacity-90 text-white text-sm p-2 rounded text-center">
-                ✓ Analysis Complete - Live Preview
-              </div>
             </div>
           ) : capturedImage && !cameraActive ? (
             <div className="text-center">

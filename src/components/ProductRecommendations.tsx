@@ -194,6 +194,12 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
     return '/placeholder-product.jpg';
   };
 
+  const handleQuickView = (productId: number) => {
+    // Open product detail page in new tab
+    const productDetailUrl = `/product/${productId}`;
+    window.open(productDetailUrl, '_blank');
+  };
+
 
 
   if (loading && products.length === 0) {
@@ -288,7 +294,11 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                 <span className="product-badge eco-badge">Eco</span>
               )}
               <div className="product-actions">
-                <button className="action-button view-button" title="Quick View">
+                <button 
+                  className="action-button view-button" 
+                  title="Quick View"
+                  onClick={() => handleQuickView(product.id)}
+                >
                   <Eye size={18} />
                 </button>
                 <button className="action-button wishlist-button" title="Add to Wishlist">
@@ -306,21 +316,6 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
               </div>
 
               <p className="product-description">{product.description}</p>
-
-              <div className="product-details">
-                <div className="detail-item">
-                  <span className="detail-label">Shape:</span>
-                  <span className="detail-value">{product.productDetail.frameShape}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Material:</span>
-                  <span className="detail-value">{product.productDetail.frameMaterial}</span>
-                </div>
-                <div className="detail-item">
-                  <span className="detail-label">Colors:</span>
-                  <span className="detail-value">{product.productColors.length} available</span>
-                </div>
-              </div>
 
               <div className="color-options">
                 {product.productColors.slice(0, 3).map((color) => (
