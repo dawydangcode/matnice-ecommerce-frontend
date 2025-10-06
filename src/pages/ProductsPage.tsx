@@ -248,7 +248,17 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
           multifocal: isMultifocalSelected ? true : undefined,
         });
         
-        console.log('[ProductsPage] API Response:', response.data?.length, 'products');
+        console.log('[ProductsPage] Filter params:', { 
+          productType,
+          selectedBrands,
+          selectedGenders,
+          currentPage,
+          pageSize
+        });
+        console.log('[ProductsPage] API Response:', {
+          dataLength: response.data?.length,
+          total: response.total
+        });
         
         // Deduplicate products by ID to prevent React key conflicts
         const uniqueProducts = response.data ? response.data.filter((product, index, array) => 
@@ -256,9 +266,37 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
         ) : [];
         
         console.log('[ProductsPage] After dedup:', uniqueProducts.length, 'unique products');
+        console.log('[ProductsPage] Setting total to:', response.total || 0);
         
         setProducts(uniqueProducts);
-        setTotal(response.total || 0);
+        
+        // Fix for incorrect total count when filtering
+        const apiTotal = response.total || 0;
+        const actualCount = uniqueProducts.length;
+        
+        // Check if we have any active filters
+        const hasActiveFilters = (productType && productType !== 'all' && productType !== '') ||
+                                selectedBrands.length > 0 ||
+                                selectedGenders.length > 0 ||
+                                selectedFrameTypes.length > 0 ||
+                                selectedFrameShapes.length > 0 ||
+                                selectedFrameMaterials.length > 0 ||
+                                selectedBridgeDesigns.length > 0 ||
+                                selectedStyles.length > 0 ||
+                                selectedGlassesWidths.length > 0 ||
+                                isMultifocalSelected ||
+                                minPrice > 0 ||
+                                maxPrice < 1000000;
+        
+        if (hasActiveFilters && currentPage === 1 && actualCount < pageSize && actualCount < apiTotal) {
+          // If we have filters, we're on page 1, got less than page size, 
+          // and actual count is less than API total, use actual count
+          console.log('[ProductsPage] Correcting total count for filtered results');
+          console.log('[ProductsPage] API total:', apiTotal, '→ Actual total:', actualCount);
+          setTotal(actualCount);
+        } else {
+          setTotal(apiTotal);
+        }
       } catch (error) {
         console.error('Error fetching products:', error);
         setProducts([]);
@@ -393,8 +431,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
             
             {/* Left Sidebar - Filters */}
             <div className={`filter-area ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
-              <div className="bg-white rounded-lg shadow-sm p-4 space-y-6">
-                
+              <div className="bg-white rounded-lg shadow-sm p-4 space-y-6">                                                                                                                                                                                                                                                                                          
                 {/* Filter Header */}
                 <div className="flex items-center justify-between mb-5 pl-2">
                   <h2 className="filter-header">Filters</h2>
