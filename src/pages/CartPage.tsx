@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '../stores/auth.store';
 import cartService, { CartSummary } from '../services/cart.service';
+import { localCartService, LocalCartItem } from '../services/localCart.service';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
@@ -16,6 +17,7 @@ const CartPage: React.FC = () => {
   const { isLoggedIn } = useAuthStore();
   
   const [cartSummary, setCartSummary] = useState<CartSummary | null>(null);
+  const [localCartItems, setLocalCartItems] = useState<LocalCartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -23,22 +25,36 @@ const CartPage: React.FC = () => {
   const loadCartData = useCallback(async () => {
     try {
       setLoading(true);
-      const summary = await cartService.getMyCartSummary();
-      console.log('Cart summary data:', summary);
-      setCartSummary(summary);
+      
+      if (isLoggedIn) {
+        // Load backend cart for authenticated users
+        const summary = await cartService.getMyCartSummary();
+        console.log('Cart summary data:', summary);
+        setCartSummary(summary);
+        setLocalCartItems([]);
+      } else {
+        // Load local cart for guest users
+        const localCart = localCartService.getLocalCart();
+        console.log('Local cart data:', localCart);
+        setLocalCartItems(localCart.items);
+        setCartSummary(null);
+      }
     } catch (error: any) {
       console.error('Error loading cart data:', error);
-      toast.error('Không thể tải giỏ hàng');
+      if (isLoggedIn) {
+        toast.error('Không thể tải giỏ hàng');
+      } else {
+        // Fallback to empty local cart
+        setLocalCartItems([]);
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isLoggedIn]);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      loadCartData();
-    }
-  }, [isLoggedIn, loadCartData]);
+    loadCartData();
+  }, [loadCartData]);
 
   // Cleanup: restore body scroll on component unmount
   useEffect(() => {
@@ -131,26 +147,7 @@ const CartPage: React.FC = () => {
     navigate('/checkout');
   };
 
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <Navigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Vui lòng đăng nhập để xem giỏ hàng
-          </h1>
-          <Link
-            to="/auth/login"
-            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Đăng nhập
-          </Link>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  // Remove the authentication check - allow both authenticated and guest users
 
   if (loading) {
     return (
@@ -165,7 +162,12 @@ const CartPage: React.FC = () => {
     );
   }
 
-  if (!cartSummary || cartSummary.items.length === 0) {
+  // Check if cart is empty (both backend and local)
+  const isCartEmpty = isLoggedIn 
+    ? (!cartSummary || cartSummary.items.length === 0)
+    : (localCartItems.length === 0);
+
+  if (isCartEmpty) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
@@ -186,6 +188,19 @@ const CartPage: React.FC = () => {
           <p className="text-gray-600 mb-8 max-w-md mx-auto">
             Hãy khám phá bộ sưu tập kính mắt và tròng kính của chúng tôi để tìm những sản phẩm phù hợp với bạn.
           </p>
+          {!isLoggedIn && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg max-w-md mx-auto border border-blue-200">
+              <p className="text-blue-800 text-sm">
+                💡 <strong>Mẹo:</strong> Đăng nhập để lưu giỏ hàng và đồng bộ trên mọi thiết bị
+              </p>
+              <Link
+                to="/auth/login"
+                className="inline-block mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                Đăng nhập ngay →
+              </Link>
+            </div>
+          )}
           <div className="flex gap-4 justify-center">
             <Link
               to="/glasses"
@@ -229,7 +244,8 @@ const CartPage: React.FC = () => {
           {/* Cart Items */}
           <div className="lg:col-span-3">
             <div className="space-y-4">
-              {cartSummary.items.map((item) => {
+              {/* Backend cart items for authenticated users */}
+              {isLoggedIn && cartSummary && cartSummary.items.map((item) => {
                 return (
                   <div key={item.cartFrameId} className="bg-white rounded-lg shadow-sm border p-10">
                     <div className="flex items-start gap-8">
@@ -506,6 +522,70 @@ const CartPage: React.FC = () => {
                   </div>
                 );
               })}
+
+              {/* Local cart items for guest users */}
+              {!isLoggedIn && localCartItems.map((item) => (
+                <div key={item.id} className="bg-white rounded-lg shadow-sm border p-10">
+                  <div className="flex items-start gap-8">
+                    {/* Product Image Placeholder */}
+                    <div className="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden">
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-gray-400 text-xs">Product</span>
+                      </div>
+                    </div>
+
+                    {/* Product Details */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Product #{item.productId} ({item.type})
+                      </h3>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
+                        <div>
+                          <p><strong>Số lượng:</strong> {item.quantity}</p>
+                          <p><strong>Giá:</strong> {formatPrice(item.framePrice)}</p>
+                          <p><strong>Ngày thêm:</strong> {new Date(item.addedAt).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                          <p><strong>Giảm giá:</strong> {formatPrice(item.discount)}</p>
+                          <p><strong>Tổng tiền:</strong> 
+                            <span className="text-blue-600 font-semibold">
+                              {formatPrice(item.totalPrice)}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Lens Data Preview if available */}
+                      {item.lensData && (
+                        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                          <h4 className="font-semibold text-gray-900 mb-2">Chi tiết tròng kính</h4>
+                          <p className="text-sm text-gray-600">
+                            Có dữ liệu tròng kính đã lưu (sẽ được xử lý khi đăng nhập)
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
+                            localCartService.removeFromLocalCart(item.id);
+                            loadCartData(); // Refresh cart
+                            toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
+                          }
+                        }}
+                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Xóa sản phẩm"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -514,36 +594,79 @@ const CartPage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm border p-6 sticky top-4">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Tổng đơn hàng</h2>
               
-              <div className="space-y-4 text-sm">
-                <div className="flex justify-between">
-                  <span>Tổng giá gọng ({cartSummary.totalItems} sản phẩm)</span>
-                  <span>{formatPrice(cartSummary.totalFramePrice)}</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span>Tổng giá tròng</span>
-                  <span>{formatPrice(cartSummary.totalLensPrice)}</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span>Giảm giá</span>
-                  <span className="text-green-600">-{formatPrice(cartSummary.totalDiscount)}</span>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <div className="flex justify-between items-center text-lg font-semibold">
-                    <span>Tổng cộng</span>
-                    <span className="text-black-600">{formatPrice(cartSummary.grandTotal)}</span>
+              {isLoggedIn && cartSummary ? (
+                // Backend cart summary
+                <div className="space-y-4 text-sm">
+                  <div className="flex justify-between">
+                    <span>Tổng giá gọng ({cartSummary.totalItems} sản phẩm)</span>
+                    <span>{formatPrice(cartSummary.totalFramePrice)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span>Tổng giá tròng</span>
+                    <span>{formatPrice(cartSummary.totalLensPrice)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span>Giảm giá</span>
+                    <span className="text-green-600">-{formatPrice(cartSummary.totalDiscount)}</span>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center text-lg font-semibold">
+                      <span>Tổng cộng</span>
+                      <span className="text-black-600">{formatPrice(cartSummary.grandTotal)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                // Local cart summary
+                <div className="space-y-4 text-sm">
+                  <div className="flex justify-between">
+                    <span>Tổng sản phẩm ({localCartItems.length} sản phẩm)</span>
+                    <span>{formatPrice(localCartItems.reduce((sum, item) => sum + item.framePrice * item.quantity, 0))}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span>Giảm giá</span>
+                    <span className="text-green-600">-{formatPrice(localCartItems.reduce((sum, item) => sum + item.discount, 0))}</span>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center text-lg font-semibold">
+                      <span>Tổng cộng</span>
+                      <span className="text-black-600">{formatPrice(localCartItems.reduce((sum, item) => sum + item.totalPrice, 0))}</span>
+                    </div>
+                  </div>
+                  
+                  {!isLoggedIn && (
+                    <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-amber-800 text-xs mb-2">
+                        💡 <strong>Lưu ý:</strong> Giỏ hàng tạm thời
+                      </p>
+                      <p className="text-amber-700 text-xs">
+                        Đăng nhập để lưu giỏ hàng và tiếp tục thanh toán
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
               
-              <button
-                onClick={handleCheckout}
-                className="w-full mt-6 bg-green-700 text-white py-3 px-4 rounded-lg hover:bg-green-800 transition-colors font-medium"
-              >
-                Thanh toán
-              </button>
+              {isLoggedIn ? (
+                <button
+                  onClick={handleCheckout}
+                  className="w-full mt-6 bg-green-700 text-white py-3 px-4 rounded-lg hover:bg-green-800 transition-colors font-medium"
+                >
+                  Thanh toán
+                </button>
+              ) : (
+                <Link
+                  to="/auth/login"
+                  className="w-full mt-6 block text-center bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Đăng nhập để thanh toán
+                </Link>
+              )}
               
               <Link
                 to="/glasses"
