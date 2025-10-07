@@ -98,11 +98,8 @@ const HomePage: React.FC = () => {
       {/* Categories Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <p className="text-gray-600 text-sm uppercase tracking-wide mb-2">
-              EUROPE'S LEADING ONLINE OPTICIAN
-            </p>
-            <h2 className="text-4xl font-bold text-gray-800 mb-8">
+          <div className="flex justify-between items-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-800">
               Find your new favourite glasses
             </h2>
             <button className="border border-gray-400 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-100 transition">
@@ -124,7 +121,7 @@ const HomePage: React.FC = () => {
                 <div className="space-y-2">
                   <div 
                     className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => navigate('/products?category=glasses&gender=women')}
+                    onClick={() => navigate('/glasses?category=women-s-glasses')}
                   >
                     <span className="text-2xl font-thin opacity-90">Glasses</span>
                     <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">
@@ -133,7 +130,7 @@ const HomePage: React.FC = () => {
                   </div>
                   <div 
                     className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => navigate('/products?category=sunglasses&gender=women')}
+                    onClick={() => navigate('/glasses?category=women-s-sunglasses')}
                   >
                     <span className="text-2xl font-thin opacity-90">Sunglasses</span>
                     <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">
@@ -157,7 +154,7 @@ const HomePage: React.FC = () => {
                 <div className="space-y-2">
                   <div 
                     className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => navigate('/products?category=glasses&gender=men')}
+                    onClick={() => navigate('/glasses?category=men-s-glasses')}
                   >
                     <span className="text-2xl font-thin opacity-90">Glasses</span>
                     <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">
@@ -166,7 +163,7 @@ const HomePage: React.FC = () => {
                   </div>
                   <div 
                     className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => navigate('/products?category=sunglasses&gender=men')}
+                    onClick={() => navigate('/glasses?category=men-s-sunglasses')}
                   >
                     <span className="text-2xl font-thin opacity-90">Sunglasses</span>
                     <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">

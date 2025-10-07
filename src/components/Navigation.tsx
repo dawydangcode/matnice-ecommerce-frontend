@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { lensService } from '../services/lens.service';
 import {
@@ -83,7 +82,7 @@ const Navigation: React.FC = () => {
             onMouseLeave={handleMouseLeave}
           >
             <Link 
-              to="/glasses"
+              to="/glasses?category=all-glasses"
               className={`flex items-center space-x-1 font-medium text-base transition-all duration-200 py-2 px-4 border-b-2 ${
                 activeDropdown === 'glasses' 
                   ? 'text-gray-900 border-black font-bold' 
@@ -101,7 +100,7 @@ const Navigation: React.FC = () => {
             onMouseLeave={handleMouseLeave}
           >
             <Link 
-              to="/sunglasses"
+              to="/sunglasses?category=all"
               className={`flex items-center space-x-1 font-medium text-base transition-all duration-200 py-2 px-4 border-b-2 ${
                 activeDropdown === 'sunglasses' 
                   ? 'text-gray-900 border-black font-bold' 
