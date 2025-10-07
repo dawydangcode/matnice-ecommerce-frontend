@@ -7,7 +7,7 @@ import VirtualTryOnModal from '../components/VirtualTryOnModal';
 import SuccessModal from '../components/SuccessModal';
 import productService, { ProductDetail } from '../services/productService';
 import { product3DModelService, Product3DModel, Model3DConfig } from '../services/product3dModel.service';
-import cartService from '../services/cart.service';
+import { localCartService } from '../services/localCart.service';
 import '../styles/ProductDetailPage.css';
 import { Glasses, Handbag, ShoppingCart, X, Video, RefreshCcw, Package } from 'lucide-react';
 import { FrameMeasurement, LensMeasurement, TempleMeasurement } from '../components/icons/Dimensions';
@@ -245,32 +245,58 @@ const ProductDetailPage: React.FC = () => {
     }
 
     try {
-      // Get or create cart
-      const cartData = await cartService.getOrCreateCart();
-      
       const framePrice = getPrice();
-      const frameData = {
-        cartId: cartData.cartId,
+      const productData = {
         productId: product.id,
         quantity: 1,
         framePrice: framePrice,
         totalPrice: framePrice, // For frame only, total price = frame price
         discount: 0,
         selectedColorId: selectedColorId,
+        type: isGlasses() ? 'frame' as const : 'sunglasses' as const,
       };
 
-      console.log('Adding frame to cart:', frameData);
+      console.log('Adding frame to cart:', productData);
       
-      const response = await cartService.addFrameOnlyToCart(frameData);
-      console.log('Frame added successfully:', response);
+      // Use smart add to cart - handles both logged in and guest users
+      const result = await localCartService.smartAddToCart(productData);
       
-      // Show success modal
-      setSuccessMessage(`${isGlasses() ? 'Frame' : 'Sunglasses'} added to cart successfully!`);
-      setIsSuccessModalOpen(true);
+      if (result.success) {
+        console.log('Frame added successfully:', result);
+        
+        // Show success modal with appropriate message
+        const message = result.isLocal 
+          ? `${isGlasses() ? 'Frame' : 'Sunglasses'} added to cart! Sign in to sync across devices.`
+          : `${isGlasses() ? 'Frame' : 'Sunglasses'} added to cart successfully!`;
+        
+        setSuccessMessage(message);
+        setIsSuccessModalOpen(true);
+      } else {
+        throw new Error('Failed to add to cart');
+      }
       
     } catch (error) {
       console.error('Error adding frame to cart:', error);
-      alert('Failed to add to cart. Please try again.');
+      
+      // Fallback: try to add to local storage directly
+      try {
+        const framePrice = getPrice();
+        localCartService.addFrameToLocalCart({
+          productId: product.id,
+          quantity: 1,
+          framePrice: framePrice,
+          totalPrice: framePrice,
+          discount: 0,
+          selectedColorId: selectedColorId,
+          type: isGlasses() ? 'frame' : 'sunglasses',
+        });
+        
+        setSuccessMessage(`${isGlasses() ? 'Frame' : 'Sunglasses'} saved locally! Sign in to sync across devices.`);
+        setIsSuccessModalOpen(true);
+      } catch (localError) {
+        console.error('Local storage fallback failed:', localError);
+        alert('Failed to add to cart. Please try again.');
+      }
     }
   };
 

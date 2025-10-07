@@ -14,16 +14,6 @@ export const glassesCategories = [
     items: ['Round', 'Square', 'Cat Eye', 'Aviator', 'Wayfarer', 'Oversized'],
   },
   {
-    title: 'Face Shape',
-    items: [
-      'Round Face',
-      'Square Face',
-      'Oval Face',
-      'Heart Face',
-      'Diamond Face',
-    ],
-  },
-  {
     title: 'Materials',
     items: ['Acetate', 'Metal', 'Titanium', 'Plastic', 'Wood', 'Carbon Fiber'],
   },

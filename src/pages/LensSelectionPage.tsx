@@ -9,6 +9,7 @@ import productService from '../services/productService';
 import lensPrescriptionService, { FilteredLens, LensPrescriptionFilterResponse } from '../services/lens-prescription.service';
 import lensDetailsService, { LensFullDetails, SelectedLensOptions, LensVariant, LensCoating, TintColor } from '../services/lens-details.service';
 import cartService, { AddLensProductToCartRequest } from '../services/cart.service';
+import { localCartService } from '../services/localCart.service';
 import { ProductCard } from '../types/product-card.types';
 import '../styles/value-table.css';
 
@@ -558,11 +559,6 @@ const LensSelectionPage: React.FC = () => {
 
     try {
       setIsAddingToCart(true);
-      
-      // Get or create cart
-      const cartResult = await cartService.getOrCreateCart();
-      console.log('Cart result:', cartResult);
-      const { cartId } = cartResult;
 
       // Prepare prescription values - convert string to numbers
       const parseValue = (value: string) => {
@@ -577,7 +573,7 @@ const LensSelectionPage: React.FC = () => {
       // Prepare cart data
       const selectedColorIdParam = searchParams.get('selectedColorId');
       const cartData: AddLensProductToCartRequest = {
-        cartId,
+        cartId: 0, // Will be set by smart add method
         frameData: {
           productId: Number(selectedProduct.id),
           framePrice: selectedProduct.price,
@@ -607,9 +603,21 @@ const LensSelectionPage: React.FC = () => {
       };
 
       console.log('Cart data being sent:', JSON.stringify(cartData, null, 2));
-      const result = await cartService.addLensProductToCart(cartData);
-      console.log('Added to cart successfully:', result);
       
+      // Use smart add to cart (works for both authenticated and guest users)
+      const result = await localCartService.smartAddToCart({
+        type: 'lens',
+        productId: Number(selectedProduct.id),
+        framePrice: selectedProduct.price,
+        lensPrice: selectedLensOptions.variant ? Number(selectedLensOptions.variant.price) : 0,
+        quantity: 1,
+        selectedColorId: selectedColorIdParam ? Number(selectedColorIdParam) : undefined,
+        // Store complex lens data as JSON string for local storage
+        lensData: JSON.stringify(cartData.lensData),
+        cartData: cartData // Pass full cart data for backend calls
+      });
+      
+      console.log('Added to cart successfully:', result);
       toast.success('Đã thêm sản phẩm vào giỏ hàng thành công!');
       
       // Navigate to cart page after successful addition
@@ -619,7 +627,69 @@ const LensSelectionPage: React.FC = () => {
       
     } catch (error) {
       console.error('Error adding to cart:', error);
-      toast.error('Có lỗi xảy ra khi thêm vào giỏ hàng. Vui lòng thử lại.');
+      
+      // Fallback to local storage if backend fails
+      try {
+        console.log('Attempting fallback to local storage...');
+        
+        // Re-define parseValue for fallback
+        const parseValueFallback = (value: string) => {
+          if (value === '± 0.00') return 0;
+          if (value === '-' || !value) return 0;
+          if (value.includes('°')) return parseFloat(value.replace('°', ''));
+          const parsed = parseFloat(value);
+          return isNaN(parsed) ? 0 : parsed;
+        };
+        
+        const framePrice = selectedProduct.price;
+        const lensPrice = selectedLensOptions.variant ? Number(selectedLensOptions.variant.price) : 0;
+        const totalPrice = framePrice + lensPrice;
+        
+        const localItem = {
+          productId: Number(selectedProduct.id),
+          framePrice: framePrice,
+          totalPrice: totalPrice,
+          quantity: 1,
+          selectedColorId: searchParams.get('selectedColorId') ? Number(searchParams.get('selectedColorId')) : undefined,
+          type: 'frame' as const,
+          discount: 0
+        };
+        
+        const addedItem = localCartService.addFrameToLocalCart(localItem);
+        
+        // Store lens data separately since addFrameToLocalCart doesn't support it
+        const lensData = {
+          itemId: addedItem.id,
+          lensVariantId: Number(selectedLensOptions.variant?.id),
+          prescriptionValues: {
+            rightEyeSphere: parseValueFallback(prescriptionData.sphereR),
+            leftEyeSphere: parseValueFallback(prescriptionData.sphereL),
+            rightEyeCylinder: parseValueFallback(prescriptionData.cylinderR),
+            leftEyeCylinder: parseValueFallback(prescriptionData.cylinderL),
+            rightEyeAxis: parseValueFallback(prescriptionData.axisR),
+            leftEyeAxis: parseValueFallback(prescriptionData.axisL),
+            pdLeft: prescriptionData.hasTwoPD ? parseValueFallback(prescriptionData.pdL) : parseValueFallback(prescriptionData.pd) / 2,
+            pdRight: prescriptionData.hasTwoPD ? parseValueFallback(prescriptionData.pdR) : parseValueFallback(prescriptionData.pd) / 2,
+            addLeft: parseValueFallback(prescriptionData.addL),
+            addRight: parseValueFallback(prescriptionData.addR)
+          },
+          selectedCoatingIds: selectedLensOptions.coatings.map(coating => Number(coating.id)),
+          selectedTintColorId: selectedLensOptions.tintColor ? Number(selectedLensOptions.tintColor.id) : undefined,
+          prescriptionNotes: 'Từ trang Lens Selection',
+          lensNotes: `Loại tròng: ${selectedLensType}`
+        };
+        
+        // Store lens data in separate localStorage key
+        localStorage.setItem(`matnice_lens_data_${addedItem.id}`, JSON.stringify(lensData));
+        toast.success('Đã lưu sản phẩm vào giỏ hàng tạm thời!');
+        
+        setTimeout(() => {
+          navigate('/cart');
+        }, 1500);
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+        toast.error('Có lỗi xảy ra khi thêm vào giỏ hàng. Vui lòng thử lại.');
+      }
     } finally {
       setIsAddingToCart(false);
     }

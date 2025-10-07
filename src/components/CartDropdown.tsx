@@ -3,13 +3,17 @@ import { ShoppingCart, X, Plus, Minus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../stores/cart.store';
 import { useAuthStore } from '../stores/auth.store';
+import { localCartService, LocalCartItem } from '../services/localCart.service';
+import { useCartCount } from '../hooks/useCartCount';
 
 const CartDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [localItems, setLocalItems] = useState<LocalCartItem[]>([]);
   const { items, totalItems, totalPrice, fetchCartItems, updateQuantity, removeItem } = useCartStore();
   const { user } = useAuthStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const cartCount = useCartCount();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -26,8 +30,22 @@ const CartDropdown: React.FC = () => {
   useEffect(() => {
     if (user?.id) {
       fetchCartItems();
+      // Sync local cart when user logs in
+      localCartService.syncCartWithBackend();
+    } else {
+      // Load local cart items for guest users
+      const localCart = localCartService.getLocalCart();
+      setLocalItems(localCart.items);
     }
   }, [user?.id, fetchCartItems]);
+
+  // Update local items when cart is updated
+  useEffect(() => {
+    if (!user?.id) {
+      const localCart = localCartService.getLocalCart();
+      setLocalItems(localCart.items);
+    }
+  }, [cartCount, user?.id]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -71,18 +89,18 @@ const CartDropdown: React.FC = () => {
         {isMobile ? (
           <div onClick={handleCartClick} className="relative cursor-pointer">
             <ShoppingCart className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
-            {totalItems > 0 && (
+            {(user?.id ? totalItems : cartCount) > 0 && (
               <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                {totalItems > 99 ? '99+' : totalItems}
+                {(user?.id ? totalItems : cartCount) > 99 ? '99+' : (user?.id ? totalItems : cartCount)}
               </span>
             )}
           </div>
         ) : (
           <Link to="/cart" className="relative">
             <ShoppingCart className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
-            {totalItems > 0 && (
+            {(user?.id ? totalItems : cartCount) > 0 && (
               <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                {totalItems > 99 ? '99+' : totalItems}
+                {(user?.id ? totalItems : cartCount) > 99 ? '99+' : (user?.id ? totalItems : cartCount)}
               </span>
             )}
           </Link>
@@ -97,7 +115,7 @@ const CartDropdown: React.FC = () => {
       {/* Dropdown */}
       {isOpen && (
         <div className="absolute right-0 top-8 w-96 max-w-[calc(100vw-2rem)] bg-white shadow-xl border rounded-lg z-50">
-          {items.length === 0 ? (
+          {(user?.id ? items : localItems).length === 0 ? (
             <div className="p-6 text-center">
               <ShoppingCart className="w-12 h-12 mx-auto text-gray-400 mb-3" />
               <p className="text-gray-500 mb-4">Giỏ hàng trống</p>
@@ -113,89 +131,174 @@ const CartDropdown: React.FC = () => {
               {/* Header */}
               <div className="p-4 border-b">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-lg">Giỏ hàng ({totalItems} sản phẩm)</h3>
+                  <h3 className="font-semibold text-lg">
+                    Giỏ hàng ({user?.id ? totalItems : cartCount} sản phẩm)
+                    {!user?.id && (
+                      <span className="text-sm font-normal text-gray-500 ml-2">
+                        (Chưa đăng nhập)
+                      </span>
+                    )}
+                  </h3>
                 </div>
               </div>
 
               {/* Items */}
               <div className="max-h-48 overflow-y-auto">
-                {items.map((item) => (
-                  <div key={item.id} className="p-4 border-b hover:bg-gray-50">
-                    <div className="flex items-start space-x-3">
-                      {/* Product Image */}
-                      <div className="flex-shrink-0">
-                        {item.imageUrl ? (
-                          <img 
-                            src={item.imageUrl} 
-                            alt={item.productName}
-                            className="w-16 h-16 object-cover rounded"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                            <span className="text-gray-400 text-xs">No Image</span>
-                          </div>
-                        )}
-                      </div>
+                {user?.id ? (
+                  // Backend items for logged in users
+                  items.map((item) => (
+                    <div key={item.id} className="p-4 border-b hover:bg-gray-50">
+                      <div className="flex items-start space-x-3">
+                        {/* Product Image */}
+                        <div className="flex-shrink-0">
+                          {item.imageUrl ? (
+                            <img 
+                              src={item.imageUrl} 
+                              alt={item.productName}
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
+                              <span className="text-gray-400 text-xs">No Image</span>
+                            </div>
+                          )}
+                        </div>
 
-                      {/* Product Info */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm text-gray-900 truncate">
-                          {item.productName}
-                        </h4>
-                        <p className="text-sm text-gray-600 truncate">
-                          Frame: {formatVND(item.framePrice)}
-                        </p>
-                        {item.lensPrice > 0 && (
-                          <p className="text-xs text-gray-500">
-                            Lens: {formatVND(item.lensPrice)}
+                        {/* Product Info */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm text-gray-900 truncate">
+                            {item.productName}
+                          </h4>
+                          <p className="text-sm text-gray-600 truncate">
+                            Frame: {formatVND(item.framePrice)}
                           </p>
-                        )}
+                          {item.lensPrice > 0 && (
+                            <p className="text-xs text-gray-500">
+                              Lens: {formatVND(item.lensPrice)}
+                            </p>
+                          )}
 
-                        {/* Quantity Controls */}
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                updateQuantity(parseInt(item.id), item.quantity - 1);
-                              }}
-                              className="w-6 h-6 rounded-full border flex items-center justify-center hover:bg-gray-100"
-                            >
-                              <Minus className="w-3 h-3" />
-                            </button>
-                            <span className="text-sm font-medium w-8 text-center">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                updateQuantity(parseInt(item.id), item.quantity + 1);
-                              }}
-                              className="w-6 h-6 rounded-full border flex items-center justify-center hover:bg-gray-100"
-                            >
-                              <Plus className="w-3 h-3" />
-                            </button>
-                          </div>
+                          {/* Quantity Controls */}
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  updateQuantity(parseInt(item.id), item.quantity - 1);
+                                }}
+                                className="w-6 h-6 rounded-full border flex items-center justify-center hover:bg-gray-100"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="text-sm font-medium w-8 text-center">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  updateQuantity(parseInt(item.id), item.quantity + 1);
+                                }}
+                                className="w-6 h-6 rounded-full border flex items-center justify-center hover:bg-gray-100"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
 
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm font-semibold text-green-600">
-                              {formatVND(item.totalPrice)}
-                            </span>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                removeItem(parseInt(item.id));
-                              }}
-                              className="text-gray-400 hover:text-red-500 transition-colors"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-semibold text-green-600">
+                                {formatVND(item.totalPrice)}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  removeItem(parseInt(item.id));
+                                }}
+                                className="text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  // Local items for guest users
+                  localItems.map((item) => (
+                    <div key={item.id} className="p-4 border-b hover:bg-gray-50">
+                      <div className="flex items-start space-x-3">
+                        {/* Product Image Placeholder */}
+                        <div className="flex-shrink-0">
+                          <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
+                            <span className="text-gray-400 text-xs">Product</span>
+                          </div>
+                        </div>
+
+                        {/* Product Info */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm text-gray-900 truncate">
+                            Product #{item.productId} ({item.type})
+                          </h4>
+                          <p className="text-sm text-gray-600 truncate">
+                            Price: {formatVND(item.framePrice)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Added: {new Date(item.addedAt).toLocaleDateString()}
+                          </p>
+
+                          {/* Quantity Controls */}
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  localCartService.updateLocalCartItemQuantity(item.id, item.quantity - 1);
+                                  const updatedCart = localCartService.getLocalCart();
+                                  setLocalItems(updatedCart.items);
+                                }}
+                                className="w-6 h-6 rounded-full border flex items-center justify-center hover:bg-gray-100"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="text-sm font-medium w-8 text-center">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  localCartService.updateLocalCartItemQuantity(item.id, item.quantity + 1);
+                                  const updatedCart = localCartService.getLocalCart();
+                                  setLocalItems(updatedCart.items);
+                                }}
+                                className="w-6 h-6 rounded-full border flex items-center justify-center hover:bg-gray-100"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-semibold text-green-600">
+                                {formatVND(item.totalPrice)}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  localCartService.removeFromLocalCart(item.id);
+                                  const updatedCart = localCartService.getLocalCart();
+                                  setLocalItems(updatedCart.items);
+                                }}
+                                className="text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
               {/* Footer */}
@@ -203,12 +306,17 @@ const CartDropdown: React.FC = () => {
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-semibold text-gray-900">Tổng cộng:</span>
                   <span className="text-lg font-bold text-green-600">
-                    {formatVND(totalPrice)}
+                    {formatVND(user?.id ? totalPrice : localItems.reduce((sum, item) => sum + item.totalPrice, 0))}
                   </span>
                 </div>
                 <div className="text-xs text-gray-500 mb-3">
                   Giao hàng (7 - 15 ngày): Miễn phí
                 </div>
+                {!user?.id && (
+                  <div className="text-xs text-amber-600 mb-3 p-2 bg-amber-50 rounded">
+                    💡 Đăng nhập để đồng bộ giỏ hàng trên các thiết bị
+                  </div>
+                )}
                 <Link
                   to="/cart"
                   className="block w-full bg-green-600 text-white text-center py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"

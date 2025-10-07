@@ -1,8 +1,8 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { jwtDecode } from "jwt-decode";
-import { User } from "../types/auth.types";
-import { authService } from "../services/auth.service";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { jwtDecode } from 'jwt-decode';
+import { User } from '../types/auth.types';
+import { authService } from '../services/auth.service';
 
 interface JwtPayload {
   userId: number;
@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthStore>()(
             // Decode JWT to get user information
             try {
               const decoded = jwtDecode<JwtPayload>(response.accessToken.token);
-              console.log("JWT Payload:", decoded);
+              console.log('JWT Payload:', decoded);
 
               // Create user object from JWT payload
               const userFromJWT: User = {
@@ -76,7 +76,7 @@ export const useAuthStore = create<AuthStore>()(
               };
 
               // Store the user object
-              localStorage.setItem("user", JSON.stringify(userFromJWT));
+              localStorage.setItem('user', JSON.stringify(userFromJWT));
 
               set({
                 user: userFromJWT,
@@ -85,14 +85,24 @@ export const useAuthStore = create<AuthStore>()(
                 error: null,
               });
 
-              console.log("User stored:", userFromJWT);
+              console.log('User stored:', userFromJWT);
+
+              // Sync local cart with backend after successful login
+              try {
+                const { localCartService } = await import(
+                  '../services/localCart.service'
+                );
+                await localCartService.syncCartWithBackend();
+              } catch (syncError) {
+                console.error('Failed to sync cart after login:', syncError);
+              }
             } catch (jwtError) {
-              console.error("Failed to decode JWT:", jwtError);
+              console.error('Failed to decode JWT:', jwtError);
 
               // Fallback: try to fetch user profile from API
               try {
                 const userProfile = await authService.getCurrentUser();
-                localStorage.setItem("user", JSON.stringify(userProfile));
+                localStorage.setItem('user', JSON.stringify(userProfile));
 
                 set({
                   user: userProfile,
@@ -101,19 +111,19 @@ export const useAuthStore = create<AuthStore>()(
                   error: null,
                 });
               } catch (profileError) {
-                console.error("Failed to fetch user profile:", profileError);
+                console.error('Failed to fetch user profile:', profileError);
 
                 // Last fallback: create basic user object
                 const basicUser = {
                   id: response.userId,
                   username: username,
-                  email: "",
+                  email: '',
                   roleId: 0,
                   createdAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString(),
                 };
 
-                localStorage.setItem("user", JSON.stringify(basicUser));
+                localStorage.setItem('user', JSON.stringify(basicUser));
 
                 set({
                   user: basicUser,
@@ -124,11 +134,11 @@ export const useAuthStore = create<AuthStore>()(
               }
             }
           } else {
-            throw new Error("Login failed - no access token");
+            throw new Error('Login failed - no access token');
           }
         } catch (error: any) {
           set({
-            error: error.message || "Login failed",
+            error: error.message || 'Login failed',
             isLoading: false,
             isLoggedIn: false,
             user: null,
@@ -150,7 +160,7 @@ export const useAuthStore = create<AuthStore>()(
           });
         } catch (error: any) {
           set({
-            error: error.message || "Registration failed",
+            error: error.message || 'Registration failed',
             isLoading: false,
           });
           throw error;
@@ -162,7 +172,7 @@ export const useAuthStore = create<AuthStore>()(
         try {
           await authService.logout();
         } catch (error) {
-          console.error("Logout error:", error);
+          console.error('Logout error:', error);
         } finally {
           set({
             user: null,
@@ -202,15 +212,15 @@ export const useAuthStore = create<AuthStore>()(
 
       updateUser: (user: User) => {
         set({ user });
-        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem('user', JSON.stringify(user));
       },
     }),
     {
-      name: "auth-store",
+      name: 'auth-store',
       partialize: (state) => ({
         user: state.user,
         isLoggedIn: state.isLoggedIn,
       }),
-    }
-  )
+    },
+  ),
 );
