@@ -560,8 +560,8 @@ const CartPage: React.FC = () => {
                               })()}
                             </h3>
                             
-                            {/* Display selected color if available */}
-                            {item.selectedColor && (
+                            {/* Display selected color if available and not 'Unknown' */}
+                            {item.selectedColor && item.selectedColor.colorName !== 'Unknown' && (
                               <p className="text-sm text-gray-600 mb-2">
                                 <strong>Màu:</strong> {item.selectedColor.colorName}
                               </p>

@@ -607,8 +607,15 @@ const LensSelectionPage: React.FC = () => {
       
       // Get color info for localStorage
       const colorInfo = selectedProductDetail?.productColors?.find((color: any) => 
-        color.id === selectedColorIdParam
+        color.id === Number(selectedColorIdParam)
       );
+
+      console.log('Color info debug:', {
+        selectedColorIdParam,
+        selectedColorIdParamNumber: Number(selectedColorIdParam),
+        availableColors: selectedProductDetail?.productColors,
+        foundColorInfo: colorInfo
+      });
 
       // Use smart add to cart (works for both authenticated and guest users)
       const result = await localCartService.smartAddToCart({
@@ -617,8 +624,8 @@ const LensSelectionPage: React.FC = () => {
         productName: selectedProduct.displayName || selectedProductDetail?.productName,
         productImage: selectedProductDetail?.productImages?.[0]?.imageUrl,
         selectedColorId: selectedColorIdParam ? Number(selectedColorIdParam) : undefined,
-        selectedColorName: colorInfo?.colorName,
-        productVariantName: colorInfo?.productVariantName,
+        selectedColorName: colorInfo?.colorName || 'Unknown',
+        productVariantName: colorInfo?.productVariantName || '',
         framePrice: selectedProduct.price,
         totalPrice: selectedProduct.price + (selectedLensOptions.variant ? Number(selectedLensOptions.variant.price) : 0),
         quantity: 1,
