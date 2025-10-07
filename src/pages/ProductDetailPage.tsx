@@ -678,32 +678,110 @@ const ProductDetailPage: React.FC = () => {
                 {accordionOpen.properties && (
                   <div className="accordion-content">
                     <div className="properties-content">
-                      <dl className="properties-list">
-                        <dt>Brand:</dt>
-                        <dd>{product.brand?.name}</dd>
-                        
-                        {product.productDetail && (
-                          <>
-                            <dt>Frame material:</dt>
-                            <dd>{product.productDetail.frameMaterial}</dd>
-                            
-                            <dt>Frame shape:</dt>
-                            <dd>{product.productDetail.frameShape}</dd>
-                            
-                            <dt>Frame type:</dt>
-                            <dd>{product.productDetail.frameType}</dd>
-                            
-                            <dt>Spring hinges:</dt>
-                            <dd>{product.productDetail.springHinges ? 'Yes' : 'No'}</dd>
-                            
-                            <dt>Weight:</dt>
-                            <dd>{product.productDetail.weight} g</dd>
-                            
-                            <dt>Multifocal:</dt>
-                            <dd>{product.productDetail.multifocal ? 'Yes' : 'No'}</dd>
-                          </>
-                        )}
-                      </dl>
+                      <div className="properties-container">
+                        <div className="properties-data-list">
+                          {/* First Column */}
+                          <div className="properties-first-column">
+                            <dl>
+                              <div className="property-row">
+                                <dt className="dt-first-half">
+                                  <span>Brand:</span>
+                                </dt>
+                                <dd className="dd-first-half">
+                                  <span>
+                                    <span className="property-link">{product.brand?.name}</span>
+                                  </span>
+                                </dd>
+                              </div>
+                              
+                              <div className="property-row">
+                                <dt className="dt-first-half">
+                                  <span>Product number:</span>
+                                </dt>
+                                <dd className="dd-first-half">
+                                  <span>{getSelectedColorData()?.productNumber || 'N/A'}</span>
+                                </dd>
+                              </div>
+                              
+                              <div className="property-row">
+                                <dt className="dt-first-half">
+                                  <span>Frame colour:</span>
+                                </dt>
+                                <dd className="dd-first-half">
+                                  <span>{selectedColor}</span>
+                                </dd>
+                              </div>
+                              
+                              {product.productDetail && (
+                                <>
+                                  <div className="property-row">
+                                    <dt className="dt-first-half">
+                                      <span>Frame material:</span>
+                                    </dt>
+                                    <dd className="dd-first-half">
+                                      <span>{product.productDetail.frameMaterial}</span>
+                                    </dd>
+                                  </div>
+                                  
+                                  <div className="property-row">
+                                    <dt className="dt-first-half">
+                                      <span>Frame shape:</span>
+                                    </dt>
+                                    <dd className="dd-first-half">
+                                      <span>{product.productDetail.frameShape}</span>
+                                    </dd>
+                                  </div>
+                                </>
+                              )}
+                            </dl>
+                          </div>
+
+                          {/* Second Column */}
+                          <div className="properties-second-column">
+                            <dl>
+                              {product.productDetail && (
+                                <>
+                                  <div className="property-row">
+                                    <dt className="dt-second-half">
+                                      <span>Frame type:</span>
+                                    </dt>
+                                    <dd className="dd-second-half">
+                                      <span>{product.productDetail.frameType}</span>
+                                    </dd>
+                                  </div>
+                                  
+                                  <div className="property-row">
+                                    <dt className="dt-second-half">
+                                      <span>Spring hinges:</span>
+                                    </dt>
+                                    <dd className="dd-second-half">
+                                      <span>{product.productDetail.springHinges ? 'Yes' : 'No'}</span>
+                                    </dd>
+                                  </div>
+                                  
+                                  <div className="property-row">
+                                    <dt className="dt-second-half">
+                                      <span>Weight:</span>
+                                    </dt>
+                                    <dd className="dd-second-half">
+                                      <span>{product.productDetail.weight}&nbsp;g</span>
+                                    </dd>
+                                  </div>
+                                  
+                                  <div className="property-row">
+                                    <dt className="dt-second-half">
+                                      <span>Multifocal:</span>
+                                    </dt>
+                                    <dd className="dd-second-half">
+                                      <span>{product.productDetail.multifocal ? 'Yes' : 'No'}</span>
+                                    </dd>
+                                  </div>
+                                </>
+                              )}
+                            </dl>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

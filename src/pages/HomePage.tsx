@@ -1,11 +1,15 @@
 import React from 'react';
 import { ChevronRight, Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import VirtualTryOnImage from '../assets/Virtual-Eyewear-Try-On.jpg';
+import WomenGlassesImage from '../assets/home-page-image/cd72032b96f1b3bf579e848b96fe6aaf.jpg';
+import MenGlassesImage from '../assets/home-page-image/8de8cf9366092e37a8d5b2e9148e577b.jpg';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -108,9 +112,9 @@ const HomePage: React.FC = () => {
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Women Category */}
-            <div className="relative h-96 rounded-3xl overflow-hidden group cursor-pointer">
+            <div className="relative h-[650px] rounded-3xl overflow-hidden group cursor-pointer">
               <img 
-                src="/api/placeholder/500/400" 
+                src={WomenGlassesImage} 
                 alt="Women glasses"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
@@ -118,14 +122,20 @@ const HomePage: React.FC = () => {
               <div className="absolute bottom-8 left-8 text-white">
                 <h3 className="text-4xl font-bold mb-4">Women</h3>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">Glasses</span>
+                  <div 
+                    className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => navigate('/products?category=glasses&gender=women')}
+                  >
+                    <span className="text-2xl font-thin opacity-90">Glasses</span>
                     <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">
                       <ChevronRight className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">Sunglasses</span>
+                  <div 
+                    className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => navigate('/products?category=sunglasses&gender=women')}
+                  >
+                    <span className="text-2xl font-thin opacity-90">Sunglasses</span>
                     <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">
                       <ChevronRight className="w-4 h-4" />
                     </div>
@@ -135,9 +145,9 @@ const HomePage: React.FC = () => {
             </div>
 
             {/* Men Category */}
-            <div className="relative h-96 rounded-3xl overflow-hidden group cursor-pointer">
+            <div className="relative h-[650px] mt-12 rounded-3xl overflow-hidden group cursor-pointer">
               <img 
-                src="/api/placeholder/500/400" 
+                src={MenGlassesImage} 
                 alt="Men glasses"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
@@ -145,14 +155,20 @@ const HomePage: React.FC = () => {
               <div className="absolute bottom-8 left-8 text-white">
                 <h3 className="text-4xl font-bold mb-4">Men</h3>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">Glasses</span>
+                  <div 
+                    className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => navigate('/products?category=glasses&gender=men')}
+                  >
+                    <span className="text-2xl font-thin opacity-90">Glasses</span>
                     <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">
                       <ChevronRight className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">Sunglasses</span>
+                  <div 
+                    className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => navigate('/products?category=sunglasses&gender=men')}
+                  >
+                    <span className="text-2xl font-thin opacity-90">Sunglasses</span>
                     <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">
                       <ChevronRight className="w-4 h-4" />
                     </div>
