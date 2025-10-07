@@ -165,14 +165,10 @@ function App() {
           <Route path="/lens/:id" element={<LensDetailPage />} />
           <Route path="/lens-selection" element={<LensSelectionPage />} />
 
-          {/* Cart Page - requires login */}
+          {/* Cart Page - accessible by everyone (supports both guest and authenticated users) */}
           <Route 
             path="/cart" 
-            element={
-              <ProtectedRoute>
-                <CartPage />
-              </ProtectedRoute>
-            } 
+            element={<CartPage />} 
           />
 
           {/* Checkout Page - requires login */}

@@ -543,7 +543,10 @@ const CartPage: React.FC = () => {
                       <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
                         <div>
                           <p><strong>Số lượng:</strong> {item.quantity}</p>
-                          <p><strong>Giá:</strong> {formatPrice(item.framePrice)}</p>
+                          <p><strong>Giá gọng:</strong> {formatPrice(item.framePrice)}</p>
+                          {item.lensPrice && item.lensPrice > 0 && (
+                            <p><strong>Giá tròng:</strong> {formatPrice(item.lensPrice)}</p>
+                          )}
                           <p><strong>Ngày thêm:</strong> {new Date(item.addedAt).toLocaleDateString()}</p>
                         </div>
                         <div>
@@ -560,9 +563,43 @@ const CartPage: React.FC = () => {
                       {item.lensData && (
                         <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                           <h4 className="font-semibold text-gray-900 mb-2">Chi tiết tròng kính</h4>
-                          <p className="text-sm text-gray-600">
-                            Có dữ liệu tròng kính đã lưu (sẽ được xử lý khi đăng nhập)
-                          </p>
+                          {(() => {
+                            try {
+                              const lensInfo = JSON.parse(item.lensData);
+                              return (
+                                <div className="text-sm text-gray-600 space-y-1">
+                                  {lensInfo.lensNotes && (
+                                    <p><strong>Loại tròng:</strong> {lensInfo.lensNotes.replace('Loại tròng: ', '')}</p>
+                                  )}
+                                  {lensInfo.prescriptionValues && (
+                                    <div className="grid grid-cols-2 gap-4 mt-2">
+                                      <div>
+                                        <p className="font-medium">Mắt phải (OD):</p>
+                                        <p>SPH: {formatPrescriptionValue(lensInfo.prescriptionValues.rightEyeSphere)}</p>
+                                        <p>CYL: {formatPrescriptionValue(lensInfo.prescriptionValues.rightEyeCylinder)}</p>
+                                        <p>AXIS: {formatPrescriptionValue(lensInfo.prescriptionValues.rightEyeAxis, '°')}</p>
+                                      </div>
+                                      <div>
+                                        <p className="font-medium">Mắt trái (OS):</p>
+                                        <p>SPH: {formatPrescriptionValue(lensInfo.prescriptionValues.leftEyeSphere)}</p>
+                                        <p>CYL: {formatPrescriptionValue(lensInfo.prescriptionValues.leftEyeCylinder)}</p>
+                                        <p>AXIS: {formatPrescriptionValue(lensInfo.prescriptionValues.leftEyeAxis, '°')}</p>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {lensInfo.prescriptionNotes && (
+                                    <p className="mt-2"><strong>Ghi chú:</strong> {lensInfo.prescriptionNotes}</p>
+                                  )}
+                                </div>
+                              );
+                            } catch (e) {
+                              return (
+                                <p className="text-sm text-gray-600">
+                                  Có dữ liệu tròng kính đã lưu (sẽ được xử lý khi đăng nhập)
+                                </p>
+                              );
+                            }
+                          })()}
                         </div>
                       )}
                     </div>
@@ -623,9 +660,16 @@ const CartPage: React.FC = () => {
                 // Local cart summary
                 <div className="space-y-4 text-sm">
                   <div className="flex justify-between">
-                    <span>Tổng sản phẩm ({localCartItems.length} sản phẩm)</span>
+                    <span>Tổng giá gọng ({localCartItems.length} sản phẩm)</span>
                     <span>{formatPrice(localCartItems.reduce((sum, item) => sum + item.framePrice * item.quantity, 0))}</span>
                   </div>
+                  
+                  {localCartItems.some(item => item.lensPrice && item.lensPrice > 0) && (
+                    <div className="flex justify-between">
+                      <span>Tổng giá tròng</span>
+                      <span>{formatPrice(localCartItems.reduce((sum, item) => sum + ((item.lensPrice || 0) * item.quantity), 0))}</span>
+                    </div>
+                  )}
                   
                   <div className="flex justify-between">
                     <span>Giảm giá</span>
@@ -660,12 +704,34 @@ const CartPage: React.FC = () => {
                   Thanh toán
                 </button>
               ) : (
-                <Link
-                  to="/auth/login"
-                  className="w-full mt-6 block text-center bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Đăng nhập để thanh toán
-                </Link>
+                <>
+                  <Link
+                    to="/auth/login"
+                    className="w-full mt-6 block text-center bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    Đăng nhập để thanh toán
+                  </Link>
+                  
+                  {/* Debug button - remove in production */}
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Xóa toàn bộ dữ liệu giỏ hàng trong localStorage?')) {
+                        localStorage.removeItem('matnice_cart');
+                        localStorage.removeItem('matnice_cart_count');
+                        // Remove lens data
+                        Object.keys(localStorage).forEach(key => {
+                          if (key.startsWith('matnice_lens_data_')) {
+                            localStorage.removeItem(key);
+                          }
+                        });
+                        window.location.reload();
+                      }
+                    }}
+                    className="w-full mt-2 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm"
+                  >
+                    🧹 Clear Local Cart (Debug)
+                  </button>
+                </>
               )}
               
               <Link

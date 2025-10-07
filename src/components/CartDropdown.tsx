@@ -241,8 +241,13 @@ const CartDropdown: React.FC = () => {
                             Product #{item.productId} ({item.type})
                           </h4>
                           <p className="text-sm text-gray-600 truncate">
-                            Price: {formatVND(item.framePrice)}
+                            Frame: {formatVND(item.framePrice)}
                           </p>
+                          {item.lensPrice && item.lensPrice > 0 && (
+                            <p className="text-xs text-gray-500">
+                              Lens: {formatVND(item.lensPrice)}
+                            </p>
+                          )}
                           <p className="text-xs text-gray-500">
                             Added: {new Date(item.addedAt).toLocaleDateString()}
                           </p>

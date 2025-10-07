@@ -6,10 +6,11 @@ export interface LocalCartItem {
   productId: number;
   quantity: number;
   framePrice: number;
+  lensPrice?: number; // For lens products
   totalPrice: number;
   discount: number;
   selectedColorId?: number;
-  lensData?: any; // For lens products
+  lensData?: string; // JSON string of lens data for lens products
   addedAt: string;
   type: 'frame' | 'sunglasses' | 'prescription' | 'lens';
 }
@@ -63,15 +64,17 @@ export class LocalCartService {
     }
   }
 
-  // Add frame to local cart
+  // Add item to local cart (supports both frames and lens products)
   addFrameToLocalCart(productData: {
     productId: number;
     quantity?: number;
     framePrice: number;
+    lensPrice?: number;
     totalPrice: number;
     discount?: number;
     selectedColorId?: number;
-    type?: 'frame' | 'sunglasses';
+    lensData?: string;
+    type?: 'frame' | 'sunglasses' | 'lens';
   }): LocalCartItem {
     const cart = this.getLocalCart();
 
@@ -87,9 +90,11 @@ export class LocalCartService {
       productId: productData.productId,
       quantity: productData.quantity || 1,
       framePrice: productData.framePrice,
+      lensPrice: productData.lensPrice,
       totalPrice: productData.totalPrice,
       discount: productData.discount || 0,
       selectedColorId: productData.selectedColorId,
+      lensData: productData.lensData,
       addedAt: new Date().toISOString(),
       type: productData.type || 'frame',
     };
@@ -97,7 +102,18 @@ export class LocalCartService {
     if (existingItemIndex >= 0) {
       // Update existing item quantity
       cart.items[existingItemIndex].quantity += newItem.quantity;
-      cart.items[existingItemIndex].totalPrice += newItem.totalPrice;
+      // Recalculate total price based on new quantity
+      const itemFramePrice =
+        productData.framePrice * cart.items[existingItemIndex].quantity;
+      const itemLensPrice =
+        (productData.lensPrice || 0) * cart.items[existingItemIndex].quantity;
+      cart.items[existingItemIndex].totalPrice =
+        itemFramePrice + itemLensPrice - (productData.discount || 0);
+      // Update lens data if provided
+      if (productData.lensData) {
+        cart.items[existingItemIndex].lensData = productData.lensData;
+        cart.items[existingItemIndex].lensPrice = productData.lensPrice;
+      }
     } else {
       // Add new item
       cart.items.push(newItem);
