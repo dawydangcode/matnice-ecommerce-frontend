@@ -112,6 +112,8 @@ const CartPage: React.FC = () => {
     return 0;
   };
 
+
+
   const handleDeleteItem = async () => {
     if (!itemToDelete) return;
     
@@ -244,7 +246,7 @@ const CartPage: React.FC = () => {
           {/* Cart Items */}
           <div className="lg:col-span-3">
             <div className="space-y-4">
-              {/* Backend cart items for authenticated users */}
+              {/* Cart items - unified layout for both authenticated and guest users */}
               {isLoggedIn && cartSummary && cartSummary.items.map((item) => {
                 return (
                   <div key={item.cartFrameId} className="bg-white rounded-lg shadow-sm border p-10">
@@ -523,106 +525,284 @@ const CartPage: React.FC = () => {
                 );
               })}
 
-              {/* Local cart items for guest users */}
-              {!isLoggedIn && localCartItems.map((item) => (
-                <div key={item.id} className="bg-white rounded-lg shadow-sm border p-10">
-                  <div className="flex items-start gap-8">
-                    {/* Product Image Placeholder */}
-                    <div className="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden">
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-gray-400 text-xs">Product</span>
-                      </div>
-                    </div>
-
-                    {/* Product Details */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Product #{item.productId} ({item.type})
-                      </h3>
-                      
-                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
-                        <div>
-                          <p><strong>Số lượng:</strong> {item.quantity}</p>
-                          <p><strong>Giá gọng:</strong> {formatPrice(item.framePrice)}</p>
-                          {item.lensPrice && item.lensPrice > 0 && (
-                            <p><strong>Giá tròng:</strong> {formatPrice(item.lensPrice)}</p>
-                          )}
-                          <p><strong>Ngày thêm:</strong> {new Date(item.addedAt).toLocaleDateString()}</p>
-                        </div>
-                        <div>
-                          <p><strong>Giảm giá:</strong> {formatPrice(item.discount)}</p>
-                          <p><strong>Tổng tiền:</strong> 
-                            <span className="text-blue-600 font-semibold">
-                              {formatPrice(item.totalPrice)}
-                            </span>
-                          </p>
-                        </div>
+              {/* Local cart items for guest users - EXACT SAME layout as backend */}
+              {!isLoggedIn && localCartItems.map((item) => {
+                return (
+                  <div key={item.id} className="bg-white rounded-lg shadow-sm border p-10">
+                    <div className="flex items-start gap-8">
+                      {/* Product Image */}
+                      <div className="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden">
+                        {item.productImage ? (
+                          <img 
+                            src={item.productImage} 
+                            alt={item.productName || `Product ${item.productId}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <span className="text-gray-400 text-xs">No Image</span>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Lens Data Preview if available */}
-                      {item.lensData && (
-                        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                          <h4 className="font-semibold text-gray-900 mb-2">Chi tiết tròng kính</h4>
-                          {(() => {
-                            try {
-                              const lensInfo = JSON.parse(item.lensData);
-                              return (
-                                <div className="text-sm text-gray-600 space-y-1">
-                                  {lensInfo.lensNotes && (
-                                    <p><strong>Loại tròng:</strong> {lensInfo.lensNotes.replace('Loại tròng: ', '')}</p>
-                                  )}
-                                  {lensInfo.prescriptionValues && (
-                                    <div className="grid grid-cols-2 gap-4 mt-2">
-                                      <div>
-                                        <p className="font-medium">Mắt phải (OD):</p>
-                                        <p>SPH: {formatPrescriptionValue(lensInfo.prescriptionValues.rightEyeSphere)}</p>
-                                        <p>CYL: {formatPrescriptionValue(lensInfo.prescriptionValues.rightEyeCylinder)}</p>
-                                        <p>AXIS: {formatPrescriptionValue(lensInfo.prescriptionValues.rightEyeAxis, '°')}</p>
-                                      </div>
-                                      <div>
-                                        <p className="font-medium">Mắt trái (OS):</p>
-                                        <p>SPH: {formatPrescriptionValue(lensInfo.prescriptionValues.leftEyeSphere)}</p>
-                                        <p>CYL: {formatPrescriptionValue(lensInfo.prescriptionValues.leftEyeCylinder)}</p>
-                                        <p>AXIS: {formatPrescriptionValue(lensInfo.prescriptionValues.leftEyeAxis, '°')}</p>
-                                      </div>
+                      {/* Product Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start mb-4">
+                          {/* Left side - Product Info */}
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                              {(() => {
+                                let displayName = item.productName || `Sản phẩm #${item.productId}`;
+                                if (item.selectedColor?.productVariantName) {
+                                  displayName += ` ${item.selectedColor.productVariantName}`;
+                                }
+                                return displayName;
+                              })()}
+                            </h3>
+                            
+                            {/* Display selected color if available */}
+                            {item.selectedColor && (
+                              <p className="text-sm text-gray-600 mb-2">
+                                <strong>Màu:</strong> {item.selectedColor.colorName}
+                              </p>
+                            )}
+                            
+                            <p className="text-sm text-gray-600">
+                              <strong>Số lượng:</strong> {item.quantity}
+                            </p>
+                          </div>
+
+                          {/* Right side - Price Information */}
+                          <div className="text-right space-y-1">
+                            <div className="text-sm text-gray-600">
+                              <p><strong>Giá gọng:</strong> {formatPrice(item.framePrice)}</p>
+                              {item.lensDetail && (
+                                <p><strong>Giá tròng:</strong> {formatPrice(item.lensDetail.lensPrice)}</p>
+                              )}
+                              
+                              {/* Coating prices */}
+                              {item.lensDetail?.selectedCoatings && item.lensDetail.selectedCoatings.length > 0 && (
+                                <div>
+                                  {item.lensDetail.selectedCoatings.map((coating, index) => (
+                                    <p key={index}><strong>Lớp phủ ({coating.name}):</strong> +{formatPrice(coating.price)}</p>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {/* Tint color price */}
+                              {item.lensDetail?.selectedTintColor?.price && (
+                                <p><strong>Màu tông ({item.lensDetail.selectedTintColor.name}):</strong> +{formatPrice(item.lensDetail.selectedTintColor.price)}</p>
+                              )}
+                              
+                              {safeParseNumber(item.discount) > 0 && (
+                                <p><strong>Giảm giá:</strong> -{formatPrice(item.discount)}</p>
+                              )}
+                            </div>
+                            
+                            {/* Total Price */}
+                            <div className="border-t border-gray-200 pt-2 mt-2">
+                              <p className="text-lg font-bold text-black">
+                                <strong>Tổng tiền:</strong> 
+                                {formatPrice((() => {
+                                  let total = safeParseNumber(item.framePrice) + safeParseNumber(item.lensDetail?.lensPrice);
+                                  
+                                  // Add coating prices
+                                  if (item.lensDetail?.selectedCoatings) {
+                                    const coatingTotal = item.lensDetail.selectedCoatings.reduce((sum: number, coating: any) => 
+                                      sum + safeParseNumber(coating.price), 0);
+                                    total += coatingTotal;
+                                  }
+                                  
+                                  // Add tint color price
+                                  if (item.lensDetail?.selectedTintColor) {
+                                    total += safeParseNumber(item.lensDetail.selectedTintColor.price);
+                                  }
+                                  
+                                  return total;
+                                })())}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Lens Information */}
+                        {(item.lensInfo || item.lensVariantInfo) && (
+                          <div className="mt-4">
+                            <h4 className="text-sm font-semibold text-gray-800 mb-3">Thông tin tròng kính</h4>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              {item.lensInfo && (
+                                <div className="flex items-start space-x-4 mb-4">
+                                  {/* Lens Image */}
+                                  {item.lensInfo.image && (
+                                    <div className="flex-shrink-0">
+                                      <img
+                                        src={item.lensInfo.image}
+                                        alt={item.lensInfo.name}
+                                        className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                                      />
                                     </div>
                                   )}
-                                  {lensInfo.prescriptionNotes && (
-                                    <p className="mt-2"><strong>Ghi chú:</strong> {lensInfo.prescriptionNotes}</p>
-                                  )}
+                                  
+                                  {/* Lens Details */}
+                                  <div className="flex-1">
+                                    <h5 className="font-medium text-gray-900 mb-1">{item.lensInfo.name}</h5>
+                                    <div className="text-sm text-gray-600 space-y-1">
+                                      <p><span className="font-medium">Loại:</span> {translateLensType(item.lensInfo.lensType)}</p>
+                                      {item.lensInfo.origin && (
+                                        <p><span className="font-medium">Xuất xứ:</span> {item.lensInfo.origin}</p>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-                              );
-                            } catch (e) {
-                              return (
-                                <p className="text-sm text-gray-600">
-                                  Có dữ liệu tròng kính đã lưu (sẽ được xử lý khi đăng nhập)
-                                </p>
-                              );
-                            }
-                          })()}
-                        </div>
-                      )}
-                    </div>
+                              )}
 
-                    {/* Actions */}
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => {
-                          if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
-                            localCartService.removeFromLocalCart(item.id);
-                            loadCartData(); // Refresh cart
-                            toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
-                          }
-                        }}
-                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Xóa sản phẩm"
-                      >
-                        <TrashIcon />
-                      </button>
+                              {/* Lens Variant Info */}
+                              {item.lensVariantInfo && (
+                                <div className="border-t border-gray-200 pt-3">
+                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Tùy chọn</h6>
+                                  <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                      <span className="font-medium text-gray-700">Thiết kế:</span>
+                                      <span className="ml-2 text-gray-600">{translateDesign(item.lensVariantInfo.design)}</span>
+                                    </div>
+                                    <div>
+                                      <span className="font-medium text-gray-700">Chất liệu:</span>
+                                      <span className="ml-2 text-gray-600">{item.lensVariantInfo.material}</span>
+                                    </div>
+                                    <div>
+                                      <span className="font-medium text-gray-700">Giá:</span>
+                                      <span className="ml-2 text-gray-600">{formatPrice(item.lensVariantInfo.price)}</span>
+                                    </div>
+                                    {item.lensVariantInfo.lensThickness && (
+                                      <div>
+                                        <span className="font-medium text-gray-700">Độ dày:</span>
+                                        <span className="ml-2 text-gray-600">{item.lensVariantInfo.lensThickness.name} (Chỉ số: {item.lensVariantInfo.lensThickness.indexValue})</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Lens Coating Info */}
+                              {item.lensDetail?.selectedCoatings && item.lensDetail.selectedCoatings.length > 0 && (
+                                <div className="border-t border-gray-200 pt-3 mt-3">
+                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Lớp phủ</h6>
+                                  <div className="space-y-2">
+                                    {item.lensDetail.selectedCoatings.map((coating, index) => (
+                                      <div key={index} className="text-sm">
+                                        <div>
+                                          <span className="font-medium text-gray-700">{coating.name}</span>
+                                          {coating.description && (
+                                            <p className="text-xs text-gray-500">{coating.description}</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Lens Tint Color Info */}
+                              {item.lensDetail?.selectedTintColor && (
+                                <div className="border-t border-gray-200 pt-3 mt-3">
+                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Màu tông</h6>
+                                  <div className="text-sm">
+                                    <div className="flex items-center">
+                                      <span className="font-medium text-gray-700">{item.lensDetail.selectedTintColor.name}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Prescription Information */}
+                        {item.lensDetail?.prescription && (
+                          <div className="border-t border-gray-200 pt-4 mt-4">
+                            <h6 className="text-sm font-medium text-gray-800 mb-3">Thông tin đơn thuốc</h6>
+                            <div className="overflow-x-auto bg-gray-50 p-4 rounded-lg">
+                              <table className="min-w-full text-sm">
+                                <thead>
+                                  <tr className="border-b border-gray-300">
+                                    <th className="text-left py-3 px-3 font-medium text-gray-700">Mắt</th>
+                                    <th className="text-center py-3 px-3 font-medium text-gray-700">SPH</th>
+                                    <th className="text-center py-3 px-3 font-medium text-gray-700">CYL</th>
+                                    <th className="text-center py-3 px-3 font-medium text-gray-700">AXIS</th>
+                                    {hasAddValues(item.lensDetail.prescription) && (
+                                      <th className="text-center py-3 px-3 font-medium text-gray-700">ADD</th>
+                                    )}
+                                    <th className="text-center py-3 px-3 font-medium text-gray-700">PD</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr className="border-b border-gray-200">
+                                    <td className="py-3 px-3 font-medium text-gray-700">Phải</td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.rightEye.sphere)}
+                                    </td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.rightEye.cylinder)}
+                                    </td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.rightEye.axis, '°')}
+                                    </td>
+                                    {hasAddValues(item.lensDetail.prescription) && (
+                                      <td className="text-center py-3 px-3 text-gray-600">
+                                        {formatPrescriptionValue(item.lensDetail.prescription.addRight)}
+                                      </td>
+                                    )}
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.pdRight)}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="py-3 px-3 font-medium text-gray-700">Trái</td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.leftEye.sphere)}
+                                    </td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.leftEye.cylinder)}
+                                    </td>
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.leftEye.axis, '°')}
+                                    </td>
+                                    {hasAddValues(item.lensDetail.prescription) && (
+                                      <td className="text-center py-3 px-3 text-gray-600">
+                                        {formatPrescriptionValue(item.lensDetail.prescription.addLeft)}
+                                      </td>
+                                    )}
+                                    <td className="text-center py-3 px-3 text-gray-600">
+                                      {formatPrescriptionValue(item.lensDetail.prescription.pdLeft)}
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+
+                      </div>
+
+                      {/* Delete Button */}
+                      <div className="flex-shrink-0">
+                        <button
+                          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                          onClick={() => {
+                            if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
+                              localCartService.removeFromLocalCart(item.id);
+                              loadCartData(); // Refresh cart
+                              toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
+                            }
+                          }}
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -664,10 +844,10 @@ const CartPage: React.FC = () => {
                     <span>{formatPrice(localCartItems.reduce((sum, item) => sum + item.framePrice * item.quantity, 0))}</span>
                   </div>
                   
-                  {localCartItems.some(item => item.lensPrice && item.lensPrice > 0) && (
+                  {localCartItems.some(item => item.lensDetail?.lensPrice && item.lensDetail.lensPrice > 0) && (
                     <div className="flex justify-between">
                       <span>Tổng giá tròng</span>
-                      <span>{formatPrice(localCartItems.reduce((sum, item) => sum + ((item.lensPrice || 0) * item.quantity), 0))}</span>
+                      <span>{formatPrice(localCartItems.reduce((sum, item) => sum + ((item.lensDetail?.lensPrice || 0) * item.quantity), 0))}</span>
                     </div>
                   )}
                   

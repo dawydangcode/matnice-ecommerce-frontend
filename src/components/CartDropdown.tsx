@@ -243,9 +243,9 @@ const CartDropdown: React.FC = () => {
                           <p className="text-sm text-gray-600 truncate">
                             Frame: {formatVND(item.framePrice)}
                           </p>
-                          {item.lensPrice && item.lensPrice > 0 && (
+                          {item.lensDetail?.lensPrice && item.lensDetail.lensPrice > 0 && (
                             <p className="text-xs text-gray-500">
-                              Lens: {formatVND(item.lensPrice)}
+                              Lens: {formatVND(item.lensDetail.lensPrice)}
                             </p>
                           )}
                           <p className="text-xs text-gray-500">

@@ -1,16 +1,73 @@
 import { apiService } from './api.service';
 
-// Local storage cart item interface
+// Local storage cart item interface - matches backend structure
 export interface LocalCartItem {
-  id: string; // temporary ID for local storage
+  id: string; // temporary ID for local storage (equivalent to cartFrameId)
   productId: number;
+  productName?: string;
+  productImage?: string;
+  selectedColor?: {
+    id: number;
+    colorName: string;
+    productVariantName: string;
+  };
   quantity: number;
   framePrice: number;
-  lensPrice?: number; // For lens products
   totalPrice: number;
   discount: number;
-  selectedColorId?: number;
-  lensData?: string; // JSON string of lens data for lens products
+  // Lens information
+  lensDetail?: {
+    id?: number;
+    lensPrice: number;
+    totalUpgradesPrice: number;
+    selectedCoatings: Array<{
+      id: number;
+      name: string;
+      price: number;
+      description: string;
+    }>;
+    selectedTintColor?: {
+      id: number;
+      name: string;
+      price: number;
+    } | null;
+    prescription: {
+      rightEye: {
+        sphere: number;
+        cylinder: number;
+        axis: number;
+      };
+      leftEye: {
+        sphere: number;
+        cylinder: number;
+        axis: number;
+      };
+      pdLeft: number;
+      pdRight: number;
+      addLeft: number;
+      addRight: number;
+    };
+  };
+  lensInfo?: {
+    id: string;
+    name: string;
+    lensType: string;
+    description: string;
+    origin: string;
+    image: string;
+  };
+  lensVariantInfo?: {
+    id: number;
+    design: string;
+    material: string;
+    price: string;
+    lensThickness: {
+      id: number;
+      name: string;
+      indexValue: number;
+      description: string;
+    };
+  };
   addedAt: string;
   type: 'frame' | 'sunglasses' | 'prescription' | 'lens';
 }
@@ -67,13 +124,18 @@ export class LocalCartService {
   // Add item to local cart (supports both frames and lens products)
   addFrameToLocalCart(productData: {
     productId: number;
+    productName?: string;
+    productImage?: string;
+    selectedColorId?: number;
+    selectedColorName?: string;
+    productVariantName?: string;
     quantity?: number;
     framePrice: number;
-    lensPrice?: number;
     totalPrice: number;
     discount?: number;
-    selectedColorId?: number;
-    lensData?: string;
+    lensDetail?: LocalCartItem['lensDetail'];
+    lensInfo?: LocalCartItem['lensInfo'];
+    lensVariantInfo?: LocalCartItem['lensVariantInfo'];
     type?: 'frame' | 'sunglasses' | 'lens';
   }): LocalCartItem {
     const cart = this.getLocalCart();
@@ -82,19 +144,28 @@ export class LocalCartService {
     const existingItemIndex = cart.items.findIndex(
       (item) =>
         item.productId === productData.productId &&
-        item.selectedColorId === productData.selectedColorId,
+        item.selectedColor?.id === productData.selectedColorId,
     );
 
     const newItem: LocalCartItem = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       productId: productData.productId,
+      productName: productData.productName,
+      productImage: productData.productImage,
+      selectedColor: productData.selectedColorId
+        ? {
+            id: productData.selectedColorId,
+            colorName: productData.selectedColorName || 'Unknown',
+            productVariantName: productData.productVariantName || '',
+          }
+        : undefined,
       quantity: productData.quantity || 1,
       framePrice: productData.framePrice,
-      lensPrice: productData.lensPrice,
       totalPrice: productData.totalPrice,
       discount: productData.discount || 0,
-      selectedColorId: productData.selectedColorId,
-      lensData: productData.lensData,
+      lensDetail: productData.lensDetail,
+      lensInfo: productData.lensInfo,
+      lensVariantInfo: productData.lensVariantInfo,
       addedAt: new Date().toISOString(),
       type: productData.type || 'frame',
     };
@@ -106,13 +177,21 @@ export class LocalCartService {
       const itemFramePrice =
         productData.framePrice * cart.items[existingItemIndex].quantity;
       const itemLensPrice =
-        (productData.lensPrice || 0) * cart.items[existingItemIndex].quantity;
+        (productData.lensDetail?.lensPrice || 0) *
+        cart.items[existingItemIndex].quantity;
       cart.items[existingItemIndex].totalPrice =
         itemFramePrice + itemLensPrice - (productData.discount || 0);
+
       // Update lens data if provided
-      if (productData.lensData) {
-        cart.items[existingItemIndex].lensData = productData.lensData;
-        cart.items[existingItemIndex].lensPrice = productData.lensPrice;
+      if (productData.lensDetail) {
+        cart.items[existingItemIndex].lensDetail = productData.lensDetail;
+      }
+      if (productData.lensInfo) {
+        cart.items[existingItemIndex].lensInfo = productData.lensInfo;
+      }
+      if (productData.lensVariantInfo) {
+        cart.items[existingItemIndex].lensVariantInfo =
+          productData.lensVariantInfo;
       }
     } else {
       // Add new item
@@ -211,7 +290,7 @@ export class LocalCartService {
               framePrice: item.framePrice,
               totalPrice: item.totalPrice,
               discount: item.discount,
-              selectedColorId: item.selectedColorId,
+              selectedColorId: item.selectedColor?.id,
             },
           };
 
@@ -235,19 +314,24 @@ export class LocalCartService {
   // Smart add to cart - decides between local storage or backend
   async smartAddToCart(productData: {
     productId: number;
+    productName?: string;
+    productImage?: string;
+    selectedColorId?: number;
+    selectedColorName?: string;
+    productVariantName?: string;
     quantity?: number;
     framePrice: number;
     totalPrice?: number;
-    lensPrice?: number;
     discount?: number;
-    selectedColorId?: number;
+    lensDetail?: LocalCartItem['lensDetail'];
+    lensInfo?: LocalCartItem['lensInfo'];
+    lensVariantInfo?: LocalCartItem['lensVariantInfo'];
     type?: 'frame' | 'sunglasses' | 'lens';
-    lensData?: string;
     cartData?: any; // For backend lens cart data
   }): Promise<{ success: boolean; message: string; isLocal: boolean }> {
     const calculatedTotalPrice =
       productData.totalPrice ||
-      productData.framePrice + (productData.lensPrice || 0);
+      productData.framePrice + (productData.lensDetail?.lensPrice || 0);
 
     if (this.isAuthenticated()) {
       // User is logged in - use backend

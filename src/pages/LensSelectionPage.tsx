@@ -6,10 +6,11 @@ import Footer from '../components/Footer';
 import Navigation from '../components/Navigation';
 import productCardService from '../services/product-card.service';
 import productService from '../services/productService';
-import lensPrescriptionService, { FilteredLens, LensPrescriptionFilterResponse } from '../services/lens-prescription.service';
-import lensDetailsService, { LensFullDetails, SelectedLensOptions, LensVariant, LensCoating, TintColor } from '../services/lens-details.service';
-import cartService, { AddLensProductToCartRequest } from '../services/cart.service';
+import lensPrescriptionService, { FilteredLens } from '../services/lens-prescription.service';
+import lensDetailsService, { LensFullDetails, SelectedLensOptions } from '../services/lens-details.service';
+
 import { localCartService } from '../services/localCart.service';
+import { AddLensProductToCartRequest } from '../services/cart.service';
 import { ProductCard } from '../types/product-card.types';
 import '../styles/value-table.css';
 
@@ -101,7 +102,7 @@ const LensSelectionPage: React.FC = () => {
   const [selectedProductDetail, setSelectedProductDetail] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [prescriptionOption, setPrescriptionOption] = useState<'saved' | 'manual'>('saved');
-  const [currentStep, setCurrentStep] = useState(1);
+
   const [showPrescriptionStep, setShowPrescriptionStep] = useState(false);
   const [showLensSelectionStep, setShowLensSelectionStep] = useState(false);
   const [showLensOptionsStep, setShowLensOptionsStep] = useState(false);
@@ -604,16 +605,75 @@ const LensSelectionPage: React.FC = () => {
 
       console.log('Cart data being sent:', JSON.stringify(cartData, null, 2));
       
+      // Get color info for localStorage
+      const colorInfo = selectedProductDetail?.productColors?.find((color: any) => 
+        color.id === selectedColorIdParam
+      );
+
       // Use smart add to cart (works for both authenticated and guest users)
       const result = await localCartService.smartAddToCart({
         type: 'lens',
         productId: Number(selectedProduct.id),
-        framePrice: selectedProduct.price,
-        lensPrice: selectedLensOptions.variant ? Number(selectedLensOptions.variant.price) : 0,
-        quantity: 1,
+        productName: selectedProduct.displayName || selectedProductDetail?.productName,
+        productImage: selectedProductDetail?.productImages?.[0]?.imageUrl,
         selectedColorId: selectedColorIdParam ? Number(selectedColorIdParam) : undefined,
-        // Store complex lens data as JSON string for local storage
-        lensData: JSON.stringify(cartData.lensData),
+        selectedColorName: colorInfo?.colorName,
+        productVariantName: colorInfo?.productVariantName,
+        framePrice: selectedProduct.price,
+        totalPrice: selectedProduct.price + (selectedLensOptions.variant ? Number(selectedLensOptions.variant.price) : 0),
+        quantity: 1,
+        discount: 0,
+        lensDetail: {
+          lensPrice: selectedLensOptions.variant ? Number(selectedLensOptions.variant.price) : 0,
+          totalUpgradesPrice: 0,
+          selectedCoatings: selectedLensOptions.coatings.map(coating => ({
+            id: Number(coating.id),
+            name: coating.name,
+            price: Number(coating.price),
+            description: coating.description || ''
+          })),
+          selectedTintColor: selectedLensOptions.tintColor ? {
+            id: Number(selectedLensOptions.tintColor.id),
+            name: selectedLensOptions.tintColor.name,
+            price: Number(selectedLensOptions.tintColor.price)
+          } : null,
+          prescription: {
+            rightEye: {
+              sphere: parseValue(prescriptionData.sphereR),
+              cylinder: parseValue(prescriptionData.cylinderR),
+              axis: parseValue(prescriptionData.axisR)
+            },
+            leftEye: {
+              sphere: parseValue(prescriptionData.sphereL),
+              cylinder: parseValue(prescriptionData.cylinderL),
+              axis: parseValue(prescriptionData.axisL)
+            },
+            pdLeft: prescriptionData.hasTwoPD ? parseValue(prescriptionData.pdL) : parseValue(prescriptionData.pd) / 2,
+            pdRight: prescriptionData.hasTwoPD ? parseValue(prescriptionData.pdR) : parseValue(prescriptionData.pd) / 2,
+            addLeft: parseValue(prescriptionData.addL),
+            addRight: parseValue(prescriptionData.addR)
+          }
+        },
+        lensInfo: selectedLens ? {
+          id: selectedLens.id.toString(),
+          name: selectedLens.name,
+          lensType: selectedLensType,
+          description: selectedLens.description || '',
+          origin: selectedLens.origin || '',
+          image: selectedLens.imageUrl || ''
+        } : undefined,
+        lensVariantInfo: selectedLensOptions.variant ? {
+          id: Number(selectedLensOptions.variant.id),
+          design: selectedLensOptions.variant.design || 'NONE',
+          material: selectedLensOptions.variant.material || 'POLYCARBONATE',
+          price: selectedLensOptions.variant.price.toString(),
+          lensThickness: {
+            id: Number(selectedLensOptions.variant.lensThickness?.id || 0),
+            name: selectedLensOptions.variant.lensThickness?.name || '',
+            indexValue: Number(selectedLensOptions.variant.lensThickness?.indexValue || 1.5),
+            description: selectedLensOptions.variant.lensThickness?.description || ''
+          }
+        } : undefined,
         cartData: cartData // Pass full cart data for backend calls
       });
       
