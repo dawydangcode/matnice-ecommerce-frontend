@@ -196,7 +196,7 @@ const CartPage: React.FC = () => {
                 💡 <strong>Mẹo:</strong> Đăng nhập để lưu giỏ hàng và đồng bộ trên mọi thiết bị
               </p>
               <Link
-                to="/auth/login"
+                to="/login"
                 className="inline-block mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
                 Đăng nhập ngay →

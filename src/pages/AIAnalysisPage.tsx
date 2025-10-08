@@ -588,26 +588,26 @@ const AIAnalysisPage: React.FC = () => {
   const features = [
     {
       icon: User,
-      title: "Gender Detection",
-      description: "Advanced AI algorithms analyze facial features to determine gender with high accuracy",
+      title: "Nhận Diện Giới Tính",
+      description: "Thuật toán AI hiện đại phân tích các đặc điểm khuôn mặt để xác định giới tính với độ chính xác cao, giúp gợi ý kiểu kính phù hợp.",
       color: "text-blue-600"
     },
     {
       icon: Palette,
-      title: "Skin Tone Analysis",
-      description: "Precise skin color classification using computer vision technology",
+      title: "Phân Tích Tông Màu Da",
+      description: "Công nghệ thị giác máy tính tiên tiến xác định chính xác tông màu da của bạn, đảm bảo kính được gợi ý sẽ tôn lên vẻ đẹp tự nhiên.",
       color: "text-purple-600"
     },
     {
       icon: Eye,
-      title: "Real-time Processing",
-      description: "Instant analysis with results delivered within seconds",
+      title: "Xử Lý Thời Gian Thực",
+      description: "Kết quả được trả về chỉ trong vài giây, giúp bạn tiết kiệm thời gian và có trải nghiệm mượt mà.",
       color: "text-green-600"
     },
     {
       icon: Zap,
-      title: "High Accuracy",
-      description: "State-of-the-art machine learning models ensure reliable results",
+      title: "Độ Chính Xác Cao",
+      description: "Sử dụng các mô hình máy học tiên tiến, chúng tôi mang đến gợi ý đáng tin cậy, phù hợp với từng người dùng.",
       color: "text-orange-600"
     }
   ];
@@ -857,6 +857,14 @@ const AIAnalysisPage: React.FC = () => {
   // Render Features Section
   const renderFeaturesSection = () => (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      {/* Section Title */}
+      <div className="text-center mb-16">
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">Tính Năng Nổi Bật</h2>
+        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          Khám phá những tính năng độc đáo giúp bạn tìm được chiếc kính hoàn hảo nhất
+        </p>
+      </div>
+
       {/* Features Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
         {features.map((feature, index) => (
@@ -875,29 +883,63 @@ const AIAnalysisPage: React.FC = () => {
 
       {/* How It Works */}
       <div className="bg-white rounded-2xl shadow-xl p-8">
-        <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">How It Works</h3>
+        <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">Quy Trình Hoạt Động</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
               <Camera className="h-8 w-8" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">1. Capture or Upload</h4>
-            <p className="text-gray-600">Take a photo using your camera or upload an existing image</p>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">1. Chụp hoặc Tải Ảnh Lên</h4>
+            <p className="text-gray-600">Sử dụng webcam để chụp ảnh trực tiếp hoặc tải lên một bức ảnh có sẵn.</p>
           </div>
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 text-purple-600 mb-4">
               <Brain className="h-8 w-8" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">2. AI Analysis</h4>
-            <p className="text-gray-600">Our AI analyzes your facial features and skin tone</p>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">2. Phân Tích AI</h4>
+            <p className="text-gray-600">Hệ thống AI của chúng tôi sẽ phân tích hình dáng khuôn mặt, tông màu da và các đặc điểm nổi bật.</p>
           </div>
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-4">
               <Sparkles className="h-8 w-8" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">3. Get Results</h4>
-            <p className="text-gray-600">Receive personalized recommendations instantly</p>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">3. Nhận Gợi Ý Cá Nhân Hóa</h4>
+            <p className="text-gray-600">Khám phá danh sách kính mắt và kính râm được thiết kế riêng cho bạn, từ kiểu dáng đến màu sắc.</p>
           </div>
+        </div>
+      </div>
+
+      {/* Why Choose Us Section */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl shadow-xl p-8 mt-16">
+        <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">Tại Sao Chọn Chúng Tôi?</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
+              <User className="h-8 w-8" />
+            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">Cá Nhân Hóa</h4>
+            <p className="text-gray-600">Mỗi gợi ý được tạo ra dựa trên đặc điểm độc đáo của bạn.</p>
+          </div>
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 text-purple-600 mb-4">
+              <Eye className="h-8 w-8" />
+            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">Trải Nghiệm Thử Kính Ảo</h4>
+            <p className="text-gray-600">Xem trước kính trên khuôn mặt bạn với công nghệ AR 3D.</p>
+          </div>
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-4">
+              <Sparkles className="h-8 w-8" />
+            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">Đa Dạng Sản Phẩm</h4>
+            <p className="text-gray-600">Hàng trăm mẫu kính từ các thương hiệu hàng đầu, phù hợp với mọi phong cách.</p>
+          </div>
+        </div>
+        
+        {/* Call to Action */}
+        <div className="text-center mt-8 p-6 bg-white rounded-xl">
+          <h4 className="text-xl font-bold text-gray-900 mb-2">Bắt đầu ngay hôm nay!</h4>
+          <p className="text-gray-600 mb-4">Chụp ảnh hoặc tải ảnh lên để nhận gợi ý kính hoàn hảo chỉ trong vài giây!</p>
         </div>
       </div>
     </div>
@@ -909,11 +951,10 @@ const AIAnalysisPage: React.FC = () => {
       <div className="text-center mb-16">
         <div className="flex items-center justify-center mb-6">
           <Brain className="h-12 w-12 text-blue-600 mr-4" />
-          <h1 className="text-4xl font-bold text-gray-900">AI Face Analysis</h1>
+          <h1 className="text-4xl font-bold text-gray-900">Khám Phá Kính Phù Hợp Với Khuôn Mặt Của Bạn</h1>
         </div>
-        <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-          Our advanced AI technology analyzes your facial features to provide personalized recommendations
-          for glasses and sunglasses that complement your unique style.
+        <p className="text-xl text-gray-600 mb-8 max-w-4xl mx-auto">
+          Chào mừng bạn đến với công nghệ AI Phân Tích Khuôn Mặt tiên tiến của chúng tôi! Chỉ với một bức ảnh, hệ thống AI sẽ phân tích các đặc điểm khuôn mặt của bạn để đưa ra những gợi ý kính mắt và kính râm hoàn hảo, phù hợp với phong cách và cá tính riêng của bạn.
         </p>
         {!showCameraAndResults && (
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -926,14 +967,14 @@ const AIAnalysisPage: React.FC = () => {
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center"
             >
               <Camera className="mr-3 h-6 w-6" />
-              Take Photo
+              Chụp Ảnh
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
               className="bg-white text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center"
             >
               <Upload className="mr-3 h-6 w-6" />
-              Upload Image
+              Tải Ảnh Lên
             </button>
           </div>
         )}
