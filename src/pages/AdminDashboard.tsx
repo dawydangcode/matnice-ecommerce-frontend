@@ -46,6 +46,7 @@ import LensCategoryForm from '../components/admin/LensCategoryForm';
 import Product3DModelManagement from '../components/admin/Product3DModelManagement';
 import OrderManagement from '../components/OrderManagement';
 import StockManagementPage from './StockManagementPage';
+import { useDashboardData } from '../hooks/useDashboardData';
 import { Product } from '../types/product.types';
 import { Brand } from '../types/brand.types';
 import { Category } from '../types/category.types';
@@ -684,6 +685,47 @@ const AdminDashboard: React.FC = () => {
 
 // Dashboard Content Component
 const DashboardContent: React.FC = () => {
+  const { stats, recentOrders, loading, error, refetch } = useDashboardData();
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((index) => (
+            <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 animate-pulse">
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                <div className="ml-4 flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-16 mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded w-24"></div>
+                </div>
+              </div>
+              <div className="mt-4 flex items-center">
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={refetch}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
@@ -695,13 +737,17 @@ const DashboardContent: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Doanh thu</p>
-              <p className="text-2xl font-bold text-gray-900">₫1,234,567</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats?.revenue ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stats.revenue.total) : '₫0'}
+              </p>
             </div>
           </div>
           <div className="mt-4 flex items-center">
-            <TrendingUp className="w-4 h-4 text-[#43AC78]" />
-            <span className="text-sm text-[#43AC78] ml-1 font-medium">+12%</span>
-            <span className="text-sm text-gray-500 ml-1">so với tháng trước</span>
+            <TrendingUp className={`w-4 h-4 ${(stats?.revenue?.growth ?? 0) >= 0 ? 'text-[#43AC78]' : 'text-red-500'}`} />
+            <span className={`text-sm ml-1 font-medium ${(stats?.revenue?.growth ?? 0) >= 0 ? 'text-[#43AC78]' : 'text-red-500'}`}>
+              {(stats?.revenue?.growth ?? 0) >= 0 ? '+' : ''}{stats?.revenue?.growth ?? 0}%
+            </span>
+            <span className="text-sm text-gray-500 ml-1">{stats?.revenue?.period || 'so với tháng trước'}</span>
           </div>
         </div>
 
@@ -712,13 +758,17 @@ const DashboardContent: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Đơn hàng</p>
-              <p className="text-2xl font-bold text-gray-900">1,234</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats?.orders ? new Intl.NumberFormat('vi-VN').format(stats.orders.total) : '0'}
+              </p>
             </div>
           </div>
           <div className="mt-4 flex items-center">
-            <TrendingUp className="w-4 h-4 text-[#43AC78]" />
-            <span className="text-sm text-[#43AC78] ml-1 font-medium">+8%</span>
-            <span className="text-sm text-gray-500 ml-1">so với tháng trước</span>
+            <TrendingUp className={`w-4 h-4 ${(stats?.orders?.growth ?? 0) >= 0 ? 'text-[#43AC78]' : 'text-red-500'}`} />
+            <span className={`text-sm ml-1 font-medium ${(stats?.orders?.growth ?? 0) >= 0 ? 'text-[#43AC78]' : 'text-red-500'}`}>
+              {(stats?.orders?.growth ?? 0) >= 0 ? '+' : ''}{stats?.orders?.growth ?? 0}%
+            </span>
+            <span className="text-sm text-gray-500 ml-1">{stats?.orders?.period || 'so với tháng trước'}</span>
           </div>
         </div>
 
@@ -729,13 +779,15 @@ const DashboardContent: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Sản phẩm</p>
-              <p className="text-2xl font-bold text-gray-900">567</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats?.products ? new Intl.NumberFormat('vi-VN').format(stats.products.total) : '0'}
+              </p>
             </div>
           </div>
           <div className="mt-4 flex items-center">
             <TrendingUp className="w-4 h-4 text-[#43AC78]" />
-            <span className="text-sm text-[#43AC78] ml-1 font-medium">+23</span>
-            <span className="text-sm text-gray-500 ml-1">sản phẩm mới</span>
+            <span className="text-sm text-[#43AC78] ml-1 font-medium">+{stats?.products?.newProducts || 0}</span>
+            <span className="text-sm text-gray-500 ml-1">{stats?.products?.period || 'sản phẩm mới'}</span>
           </div>
         </div>
 
@@ -746,13 +798,17 @@ const DashboardContent: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Khách hàng</p>
-              <p className="text-2xl font-bold text-gray-900">2,345</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats?.customers ? new Intl.NumberFormat('vi-VN').format(stats.customers.total) : '0'}
+              </p>
             </div>
           </div>
           <div className="mt-4 flex items-center">
-            <TrendingUp className="w-4 h-4 text-[#43AC78]" />
-            <span className="text-sm text-[#43AC78] ml-1 font-medium">+15%</span>
-            <span className="text-sm text-gray-500 ml-1">so với tháng trước</span>
+            <TrendingUp className={`w-4 h-4 ${(stats?.customers?.growth ?? 0) >= 0 ? 'text-[#43AC78]' : 'text-red-500'}`} />
+            <span className={`text-sm ml-1 font-medium ${(stats?.customers?.growth ?? 0) >= 0 ? 'text-[#43AC78]' : 'text-red-500'}`}>
+              {(stats?.customers?.growth ?? 0) >= 0 ? '+' : ''}{stats?.customers?.growth ?? 0}%
+            </span>
+            <span className="text-sm text-gray-500 ml-1">{stats?.customers?.period || 'so với tháng trước'}</span>
           </div>
         </div>
       </div>
@@ -770,18 +826,27 @@ const DashboardContent: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Đơn hàng gần đây</h3>
           <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((order) => (
-              <div key={order} className="flex items-center justify-between p-3 bg-gradient-to-r from-[#A8EDCB]/20 to-[#93E9BE]/20 rounded-lg border border-[#93E9BE]/30 hover:shadow-sm transition-all">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Đơn hàng #{order}001</p>
-                  <p className="text-xs text-gray-500">2 sản phẩm</p>
+            {recentOrders?.length > 0 ? (
+              recentOrders.map((order) => (
+                <div key={order.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-[#A8EDCB]/20 to-[#93E9BE]/20 rounded-lg border border-[#93E9BE]/30 hover:shadow-sm transition-all">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{order.orderNumber}</p>
+                    <p className="text-xs text-gray-500">{order.itemCount} sản phẩm</p>
+                    <p className="text-xs text-gray-400">{order.customerName}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">
+                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.totalAmount)}
+                    </p>
+                    <p className="text-xs text-[#43AC78] font-medium">{order.status}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">₫456,789</p>
-                  <p className="text-xs text-[#43AC78] font-medium">Đã thanh toán</p>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Chưa có đơn hàng nào</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
