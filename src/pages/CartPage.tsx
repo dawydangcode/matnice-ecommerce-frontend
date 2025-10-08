@@ -171,7 +171,7 @@ const CartPage: React.FC = () => {
 
   if (isCartEmpty) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <Header />
         <Navigation />
         <div className="bg-white shadow-sm border-b">
@@ -182,40 +182,42 @@ const CartPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <div className="text-6xl mb-6">🛒</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Giỏ hàng của bạn đang trống
-          </h2>
-          <p className="text-gray-600 mb-8 max-w-md mx-auto">
-            Hãy khám phá bộ sưu tập kính mắt và tròng kính của chúng tôi để tìm những sản phẩm phù hợp với bạn.
-          </p>
-          {!isLoggedIn && (
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg max-w-md mx-auto border border-blue-200">
-              <p className="text-blue-800 text-sm">
-                💡 <strong>Mẹo:</strong> Đăng nhập để lưu giỏ hàng và đồng bộ trên mọi thiết bị
-              </p>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+            <div className="text-6xl mb-6">🛒</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Giỏ hàng của bạn đang trống
+            </h2>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              Hãy khám phá bộ sưu tập kính mắt và tròng kính của chúng tôi để tìm những sản phẩm phù hợp với bạn.
+            </p>
+            {!isLoggedIn && (
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg max-w-md mx-auto border border-blue-200">
+                <p className="text-blue-800 text-sm">
+                  💡 <strong>Mẹo:</strong> Đăng nhập để lưu giỏ hàng và đồng bộ trên mọi thiết bị
+                </p>
+                <Link
+                  to="/login"
+                  className="inline-block mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  Đăng nhập ngay →
+                </Link>
+              </div>
+            )}
+            <div className="flex gap-4 justify-center">
               <Link
-                to="/login"
-                className="inline-block mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                to="/glasses"
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Đăng nhập ngay →
+                Mua kính mắt
+              </Link>
+              <Link
+                to="/lenses"
+                className="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Mua tròng kính
               </Link>
             </div>
-          )}
-          <div className="flex gap-4 justify-center">
-            <Link
-              to="/glasses"
-              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Mua kính mắt
-            </Link>
-            <Link
-              to="/lenses"
-              className="inline-flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Mua tròng kính
-            </Link>
           </div>
         </div>
         <Footer />
@@ -224,12 +226,13 @@ const CartPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
       <Navigation />
       
-      {/* Cart Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="flex-1">
+        {/* Cart Header */}
+        <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900">Basket</h1>
@@ -998,6 +1001,7 @@ const CartPage: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
       
       <Footer />
     </div>
