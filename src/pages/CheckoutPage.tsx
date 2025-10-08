@@ -8,6 +8,8 @@ import PayOSPayment from '../components/PayOSPayment';
 import cartService, { CartSummary } from '../services/cart.service';
 import orderService from '../services/order.service';
 import vietnamAddressService, { Province, District, Ward } from '../services/vietnam-address.service';
+import userAddressService, { UserAddress } from '../services/user-address.service';
+import { useAuthStore } from '../stores/auth.store';
 import { CreditCard, HandCoins } from 'lucide-react';
 
 interface CustomerInfo {
@@ -41,6 +43,7 @@ const formatPrice = (price: number): string => {
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, isLoggedIn } = useAuthStore();
   
   // Load cart data from backend API using the same CartSummary as CartPage
   const [cartSummary, setCartSummary] = useState<CartSummary | null>(null);
@@ -89,6 +92,11 @@ const CheckoutPage: React.FC = () => {
   const [wards, setWards] = useState<Ward[]>([]);
   const [selectedProvinceCode, setSelectedProvinceCode] = useState<number | null>(null);
   const [selectedDistrictCode, setSelectedDistrictCode] = useState<number | null>(null);
+
+  // User addresses
+  const [userAddresses, setUserAddresses] = useState<UserAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [useNewAddress, setUseNewAddress] = useState(false);
 
   // Load provinces on component mount
   useEffect(() => {
@@ -145,6 +153,36 @@ const CheckoutPage: React.FC = () => {
     };
     loadWards();
   }, [selectedDistrictCode]);
+
+  // Load user addresses if logged in
+  useEffect(() => {
+    const loadUserAddresses = async () => {
+      if (isLoggedIn && user?.id) {
+        try {
+          const addresses = await userAddressService.getUserAddresses(user.id);
+          setUserAddresses(addresses);
+          
+          // Find default address
+          const defaultAddress = addresses.find(addr => addr.isDefault);
+          if (defaultAddress) {
+            setSelectedAddressId(defaultAddress.id);
+            // Pre-fill customer info with default address
+            setCustomerInfo(prev => ({
+              ...prev,
+              province: defaultAddress.province,
+              district: defaultAddress.district,
+              ward: defaultAddress.ward,
+              address: defaultAddress.addressDetail,
+              notes: defaultAddress.notes || ''
+            }));
+          }
+        } catch (error) {
+          console.error('Error loading user addresses:', error);
+        }
+      }
+    };
+    loadUserAddresses();
+  }, [isLoggedIn, user?.id]);
 
   // Calculate shipping cost based on whether there are lenses
   const hasLenses = cartSummary?.items?.some(item => item.lensDetail) || false;
@@ -272,6 +310,42 @@ const CheckoutPage: React.FC = () => {
         setErrors(prev => ({ ...prev, ward: undefined }));
       }
     }
+  };
+
+  // Handle address selection
+  const handleAddressSelection = (addressId: number) => {
+    const selectedAddress = userAddresses.find(addr => addr.id === addressId);
+    if (selectedAddress) {
+      setSelectedAddressId(addressId);
+      setUseNewAddress(false);
+      setCustomerInfo(prev => ({
+        ...prev,
+        province: selectedAddress.province,
+        district: selectedAddress.district,
+        ward: selectedAddress.ward,
+        address: selectedAddress.addressDetail,
+        notes: selectedAddress.notes || ''
+      }));
+      
+      // Reset address form states
+      setSelectedProvinceCode(null);
+      setSelectedDistrictCode(null);
+      setDistricts([]);
+      setWards([]);
+    }
+  };
+
+  const handleUseNewAddress = () => {
+    setUseNewAddress(true);
+    setSelectedAddressId(null);
+    setCustomerInfo(prev => ({
+      ...prev,
+      province: '',
+      district: '',
+      ward: '',
+      address: '',
+      notes: ''
+    }));
   };
 
   const handleApplyPromo = () => {
@@ -513,8 +587,65 @@ const CheckoutPage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Địa chỉ giao hàng</h2>
               
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Address Selection for Logged in Users */}
+              {isLoggedIn && userAddresses.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Chọn địa chỉ có sẵn</h3>
+                  <div className="space-y-3">
+                    {userAddresses.map((address) => (
+                      <div key={address.id} className="flex items-start space-x-3">
+                        <input
+                          id={`address-${address.id}`}
+                          name="selected-address"
+                          type="radio"
+                          checked={selectedAddressId === address.id}
+                          onChange={() => handleAddressSelection(address.id)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mt-1"
+                        />
+                        <label htmlFor={`address-${address.id}`} className="flex-1 cursor-pointer">
+                          <div className="text-sm">
+                            <div className="font-medium text-gray-900">
+                              {userAddressService.formatFullAddress(address)}
+                              {address.isDefault && (
+                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                  Mặc định
+                                </span>
+                              )}
+                            </div>
+                            {address.notes && (
+                              <div className="text-gray-500 mt-1">Ghi chú: {address.notes}</div>
+                            )}
+                          </div>
+                        </label>
+                      </div>
+                    ))}
+                    
+                    {/* Option to use new address */}
+                    <div className="flex items-start space-x-3">
+                      <input
+                        id="new-address"
+                        name="selected-address"
+                        type="radio"
+                        checked={useNewAddress}
+                        onChange={handleUseNewAddress}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mt-1"
+                      />
+                      <label htmlFor="new-address" className="flex-1 cursor-pointer">
+                        <div className="text-sm font-medium text-gray-900">
+                          Sử dụng địa chỉ mới
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <hr className="my-6" />
+                </div>
+              )}
+              
+              {/* Only show address form if user is not logged in OR is using new address */}
+              {(!isLoggedIn || useNewAddress || userAddresses.length === 0) && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Tỉnh / Thành phố <span className="text-red-500">*</span>
@@ -618,6 +749,7 @@ const CheckoutPage: React.FC = () => {
                   />
                 </div>
               </div>
+              )}
             </div>
 
             {/* Payment Method */}
