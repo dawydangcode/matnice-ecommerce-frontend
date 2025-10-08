@@ -7,6 +7,7 @@ import Footer from '../components/Footer';
 import PayOSPayment from '../components/PayOSPayment';
 import cartService, { CartSummary } from '../services/cart.service';
 import orderService from '../services/order.service';
+import stockService, { StockReservationItem } from '../services/stock.service';
 import vietnamAddressService, { Province, District, Ward } from '../services/vietnam-address.service';
 import userAddressService, { UserAddress } from '../services/user-address.service';
 import { useAuthStore } from '../stores/auth.store';
@@ -401,6 +402,30 @@ const CheckoutPage: React.FC = () => {
       if (!token) {
         toast.error('Vui lòng đăng nhập để đặt hàng');
         return;
+      }
+
+      // Validate stock availability before creating order
+      console.log('Validating stock for cart items...');
+      if (cartSummary && cartSummary.items.length > 0) {
+        const stockItems: StockReservationItem[] = cartSummary.items.map(item => ({
+          productColorId: item.selectedColor?.id || 0,
+          quantity: item.quantity
+        }));
+
+        try {
+          const stockValidation = await stockService.validateStockForCart(stockItems);
+          if (!stockValidation.isValid) {
+            const errorMessages = stockValidation.errors.map(error => error.message).join('\n');
+            toast.error(`Không đủ hàng trong kho:\n${errorMessages}`);
+            setIsSubmitting(false);
+            return;
+          }
+          console.log('Stock validation passed');
+        } catch (stockError) {
+          console.warn('Stock validation failed, proceeding with order creation:', stockError);
+          // Don't block order creation if stock validation fails
+          // Backend will handle final stock check
+        }
       }
 
       // Prepare order data according to backend DTO (userId will be extracted from token)

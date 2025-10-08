@@ -24,6 +24,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import MyAccountPage from './pages/MyAccountPage';
+import StockManagementPage from './pages/StockManagementPage';
 
 // Protected Route Component for Admin
 interface AdminRouteProps {
@@ -232,6 +233,14 @@ function App() {
             element={
               <AdminRoute>
                 <Configure3DModel />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/stock"
+            element={
+              <AdminRoute>
+                <StockManagementPage />
               </AdminRoute>
             }
           />

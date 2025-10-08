@@ -8,6 +8,7 @@ import SuccessModal from '../components/SuccessModal';
 import productService, { ProductDetail } from '../services/productService';
 import { product3DModelService, Product3DModel, Model3DConfig } from '../services/product3dModel.service';
 import { localCartService } from '../services/localCart.service';
+import stockService from '../services/stock.service';
 import '../styles/ProductDetailPage.css';
 import { Glasses, Handbag, ShoppingCart, X, Video, RefreshCcw, Package } from 'lucide-react';
 import { FrameMeasurement, LensMeasurement, TempleMeasurement } from '../components/icons/Dimensions';
@@ -175,9 +176,15 @@ const ProductDetailPage: React.FC = () => {
   const getStockStatus = () => {
     const colorData = getSelectedColorData();
     if (colorData && colorData.stock > 0) {
-      return { status: 'In stock', color: '#059669' };
+      return { 
+        status: stockService.formatStockMessage(colorData.stock), 
+        color: stockService.getStockStatusColor(colorData.stock) 
+      };
     }
-    return { status: 'Out of stock', color: '#dc2626' };
+    return { 
+      status: 'Hết hàng', 
+      color: stockService.getStockStatusColor(0) 
+    };
   };
 
   const getColorClass = (colorName: string) => {

@@ -15,7 +15,8 @@ import {
   Eye,
   Palette,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Archive
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { useProductStore } from '../stores/product.store';
@@ -44,6 +45,7 @@ import LensBrandForm from '../components/admin/LensBrandForm';
 import LensCategoryForm from '../components/admin/LensCategoryForm';
 import Product3DModelManagement from '../components/admin/Product3DModelManagement';
 import OrderManagement from '../components/OrderManagement';
+import StockManagementPage from './StockManagementPage';
 import { Product } from '../types/product.types';
 import { Brand } from '../types/brand.types';
 import { Category } from '../types/category.types';
@@ -51,7 +53,7 @@ import { Lens } from '../types/lens.types';
 import { LensBrand } from '../types/lensBrand.types';
 import { LensCategory } from '../types/lensCategory.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'color-skin-recommendation' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-detail' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form' | 'orders';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'color-skin-recommendation' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-detail' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form' | 'orders' | 'stock' | 'stock-management';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -338,6 +340,7 @@ const AdminDashboard: React.FC = () => {
     },
     // Other items
     { id: 'orders', label: 'Đơn hàng', icon: ShoppingCart },
+    { id: 'stock', label: 'Quản lý tồn kho', icon: Archive },
     { id: 'customers', label: 'Khách hàng', icon: Users },
     { id: 'settings', label: 'Cài đặt', icon: Settings },
   ];
@@ -392,6 +395,8 @@ const AdminDashboard: React.FC = () => {
                           setCurrentView('categories');
                         } else if (item.id === 'orders') {
                           setCurrentView('orders');
+                        } else if (item.id === 'stock') {
+                          setCurrentView('stock-management');
                         }
                         // Handle other menu items later
                       }
@@ -448,6 +453,8 @@ const AdminDashboard: React.FC = () => {
                                 setCurrentView('lens-thickness');
                               } else if (child.id === 'lens-tints') {
                                 setCurrentView('lens-tints');
+                              } else if (child.id === 'stock-management') {
+                                setCurrentView('stock-management');
                               }
                             }}
                             className={`w-full flex items-center px-4 py-2 rounded-lg transition text-sm ${
@@ -506,6 +513,7 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'lens-thickness' && 'Lens Thickness Management'}
                 {currentView === 'lens-tints' && 'Lens Tints & Colors Management'}
                 {currentView === 'orders' && 'Quản lý đơn hàng'}
+                {currentView === 'stock-management' && 'Quản lý tồn kho'}
               </h1>
             </div>
             
@@ -667,6 +675,7 @@ const AdminDashboard: React.FC = () => {
           {currentView === 'lens-thickness' && <LensThicknessPage />}
           {currentView === 'lens-tints' && <div className="p-4 bg-yellow-100 rounded">Lens Tints Page - Coming Soon</div>}
           {currentView === 'orders' && <OrderManagement />}
+          {currentView === 'stock-management' && <StockManagementPage />}
         </main>
       </div>
     </div>
