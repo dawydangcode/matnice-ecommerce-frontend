@@ -67,8 +67,7 @@ const AIAnalysisPage: React.FC = () => {
 
   const { initializeFaceAPI, detectFace, isFaceInFrame } = useFaceDetection();
 
-  // API base URL
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+
 
   // Start camera
   const startCamera = useCallback(async () => {
@@ -365,8 +364,8 @@ const AIAnalysisPage: React.FC = () => {
               const formData = new FormData();
               formData.append('image', file);
 
-              const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-              fetch(`${API_URL}/api/v1/ai/analyze-face`, {
+              // AI endpoints don't require authentication - use direct fetch
+              fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/v1/ai/analyze-face`, {
                 method: 'POST',
                 body: formData,
               })
@@ -385,7 +384,8 @@ const AIAnalysisPage: React.FC = () => {
 
                     const poll = async () => {
                       try {
-                        const response = await fetch(`${API_URL}/api/v1/ai/analysis/${sessionId}/result/`);
+                        // AI endpoints don't require authentication - use direct fetch
+                        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/v1/ai/analysis/${sessionId}/result/`);
                         
                         if (!response.ok) {
                           throw new Error(`Failed to get results: ${response.status}`);
@@ -700,7 +700,10 @@ const AIAnalysisPage: React.FC = () => {
 
     const poll = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/v1/ai/analysis/${sessionId}/result/`);
+        console.log('🔍 Polling for results, attempt:', attempts + 1);
+        
+        // AI endpoints don't require authentication - use direct fetch
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/v1/ai/analysis/${sessionId}/result/`);
         
         if (!response.ok) {
           throw new Error(`Failed to get results: ${response.status}`);
@@ -745,7 +748,7 @@ const AIAnalysisPage: React.FC = () => {
     };
 
     poll();
-  }, [API_BASE_URL]);
+  }, []);
 
   // Analyze image
   const analyzeImage = useCallback(async (imageData: string) => {
@@ -758,7 +761,8 @@ const AIAnalysisPage: React.FC = () => {
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/ai/analyze-face`, {
+      // AI endpoints don't require authentication - use direct fetch
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/v1/ai/analyze-face`, {
         method: 'POST',
         body: formData,
       });
@@ -779,7 +783,7 @@ const AIAnalysisPage: React.FC = () => {
       setError(error instanceof Error ? error.message : 'Analysis failed');
       setIsAnalyzing(false);
     }
-  }, [API_BASE_URL, pollForResults]);
+  }, [pollForResults]);
 
   // Scroll to Live Analysis section
   const scrollToLiveAnalysis = useCallback(() => {
@@ -901,7 +905,7 @@ const AIAnalysisPage: React.FC = () => {
 
   // Render different steps
   const renderIntroStep = () => (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="text-center mb-16">
         <div className="flex items-center justify-center mb-6">
           <Brain className="h-12 w-12 text-blue-600 mr-4" />

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Eye, ShoppingCart, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
-import { apiService } from '../services/api.service';
 import '../styles/ProductRecommendations.css';
 
 interface ProductColor {
@@ -114,27 +113,35 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
     setError(null);
 
     try {
-      const params = {
+      const params = new URLSearchParams({
         gender: analysisResult.gender.detected,
         skinColor: analysisResult.SkinColor.detected,
         faceShape: analysisResult.faceShape.detected,
         page: page.toString(),
         limit: '12', // Show more products in carousel
-      };
+      });
 
-      console.log('Fetching recommendations with params:', params);
-      const response: any = await apiService.get('/product-recommendation/filter', params);
-      console.log('API response:', response);
+      console.log('Fetching recommendations with params:', params.toString());
       
-      if (response.success) {
+      // Use direct fetch for product recommendations to avoid auth issues
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/product-recommendation/filter?${params}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch recommendations: ${response.status}`);
+      }
+      
+      const data: any = await response.json();
+      console.log('API response:', data);
+      
+      if (data.success) {
         // If it's page 1, replace products; otherwise append
         if (page === 1) {
-          setProducts(response.data.products);
+          setProducts(data.data.products);
         } else {
-          setProducts(prev => [...prev, ...response.data.products]);
+          setProducts(prev => [...prev, ...data.data.products]);
         }
-        setTotalPages(response.data.totalPages);
-        setTotal(response.data.total);
+        setTotalPages(data.data.totalPages);
+        setTotal(data.data.total);
         setCurrentPage(page);
       } else {
         setError('Failed to fetch product recommendations');

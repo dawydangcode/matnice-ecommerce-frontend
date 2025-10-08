@@ -52,12 +52,12 @@ class ApiService {
         return response;
       },
       (error) => {
-        if (error.response?.status === 401) {
-          // Token expired or invalid
+        const url = error.config?.url || '';
+        // Only trigger session expired for non-AI endpoints
+        const isAIEndpoint = url.includes('/api/v1/ai/');
+        if (error.response?.status === 401 && !isAIEndpoint) {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('user');
-
-          // Redirect to login
           if (window.location.pathname !== '/login') {
             toast.error('Session expired. Please login again.');
             window.location.href = '/login';
@@ -67,7 +67,6 @@ class ApiService {
         } else if (error.response?.status >= 500) {
           toast.error('Server error. Please try again later.');
         }
-
         return Promise.reject(error);
       },
     );
