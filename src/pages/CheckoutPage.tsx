@@ -7,6 +7,7 @@ import Footer from '../components/Footer';
 import PayOSPayment from '../components/PayOSPayment';
 import cartService, { CartSummary } from '../services/cart.service';
 import orderService from '../services/order.service';
+import vietnamAddressService, { Province, District, Ward } from '../services/vietnam-address.service';
 import { CreditCard, HandCoins } from 'lucide-react';
 
 interface CustomerInfo {
@@ -82,6 +83,69 @@ const CheckoutPage: React.FC = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [showPayOSPayment, setShowPayOSPayment] = useState(false);
 
+  // Vietnam address data
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState<number | null>(null);
+  const [selectedDistrictCode, setSelectedDistrictCode] = useState<number | null>(null);
+
+  // Load provinces on component mount
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const provincesData = await vietnamAddressService.getProvinces();
+        setProvinces(provincesData);
+      } catch (error) {
+        console.error('Error loading provinces:', error);
+        toast.error('Không thể tải dữ liệu tỉnh thành');
+      }
+    };
+    loadProvinces();
+  }, []);
+
+  // Load districts when province changes
+  useEffect(() => {
+    const loadDistricts = async () => {
+      if (selectedProvinceCode) {
+        try {
+          const districtsData = await vietnamAddressService.getDistrictsByProvinceCode(selectedProvinceCode);
+          setDistricts(districtsData);
+          setWards([]); // Clear wards when province changes
+          setSelectedDistrictCode(null);
+          setCustomerInfo(prev => ({ ...prev, district: '', ward: '' }));
+        } catch (error) {
+          console.error('Error loading districts:', error);
+          toast.error('Không thể tải dữ liệu quận/huyện');
+        }
+      } else {
+        setDistricts([]);
+        setWards([]);
+        setSelectedDistrictCode(null);
+      }
+    };
+    loadDistricts();
+  }, [selectedProvinceCode]);
+
+  // Load wards when district changes
+  useEffect(() => {
+    const loadWards = async () => {
+      if (selectedDistrictCode) {
+        try {
+          const wardsData = await vietnamAddressService.getWardsByDistrictCode(selectedDistrictCode);
+          setWards(wardsData);
+          setCustomerInfo(prev => ({ ...prev, ward: '' }));
+        } catch (error) {
+          console.error('Error loading wards:', error);
+          toast.error('Không thể tải dữ liệu phường/xã');
+        }
+      } else {
+        setWards([]);
+      }
+    };
+    loadWards();
+  }, [selectedDistrictCode]);
+
   // Calculate shipping cost based on whether there are lenses
   const hasLenses = cartSummary?.items?.some(item => item.lensDetail) || false;
   const shippingCost = hasLenses ? 0 : 30000; // Free shipping if has lenses, 30k if frame only
@@ -153,6 +217,60 @@ const CheckoutPage: React.FC = () => {
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  // Handle address field changes
+  const handleProvinceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const provinceCode = parseInt(event.target.value);
+    const selectedProvince = provinces.find(p => p.code === provinceCode);
+    
+    if (selectedProvince) {
+      setSelectedProvinceCode(provinceCode);
+      setCustomerInfo(prev => ({ 
+        ...prev, 
+        province: selectedProvince.name,
+        district: '',
+        ward: ''
+      }));
+      // Clear province error
+      if (errors.province) {
+        setErrors(prev => ({ ...prev, province: undefined }));
+      }
+    }
+  };
+
+  const handleDistrictChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const districtCode = parseInt(event.target.value);
+    const selectedDistrict = districts.find(d => d.code === districtCode);
+    
+    if (selectedDistrict) {
+      setSelectedDistrictCode(districtCode);
+      setCustomerInfo(prev => ({ 
+        ...prev, 
+        district: selectedDistrict.name,
+        ward: ''
+      }));
+      // Clear district error
+      if (errors.district) {
+        setErrors(prev => ({ ...prev, district: undefined }));
+      }
+    }
+  };
+
+  const handleWardChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const wardCode = parseInt(event.target.value);
+    const selectedWard = wards.find(w => w.code === wardCode);
+    
+    if (selectedWard) {
+      setCustomerInfo(prev => ({ 
+        ...prev, 
+        ward: selectedWard.name
+      }));
+      // Clear ward error
+      if (errors.ward) {
+        setErrors(prev => ({ ...prev, ward: undefined }));
+      }
     }
   };
 
@@ -402,17 +520,18 @@ const CheckoutPage: React.FC = () => {
                       Tỉnh / Thành phố <span className="text-red-500">*</span>
                     </label>
                     <select
-                      value={customerInfo.province}
-                      onChange={(e) => handleInputChange('province', e.target.value)}
+                      value={selectedProvinceCode || ''}
+                      onChange={handleProvinceChange}
                       className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         errors.province ? 'border-red-500' : 'border-gray-300'
                       }`}
                     >
-                      <option value="">Select...</option>
-                      <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                      <option value="Hà Nội">Hà Nội</option>
-                      <option value="Đà Nẵng">Đà Nẵng</option>
-                      <option value="Cần Thơ">Cần Thơ</option>
+                      <option value="">Chọn tỉnh/thành phố...</option>
+                      {provinces.map(province => (
+                        <option key={province.code} value={province.code}>
+                          {province.name}
+                        </option>
+                      ))}
                     </select>
                     {errors.province && (
                       <p className="text-red-500 text-sm mt-1">{errors.province}</p>
@@ -424,23 +543,19 @@ const CheckoutPage: React.FC = () => {
                       Quận/ Huyện <span className="text-red-500">*</span>
                     </label>
                     <select
-                      value={customerInfo.district}
-                      onChange={(e) => handleInputChange('district', e.target.value)}
+                      value={selectedDistrictCode || ''}
+                      onChange={handleDistrictChange}
                       className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         errors.district ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      disabled={!customerInfo.province}
+                      disabled={!selectedProvinceCode}
                     >
-                      <option value="">Select...</option>
-                      {customerInfo.province === 'TP. Hồ Chí Minh' && (
-                        <>
-                          <option value="Quận 1">Quận 1</option>
-                          <option value="Quận 3">Quận 3</option>
-                          <option value="Quận 5">Quận 5</option>
-                          <option value="Quận 7">Quận 7</option>
-                          <option value="Quận 10">Quận 10</option>
-                        </>
-                      )}
+                      <option value="">Chọn quận/huyện...</option>
+                      {districts.map(district => (
+                        <option key={district.code} value={district.code}>
+                          {district.name}
+                        </option>
+                      ))}
                     </select>
                     {errors.district && (
                       <p className="text-red-500 text-sm mt-1">{errors.district}</p>
@@ -452,21 +567,19 @@ const CheckoutPage: React.FC = () => {
                       Phường/ Xã <span className="text-red-500">*</span>
                     </label>
                     <select
-                      value={customerInfo.ward}
-                      onChange={(e) => handleInputChange('ward', e.target.value)}
+                      value={wards.find(w => w.name === customerInfo.ward)?.code || ''}
+                      onChange={handleWardChange}
                       className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         errors.ward ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      disabled={!customerInfo.district}
+                      disabled={!selectedDistrictCode}
                     >
-                      <option value="">Select...</option>
-                      {customerInfo.district === 'Quận 1' && (
-                        <>
-                          <option value="Phường Bến Nghé">Phường Bến Nghé</option>
-                          <option value="Phường Bến Thành">Phường Bến Thành</option>
-                          <option value="Phường Cầu Kho">Phường Cầu Kho</option>
-                        </>
-                      )}
+                      <option value="">Chọn phường/xã...</option>
+                      {wards.map(ward => (
+                        <option key={ward.code} value={ward.code}>
+                          {ward.name}
+                        </option>
+                      ))}
                     </select>
                     {errors.ward && (
                       <p className="text-red-500 text-sm mt-1">{errors.ward}</p>
@@ -476,7 +589,7 @@ const CheckoutPage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Địa chỉ <span className="text-red-500">*</span>
+                    Số nhà <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -485,7 +598,7 @@ const CheckoutPage: React.FC = () => {
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       errors.address ? 'border-red-500' : 'border-gray-300'
                     }`}
-                    placeholder="Nhập địa chỉ cụ thể"
+                    placeholder="Nhập số nhà cụ thể"
                   />
                   {errors.address && (
                     <p className="text-red-500 text-sm mt-1">{errors.address}</p>
@@ -815,7 +928,7 @@ const CheckoutPage: React.FC = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Hình thức thanh toán</span>
                   <span className="text-blue-600">
-                    {selectedPaymentMethod === PaymentMethod.CASH ? 'Thanh toán khi nhận hàng' : '💳 PayOS'}
+                    {selectedPaymentMethod === PaymentMethod.CASH ? 'Thanh toán khi nhận hàng' : 'PayOS'}
                   </span>
                 </div>
                 

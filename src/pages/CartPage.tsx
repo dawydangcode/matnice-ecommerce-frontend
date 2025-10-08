@@ -886,7 +886,7 @@ const CartPage: React.FC = () => {
               ) : (
                 <>
                   <Link
-                    to="/auth/login"
+                    to="/login"
                     className="w-full mt-6 block text-center bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
                   >
                     Đăng nhập để thanh toán
