@@ -254,7 +254,9 @@ export class LocalCartService {
 
   // Check if user is authenticated
   private isAuthenticated(): boolean {
-    return !!localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
+    console.log('LocalCartService: Checking auth token:', !!token);
+    return !!token;
   }
 
   // Sync local cart with backend when user logs in
@@ -329,11 +331,13 @@ export class LocalCartService {
     type?: 'frame' | 'sunglasses' | 'lens';
     cartData?: any; // For backend lens cart data
   }): Promise<{ success: boolean; message: string; isLocal: boolean }> {
+    console.log('SmartAddToCart called with type:', productData.type);
     const calculatedTotalPrice =
       productData.totalPrice ||
       productData.framePrice + (productData.lensDetail?.lensPrice || 0);
 
     if (this.isAuthenticated()) {
+      console.log('User is authenticated, using backend API');
       // User is logged in - use backend
       try {
         if (productData.type === 'lens' && productData.cartData) {
@@ -352,7 +356,10 @@ export class LocalCartService {
             cartId: cartResult.cartId,
           };
 
-          await apiService.post('/api/v1/cart/add-lens-product', lensCartData);
+          await apiService.post(
+            '/api/v1/cart-combined/add-lens-product',
+            lensCartData,
+          );
         } else {
           // Handle regular frame/sunglasses products
           const cartData = await apiService
@@ -405,6 +412,7 @@ export class LocalCartService {
         };
       }
     } else {
+      console.log('User not authenticated, using localStorage');
       // User not logged in - use local storage
       const localData = {
         ...productData,
