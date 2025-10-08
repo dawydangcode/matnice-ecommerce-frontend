@@ -23,7 +23,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     reset
   } = useForm<LoginFormData>({
     resolver: yupResolver(loginSchema),
-    mode: 'onBlur'
+    mode: 'onSubmit'
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -57,8 +57,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-8 p-6">
         {/* Header */}
         <div className="text-center mb-8">  
-          <h2 className="text-3xl md:text-3xl text-2xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-          <p className="text-gray-600 text-sm md:text-base">Sign in to your Matnice account</p>
+          <h2 className="text-3xl md:text-3xl text-2xl font-thin text-gray-900 mb-2">Welcome to MatNice</h2>
+          <p className="text-gray-600 text-sm md:text-base">Log in with your email address or user name.</p>
         </div>
 
         {/* Error Display */}
@@ -71,20 +71,27 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Username Field */}
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-              Username
-            </label>
+          <div className="relative">
             <input
               {...register('username')}
               type="text"
               id="username"
-              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors ${
-                errors.username ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-4 py-4 border-2 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200 text-lg peer placeholder-transparent ${
+                errors.username ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300'
               }`}
-              placeholder="Enter your username"
+              placeholder="Username"
               disabled={isLoading}
             />
+            <label
+              htmlFor="username"
+              className={`absolute left-4 -top-2.5 bg-white px-2 text-sm transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-lg peer-placeholder-shown:text-gray-400 peer-focus:-top-2.5 peer-focus:text-sm ${
+                errors.username 
+                  ? 'text-red-600 peer-focus:text-red-600' 
+                  : 'text-gray-600 peer-focus:text-blue-600'
+              }`}
+            >
+              Email/Username
+            </label>
             {errors.username && (
               <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
             )}
@@ -92,20 +99,27 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
           {/* Password Field */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
             <div className="relative">
               <input
                 {...register('password')}
                 type={showPassword ? 'text' : 'password'}
                 id="password"
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors pr-12 ${
-                  errors.password ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-4 py-4 border-2 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all duration-200 pr-12 text-lg peer placeholder-transparent ${
+                  errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300'
                 }`}
-                placeholder="Enter your password"
+                placeholder="Password"
                 disabled={isLoading}
               />
+              <label
+                htmlFor="password"
+                className={`absolute left-4 -top-2.5 bg-white px-2 text-sm transition-all duration-200 peer-placeholder-shown:top-4 peer-placeholder-shown:text-lg peer-placeholder-shown:text-gray-400 peer-focus:-top-2.5 peer-focus:text-sm ${
+                  errors.password 
+                    ? 'text-red-600 peer-focus:text-red-600' 
+                    : 'text-gray-600 peer-focus:text-blue-600'
+                }`}
+              >
+                Password
+              </label>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -134,7 +148,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-black focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
             {isLoading ? (
               <>

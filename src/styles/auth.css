@@ -1,20 +1,23 @@
 .auth-background {
   background-image: url('../assets/login-background.png');
   background-size: cover;
-  background-position: center;
+  background-position: center top;
   background-repeat: no-repeat;
+  background-attachment: scroll;
 }
 
 .auth-container {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding-right: 80px;
+  height: 100%;
+  padding: 20px;
+  padding-right: 200px;
 }
 
 .auth-form-wrapper {
   width: 100%;
-  max-width: 450px;
+  max-width: 650px;
 }
 
 /* Mobile styles */
