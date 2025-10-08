@@ -83,6 +83,7 @@ export interface LocalCart {
 export class LocalCartService {
   private readonly CART_STORAGE_KEY = 'matnice_cart';
   private readonly CART_COUNT_KEY = 'matnice_cart_count';
+  private isSyncing = false;
 
   // Get cart from localStorage
   getLocalCart(): LocalCart {
@@ -265,10 +266,19 @@ export class LocalCartService {
       return;
     }
 
+    // Prevent multiple simultaneous syncs
+    if (this.isSyncing) {
+      console.log('Cart sync already in progress, skipping...');
+      return;
+    }
+
     const localCart = this.getLocalCart();
     if (localCart.items.length === 0) {
       return;
     }
+
+    this.isSyncing = true;
+    console.log('Starting cart sync with backend...');
 
     try {
       // Get or create backend cart
@@ -284,22 +294,67 @@ export class LocalCartService {
       // Add each local item to backend cart
       for (const item of localCart.items) {
         try {
-          const frameData = {
-            frame: {
+          // Check if item has lens data
+          if (item.lensDetail && item.lensInfo && item.lensVariantInfo) {
+            // This is a lens product - use lens endpoint
+            const lensProductData = {
               cartId: backendCart.cartId,
-              productId: item.productId,
-              quantity: item.quantity,
-              framePrice: item.framePrice,
-              totalPrice: item.totalPrice,
-              discount: item.discount,
-              selectedColorId: item.selectedColor?.id,
-            },
-          };
+              frameData: {
+                productId: item.productId,
+                framePrice: item.framePrice,
+                quantity: item.quantity,
+                selectedColorId: item.selectedColor?.id,
+              },
+              lensData: {
+                lensVariantId: item.lensVariantInfo.id,
+                lensPrice: item.lensDetail.lensPrice,
+                prescriptionValues: {
+                  rightEyeSphere:
+                    item.lensDetail.prescription?.rightEye?.sphere || 0,
+                  leftEyeSphere:
+                    item.lensDetail.prescription?.leftEye?.sphere || 0,
+                  rightEyeCylinder:
+                    item.lensDetail.prescription?.rightEye?.cylinder || 0,
+                  leftEyeCylinder:
+                    item.lensDetail.prescription?.leftEye?.cylinder || 0,
+                  rightEyeAxis:
+                    item.lensDetail.prescription?.rightEye?.axis || 0,
+                  leftEyeAxis: item.lensDetail.prescription?.leftEye?.axis || 0,
+                  pdLeft: item.lensDetail.prescription?.pdLeft || 0,
+                  pdRight: item.lensDetail.prescription?.pdRight || 0,
+                  addLeft: item.lensDetail.prescription?.addLeft || 0,
+                  addRight: item.lensDetail.prescription?.addRight || 0,
+                },
+                selectedCoatingIds:
+                  item.lensDetail.selectedCoatings?.map((c) => c.id) || [],
+                prescriptionNotes: 'Synced from localStorage',
+                lensNotes: `Loại tròng: ${item.lensInfo.lensType}`,
+              },
+            };
 
-          await apiService.post(
-            '/api/v1/cart-combined/item/create-complete',
-            frameData,
-          );
+            await apiService.post(
+              '/api/v1/cart-combined/add-lens-product',
+              lensProductData,
+            );
+          } else {
+            // This is a frame-only product - use existing endpoint
+            const frameData = {
+              frame: {
+                cartId: backendCart.cartId,
+                productId: item.productId,
+                quantity: item.quantity,
+                framePrice: item.framePrice,
+                totalPrice: item.totalPrice,
+                discount: item.discount,
+                selectedColorId: item.selectedColor?.id,
+              },
+            };
+
+            await apiService.post(
+              '/api/v1/cart-combined/item/create-complete',
+              frameData,
+            );
+          }
         } catch (error) {
           console.error('Error syncing item to backend:', error);
         }
@@ -310,6 +365,8 @@ export class LocalCartService {
       console.log('Cart synced with backend successfully');
     } catch (error) {
       console.error('Error syncing cart with backend:', error);
+    } finally {
+      this.isSyncing = false;
     }
   }
 
