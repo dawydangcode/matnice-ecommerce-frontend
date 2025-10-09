@@ -837,36 +837,78 @@ const DashboardContent: React.FC = () => {
           {/* Top Sellers - 1/4 width */}
           <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Top Seller Products</h3>
-            <div className="space-y-4">
+            <div className="space-y-3 h-80 overflow-y-auto">
               {topProducts?.length > 0 ? (
-                topProducts.slice(0, 5).map((product, index) => (
-                  <div key={product.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-[#A8EDCB]/20 to-[#93E9BE]/20 rounded-lg border border-[#93E9BE]/30 hover:shadow-sm transition-all">
-                    <div className="flex items-center">
-                      <div className="w-6 h-6 bg-gradient-to-br from-[#43AC78] to-[#64C695] rounded-full flex items-center justify-center text-white font-bold text-xs mr-2">
-                        {index + 1}
+                <>
+                  {/* Actual products */}
+                  {topProducts.slice(0, 5).map((product, index) => (
+                    <div key={product.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-[#A8EDCB]/20 to-[#93E9BE]/20 rounded-lg border border-[#93E9BE]/30 hover:shadow-sm transition-all">
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-gradient-to-br from-[#43AC78] to-[#64C695] rounded-full flex items-center justify-center text-white font-bold text-xs mr-2">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-gray-900 truncate">{product.name}</p>
+                          <p className="text-xs text-gray-500">{product.brand}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-900 truncate">{product.name}</p>
-                        <p className="text-xs text-gray-500">{product.brand}</p>
+                      <div className="text-right">
+                        <p className="text-xs font-medium text-gray-900">{product.soldQuantity}</p>
+                        <p className="text-xs text-[#43AC78] font-medium">
+                          {new Intl.NumberFormat('vi-VN', { 
+                            style: 'currency', 
+                            currency: 'VND',
+                            maximumFractionDigits: 0
+                          }).format(product.revenue)}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs font-medium text-gray-900">{product.soldQuantity}</p>
-                      <p className="text-xs text-[#43AC78] font-medium">
-                        {new Intl.NumberFormat('vi-VN', { 
-                          style: 'currency', 
-                          currency: 'VND',
-                          maximumFractionDigits: 0
-                        }).format(product.revenue)}
-                      </p>
+                  ))}
+                  {/* Fill remaining slots with placeholders */}
+                  {Array.from({ length: Math.max(0, 8 - topProducts.length) }).map((_, index) => (
+                    <div key={`placeholder-${index}`} className="flex items-center justify-between p-3 bg-gray-50/50 rounded-lg border border-gray-200/50">
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-gray-400 font-bold text-xs mr-2">
+                          {topProducts.length + index + 1}
+                        </div>
+                        <div>
+                          <div className="h-3 bg-gray-200 rounded w-16 mb-1"></div>
+                          <div className="h-2 bg-gray-100 rounded w-12"></div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="h-3 bg-gray-200 rounded w-8 mb-1"></div>
+                        <div className="h-2 bg-gray-100 rounded w-12"></div>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Package className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                  <p className="text-xs">Chưa có dữ liệu</p>
-                </div>
+                <>
+                  {/* No data state with placeholders */}
+                  <div className="text-center py-4 text-gray-500">
+                    <Package className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+                    <p className="text-xs">Chưa có dữ liệu</p>
+                  </div>
+                  {/* Fill with empty placeholders */}
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div key={`empty-placeholder-${index}`} className="flex items-center justify-between p-3 bg-gray-50/30 rounded-lg border border-gray-200/30">
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-gray-300 font-bold text-xs mr-2">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <div className="h-3 bg-gray-100 rounded w-16 mb-1"></div>
+                          <div className="h-2 bg-gray-50 rounded w-12"></div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="h-3 bg-gray-100 rounded w-8 mb-1"></div>
+                        <div className="h-2 bg-gray-50 rounded w-12"></div>
+                      </div>
+                    </div>
+                  ))}
+                </>
               )}
             </div>
           </div>
