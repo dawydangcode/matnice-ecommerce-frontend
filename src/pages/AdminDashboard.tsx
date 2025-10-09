@@ -46,6 +46,7 @@ import LensCategoryForm from '../components/admin/LensCategoryForm';
 import Product3DModelManagement from '../components/admin/Product3DModelManagement';
 import OrderManagement from '../components/OrderManagement';
 import StockManagementPage from './StockManagementPage';
+import SimpleBarChart from '../components/charts/SimpleBarChart';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { Product } from '../types/product.types';
 import { Brand } from '../types/brand.types';
@@ -685,7 +686,7 @@ const AdminDashboard: React.FC = () => {
 
 // Dashboard Content Component
 const DashboardContent: React.FC = () => {
-  const { stats, recentOrders, loading, error, refetch } = useDashboardData();
+  const { stats, recentOrders, monthlyRevenue, loading, error, refetch } = useDashboardData();
 
   if (loading) {
     return (
@@ -817,10 +818,7 @@ const DashboardContent: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Doanh thu theo tháng</h3>
-          <div className="h-64 flex items-center justify-center text-[#64C695]">
-            <BarChart3 className="w-16 h-16" />
-            <span className="ml-2">Biểu đồ sẽ được hiển thị ở đây</span>
-          </div>
+          <SimpleBarChart data={monthlyRevenue} loading={loading} />
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
