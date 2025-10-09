@@ -1,5 +1,13 @@
 import { apiService } from './api.service';
 
+export interface TopProduct {
+  id: number;
+  name: string;
+  brand: string;
+  soldQuantity: number;
+  revenue: number;
+}
+
 export interface DashboardStats {
   revenue: {
     total: number;
@@ -21,6 +29,7 @@ export interface DashboardStats {
     growth: number;
     period: string;
   };
+  topProducts?: TopProduct[];
 }
 
 export interface RecentOrder {
@@ -31,6 +40,7 @@ export interface RecentOrder {
   status: string;
   createdAt: string;
   customerName?: string;
+  paymentStatus?: string;
 }
 
 export interface MonthlyRevenue {
@@ -102,6 +112,21 @@ class DashboardService {
    */
   formatNumber(num: number): string {
     return new Intl.NumberFormat('vi-VN').format(num);
+  }
+
+  /**
+   * Get top selling products
+   */
+  async getTopProducts(limit: number = 5): Promise<TopProduct[]> {
+    try {
+      const response = await apiService.get<TopProduct[]>(
+        `${this.baseUrl}/top-products?limit=${limit}`,
+      );
+      return response;
+    } catch (error) {
+      console.error('Error fetching top products:', error);
+      return [];
+    }
   }
 
   /**

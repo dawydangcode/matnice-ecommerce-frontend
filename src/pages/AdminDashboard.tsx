@@ -686,7 +686,7 @@ const AdminDashboard: React.FC = () => {
 
 // Dashboard Content Component
 const DashboardContent: React.FC = () => {
-  const { stats, recentOrders, monthlyRevenue, loading, error, refetch } = useDashboardData();
+  const { stats, recentOrders, monthlyRevenue, topProducts, loading, error, refetch } = useDashboardData();
 
   if (loading) {
     return (
@@ -815,37 +815,158 @@ const DashboardContent: React.FC = () => {
       </div>
 
       {/* Charts and Tables */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Doanh thu theo tháng</h3>
-          <SimpleBarChart data={monthlyRevenue} loading={loading} />
+      <div className="space-y-6">
+        {/* Revenue Chart and Top Sellers */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Revenue Chart - 3/4 width */}
+          <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Doanh thu theo tháng</h3>
+            <SimpleBarChart data={monthlyRevenue} loading={loading} />
+          </div>
+
+          {/* Top Sellers - 1/4 width */}
+          <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Top Seller Products</h3>
+            <div className="space-y-4">
+              {topProducts?.length > 0 ? (
+                topProducts.slice(0, 5).map((product, index) => (
+                  <div key={product.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-[#A8EDCB]/20 to-[#93E9BE]/20 rounded-lg border border-[#93E9BE]/30 hover:shadow-sm transition-all">
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 bg-gradient-to-br from-[#43AC78] to-[#64C695] rounded-full flex items-center justify-center text-white font-bold text-xs mr-2">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-900 truncate">{product.name}</p>
+                        <p className="text-xs text-gray-500">{product.brand}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-medium text-gray-900">{product.soldQuantity}</p>
+                      <p className="text-xs text-[#43AC78] font-medium">
+                        {new Intl.NumberFormat('vi-VN', { 
+                          style: 'currency', 
+                          currency: 'VND',
+                          maximumFractionDigits: 0
+                        }).format(product.revenue)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Package className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <p className="text-xs">Chưa có dữ liệu</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
+        {/* Recent Orders - Full Width */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Đơn hàng gần đây</h3>
-          <div className="space-y-4">
-            {recentOrders?.length > 0 ? (
-              recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-[#A8EDCB]/20 to-[#93E9BE]/20 rounded-lg border border-[#93E9BE]/30 hover:shadow-sm transition-all">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{order.orderNumber}</p>
-                    <p className="text-xs text-gray-500">{order.itemCount} sản phẩm</p>
-                    <p className="text-xs text-gray-400">{order.customerName}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">
-                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.totalAmount)}
-                    </p>
-                    <p className="text-xs text-[#43AC78] font-medium">{order.status}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p>Chưa có đơn hàng nào</p>
-              </div>
-            )}
-          </div>
+          {recentOrders?.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Đơn hàng
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Khách hàng
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ngày đặt
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tổng tiền
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Trạng thái
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Thanh toán
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {recentOrders.map((order) => (
+                    <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
+                        <div className="text-sm text-gray-500">{order.itemCount} sản phẩm</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{order.customerName || 'Khách vãng lai'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {new Date(order.createdAt).toLocaleDateString('vi-VN', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {new Date(order.createdAt).toLocaleTimeString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.totalAmount)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                          order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                          order.status === 'processing' ? 'bg-indigo-100 text-indigo-800' :
+                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {order.status === 'delivered' ? 'Đã giao hàng' :
+                           order.status === 'shipped' ? 'Đã gửi hàng' :
+                           order.status === 'processing' ? 'Đang xử lý' :
+                           order.status === 'pending' ? 'Chờ xử lý' :
+                           order.status === 'cancelled' ? 'Đã hủy' :
+                           order.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          order.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                          order.paymentStatus === 'processing' ? 'bg-blue-100 text-blue-800' :
+                          order.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          order.paymentStatus === 'failed' ? 'bg-red-100 text-red-800' :
+                          order.paymentStatus === 'cancelled' ? 'bg-gray-100 text-gray-800' :
+                          order.paymentStatus === 'refunded' ? 'bg-purple-100 text-purple-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {order.paymentStatus === 'completed' ? 'Đã thanh toán' :
+                           order.paymentStatus === 'processing' ? 'Đang xử lý' :
+                           order.paymentStatus === 'pending' ? 'Chờ thanh toán' :
+                           order.paymentStatus === 'failed' ? 'Thất bại' :
+                           order.paymentStatus === 'cancelled' ? 'Đã hủy' :
+                           order.paymentStatus === 'refunded' ? 'Đã hoàn tiền' :
+                           order.paymentStatus || 'Chưa xác định'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <ShoppingCart className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+              <p>Chưa có đơn hàng nào</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
