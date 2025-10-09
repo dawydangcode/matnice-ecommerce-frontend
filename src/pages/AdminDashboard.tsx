@@ -46,7 +46,8 @@ import LensCategoryForm from '../components/admin/LensCategoryForm';
 import Product3DModelManagement from '../components/admin/Product3DModelManagement';
 import OrderManagement from '../components/OrderManagement';
 import StockManagementPage from './StockManagementPage';
-import SimpleBarChart from '../components/charts/SimpleBarChart';
+import RechartsLineChart from '../components/charts/RechartsLineChart';
+import TimeFilter, { TimeRange } from '../components/dashboard/TimeFilter';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { Product } from '../types/product.types';
 import { Brand } from '../types/brand.types';
@@ -686,7 +687,8 @@ const AdminDashboard: React.FC = () => {
 
 // Dashboard Content Component
 const DashboardContent: React.FC = () => {
-  const { stats, recentOrders, monthlyRevenue, topProducts, loading, error, refetch } = useDashboardData();
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('monthly');
+  const { stats, recentOrders, monthlyRevenue, topProducts, loading, error, refetch } = useDashboardData(selectedTimeRange);
 
   if (loading) {
     return (
@@ -820,8 +822,16 @@ const DashboardContent: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Revenue Chart - 3/4 width */}
           <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Doanh thu theo tháng</h3>
-            <SimpleBarChart data={monthlyRevenue} loading={loading} />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Số đơn hàng theo {selectedTimeRange === 'monthly' ? 'tháng' : selectedTimeRange === 'weekly' ? 'tuần' : 'năm'}
+              </h3>
+              <TimeFilter 
+                selectedTimeRange={selectedTimeRange}
+                onTimeRangeChange={setSelectedTimeRange}
+              />
+            </div>
+            <RechartsLineChart data={monthlyRevenue} loading={loading} />
           </div>
 
           {/* Top Sellers - 1/4 width */}

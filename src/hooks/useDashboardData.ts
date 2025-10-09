@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import dashboardService, {
   DashboardStats,
   RecentOrder,
@@ -6,6 +6,8 @@ import dashboardService, {
   TopProduct,
 } from '../services/dashboard.service';
 import toast from 'react-hot-toast';
+
+type TimeRange = 'monthly' | 'weekly' | 'annually';
 
 interface UseDashboardDataReturn {
   stats: DashboardStats | null;
@@ -17,7 +19,9 @@ interface UseDashboardDataReturn {
   refetch: () => Promise<void>;
 }
 
-export const useDashboardData = (): UseDashboardDataReturn => {
+export const useDashboardData = (
+  timeRange: TimeRange = 'monthly',
+): UseDashboardDataReturn => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenue[]>([]);
@@ -25,40 +29,57 @@ export const useDashboardData = (): UseDashboardDataReturn => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch all dashboard data in parallel
-      const [statsData, ordersData, revenueData, topProductsData] =
+      console.log('Fetching dashboard data with timeRange:', timeRange);
+
+      // Map frontend timeRange to backend timeRange
+      const backendTimeRange =
+        timeRange === 'monthly'
+          ? 'month'
+          : timeRange === 'weekly'
+            ? 'week'
+            : timeRange === 'annually'
+              ? 'year'
+              : 'month';
+
+      // Fetch all data in parallel
+      const [statsResult, ordersResult, revenueResult, productsResult] =
         await Promise.all([
-          dashboardService.getStats(),
+          dashboardService.getStats(backendTimeRange),
           dashboardService.getRecentOrders(5),
-          dashboardService.getMonthlyRevenue(12),
+          dashboardService.getRevenueData(backendTimeRange),
           dashboardService.getTopProducts(5),
         ]);
 
-      setStats(statsData);
-      setRecentOrders(ordersData);
-      setMonthlyRevenue(revenueData);
-      setTopProducts(topProductsData);
-    } catch (err: any) {
-      const errorMessage =
-        err?.response?.data?.message ||
-        err?.message ||
-        'Không thể tải dữ liệu dashboard';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      console.error('Dashboard data fetch error:', err);
+      console.log('Dashboard data fetched successfully:', {
+        stats: statsResult,
+        orders: ordersResult?.length || 0,
+        revenue: revenueResult?.length || 0,
+        products: productsResult?.length || 0,
+        timeRange: backendTimeRange,
+      });
+
+      setStats(statsResult);
+      setRecentOrders(ordersResult);
+      setMonthlyRevenue(revenueResult);
+      setTopProducts(productsResult);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(
+        err instanceof Error ? err.message : 'Không thể tải dữ liệu dashboard',
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   return {
     stats,

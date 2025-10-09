@@ -27,10 +27,13 @@ const SimpleBarChart: React.FC<SimpleBarChartProps> = ({ data, loading }) => {
   const maxRevenue = Math.max(...data.map(item => item.revenue));
   const maxHeight = 200; // Max height in pixels
 
+  // Determine how many items to show based on data length
+  const displayData = data.length <= 7 ? data : data.slice(-6);
+  
   return (
     <div className="h-64 p-4">
       <div className="flex items-end justify-between h-full space-x-2">
-        {data.slice(-6).map((item, index) => {
+        {displayData.map((item, index) => {
           const height = maxRevenue > 0 ? (item.revenue / maxRevenue) * maxHeight : 0;
           const formattedRevenue = new Intl.NumberFormat('vi-VN', {
             style: 'currency',

@@ -55,10 +55,11 @@ class DashboardService {
   /**
    * Get dashboard statistics
    */
-  async getStats(): Promise<DashboardStats> {
+  async getStats(timeRange?: string): Promise<DashboardStats> {
     try {
+      const params = timeRange ? `?timeRange=${timeRange}` : '';
       const response = await apiService.get<DashboardStats>(
-        `${this.baseUrl}/stats`,
+        `${this.baseUrl}/stats${params}`,
       );
       return response;
     } catch (error) {
@@ -85,14 +86,38 @@ class DashboardService {
   /**
    * Get monthly revenue data for charts
    */
-  async getMonthlyRevenue(months: number = 12): Promise<MonthlyRevenue[]> {
+  async getMonthlyRevenue(
+    months: number = 12,
+    timeRange?: string,
+  ): Promise<MonthlyRevenue[]> {
     try {
+      const params = new URLSearchParams();
+      params.append('months', months.toString());
+      if (timeRange) {
+        params.append('timeRange', timeRange);
+      }
       const response = await apiService.get<MonthlyRevenue[]>(
-        `${this.baseUrl}/monthly-revenue?months=${months}`,
+        `${this.baseUrl}/monthly-revenue?${params.toString()}`,
       );
       return response;
     } catch (error) {
       console.error('Error fetching monthly revenue:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get revenue data based on time range
+   */
+  async getRevenueData(timeRange?: string): Promise<MonthlyRevenue[]> {
+    try {
+      const params = timeRange ? `?timeRange=${timeRange}` : '';
+      const response = await apiService.get<MonthlyRevenue[]>(
+        `${this.baseUrl}/revenue-data${params}`,
+      );
+      return response;
+    } catch (error) {
+      console.error('Error fetching revenue data:', error);
       throw error;
     }
   }
