@@ -15,6 +15,7 @@ import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import HeroContent from '../components/HeroContent';
 import FilterSection from '../components/FilterSection';
+import { useScrollToTop } from '../hooks/useScrollToTop';
 import { getHeroContent } from '../data/hero-content';
 import GlassWidthSmall from '../components/icons/GlassWidth/GlassWidthSmall';
 import GlassWidthMedium from '../components/icons/GlassWidth/GlassWidthMedium';
@@ -45,6 +46,9 @@ const ProductsPage: React.FC = () => {
   const location = useLocation();
   const { category } = useParams<{ category: string }>();
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  
+  // Auto scroll to top when location changes (when navigating from HomePage categories)
+  useScrollToTop();
   
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [sortBy, setSortBy] = useState('newest');

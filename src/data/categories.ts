@@ -136,7 +136,7 @@ export const legacyBoutiqueCategories = [
 ];
 
 export const legacyAiCategories = [
-  { name: 'Virtual Try-On', href: '/ai/virtual-try-on' },
+  { name: 'Virtual Try-On', href: '/ai' },
   { name: 'Face Analysis', href: '/ai/face-analysis' },
   { name: 'Style Recommendation', href: '/ai/style-recommendation' },
   { name: 'Frame Finder', href: '/ai/frame-finder' },

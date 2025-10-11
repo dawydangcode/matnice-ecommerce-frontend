@@ -45,7 +45,7 @@ const HomePage: React.FC = () => {
                   Shop Glasses
                 </Link>
                 <Link 
-                  to="/ai/virtual-try-on"
+                  to="/ai"
                   className="border-2 border-blue-600 text-blue-600 px-8 py-4 text-lg font-semibold rounded-full hover:bg-blue-600 hover:text-white transition-colors"
                 >
                   Try AI Fitting

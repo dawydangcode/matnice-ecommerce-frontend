@@ -1,10 +1,13 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 /**
- * Custom hook to scroll to top when component mounts
+ * Custom hook to scroll to top when component mounts or location changes
  * @param smooth - Whether to use smooth scrolling (default: true)
  */
 export const useScrollToTop = (smooth: boolean = true) => {
+  const location = useLocation();
+
   useEffect(() => {
     if (smooth) {
       window.scrollTo({
@@ -15,7 +18,7 @@ export const useScrollToTop = (smooth: boolean = true) => {
     } else {
       window.scrollTo(0, 0);
     }
-  }, [smooth]);
+  }, [location.pathname, location.search, smooth]);
 };
 
 export default useScrollToTop;
