@@ -6,7 +6,7 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
     // Debug logging
     console.log('Environment API URL:', process.env.REACT_APP_API_URL);

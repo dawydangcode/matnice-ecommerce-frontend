@@ -124,7 +124,7 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
       console.log('Fetching recommendations with params:', params.toString());
       
       // Use direct fetch for product recommendations to avoid auth issues
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/product-recommendation/filter?${params}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/product-recommendation/filter?${params}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch recommendations: ${response.status}`);

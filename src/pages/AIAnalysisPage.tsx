@@ -365,7 +365,7 @@ const AIAnalysisPage: React.FC = () => {
               formData.append('image', file);
 
               // AI endpoints don't require authentication - use direct fetch
-              fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/v1/ai/analyze-face`, {
+              fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/v1/ai/analyze-face`, {
                 method: 'POST',
                 body: formData,
               })
@@ -385,7 +385,7 @@ const AIAnalysisPage: React.FC = () => {
                     const poll = async () => {
                       try {
                         // AI endpoints don't require authentication - use direct fetch
-                        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/v1/ai/analysis/${sessionId}/result/`);
+                        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/v1/ai/analysis/${sessionId}/result/`);
                         
                         if (!response.ok) {
                           throw new Error(`Failed to get results: ${response.status}`);
@@ -703,7 +703,7 @@ const AIAnalysisPage: React.FC = () => {
         console.log('🔍 Polling for results, attempt:', attempts + 1);
         
         // AI endpoints don't require authentication - use direct fetch
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/v1/ai/analysis/${sessionId}/result/`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/v1/ai/analysis/${sessionId}/result/`);
         
         if (!response.ok) {
           throw new Error(`Failed to get results: ${response.status}`);
