@@ -1,9 +1,10 @@
 import React from 'react';
-import { Search, Heart, User, Menu } from 'lucide-react';
+import { Search, User, Menu } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { Link, useLocation } from 'react-router-dom';
 import smallEyeLogo from '../assets/small_eye_logo.png';
 import CartDropdown from './CartDropdown';
+import WishlistDropdown from './WishlistDropdown';
 
 // Shared props interface
 interface HeaderProps {
@@ -34,7 +35,7 @@ const DesktopHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) =>
           {/* Right Icons */}
           <div className="flex-1 flex justify-end items-center space-x-4">
             <Search className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
-            <Heart className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
+            <WishlistDropdown />
             <CartDropdown />
             
             {/* User Menu */}
@@ -107,7 +108,7 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
 
           {/* Right - Icons */}
           <div className="flex items-center space-x-3">
-            <Heart className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
+            <WishlistDropdown />
             <CartDropdown />
             
             {/* User Icon Only */}

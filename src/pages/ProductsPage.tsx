@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Heart, Search } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { useWishlistStore } from '../stores/wishlist.store';
+import { useAuthStore } from '../stores/auth.store';
+import { toastService } from '../services/toast.service';
 import { ProductCard } from '../types/product-card.types';
 import { 
   FrameType, 
@@ -49,6 +52,10 @@ const ProductsPage: React.FC = () => {
   
   // Auto scroll to top when location changes (when navigating from HomePage categories)
   useScrollToTop();
+  
+  // Wishlist store
+  const { addToWishlist, removeFromWishlist, removeItemByProductId, isItemInWishlist, fetchWishlist } = useWishlistStore();
+  const { user } = useAuthStore();
   
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
@@ -410,6 +417,15 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     setCurrentPage(1);
     // eslint-disable-next-line
   }, [selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, priceRange, selectedGlassesWidths, isMultifocalSelected]);
+
+  // Fetch wishlist when user is available (on mount and when user changes)
+  useEffect(() => {
+    if (user) {
+      fetchWishlist().catch(error => {
+        console.error('Error fetching wishlist:', error);
+      });
+    }
+  }, [user, fetchWishlist]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -943,13 +959,39 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                           <div className="absolute top-2 right-4 z-10">
                             <button 
                               className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm hover:shadow-md transition-shadow"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                // Handle favorite logic here
+                                
+                                if (!user) {
+                                  toastService.warning('Please login to add items to wishlist');
+                                  return;
+                                }
+
+                                try {
+                                  const productId = typeof product.id === 'string' ? parseInt(product.id) : product.id;
+                                  const isInWishlist = isItemInWishlist('product', productId);
+                                  
+                                  if (isInWishlist) {
+                                    await removeItemByProductId('product', productId);
+                                    toastService.success('Removed from wishlist');
+                                  } else {
+                                    await addToWishlist('product', productId);
+                                    toastService.success('Added to wishlist successfully!');
+                                  }
+                                } catch (error) {
+                                  console.error('Failed to update wishlist:', error);
+                                  toastService.error('Failed to update wishlist. Please try again.');
+                                }
                               }}
                             >
-                              <Heart className="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" />
+                              <Heart 
+                                className={`w-5 h-5 transition-colors ${
+                                  isItemInWishlist('product', typeof product.id === 'string' ? parseInt(product.id) : product.id)
+                                    ? 'text-red-500 fill-red-500' 
+                                    : 'text-gray-400 hover:text-red-500'
+                                }`} 
+                              />
                             </button>
                           </div>
                           
