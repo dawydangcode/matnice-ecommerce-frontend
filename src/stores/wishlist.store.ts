@@ -53,7 +53,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       console.log('[WishlistStore] Raw API response:', response);
       console.log('[WishlistStore] Response.data:', response.data);
       console.log('[WishlistStore] Response.total:', response.total);
-      
+
       const validItems = (response.data || []).filter((item) => {
         const isValid = item != null;
         if (!isValid) {
@@ -61,7 +61,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
         }
         return isValid;
       });
-      
+
       console.log(
         '[WishlistStore] Fetched wishlist:',
         validItems.length,

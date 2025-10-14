@@ -47,12 +47,34 @@ class WishlistService {
       const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
 
       console.log('[WishlistService] Making API call to:', url);
-      const response = (await apiService.get(url)) as {
-        data: WishlistResponse;
-      };
+      const response = await apiService.get(url);
       console.log('[WishlistService] Raw API response:', response);
-      console.log('[WishlistService] Response.data:', response.data);
-      return response.data;
+
+      // Check if response is already the WishlistResponse format
+      if (Array.isArray(response)) {
+        // If response is directly an array, wrap it
+        const wishlistResponse: WishlistResponse = {
+          total: response.length,
+          data: response,
+        };
+        console.log(
+          '[WishlistService] Wrapped array response:',
+          wishlistResponse,
+        );
+        return wishlistResponse;
+      } else if (
+        response &&
+        typeof response === 'object' &&
+        'data' in response
+      ) {
+        // If response has .data property, use it
+        console.log('[WishlistService] Using response.data:', response.data);
+        return response.data as WishlistResponse;
+      } else {
+        // If response is already in correct format
+        console.log('[WishlistService] Direct response:', response);
+        return response as WishlistResponse;
+      }
     } catch (error) {
       console.error('[WishlistService] Error fetching wishlist:', error);
       throw error;
