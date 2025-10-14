@@ -46,12 +46,15 @@ class WishlistService {
       const queryString = params.toString();
       const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
 
+      console.log('[WishlistService] Making API call to:', url);
       const response = (await apiService.get(url)) as {
         data: WishlistResponse;
       };
+      console.log('[WishlistService] Raw API response:', response);
+      console.log('[WishlistService] Response.data:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching wishlist:', error);
+      console.error('[WishlistService] Error fetching wishlist:', error);
       throw error;
     }
   }

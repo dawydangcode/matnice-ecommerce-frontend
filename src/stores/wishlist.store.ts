@@ -41,34 +41,40 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
   fetchWishlist: async () => {
     const { user } = useAuthStore.getState();
-    if (!user) return;
+    if (!user) {
+      console.log('[WishlistStore] No user found, skipping fetch');
+      return;
+    }
 
     set({ loading: true, error: null });
     try {
+      console.log('[WishlistStore] Fetching wishlist for user:', user.id);
       const response = await wishlistService.getWishlist();
-      const validItems = (response.data || []).filter((item) => item != null);
       console.log('[WishlistStore] Raw API response:', response);
+      console.log('[WishlistStore] Response.data:', response.data);
+      console.log('[WishlistStore] Response.total:', response.total);
+      
+      const validItems = (response.data || []).filter((item) => {
+        const isValid = item != null;
+        if (!isValid) {
+          console.log('[WishlistStore] Filtering out null item:', item);
+        }
+        return isValid;
+      });
+      
       console.log(
         '[WishlistStore] Fetched wishlist:',
         validItems.length,
         'items',
         validItems,
       );
-      console.log(
-        '[WishlistStore] First item details:',
-        validItems[0],
-        'productId type:',
-        typeof validItems[0]?.productId,
-        'productId value:',
-        validItems[0]?.productId,
-      );
       set({
         items: validItems,
-        totalItems: response.total,
+        totalItems: response.total || validItems.length,
         loading: false,
       });
     } catch (error) {
-      console.error('Error fetching wishlist:', error);
+      console.error('[WishlistStore] Error fetching wishlist:', error);
       set({
         error:
           error instanceof Error ? error.message : 'Failed to fetch wishlist',
@@ -219,15 +225,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       items.length,
     );
     const result = items.some((item) => {
-      if (!item || item.itemType !== itemType) {
-        console.log(
-          '[WishlistStore] Skipping item - null or wrong type:',
-          item?.itemType,
-          'vs',
-          itemType,
-        );
-        return false;
-      }
+      if (!item || item.itemType !== itemType) return false;
 
       if (itemType === 'product') {
         // Ensure both values are numbers for comparison
@@ -238,17 +236,10 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
         const matchesProduct = itemProductId === itemId;
         console.log(
           '[WishlistStore] Comparing product:',
-          'item.productId=',
-          item.productId,
-          '(type:',
-          typeof item.productId,
-          ') ->',
           itemProductId,
           '===',
           itemId,
-          '(type:',
-          typeof itemId,
-          ') =',
+          '=',
           matchesProduct,
         );
         if (selectedColorId) {
