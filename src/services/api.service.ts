@@ -7,19 +7,33 @@ class ApiService {
 
   constructor() {
     let apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
-    
-    // In production on Vercel (HTTPS), try to use HTTPS for API
-    if (window.location.protocol === 'https:' && apiUrl.startsWith('http://')) {
-      // First try HTTPS version
-      apiUrl = apiUrl.replace('http://', 'https://');
-      console.log('Attempting HTTPS API URL for production:', apiUrl);
-    }
-    
-    this.baseURL = apiUrl;
 
     // Debug logging
     console.log('Environment API URL:', process.env.REACT_APP_API_URL);
     console.log('Window protocol:', window.location.protocol);
+    console.log('Window hostname:', window.location.hostname);
+
+    // Production domain check
+    const isProductionDomain =
+      window.location.hostname === 'matnice.id.vn' ||
+      window.location.hostname.includes('vercel.app');
+
+    // In production with HTTPS, we need to handle Mixed Content
+    if (window.location.protocol === 'https:' && apiUrl.startsWith('http://')) {
+      console.warn(
+        'Mixed Content Warning: HTTPS site trying to access HTTP API',
+      );
+      console.warn('This will be blocked by browsers for security reasons');
+
+      if (isProductionDomain) {
+        // For production, we should use a proxy or setup HTTPS on backend
+        console.warn(
+          'Consider setting up HTTPS on backend server or using a proxy',
+        );
+      }
+    }
+
+    this.baseURL = apiUrl;
     console.log('Using baseURL:', this.baseURL);
 
     this.api = axios.create({
@@ -63,6 +77,27 @@ class ApiService {
       },
       (error) => {
         const url = error.config?.url || '';
+
+        // Handle Mixed Content Error
+        if (error.message && error.message.includes('Mixed Content')) {
+          console.error(
+            'Mixed Content Error: Cannot make HTTP requests from HTTPS site',
+          );
+          toast.error('API connection blocked. Please contact support.');
+          return Promise.reject(
+            new Error('Mixed Content: API connection blocked'),
+          );
+        }
+
+        // Network Error (including CORS issues)
+        if (error.message === 'Network Error') {
+          console.error(
+            'Network Error - Possible causes: CORS, server down, or mixed content',
+          );
+          toast.error('Unable to connect to server. Please try again.');
+          return Promise.reject(error);
+        }
+
         // Only trigger session expired for non-AI endpoints
         const isAIEndpoint = url.includes('/api/v1/ai/');
         if (error.response?.status === 401 && !isAIEndpoint) {
