@@ -6,10 +6,20 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+    let apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+    
+    // In production on Vercel (HTTPS), try to use HTTPS for API
+    if (window.location.protocol === 'https:' && apiUrl.startsWith('http://')) {
+      // First try HTTPS version
+      apiUrl = apiUrl.replace('http://', 'https://');
+      console.log('Attempting HTTPS API URL for production:', apiUrl);
+    }
+    
+    this.baseURL = apiUrl;
 
     // Debug logging
     console.log('Environment API URL:', process.env.REACT_APP_API_URL);
+    console.log('Window protocol:', window.location.protocol);
     console.log('Using baseURL:', this.baseURL);
 
     this.api = axios.create({
