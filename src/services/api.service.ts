@@ -78,6 +78,20 @@ class ApiService {
       (error) => {
         const url = error.config?.url || '';
 
+        // Handle SSL Certificate Error
+        if (
+          error.code === 'ERR_CERT_AUTHORITY_INVALID' ||
+          (error.message && error.message.includes('certificate'))
+        ) {
+          console.error(
+            'SSL Certificate Error: Self-signed certificate not trusted',
+          );
+          toast.error(
+            'SSL Certificate Error. Please visit https://13.54.93.54 first to accept the certificate.',
+          );
+          return Promise.reject(new Error('SSL Certificate: Not trusted'));
+        }
+
         // Handle Mixed Content Error
         if (error.message && error.message.includes('Mixed Content')) {
           console.error(
@@ -92,9 +106,17 @@ class ApiService {
         // Network Error (including CORS issues)
         if (error.message === 'Network Error') {
           console.error(
-            'Network Error - Possible causes: CORS, server down, or mixed content',
+            'Network Error - Possible causes: CORS, server down, mixed content, or SSL certificate',
           );
-          toast.error('Unable to connect to server. Please try again.');
+
+          // In production, show more helpful message
+          if (window.location.hostname === 'matnice.id.vn') {
+            toast.error(
+              'Unable to connect to server. Please visit https://13.54.93.54 first to accept the SSL certificate, then refresh this page.',
+            );
+          } else {
+            toast.error('Unable to connect to server. Please try again.');
+          }
           return Promise.reject(error);
         }
 
