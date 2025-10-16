@@ -137,47 +137,76 @@ const WishlistDropdown: React.FC = () => {
               </div>
 
               {/* Items */}
-              <div className="max-h-48 overflow-y-auto">
-                {items.map((item) => (
-                  <div key={item.id} className="p-4 border-b hover:bg-gray-50">
-                    <div className="flex items-start space-x-3">
-                      {/* Product Image Placeholder */}
-                      <div className="flex-shrink-0">
-                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <Heart className="w-6 h-6 text-gray-400" />
+              <div className="max-h-96 overflow-y-auto">
+                {items.map((item) => {
+                  // Debug: Log item data
+                  console.log('[WishlistDropdown] ==== ITEM DEBUG ====');
+                  console.log('[WishlistDropdown] Full item:', JSON.stringify(item, null, 2));
+                  console.log('[WishlistDropdown] thumbnailUrl:', item.thumbnailUrl);
+                  console.log('[WishlistDropdown] imageUrl:', item.imageUrl);
+                  console.log('[WishlistDropdown] ==== END ====');
+                  
+                  // Determine the display name
+                  const displayName = item.displayName || item.productName || item.lensName || 'Item';
+                  const imageUrl = item.thumbnailUrl || item.imageUrl || '/api/placeholder/64/64';
+                  const itemUrl = item.itemType === 'product' 
+                    ? `/product/${item.productId}` 
+                    : `/lens/${item.lensId}`;
+                  
+                  return (
+                    <Link 
+                      key={item.id} 
+                      to={itemUrl}
+                      className="block p-4 border-b hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <div className="flex items-start space-x-3">
+                        {/* Product Image */}
+                        <div className="flex-shrink-0">
+                          <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
+                            <img 
+                              src={imageUrl}
+                              alt={displayName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/api/placeholder/64/64';
+                              }}
+                            />
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Item Info */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-gray-900 truncate">
-                          {item.brandName && `${item.brandName} `}
-                          {item.productName || item.lensName || 'Item'}
-                        </h4>
-                        {item.colorName && (
-                          <p className="text-xs text-gray-500">Color: {item.colorName}</p>
-                        )}
-                        {item.productPrice && (
-                          <p className="text-sm font-medium text-gray-900 mt-1">
-                            {formatVND(item.productPrice)}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-400 mt-1">
-                          Added {new Date(item.addedAt).toLocaleDateString()}
-                        </p>
-                      </div>
+                        {/* Item Info */}
+                        <div className="flex-1 min-w-0">
+                          {item.brandName && (
+                            <p className="text-xs text-gray-500 mb-1">{item.brandName}</p>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium text-gray-900 truncate flex-1">
+                              {displayName}
+                            </h4>
+                            {item.productPrice && (
+                              <p className="text-sm font-semibold text-gray-900 ml-2 flex-shrink-0">
+                                {formatVND(item.productPrice)}
+                              </p>
+                            )}
+                          </div>
+                          {item.colorName && (
+                            <p className="text-xs text-gray-500 mt-1">Color: {item.colorName}</p>
+                          )}
+                        </div>
 
-                      {/* Remove Button */}
-                      <button
-                        onClick={(e) => handleRemoveItem(item.id, e)}
-                        className="flex-shrink-0 text-gray-400 hover:text-red-500 transition-colors"
-                        title="Remove from wishlist"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                        {/* Remove Button */}
+                        <button
+                          onClick={(e) => handleRemoveItem(item.id, e)}
+                          className="flex-shrink-0 text-gray-400 hover:text-red-500 transition-colors"
+                          title="Remove from wishlist"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
 
               {/* Footer */}

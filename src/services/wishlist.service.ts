@@ -15,6 +15,9 @@ export interface WishlistItem {
   brandName?: string;
   lensName?: string;
   lensBrandName?: string;
+  thumbnailUrl?: string;
+  imageUrl?: string;
+  displayName?: string;
 }
 
 export interface WishlistResponse {
@@ -101,12 +104,29 @@ class WishlistService {
 
   async addToWishlist(data: AddToWishlistRequest): Promise<WishlistItem> {
     try {
-      const response = (await apiService.post(`${this.baseUrl}/add`, data)) as {
-        data: WishlistItem;
-      };
-      return response.data;
+      console.log('[WishlistService] Adding to wishlist:', data);
+      const response = await apiService.post(`${this.baseUrl}/add`, data);
+      console.log('[WishlistService] Add to wishlist response:', response);
+
+      // Handle different response formats
+      let wishlistItem: WishlistItem;
+
+      if (response && typeof response === 'object') {
+        if ('data' in response && response.data) {
+          // Response format: { data: WishlistItem }
+          wishlistItem = response.data as WishlistItem;
+        } else {
+          // Response is directly WishlistItem
+          wishlistItem = response as WishlistItem;
+        }
+      } else {
+        throw new Error('Invalid response format from server');
+      }
+
+      console.log('[WishlistService] Returning wishlist item:', wishlistItem);
+      return wishlistItem;
     } catch (error) {
-      console.error('Error adding to wishlist:', error);
+      console.error('[WishlistService] Error adding to wishlist:', error);
       throw error;
     }
   }

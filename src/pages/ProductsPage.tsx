@@ -938,9 +938,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((product) => {
-                      // Pre-calculate wishlist status to avoid multiple calls
                       const productId = typeof product.id === 'string' ? parseInt(product.id) : product.id;
-                      const isInWishlist = isItemInWishlist('product', productId);
                       
                       return (
                       <Link 
@@ -981,10 +979,12 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                                   return;
                                 }
 
+                                const currentIsInWishlist = isItemInWishlist('product', productId);
+
                                 try {
-                                  console.log('[ProductsPage] Heart clicked for product:', productId, 'Current wishlist status:', isInWishlist);
+                                  console.log('[ProductsPage] Heart clicked for product:', productId, 'Current wishlist status:', currentIsInWishlist);
                                   
-                                  if (isInWishlist) {
+                                  if (currentIsInWishlist) {
                                     await removeItemByProductId('product', productId);
                                     toastService.success('Removed from wishlist');
                                   } else {
@@ -999,7 +999,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                             >
                               <Heart 
                                 className={`w-5 h-5 transition-colors ${
-                                  isInWishlist
+                                  isItemInWishlist('product', productId)
                                     ? 'text-red-500 fill-red-500' 
                                     : 'text-gray-400 hover:text-red-500'
                                 }`} 

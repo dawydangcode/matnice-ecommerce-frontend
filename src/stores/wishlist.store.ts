@@ -107,21 +107,10 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       const newItem = await wishlistService.addToWishlist(data);
       console.log('[WishlistStore] Added item:', newItem);
 
-      const currentItems = get().items || [];
-      const validItems = currentItems.filter((item) => item != null);
-      console.log(
-        '[WishlistStore] Current items before add:',
-        validItems.length,
-      );
-      set({
-        items: newItem ? [newItem, ...validItems] : validItems,
-        totalItems: newItem ? validItems.length + 1 : validItems.length,
-        loading: false,
-      });
-      console.log(
-        '[WishlistStore] Updated wishlist, total items:',
-        newItem ? validItems.length + 1 : validItems.length,
-      );
+      // Refetch the entire wishlist to get full product details
+      await get().fetchWishlist();
+
+      console.log('[WishlistStore] Wishlist refreshed after adding item');
     } catch (error: any) {
       console.error('Error adding to wishlist:', error);
 
