@@ -50,31 +50,49 @@ class WishlistService {
       const response = await apiService.get(url);
       console.log('[WishlistService] Raw API response:', response);
 
-      // Check if response is already the WishlistResponse format
+      // Backend returns the WishlistResponse format directly
+      // Check different response structures
+      let wishlistResponse: WishlistResponse;
+
       if (Array.isArray(response)) {
-        // If response is directly an array, wrap it
-        const wishlistResponse: WishlistResponse = {
+        // If response is directly an array
+        console.log('[WishlistService] Response is array, wrapping...');
+        wishlistResponse = {
           total: response.length,
           data: response,
         };
-        console.log(
-          '[WishlistService] Wrapped array response:',
-          wishlistResponse,
-        );
-        return wishlistResponse;
-      } else if (
-        response &&
-        typeof response === 'object' &&
-        'data' in response
-      ) {
-        // If response has .data property, use it
-        console.log('[WishlistService] Using response.data:', response.data);
-        return response.data as WishlistResponse;
+      } else if (response && typeof response === 'object') {
+        if (
+          'data' in response &&
+          response.data &&
+          typeof response.data === 'object' &&
+          'total' in response.data &&
+          'data' in response.data
+        ) {
+          // If response is wrapped: { data: { total, data } }
+          console.log(
+            '[WishlistService] Response is nested object, extracting...',
+          );
+          wishlistResponse = response.data as WishlistResponse;
+        } else if ('total' in response && 'data' in response) {
+          // If response is already correct format: { total, data }
+          console.log('[WishlistService] Response is correct format');
+          wishlistResponse = response as WishlistResponse;
+        } else {
+          // Unknown format, return empty
+          console.warn('[WishlistService] Unknown response format:', response);
+          wishlistResponse = { total: 0, data: [] };
+        }
       } else {
-        // If response is already in correct format
-        console.log('[WishlistService] Direct response:', response);
-        return response as WishlistResponse;
+        console.warn('[WishlistService] Invalid response:', response);
+        wishlistResponse = { total: 0, data: [] };
       }
+
+      console.log(
+        '[WishlistService] Final wishlistResponse:',
+        wishlistResponse,
+      );
+      return wishlistResponse;
     } catch (error) {
       console.error('[WishlistService] Error fetching wishlist:', error);
       throw error;

@@ -420,10 +420,18 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
 
   // Fetch wishlist when user is available (on mount and when user changes)
   useEffect(() => {
+    console.log('[ProductsPage] Wishlist useEffect triggered, user:', user?.email);
     if (user) {
-      fetchWishlist().catch(error => {
-        console.error('Error fetching wishlist:', error);
-      });
+      console.log('[ProductsPage] Fetching wishlist...');
+      fetchWishlist()
+        .then(() => {
+          console.log('[ProductsPage] Wishlist fetched successfully');
+        })
+        .catch(error => {
+          console.error('[ProductsPage] Error fetching wishlist:', error);
+        });
+    } else {
+      console.log('[ProductsPage] No user, skipping wishlist fetch');
     }
   }, [user, fetchWishlist]);
 
@@ -929,7 +937,12 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
               ) : (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {products.map((product) => (
+                    {products.map((product) => {
+                      // Pre-calculate wishlist status to avoid multiple calls
+                      const productId = typeof product.id === 'string' ? parseInt(product.id) : product.id;
+                      const isInWishlist = isItemInWishlist('product', productId);
+                      
+                      return (
                       <Link 
                         key={product.id} 
                         to={`/product/${product.id}`}
@@ -969,8 +982,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                                 }
 
                                 try {
-                                  const productId = typeof product.id === 'string' ? parseInt(product.id) : product.id;
-                                  const isInWishlist = isItemInWishlist('product', productId);
+                                  console.log('[ProductsPage] Heart clicked for product:', productId, 'Current wishlist status:', isInWishlist);
                                   
                                   if (isInWishlist) {
                                     await removeItemByProductId('product', productId);
@@ -987,7 +999,7 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                             >
                               <Heart 
                                 className={`w-5 h-5 transition-colors ${
-                                  isItemInWishlist('product', typeof product.id === 'string' ? parseInt(product.id) : product.id)
+                                  isInWishlist
                                     ? 'text-red-500 fill-red-500' 
                                     : 'text-gray-400 hover:text-red-500'
                                 }`} 
@@ -1027,7 +1039,8 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                           </div>
                         </div>
                       </Link>
-                    ))}
+                    );
+                    })}
                   </div>
 
                   {/* Pagination */}
