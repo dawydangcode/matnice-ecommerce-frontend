@@ -16,6 +16,7 @@ import LensPage from './pages/LensPage';
 import LensDetailPage from './pages/LensDetailPage';
 import LensSelectionPage from './pages/LensSelectionPage';
 import CartPage from './pages/CartPage';
+import WishlistPage from './pages/WishlistPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AddProduct3DModel from './pages/admin/AddProduct3DModel';
 import Configure3DModel from './pages/admin/Configure3DModel';
@@ -170,6 +171,16 @@ function App() {
           <Route 
             path="/cart" 
             element={<CartPage />} 
+          />
+
+          {/* Wishlist Page - requires login */}
+          <Route 
+            path="/wishlist" 
+            element={
+              <ProtectedRoute>
+                <WishlistPage />
+              </ProtectedRoute>
+            } 
           />
 
           {/* Checkout Page - requires login */}
