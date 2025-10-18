@@ -29,6 +29,7 @@ import userAddressService, { UserAddress, CreateUserAddressRequest } from '../se
 import userDetailService, { UserDetail, GenderType, UpdateUserDetailRequest } from '../services/user-detail.service';
 import vietnamAddressService, { Province, District, Ward } from '../services/vietnam-address.service';
 import toast from 'react-hot-toast';
+import MyPrescriptions from '../components/MyPrescriptions';
 
 const MyAccountPage: React.FC = () => {
   const { user, isLoggedIn, logout } = useAuthStore();
@@ -1078,12 +1079,11 @@ const MyAccountPage: React.FC = () => {
         );
       case 'prescriptions':
         return (
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">My Prescription Values</h3>
-            <p className="text-gray-600">No prescription values saved.</p>
+          <div>
+            <MyPrescriptions />
           </div>
         );
-      case 'favorites':
+      case 'wishlist':
         return (
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">My Favorites</h3>
