@@ -1,0 +1,49 @@
+.saved-prescription-border {
+  border-color: #363434;
+}
+
+.prescription-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.prescription-headers {
+  display: grid;
+  grid-template-columns: 120px repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.prescription-spacer {
+  min-width: 120px;
+}
+
+.prescription-type-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+}
+
+.prescription-values-row {
+  display: grid;
+  grid-template-columns: 120px repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  align-items: center;
+}
+
+.prescription-eye-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.prescription-value-box {
+  background-color: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 14px;
+  color: #1f2937;
+}

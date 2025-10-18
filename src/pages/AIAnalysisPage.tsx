@@ -967,7 +967,7 @@ const AIAnalysisPage: React.FC = () => {
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center"
             >
               <Camera className="mr-3 h-6 w-6" />
-              Chụp Ảnh
+              Trải nghiệm ngay
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}

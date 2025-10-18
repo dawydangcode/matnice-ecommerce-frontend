@@ -8,10 +8,11 @@ import productCardService from '../services/product-card.service';
 import productService from '../services/productService';
 import lensPrescriptionService, { FilteredLens } from '../services/lens-prescription.service';
 import lensDetailsService, { LensFullDetails, SelectedLensOptions } from '../services/lens-details.service';
-
 import { localCartService } from '../services/localCart.service';
 import { AddLensProductToCartRequest } from '../services/cart.service';
 import { ProductCard } from '../types/product-card.types';
+import { UserPrescription } from '../services/user-prescription.service';
+import SavedPrescriptionSelector from '../components/SavedPrescriptionSelector';
 import '../styles/value-table.css';
 
 // Prescription dropdown values
@@ -193,6 +194,32 @@ const LensSelectionPage: React.FC = () => {
       year: ''
     }
   });
+
+  // Handle when saved prescription is selected
+  const handleSavedPrescriptionSelect = useCallback((prescription: UserPrescription) => {
+    // Map saved prescription values to form (for when user switches to manual later)
+    setPrescriptionData({
+      sphereR: Number(prescription.rightEyeSph).toFixed(2),
+      sphereL: Number(prescription.leftEyeSph).toFixed(2),
+      cylinderR: Number(prescription.rightEyeCyl).toFixed(2),
+      cylinderL: Number(prescription.leftEyeCyl).toFixed(2),
+      addR: prescription.rightEyeAdd ? Number(prescription.rightEyeAdd).toFixed(2) : '-',
+      addL: prescription.leftEyeAdd ? Number(prescription.leftEyeAdd).toFixed(2) : '-',
+      axisR: `${prescription.rightEyeAxis}°`,
+      axisL: `${prescription.leftEyeAxis}°`,
+      pd: (Number(prescription.pdRight) + Number(prescription.pdLeft)).toFixed(2),
+      pdR: Number(prescription.pdRight).toFixed(2),
+      pdL: Number(prescription.pdLeft).toFixed(2),
+      hasTwoPD: true,
+      prescriptionDate: {
+        day: '',
+        month: '',
+        year: ''
+      }
+    });
+    
+    // Keep in saved mode - user can manually switch to manual if they want to edit
+  }, []);
 
   
   // Load initial product data (glasses/frames)
@@ -900,42 +927,37 @@ const LensSelectionPage: React.FC = () => {
                 <>
                   {/* Prescription Options */}
                   <div className="space-y-4 mb-6">
-                <div
-                  className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                    prescriptionOption === 'saved'
-                      ? 'border-2 bg-white'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  style={prescriptionOption === 'saved' ? {borderColor: '#363434'} : {}}
-                  onClick={() => setPrescriptionOption('saved')}
-                >
-                  <h3 className="font-semibold text-gray-900 mb-2">Use saved prescription values</h3>
-                  {prescriptionOption === 'saved' ? (
-                    <>
-                      <p className="text-gray-600 text-sm mb-4">Please sign in to load saved values from your account.</p>
-                      <button className="bg-gray-800 text-white py-2 px-6 rounded-lg font-medium hover:bg-gray-900 transition-colors">
-                        Login now
-                      </button>
-                    </>
-                  ) : (
-                    <p className="text-gray-600 text-sm">
-                      If you have stored your values from an eye test or previous purchase in your customer account.
-                    </p>
-                  )}
-                </div>
+                    {/* Saved Prescription Option */}
+                    {prescriptionOption === 'saved' ? (
+                      <SavedPrescriptionSelector
+                        selectedLensType={selectedLensType}
+                        onPrescriptionSelect={handleSavedPrescriptionSelect}
+                      />
+                    ) : (
+                      <div
+                        className="border rounded-lg p-4 cursor-pointer transition-all border-gray-200 hover:border-gray-300"
+                        onClick={() => setPrescriptionOption('saved')}
+                      >
+                        <h3 className="font-semibold text-gray-900 mb-2">Use saved prescription values</h3>
+                        <p className="text-gray-600 text-sm">
+                          If you have stored your values from an eye test or previous purchase in your customer account.
+                        </p>
+                      </div>
+                    )}
 
-                {prescriptionOption !== 'manual' && (
-                  <div
-                    className="border rounded-lg p-4 cursor-pointer transition-all border-gray-200 hover:border-gray-300"
-                    onClick={() => setPrescriptionOption('manual')}
-                  >
-                    <h3 className="font-semibold text-gray-900 mb-2">Enter your prescription values manually</h3>
-                    <p className="text-gray-600 text-sm">
-                      Please enter your prescription values as recorded on your prescription card.
-                    </p>
+                    {/* Manual Prescription Option */}
+                    {prescriptionOption === 'manual' ? null : (
+                      <div
+                        className="border rounded-lg p-4 cursor-pointer transition-all border-gray-200 hover:border-gray-300"
+                        onClick={() => setPrescriptionOption('manual')}
+                      >
+                        <h3 className="font-semibold text-gray-900 mb-2">Enter your prescription values manually</h3>
+                        <p className="text-gray-600 text-sm">
+                          Please enter your prescription values as recorded on your prescription card.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
               {/* Manual Prescription Form */}
               {prescriptionOption === 'manual' && (
