@@ -21,7 +21,6 @@ const prescriptionSchema = z.object({
   leftEyeAdd: z.number().optional(),
   pdRight: z.number().min(20).max(40),
   pdLeft: z.number().min(20).max(40),
-  isDefault: z.boolean().optional(),
   notes: z.string().optional(),
 });
 
@@ -92,7 +91,6 @@ const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
       leftEyeAdd: undefined,
       pdRight: 32.0,
       pdLeft: 32.0,
-      isDefault: false,
       notes: '',
     },
   });
@@ -100,9 +98,16 @@ const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   useEffect(() => {
     if (prescriptionToEdit) {
       reset({
-        ...prescriptionToEdit,
-        rightEyeAdd: prescriptionToEdit.rightEyeAdd ?? undefined,
-        leftEyeAdd: prescriptionToEdit.leftEyeAdd ?? undefined,
+        rightEyeSph: Number(prescriptionToEdit.rightEyeSph),
+        rightEyeCyl: Number(prescriptionToEdit.rightEyeCyl),
+        rightEyeAxis: Number(prescriptionToEdit.rightEyeAxis),
+        rightEyeAdd: prescriptionToEdit.rightEyeAdd ? Number(prescriptionToEdit.rightEyeAdd) : undefined,
+        leftEyeSph: Number(prescriptionToEdit.leftEyeSph),
+        leftEyeCyl: Number(prescriptionToEdit.leftEyeCyl),
+        leftEyeAxis: Number(prescriptionToEdit.leftEyeAxis),
+        leftEyeAdd: prescriptionToEdit.leftEyeAdd ? Number(prescriptionToEdit.leftEyeAdd) : undefined,
+        pdRight: Number(prescriptionToEdit.pdRight),
+        pdLeft: Number(prescriptionToEdit.pdLeft),
         notes: prescriptionToEdit.notes ?? '',
       });
     } else {
@@ -118,7 +123,6 @@ const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
         leftEyeAdd: undefined,
         pdRight: 32.0,
         pdLeft: 32.0,
-        isDefault: false,
         notes: '',
       });
     }
@@ -234,27 +238,6 @@ const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
                   rows={4}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                 />
-              )}
-            />
-          </div>
-          
-          <div className="mt-4">
-            <Controller
-              name="isDefault"
-              control={control}
-              render={({ field }) => (
-                <div className="flex items-center">
-                  <input
-                    id="isDefault"
-                    type="checkbox"
-                    checked={field.value}
-                    onChange={field.onChange}
-                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                  />
-                  <label htmlFor="isDefault" className="ml-2 block text-sm text-gray-900">
-                    Set as default prescription
-                  </label>
-                </div>
               )}
             />
           </div>

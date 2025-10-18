@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import userPrescriptionService, { UserPrescription } from '../services/user-prescription.service';
 import PrescriptionModal from './PrescriptionModal';
-import { Plus, Edit, Trash2, Star, Info } from 'lucide-react';
+import { Plus, Edit, Trash2, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 
@@ -12,6 +12,7 @@ const MyPrescriptions: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [prescriptionToEdit, setPrescriptionToEdit] = useState<UserPrescription | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const fetchPrescriptions = useCallback(async () => {
     setIsLoading(true);
@@ -74,17 +75,6 @@ const MyPrescriptions: React.FC = () => {
     }
   };
 
-  const handleSetDefault = async (id: number) => {
-    try {
-      await userPrescriptionService.setDefaultPrescription(id);
-      toast.success('Default prescription updated.');
-      fetchPrescriptions(); // Refetch to update the default status everywhere
-    } catch (error) {
-      console.error('Failed to set default prescription:', error);
-      toast.error('Failed to set as default.');
-    }
-  };
-
   const formatDateTime = (dateString?: string) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -117,58 +107,77 @@ const MyPrescriptions: React.FC = () => {
           <p>Loading prescriptions...</p>
         ) : prescriptions && prescriptions.length > 0 ? (
           <>
-            <div className="flex space-x-4 mb-6">
-              {prescriptions.map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => setSelectedPrescription(p)}
-                  className={clsx(
-                    'p-4 rounded-lg cursor-pointer border-b-4',
-                    {
-                      'bg-white shadow-md border-green-500':
-                        selectedPrescription?.id === p.id,
-                      'bg-gray-200 border-transparent':
-                        selectedPrescription?.id !== p.id,
-                    },
-                  )}
+            <div className="mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+                {(showAll ? prescriptions : prescriptions.slice(0, 4)).map((p) => (
+                  <div
+                    key={p.id}
+                    onClick={() => setSelectedPrescription(p)}
+                    className={clsx(
+                      'p-4 rounded-lg cursor-pointer border-b-4',
+                      {
+                        'bg-white shadow-md border-green-500':
+                          selectedPrescription?.id === p.id,
+                        'bg-gray-200 border-transparent':
+                          selectedPrescription?.id !== p.id,
+                      },
+                    )}
+                  >
+                    <h3 className="font-semibold text-gray-800">
+                      {formatDateTime(p.createdAt)}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Customer account input
+                    </p>
+                  </div>
+                ))}
+              </div>
+              
+              {prescriptions.length > 4 && (
+                <button
+                  onClick={() => setShowAll(!showAll)}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                 >
-                  <h3 className="font-semibold text-gray-800">
-                    {formatDateTime(p.createdAt)}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Customer account input
-                  </p>
-                </div>
-              ))}
+                  {showAll ? 'Only show latest' : 'Show other values'}
+                </button>
+              )}
             </div>
 
             {selectedPrescription && (
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="grid grid-cols-5 gap-4 text-center mb-4">
                   <div className="font-semibold text-gray-600"></div>
-                  <div className="font-semibold text-gray-600 flex items-center justify-center">
-                    Sphere <Info className="w-4 h-4 ml-1" />
-                    <span className="block text-xs text-gray-400 w-full">
+                  <div className="font-semibold text-gray-600">
+                    <div className="flex items-center justify-center">
+                      Sphere <Info className="w-4 h-4 ml-1" />
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
                       S / SPH
-                    </span>
+                    </div>
                   </div>
-                  <div className="font-semibold text-gray-600 flex items-center justify-center">
-                    Cylinder <Info className="w-4 h-4 ml-1" />
-                    <span className="block text-xs text-gray-400 w-full">
+                  <div className="font-semibold text-gray-600">
+                    <div className="flex items-center justify-center">
+                      Cylinder <Info className="w-4 h-4 ml-1" />
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
                       ZYL / CYL
-                    </span>
+                    </div>
                   </div>
-                  <div className="font-semibold text-gray-600 flex items-center justify-center">
-                    Add <Info className="w-4 h-4 ml-1" />
-                    <span className="block text-xs text-gray-400 w-full">
+                  <div className="font-semibold text-gray-600">
+                    <div className="flex items-center justify-center">
+                      Add <Info className="w-4 h-4 ml-1" />
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
                       ADD
-                    </span>
+                    </div>
                   </div>
-                  <div className="font-semibold text-gray-600 flex items-center justify-center">
-                    PD <Info className="w-4 h-4 ml-1" />
-                    <span className="block text-xs text-gray-400 w-full">
+                  <div className="font-semibold text-gray-600">
+                    <div className="flex items-center justify-center">
+                      PD <Info className="w-4 h-4 ml-1" />
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
                       PD
-                    </span>
+                    </div>
                   </div>
                 </div>
 
@@ -201,37 +210,19 @@ const MyPrescriptions: React.FC = () => {
                   </div>
                 )}
 
-                <div className="mt-6 pt-4 border-t flex items-center justify-between">
-                  <div>
-                    {!selectedPrescription.isDefault && (
-                      <button
-                        onClick={() => handleSetDefault(selectedPrescription.id)}
-                        className="text-sm text-green-600 hover:text-green-800 font-medium"
-                      >
-                        Set as default
-                      </button>
-                    )}
-                     {selectedPrescription.isDefault && (
-                        <div className="flex items-center text-sm text-yellow-600">
-                          <Star className="w-4 h-4 mr-1" />
-                          This is your default prescription
-                        </div>
-                      )}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleOpenModal(selectedPrescription)}
-                      className="p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-full"
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(selectedPrescription.id)}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
+                <div className="mt-6 pt-4 border-t flex items-center justify-end space-x-2">
+                  <button
+                    onClick={() => handleOpenModal(selectedPrescription)}
+                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-full"
+                  >
+                    <Edit className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(selectedPrescription.id)}
+                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-100 rounded-full"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
             )}
