@@ -26,14 +26,36 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
     setLoading(true);
     try {
       const response = await userPrescriptionService.getPrescriptions();
-      const fetchedPrescriptions = response?.data || [];
-      setPrescriptions(fetchedPrescriptions);
+      const allPrescriptions = response?.data || [];
+      
+      // Filter prescriptions based on lens type
+      let filteredPrescriptions = allPrescriptions;
+      
+      if (selectedLensType === 'SINGLE_VISION') {
+        // For Single Vision, only show prescriptions without ADD values
+        filteredPrescriptions = allPrescriptions.filter((p) => {
+          const hasNoAddRight = !p.rightEyeAdd || Number(p.rightEyeAdd) === 0;
+          const hasNoAddLeft = !p.leftEyeAdd || Number(p.leftEyeAdd) === 0;
+          return hasNoAddRight && hasNoAddLeft;
+        });
+      } else if (selectedLensType === 'PROGRESSIVE' || selectedLensType === 'OFFICE') {
+        // For Progressive/Office, only show prescriptions WITH ADD values
+        filteredPrescriptions = allPrescriptions.filter((p) => {
+          const hasAddRight = p.rightEyeAdd && Number(p.rightEyeAdd) > 0;
+          const hasAddLeft = p.leftEyeAdd && Number(p.leftEyeAdd) > 0;
+          return hasAddRight || hasAddLeft;
+        });
+      }
+      
+      setPrescriptions(filteredPrescriptions);
 
-      if (fetchedPrescriptions.length > 0) {
+      if (filteredPrescriptions.length > 0) {
         const defaultPrescription =
-          fetchedPrescriptions.find((p) => p.isDefault) || fetchedPrescriptions[0];
+          filteredPrescriptions.find((p) => p.isDefault) || filteredPrescriptions[0];
         setSelectedPrescription(defaultPrescription);
         onPrescriptionSelect(defaultPrescription);
+      } else {
+        setSelectedPrescription(null);
       }
     } catch (error) {
       console.error('Failed to load prescriptions:', error);
@@ -41,13 +63,13 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [onPrescriptionSelect]);
+  }, [onPrescriptionSelect, selectedLensType]);
 
   useEffect(() => {
     if (isLoggedIn) {
       loadPrescriptions();
     }
-  }, [isLoggedIn, loadPrescriptions]);
+  }, [isLoggedIn, loadPrescriptions, selectedLensType]);
 
   const handlePrescriptionSelect = (prescription: UserPrescription) => {
     setSelectedPrescription(prescription);
@@ -62,6 +84,10 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
     const month = date.toLocaleString('en-US', { month: 'short' });
     const year = date.getFullYear();
     return `${day} ${month} ${year}`;
+  };
+
+  const needsAddValue = () => {
+    return ['PROGRESSIVE', 'OFFICE'].includes(selectedLensType);
   };
 
   if (!isLoggedIn) {
@@ -98,7 +124,11 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
       <div className="border-2 rounded-lg p-6 saved-prescription-border">
         <h3 className="font-semibold text-gray-900 mb-2">Use saved prescription values</h3>
         <p className="text-gray-600 text-sm mb-4">
-          We couldn't load any values from this customer account. Enter your prescription values manually or book a free eye test if you don't have any prescription values yet.
+          {selectedLensType === 'SINGLE_VISION' 
+            ? 'No saved prescriptions found without ADD values for Single Vision lenses. Enter your prescription values manually or book a free eye test.'
+            : selectedLensType === 'PROGRESSIVE' || selectedLensType === 'OFFICE'
+            ? 'No saved prescriptions found with ADD values for Progressive/Office lenses. Enter your prescription values manually or book a free eye test.'
+            : 'We couldn\'t load any values from this customer account. Enter your prescription values manually or book a free eye test if you don\'t have any prescription values yet.'}
         </p>
       </div>
     );
@@ -118,7 +148,7 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
           <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4">
             <div className="prescription-grid">
               {/* Header Row */}
-              <div className="prescription-headers with-add">
+              <div className={`prescription-headers ${needsAddValue() ? 'with-add' : ''}`}>
                 <div className="prescription-spacer"></div>
                 <div className="prescription-type-header">
                   Sphere<br />
@@ -132,10 +162,12 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
                   Axis<br />
                   <span className="text-xs text-gray-400">(A/ACH)</span>
                 </div>
-                <div className="prescription-type-header">
-                  Add<br />
-                  <span className="text-xs text-gray-400">(ADD)</span>
-                </div>
+                {needsAddValue() && (
+                  <div className="prescription-type-header">
+                    Add<br />
+                    <span className="text-xs text-gray-400">(ADD)</span>
+                  </div>
+                )}
                 <div className="prescription-type-header">
                   Pupillary distance<br />
                   <span className="text-xs text-gray-400">(PD)</span>
@@ -143,26 +175,30 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
               </div>
 
               {/* Right Eye Row */}
-              <div className="prescription-values-row with-add">
+              <div className={`prescription-values-row ${needsAddValue() ? 'with-add' : ''}`}>
                 <div className="prescription-eye-label">Right eye</div>
                 <div className="prescription-value-box">{Number(selectedPrescription.rightEyeSph).toFixed(2)} dpt</div>
                 <div className="prescription-value-box">{Number(selectedPrescription.rightEyeCyl).toFixed(2)} dpt</div>
                 <div className="prescription-value-box">{selectedPrescription.rightEyeAxis}º</div>
-                <div className="prescription-value-box">
-                  {selectedPrescription.rightEyeAdd ? Number(selectedPrescription.rightEyeAdd).toFixed(2) : '-'} dpt
-                </div>
+                {needsAddValue() && (
+                  <div className="prescription-value-box">
+                    {selectedPrescription.rightEyeAdd ? Number(selectedPrescription.rightEyeAdd).toFixed(2) : '-'} dpt
+                  </div>
+                )}
                 <div className="prescription-value-box">{Number(selectedPrescription.pdRight).toFixed(2)} mm</div>
               </div>
 
               {/* Left Eye Row */}
-              <div className="prescription-values-row with-add">
+              <div className={`prescription-values-row ${needsAddValue() ? 'with-add' : ''}`}>
                 <div className="prescription-eye-label">Left eye</div>
                 <div className="prescription-value-box">{Number(selectedPrescription.leftEyeSph).toFixed(2)} dpt</div>
                 <div className="prescription-value-box">{Number(selectedPrescription.leftEyeCyl).toFixed(2)} dpt</div>
                 <div className="prescription-value-box">{selectedPrescription.leftEyeAxis}º</div>
-                <div className="prescription-value-box">
-                  {selectedPrescription.leftEyeAdd ? Number(selectedPrescription.leftEyeAdd).toFixed(2) : '-'} dpt
-                </div>
+                {needsAddValue() && (
+                  <div className="prescription-value-box">
+                    {selectedPrescription.leftEyeAdd ? Number(selectedPrescription.leftEyeAdd).toFixed(2) : '-'} dpt
+                  </div>
+                )}
                 <div className="prescription-value-box">{Number(selectedPrescription.pdLeft).toFixed(2)} mm</div>
               </div>
             </div>

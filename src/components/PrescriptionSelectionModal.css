@@ -148,6 +148,26 @@
   font-weight: 500 !important;
 }
 
+/* Notes Section */
+.prescription-card-notes {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.notes-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.notes-content {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
 /* Modal Footer */
 .modal-footer {
   padding: 20px 32px;

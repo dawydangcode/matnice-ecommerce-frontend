@@ -118,6 +118,14 @@ const PrescriptionSelectionModal: React.FC<PrescriptionSelectionModalProps> = ({
                     <div className="prescription-value">{Number(prescription.pdLeft).toFixed(2)} mm</div>
                   </div>
                 </div>
+
+                {/* Notes Section */}
+                {prescription.notes && (
+                  <div className="prescription-card-notes">
+                    <p className="notes-label">Notes:</p>
+                    <p className="notes-content">{prescription.notes}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
