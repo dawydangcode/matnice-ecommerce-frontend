@@ -206,12 +206,14 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
 
           {/* Load Other Prescriptions Button */}
           {prescriptions.length > 1 && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="text-blue-600 text-sm hover:underline mb-4"
-            >
-              Load other prescriptions
-            </button>
+            <div className="flex justify-center">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="w-full bg-gray-800 text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-900 transition-colors"
+              >
+                Load other prescriptions
+              </button>
+            </div>
           )}
         </>
       )}
