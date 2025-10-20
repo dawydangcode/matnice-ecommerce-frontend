@@ -64,10 +64,6 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
     return `${day} ${month} ${year}`;
   };
 
-  const needsAddValue = () => {
-    return ['PROGRESSIVE', 'OFFICE'].includes(selectedLensType);
-  };
-
   if (!isLoggedIn) {
     return (
       <div className="border-2 rounded-lg p-6 saved-prescription-border">
@@ -122,7 +118,7 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
           <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4">
             <div className="prescription-grid">
               {/* Header Row */}
-              <div className="prescription-headers">
+              <div className="prescription-headers with-add">
                 <div className="prescription-spacer"></div>
                 <div className="prescription-type-header">
                   Sphere<br />
@@ -136,12 +132,10 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
                   Axis<br />
                   <span className="text-xs text-gray-400">(A/ACH)</span>
                 </div>
-                {needsAddValue() && (
-                  <div className="prescription-type-header">
-                    Add<br />
-                    <span className="text-xs text-gray-400">(ADD)</span>
-                  </div>
-                )}
+                <div className="prescription-type-header">
+                  Add<br />
+                  <span className="text-xs text-gray-400">(ADD)</span>
+                </div>
                 <div className="prescription-type-header">
                   Pupillary distance<br />
                   <span className="text-xs text-gray-400">(PD)</span>
@@ -149,30 +143,26 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
               </div>
 
               {/* Right Eye Row */}
-              <div className="prescription-values-row">
+              <div className="prescription-values-row with-add">
                 <div className="prescription-eye-label">Right eye</div>
                 <div className="prescription-value-box">{Number(selectedPrescription.rightEyeSph).toFixed(2)} dpt</div>
                 <div className="prescription-value-box">{Number(selectedPrescription.rightEyeCyl).toFixed(2)} dpt</div>
                 <div className="prescription-value-box">{selectedPrescription.rightEyeAxis}º</div>
-                {needsAddValue() && (
-                  <div className="prescription-value-box">
-                    {selectedPrescription.rightEyeAdd ? Number(selectedPrescription.rightEyeAdd).toFixed(2) : '-'} dpt
-                  </div>
-                )}
+                <div className="prescription-value-box">
+                  {selectedPrescription.rightEyeAdd ? Number(selectedPrescription.rightEyeAdd).toFixed(2) : '-'} dpt
+                </div>
                 <div className="prescription-value-box">{Number(selectedPrescription.pdRight).toFixed(2)} mm</div>
               </div>
 
               {/* Left Eye Row */}
-              <div className="prescription-values-row">
+              <div className="prescription-values-row with-add">
                 <div className="prescription-eye-label">Left eye</div>
                 <div className="prescription-value-box">{Number(selectedPrescription.leftEyeSph).toFixed(2)} dpt</div>
                 <div className="prescription-value-box">{Number(selectedPrescription.leftEyeCyl).toFixed(2)} dpt</div>
                 <div className="prescription-value-box">{selectedPrescription.leftEyeAxis}º</div>
-                {needsAddValue() && (
-                  <div className="prescription-value-box">
-                    {selectedPrescription.leftEyeAdd ? Number(selectedPrescription.leftEyeAdd).toFixed(2) : '-'} dpt
-                  </div>
-                )}
+                <div className="prescription-value-box">
+                  {selectedPrescription.leftEyeAdd ? Number(selectedPrescription.leftEyeAdd).toFixed(2) : '-'} dpt
+                </div>
                 <div className="prescription-value-box">{Number(selectedPrescription.pdLeft).toFixed(2)} mm</div>
               </div>
             </div>

@@ -31,10 +31,6 @@ const PrescriptionSelectionModal: React.FC<PrescriptionSelectionModalProps> = ({
     return `${day} ${month} ${year}`;
   };
 
-  const needsAddValue = () => {
-    return ['PROGRESSIVE', 'OFFICE'].includes(selectedLensType);
-  };
-
   const handlePrescriptionClick = (prescriptionId: number) => {
     setSelectedPrescriptionId(prescriptionId);
   };
@@ -48,7 +44,7 @@ const PrescriptionSelectionModal: React.FC<PrescriptionSelectionModalProps> = ({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
         <div className="modal-header">
@@ -64,6 +60,9 @@ const PrescriptionSelectionModal: React.FC<PrescriptionSelectionModalProps> = ({
             {prescriptions.map((prescription) => (
               <div
                 key={prescription.id}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePrescriptionClick(prescription.id); } }}
                 className={`prescription-card ${selectedPrescriptionId === prescription.id ? 'selected' : ''}`}
                 onClick={() => handlePrescriptionClick(prescription.id)}
               >
@@ -73,49 +72,48 @@ const PrescriptionSelectionModal: React.FC<PrescriptionSelectionModalProps> = ({
                 </div>
 
                 <div className="prescription-card-body">
-                  <div className="prescription-row prescription-header-row">
-                    <div></div>
+                  {/* Header Row */}
+                  <div className="prescription-header-row">
+                    <div /> {/* Empty cell for alignment */}
                     <div className="prescription-col-header">Right eye</div>
                     <div className="prescription-col-header">Left eye</div>
                   </div>
 
-                  {/* Sphere */}
+                  {/* Sphere Row */}
                   <div className="prescription-row">
-                    <div className="prescription-label">Sphere (S / SPH)</div>
+                    <div className="prescription-label">Sphere</div>
                     <div className="prescription-value">{Number(prescription.rightEyeSph).toFixed(2)} dpt</div>
                     <div className="prescription-value">{Number(prescription.leftEyeSph).toFixed(2)} dpt</div>
                   </div>
 
-                  {/* Cylinder */}
+                  {/* Cylinder Row */}
                   <div className="prescription-row">
-                    <div className="prescription-label">Cylinder (ZYL / CYL)</div>
+                    <div className="prescription-label">Cylinder</div>
                     <div className="prescription-value">{Number(prescription.rightEyeCyl).toFixed(2)} dpt</div>
                     <div className="prescription-value">{Number(prescription.leftEyeCyl).toFixed(2)} dpt</div>
                   </div>
 
-                  {/* Axis */}
+                  {/* Axis Row */}
                   <div className="prescription-row">
-                    <div className="prescription-label">Axis (A/ACH)</div>
+                    <div className="prescription-label">Axis</div>
                     <div className="prescription-value">{prescription.rightEyeAxis} º</div>
                     <div className="prescription-value">{prescription.leftEyeAxis} º</div>
                   </div>
 
-                  {/* Add (only for Progressive/Office) */}
-                  {needsAddValue() && (
-                    <div className="prescription-row">
-                      <div className="prescription-label">Add (ADD)</div>
-                      <div className="prescription-value">
-                        {prescription.rightEyeAdd ? Number(prescription.rightEyeAdd).toFixed(2) + ' dpt' : '-'}
-                      </div>
-                      <div className="prescription-value">
-                        {prescription.leftEyeAdd ? Number(prescription.leftEyeAdd).toFixed(2) + ' dpt' : '-'}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* PD */}
+                  {/* Add Row - Always show */}
                   <div className="prescription-row">
-                    <div className="prescription-label">Pupillary distance (PD)</div>
+                    <div className="prescription-label">Add</div>
+                    <div className="prescription-value">
+                      {prescription.rightEyeAdd ? `${Number(prescription.rightEyeAdd).toFixed(2)} dpt` : '-'}
+                    </div>
+                    <div className="prescription-value">
+                      {prescription.leftEyeAdd ? `${Number(prescription.leftEyeAdd).toFixed(2)} dpt` : '-'}
+                    </div>
+                  </div>
+
+                  {/* PD Row */}
+                  <div className="prescription-row">
+                    <div className="prescription-label">PD</div>
                     <div className="prescription-value">{Number(prescription.pdRight).toFixed(2)} mm</div>
                     <div className="prescription-value">{Number(prescription.pdLeft).toFixed(2)} mm</div>
                   </div>

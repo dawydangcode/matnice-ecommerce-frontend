@@ -926,7 +926,7 @@ const LensSelectionPage: React.FC = () => {
                 // Full prescription form when not in step 3
                 <>
                   {/* Prescription Options */}
-                  <div className="space-y-4 mb-6">
+                  <div className="space-y-4 mb-6 max-w-[900px]">
                     {/* Saved Prescription Option */}
                     {prescriptionOption === 'saved' ? (
                       <SavedPrescriptionSelector
@@ -961,7 +961,7 @@ const LensSelectionPage: React.FC = () => {
 
               {/* Manual Prescription Form */}
               {prescriptionOption === 'manual' && (
-                <div className="border-2 rounded-lg p-6 mt-4" style={{borderColor: '#363434'}}>
+                <div className="border-2 rounded-lg p-6 mt-4 max-w-[900px]" style={{borderColor: '#363434'}}>
                   <h3 className="font-semibold text-gray-900 mb-2">Enter your prescription values manually</h3>
                   <p className="text-gray-600 text-sm mb-6">
                     Please enter your prescription values as recorded on your prescription card.

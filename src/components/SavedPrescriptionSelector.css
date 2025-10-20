@@ -1,17 +1,25 @@
 .saved-prescription-border {
   border-color: #363434;
+  max-width: 900px; /* Limit the overall component width */
 }
 
 .prescription-grid {
   display: grid;
   gap: 8px;
+  max-width: 850px; /* Limit the table width */
+  overflow-x: auto; /* Allow horizontal scroll if needed on very small screens */
 }
 
 .prescription-headers {
   display: grid;
-  grid-template-columns: 120px repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: 120px repeat(5, minmax(100px, 120px));
   gap: 8px;
   margin-bottom: 8px;
+}
+
+/* Adjust when ADD column is present (6 columns total) */
+.prescription-headers.with-add {
+  grid-template-columns: 120px repeat(6, minmax(100px, 120px));
 }
 
 .prescription-spacer {
@@ -27,9 +35,14 @@
 
 .prescription-values-row {
   display: grid;
-  grid-template-columns: 120px repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: 120px repeat(5, minmax(100px, 120px));
   gap: 8px;
   align-items: center;
+}
+
+/* Adjust when ADD column is present (6 columns total) */
+.prescription-values-row.with-add {
+  grid-template-columns: 120px repeat(6, minmax(100px, 120px));
 }
 
 .prescription-eye-label {
