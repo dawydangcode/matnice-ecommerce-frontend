@@ -17,7 +17,8 @@ import {
   CheckCircle,
   XCircle,
   Truck,
-  AlertCircle
+  AlertCircle,
+  ShoppingBag
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { Link, useNavigate } from 'react-router-dom';
@@ -28,11 +29,14 @@ import orderService, { OrderResponse } from '../services/order.service';
 import userAddressService, { UserAddress, CreateUserAddressRequest } from '../services/user-address.service';
 import userDetailService, { UserDetail, GenderType, UpdateUserDetailRequest } from '../services/user-detail.service';
 import vietnamAddressService, { Province, District, Ward } from '../services/vietnam-address.service';
+import { useWishlistStore } from '../stores/wishlist.store';
+import { formatVND } from '../utils/currency';
 import toast from 'react-hot-toast';
 import MyPrescriptions from '../components/MyPrescriptions';
 
 const MyAccountPage: React.FC = () => {
   const { user, isLoggedIn, logout } = useAuthStore();
+  const { items: wishlistItems, totalItems: wishlistTotalItems, fetchWishlist, removeFromWishlist, loading: wishlistLoading } = useWishlistStore();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -40,6 +44,7 @@ const MyAccountPage: React.FC = () => {
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [userDetail, setUserDetail] = useState<UserDetail | null>(null);
+  const [removingWishlistItemId, setRemovingWishlistItemId] = useState<number | null>(null);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
   const [isCreatingAddress, setIsCreatingAddress] = useState(false);
@@ -226,6 +231,13 @@ const MyAccountPage: React.FC = () => {
     loadInitialData();
   }, [isLoggedIn, navigate, user?.id]);
 
+  // Load wishlist when switching to wishlist tab
+  useEffect(() => {
+    if (activeTab === 'wishlist' && user?.id) {
+      fetchWishlist();
+    }
+  }, [activeTab, user?.id, fetchWishlist]);
+
   // Standalone reload functions for individual use
   const reloadOrders = async () => {
     try {
@@ -262,6 +274,20 @@ const MyAccountPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to load user detail:', error);
+    }
+  };
+
+  // Handle wishlist item removal
+  const handleRemoveWishlistItem = async (wishlistItemId: number, itemName: string) => {
+    try {
+      setRemovingWishlistItemId(wishlistItemId);
+      await removeFromWishlist(wishlistItemId);
+      toast.success(`${itemName} removed from wishlist`);
+    } catch (error) {
+      console.error('Failed to remove item from wishlist:', error);
+      toast.error('Failed to remove item from wishlist');
+    } finally {
+      setRemovingWishlistItemId(null);
     }
   };
 
@@ -457,7 +483,7 @@ const MyAccountPage: React.FC = () => {
     { id: 'orders', label: 'Order History', icon: Package },
     { id: 'addresses', label: 'My Addresses', icon: MapPin },
     { id: 'prescriptions', label: 'My Prescription Values', icon: Settings },
-    { id: 'favorites', label: 'My Favorites', icon: Heart },
+    { id: 'wishlist', label: 'My Favorites', icon: Heart },
     { id: 'payment', label: 'Payment Methods', icon: CreditCard },
     { id: 'security', label: 'Change Password', icon: Key },
   ];
@@ -1086,8 +1112,96 @@ const MyAccountPage: React.FC = () => {
       case 'wishlist':
         return (
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">My Favorites</h3>
-            <p className="text-gray-600">No favorite items yet.</p>
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Favourites ({wishlistTotalItems} item{wishlistTotalItems !== 1 ? 's' : ''})
+              </h3>
+            </div>
+
+            {wishlistLoading && wishlistItems.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <span className="ml-2 text-sm text-gray-500">Loading wishlist...</span>
+              </div>
+            ) : wishlistItems.length === 0 ? (
+              <div className="text-center py-12">
+                <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 mb-4">Your wishlist is empty.</p>
+                <Link
+                  to="/products"
+                  className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  Continue Shopping
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {wishlistItems.map((item) => {
+                  const displayName = item.displayName || item.productName || item.lensName || 'Item';
+                  const imageUrl = item.thumbnailUrl || item.imageUrl || '/api/placeholder/400/400';
+                  const itemUrl = item.itemType === 'product' 
+                    ? `/product/${item.productId}` 
+                    : `/lens/${item.lensId}`;
+                  const isRemoving = removingWishlistItemId === item.id;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="border border-gray-200 rounded-lg p-4 flex flex-col h-full hover:shadow-md transition-shadow"
+                    >
+                      <Link to={itemUrl} className="block">
+                        <div className="w-full h-44 bg-gray-100 rounded overflow-hidden mb-3">
+                          <img
+                            src={imageUrl}
+                            alt={displayName}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              e.currentTarget.src = '/api/placeholder/400/400';
+                            }}
+                          />
+                        </div>
+                      </Link>
+
+                      <div className="flex-1">
+                        {item.brandName && (
+                          <p className="text-xs text-gray-500 mb-1">{item.brandName}</p>
+                        )}
+                        <Link to={itemUrl} className="hover:underline">
+                          <h3 className="text-sm font-medium text-gray-800 mb-2">
+                            {displayName}
+                          </h3>
+                        </Link>
+                        {item.productPrice && (
+                          <p className="text-lg font-bold text-gray-900 mb-1">
+                            {formatVND(item.productPrice)}
+                          </p>
+                        )}
+                        {item.colorName && (
+                          <p className="text-xs text-gray-500">Color: {item.colorName}</p>
+                        )}
+                      </div>
+
+                      <div className="mt-4 flex items-center gap-2">
+                        <Link
+                          to={itemUrl}
+                          className="flex-1 text-center bg-gray-800 text-white py-2 rounded-md text-sm hover:bg-gray-700 transition-colors"
+                        >
+                          View
+                        </Link>
+                        <button
+                          onClick={() => handleRemoveWishlistItem(item.id, displayName)}
+                          disabled={isRemoving}
+                          className="text-red-600 text-sm px-3 py-2 border border-red-600 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50"
+                        >
+                          {isRemoving ? '...' : 'Remove'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       case 'payment':
