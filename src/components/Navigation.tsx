@@ -71,7 +71,7 @@ const Navigation: React.FC = () => {
   };
 
   return (
-    <nav className="bg-gray-50 border-t relative">
+    <nav className="hidden md:block bg-gray-50 border-t relative">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-center space-x-8 py-3">
           
