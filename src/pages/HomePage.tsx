@@ -10,22 +10,12 @@ import '../styles/scrollbar.css';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentSlide, setCurrentSlide] = useState(1); // Start at 1 because we have a clone before
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Check if mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const [isTransitioning, setIsTransitioning] = useState(true);
 
   const heroSlides = [
     {
@@ -60,22 +50,57 @@ const HomePage: React.FC = () => {
   // Auto-play slideshow
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      setIsTransitioning(true);
+      setCurrentSlide((prev) => prev + 1);
     }, 5000); // Change slide every 5 seconds
 
     return () => clearInterval(timer);
-  }, [heroSlides.length]);
+  }, []);
+
+  // Handle infinite loop: reset position when reaching clones
+  useEffect(() => {
+    if (heroSlides.length === 0) return;
+
+    // If we're at the clone at the end, jump to the real first slide
+    if (currentSlide === heroSlides.length + 1) {
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setCurrentSlide(1);
+      }, 300); // Wait for transition to complete
+    }
+    
+    // If we're at the clone at the start, jump to the real last slide
+    if (currentSlide === 0) {
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setCurrentSlide(heroSlides.length);
+      }, 300); // Wait for transition to complete
+    }
+  }, [currentSlide, heroSlides.length]);
+
+  // Re-enable transition after jumping
+  useEffect(() => {
+    if (!isTransitioning) {
+      const timer = setTimeout(() => {
+        setIsTransitioning(true);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isTransitioning]);
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    setIsTransitioning(true);
+    setCurrentSlide((prev) => prev + 1);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+    setIsTransitioning(true);
+    setCurrentSlide((prev) => prev - 1);
   };
 
   const goToSlide = (index: number) => {
-    setCurrentSlide(index);
+    setIsTransitioning(true);
+    setCurrentSlide(index + 1); // +1 because of clone at start
   };
 
   // Touch handlers for swipe
@@ -103,6 +128,8 @@ const HomePage: React.FC = () => {
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
 
+    setIsTransitioning(true);
+    
     if (isLeftSwipe) {
       nextSlide();
     }
@@ -136,19 +163,79 @@ const HomePage: React.FC = () => {
           {/* Slides Container */}
           <div className="relative h-full min-h-[550px] md:min-h-0 overflow-hidden">
             <div 
-              className="flex md:block transition-transform duration-300 ease-out h-full"
+              className="flex h-full"
               style={{
                 transform: `translateX(calc(-${currentSlide * 100}% + ${isDragging ? dragOffset : 0}px))`,
-                transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+                transition: isDragging || !isTransitioning ? 'none' : 'transform 0.3s ease-out'
               }}
             >
+              {/* Clone of last slide (for infinite loop from first to last) */}
+              {heroSlides.length > 0 && (
+                <div
+                  className="w-full flex-shrink-0"
+                  style={{
+                    display: 'block'
+                  }}
+                >
+                <div className="flex flex-col md:flex-row items-center h-full md:gap-8 lg:gap-12">
+                  <div className="w-full md:w-1/2 flex justify-center order-1 md:order-2 mb-6 md:mb-0">
+                    <div className="relative w-full md:max-w-none">
+                      <img 
+                        src={heroSlides[heroSlides.length - 1].image}
+                        alt={`${heroSlides[heroSlides.length - 1].title} ${heroSlides[heroSlides.length - 1].highlight}`}
+                        className="w-full h-[300px] md:h-[450px] object-cover md:object-contain"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full md:w-1/2 space-y-6 md:space-y-8 order-2 md:order-1 px-4 py-6 md:px-0 md:py-0">
+                    <div>
+                      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
+                        {heroSlides[heroSlides.length - 1].title}
+                        <span className="block text-gray-900">{heroSlides[heroSlides.length - 1].highlight}</span>
+                      </h1>
+                      <p className="hidden md:block text-base sm:text-lg md:text-xl text-gray-600 mt-4 md:mt-6 leading-relaxed">
+                        {heroSlides[heroSlides.length - 1].description}
+                      </p>
+                    </div>
+                    <div className="flex flex-row gap-3">
+                      <Link 
+                        to={heroSlides[heroSlides.length - 1].primaryBtn.link}
+                        className="flex-1 bg-gray-900 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-semibold rounded-full hover:bg-gray-800 transition-colors shadow-lg text-center"
+                      >
+                        {heroSlides[heroSlides.length - 1].primaryBtn.text}
+                      </Link>
+                      <Link 
+                        to={heroSlides[heroSlides.length - 1].secondaryBtn.link}
+                        className="flex-1 border-2 border-gray-900 text-gray-900 px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-semibold rounded-full hover:bg-gray-900 hover:text-white transition-colors text-center"
+                      >
+                        {heroSlides[heroSlides.length - 1].secondaryBtn.text}
+                      </Link>
+                    </div>
+                    <div className="hidden md:flex items-center justify-around sm:justify-start sm:space-x-8 mt-8 md:mt-12">
+                      <div className="text-center">
+                        <div className="text-2xl sm:text-3xl font-bold text-gray-800">10K+</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Happy Customers</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl sm:text-3xl font-bold text-gray-800">500+</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Frame Styles</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl sm:text-3xl font-bold text-gray-800">50+</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Premium Brands</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              )}
+              
+              {/* Real slides */}
               {heroSlides.map((slide, index) => (
                 <div
                   key={slide.id}
-                  className="w-full flex-shrink-0 md:absolute md:inset-0 md:transition-opacity md:duration-700"
+                  className="w-full flex-shrink-0"
                   style={{
-                    opacity: !isMobile ? (index === currentSlide ? 1 : 0) : 1,
-                    zIndex: !isMobile ? (index === currentSlide ? 10 : 0) : 'auto',
                     display: 'block'
                   }}
                 >
@@ -209,6 +296,67 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
             ))}
+            
+            {/* Clone of first slide (for infinite loop from last to first) */}
+            {heroSlides.length > 0 && (
+              <div
+                className="w-full flex-shrink-0"
+                style={{
+                  display: 'block'
+                }}
+              >
+              <div className="flex flex-col md:flex-row items-center h-full md:gap-8 lg:gap-12">
+                <div className="w-full md:w-1/2 flex justify-center order-1 md:order-2 mb-6 md:mb-0">
+                  <div className="relative w-full md:max-w-none">
+                    <img 
+                      src={heroSlides[0].image}
+                      alt={`${heroSlides[0].title} ${heroSlides[0].highlight}`}
+                      className="w-full h-[300px] md:h-[450px] object-cover md:object-contain"
+                    />
+                  </div>
+                </div>
+                <div className="w-full md:w-1/2 space-y-6 md:space-y-8 order-2 md:order-1 px-4 py-6 md:px-0 md:py-0">
+                  <div>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
+                      {heroSlides[0].title}
+                      <span className="block text-gray-900">{heroSlides[0].highlight}</span>
+                    </h1>
+                    <p className="hidden md:block text-base sm:text-lg md:text-xl text-gray-600 mt-4 md:mt-6 leading-relaxed">
+                      {heroSlides[0].description}
+                    </p>
+                  </div>
+                  <div className="flex flex-row gap-3">
+                    <Link 
+                      to={heroSlides[0].primaryBtn.link}
+                      className="flex-1 bg-gray-900 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-semibold rounded-full hover:bg-gray-800 transition-colors shadow-lg text-center"
+                    >
+                      {heroSlides[0].primaryBtn.text}
+                    </Link>
+                    <Link 
+                      to={heroSlides[0].secondaryBtn.link}
+                      className="flex-1 border-2 border-gray-900 text-gray-900 px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-semibold rounded-full hover:bg-gray-900 hover:text-white transition-colors text-center"
+                    >
+                      {heroSlides[0].secondaryBtn.text}
+                    </Link>
+                  </div>
+                  <div className="hidden md:flex items-center justify-around sm:justify-start sm:space-x-8 mt-8 md:mt-12">
+                    <div className="text-center">
+                      <div className="text-2xl sm:text-3xl font-bold text-gray-800">10K+</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Happy Customers</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl sm:text-3xl font-bold text-gray-800">500+</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Frame Styles</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl sm:text-3xl font-bold text-gray-800">50+</div>
+                      <div className="text-xs sm:text-sm text-gray-600">Premium Brands</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            )}
             </div>
           </div>
         </div>
@@ -236,7 +384,9 @@ const HomePage: React.FC = () => {
               key={index}
               onClick={() => goToSlide(index)}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentSlide 
+                (currentSlide === index + 1 || 
+                 (currentSlide === 0 && index === heroSlides.length - 1) ||
+                 (currentSlide === heroSlides.length + 1 && index === 0))
                   ? 'bg-gray-900 w-8' 
                   : 'bg-gray-300 hover:bg-gray-400'
               }`}
