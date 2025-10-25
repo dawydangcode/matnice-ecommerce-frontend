@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Heart, Search } from 'lucide-react';
+import { Heart, Search, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { LensCard, BrandLensData, LensCategoryData, LensType } from '../types/lensCard.types';
 import { lensCardService } from '../services/lensCard.service';
@@ -15,6 +15,7 @@ import '../styles/filter-section.css';
 const LensPage: React.FC = () => {
   const location = useLocation();
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState([0, 10000000]);
 
@@ -42,6 +43,19 @@ const LensPage: React.FC = () => {
     const searchParams = new URLSearchParams(location.search);
     return getHeroContent('lenses', searchParams);
   }, [location.search]);
+
+  // Lock body scroll when mobile filter drawer is open
+  React.useEffect(() => {
+    if (showMobileFilters && activeFilterTab) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showMobileFilters, activeFilterTab]);
 
   // Handle URL parameters to set initial filters
   useEffect(() => {
@@ -235,14 +249,250 @@ const LensPage: React.FC = () => {
         backgroundColor={heroContent.backgroundColor}
       />
 
+      {/* Mobile Filter Buttons */}
+      <div className="md:hidden bg-white border-b px-4 py-3">
+        <h3 className="text-sm font-bold text-gray-700 mb-3">FILTER BY</h3>
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          <button
+            onClick={() => {
+              setActiveFilterTab('type');
+              setShowMobileFilters(true);
+            }}
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Type
+          </button>
+          <button
+            onClick={() => {
+              setActiveFilterTab('function');
+              setShowMobileFilters(true);
+            }}
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Function
+          </button>
+          <button
+            onClick={() => {
+              setActiveFilterTab('brand');
+              setShowMobileFilters(true);
+            }}
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Brand
+          </button>
+          <button
+            onClick={() => {
+              setActiveFilterTab('price');
+              setShowMobileFilters(true);
+            }}
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Price
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Filter Drawer */}
+      {showMobileFilters && activeFilterTab && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => {
+              setShowMobileFilters(false);
+              setActiveFilterTab(null);
+            }}
+          />
+          
+          {/* Drawer */}
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] overflow-y-auto">
+            {/* Drawer Header */}
+            <div className="sticky top-0 bg-white border-b px-4 py-4 flex items-center justify-between z-10">
+              <h3 className="text-lg font-bold text-gray-900 capitalize">
+                {activeFilterTab === 'type' && 'Type'}
+                {activeFilterTab === 'function' && 'Function'}
+                {activeFilterTab === 'brand' && 'Brand'}
+                {activeFilterTab === 'price' && 'Price'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowMobileFilters(false);
+                  setActiveFilterTab(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Drawer Content */}
+            <div className="p-4 space-y-6">
+              {/* Type Tab Content */}
+              {activeFilterTab === 'type' && (
+                <FilterSection title="TYPE">
+                  <div className="space-y-2">
+                    {Object.values(LensType).map((type) => (
+                      <label key={type} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="filter-checkbox"
+                          checked={selectedTypes.includes(type)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedTypes([...selectedTypes, type]);
+                            } else {
+                              setSelectedTypes(selectedTypes.filter(t => t !== type));
+                            }
+                          }}
+                        />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">
+                          {type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
+              )}
+
+              {/* Function Tab Content */}
+              {activeFilterTab === 'function' && (
+                <FilterSection title="FUNCTION">
+                  <div className="space-y-2">
+                    {categories.map((category) => (
+                      <label key={category.id} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="filter-checkbox"
+                          checked={selectedCategories.includes(category.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedCategories([...selectedCategories, category.id]);
+                            } else {
+                              setSelectedCategories(selectedCategories.filter(id => id !== category.id));
+                            }
+                          }}
+                        />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">{category.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
+              )}
+
+              {/* Brand Tab Content */}
+              {activeFilterTab === 'brand' && (
+                <FilterSection title="BRAND">
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      placeholder="Search brands..."
+                      value={brandSearchTerm}
+                      onChange={(e) => setBrandSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                    />
+                  </div>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {filteredBrands.map((brand) => (
+                      <label key={brand.id} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="filter-checkbox"
+                          checked={selectedBrands.includes(brand.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedBrands([...selectedBrands, brand.id]);
+                            } else {
+                              setSelectedBrands(selectedBrands.filter(id => id !== brand.id));
+                            }
+                          }}
+                        />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">{brand.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
+              )}
+
+              {/* Price Tab Content */}
+              {activeFilterTab === 'price' && (
+                <FilterSection title="PRICE">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="number"
+                        placeholder="Min (₫)"
+                        value={priceRange[0]}
+                        onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+                        className="w-24 px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <span className="text-gray-500">-</span>
+                      <input
+                        type="number"
+                        placeholder="Max (₫)"
+                        value={priceRange[1]}
+                        onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                        className="w-24 px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      {[
+                        { label: 'Dưới 100,000₫', range: [0, 100000] },
+                        { label: '100,000₫ - 500,000₫', range: [100000, 500000] },
+                        { label: '500,000₫ - 1,000,000₫', range: [500000, 1000000] },
+                        { label: '1,000,000₫ - 2,000,000₫', range: [1000000, 2000000] },
+                        { label: 'Trên 2,000,000₫', range: [2000000, 10000000] }
+                      ].map((priceOption) => {
+                        const [min, max] = priceOption.range;
+                        const isSelected = priceRange[0] === min && priceRange[1] === max;
+
+                        return (
+                          <label key={priceOption.label} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="filter-checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setPriceRange([min, max]);
+                                } else {
+                                  setPriceRange([0, 10000000]);
+                                }
+                              }}
+                            />
+                            <span className="ml-3 text-sm text-gray-600 font-medium">{priceOption.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </FilterSection>
+              )}
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="sticky bottom-0 bg-white border-t px-4 py-4 z-10">
+              <button
+                onClick={() => {
+                  setShowMobileFilters(false);
+                  setActiveFilterTab(null);
+                }}
+                className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+              >
+                Show {total} results
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <section className="py-8">
         <div className="max-w-full mx-auto px-6">
           {/* Desktop Grid Layout (≥1024px) */}
           <div className="product-listing-grid lg:grid lg:grid-cols-[280px_1fr] lg:gap-8">
 
-            {/* Left Sidebar - Filters */}
-            <div className={`filter-area ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
+            {/* Left Sidebar - Filters (Desktop Only) */}
+            <div className="filter-area hidden lg:block">
               <div className="bg-white rounded-lg shadow-sm p-4 space-y-6">
 
                 {/* Filter Header */}
@@ -434,12 +684,6 @@ const LensPage: React.FC = () => {
                   <div className="product-total-count">
                     {total} Results
                   </div>
-                  <button
-                    onClick={() => setShowMobileFilters(true)}
-                    className="lg:hidden px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-                  >
-                    Filters
-                  </button>
                 </div>
                 <div className="flex items-center space-x-4">
                   <select

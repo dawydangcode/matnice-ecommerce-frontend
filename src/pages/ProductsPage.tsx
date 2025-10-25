@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Heart, Search } from 'lucide-react';
+import { Heart, Search, X } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useWishlistStore } from '../stores/wishlist.store';
 import { useAuthStore } from '../stores/auth.store';
@@ -58,6 +58,7 @@ const ProductsPage: React.FC = () => {
   const { user } = useAuthStore();
   
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('newest');
   const [priceRange, setPriceRange] = useState([0, 1000000]);
   
@@ -94,6 +95,19 @@ const ProductsPage: React.FC = () => {
   // Create stable dependencies for useEffect
   const minPrice = useMemo(() => priceRange[0], [priceRange]);
   const maxPrice = useMemo(() => priceRange[1], [priceRange]);
+
+  // Lock body scroll when mobile filter drawer is open
+  React.useEffect(() => {
+    if (showMobileFilters && activeFilterTab) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showMobileFilters, activeFilterTab]);
 
   
 
@@ -502,14 +516,429 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
         </div>
       )}
 
+      {/* Mobile Filter Buttons */}
+      <div className="md:hidden bg-white border-b px-4 py-3">
+        <h3 className="text-sm font-bold text-gray-700 mb-3">FILTER BY</h3>
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          <button
+            onClick={() => {
+              setActiveFilterTab('your-size');
+              setShowMobileFilters(true);
+            }}
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Your size
+          </button>
+          <button
+            onClick={() => {
+              setActiveFilterTab('frame');
+              setShowMobileFilters(true);
+            }}
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Frame
+          </button>
+          <button
+            onClick={() => {
+              setActiveFilterTab('brand');
+              setShowMobileFilters(true);
+            }}
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Brand
+          </button>
+          <button
+            onClick={() => {
+              setActiveFilterTab('price');
+              setShowMobileFilters(true);
+            }}
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Price
+          </button>
+          <button
+            onClick={() => {
+              setActiveFilterTab('lens');
+              setShowMobileFilters(true);
+            }}
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Lens
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Filter Drawer */}
+      {showMobileFilters && activeFilterTab && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => {
+              setShowMobileFilters(false);
+              setActiveFilterTab(null);
+            }}
+          />
+          
+          {/* Drawer */}
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] overflow-y-auto">
+            {/* Drawer Header */}
+            <div className="sticky top-0 bg-white border-b px-4 py-4 flex items-center justify-between z-10">
+              <h3 className="text-lg font-bold text-gray-900 capitalize">
+                {activeFilterTab === 'your-size' && 'Your Size'}
+                {activeFilterTab === 'frame' && 'Frame'}
+                {activeFilterTab === 'brand' && 'Brand'}
+                {activeFilterTab === 'price' && 'Price'}
+                {activeFilterTab === 'lens' && 'Lens'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowMobileFilters(false);
+                  setActiveFilterTab(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Drawer Content */}
+            <div className="p-4 space-y-6">
+              {/* Your Size Tab Content */}
+              {activeFilterTab === 'your-size' && (
+                <>
+                  {/* Recommendations Section */}
+                  <FilterSection title="RECOMMENDATIONS FOR YOU">
+                    <div className="space-y-3">
+                      <label className="flex items-start space-x-3">
+                        <input type="checkbox" className="mt-1 filter-checkbox" />
+                        <span className="text-sm text-gray-700">Your recommended glasses width</span>
+                      </label>
+                      <div className="bg-gray-200 p-3 rounded-lg border border-gray-100">
+                        <div className="flex items-start space-x-2">
+                          <div className="w-4 h-4 rounded-full bg-gray-100 text-black-600 flex items-center justify-center mt-1 text-xs font-medium">
+                            i
+                          </div>
+                          <div className="text-[14px] text-black-700">
+                            Do you already own a pair of our glasses? Log in now and filter glasses in your size.
+                          </div>
+                        </div>
+                        <button className="w-full mt-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-black-600 hover:bg-gray-50 transition-colors">
+                          Log in now
+                        </button>
+                      </div>
+                    </div>
+                  </FilterSection>
+
+                  {/* Glasses Width */}
+                  <FilterSection title="GLASSES WIDTH">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="filter-checkbox"
+                            checked={selectedGlassesWidths.includes('small')}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedGlassesWidths([...selectedGlassesWidths, 'small']);
+                              } else {
+                                setSelectedGlassesWidths(selectedGlassesWidths.filter(w => w !== 'small'));
+                              }
+                            }}
+                          />
+                          <span className="ml-3 mt-3 text-sm text-gray-700">Small</span>
+                        </label>
+                        <GlassWidthSmall className="text-black-400" size={40} />
+                      </div>
+                      <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="filter-checkbox"
+                            checked={selectedGlassesWidths.includes('medium')}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedGlassesWidths([...selectedGlassesWidths, 'medium']);
+                              } else {
+                                setSelectedGlassesWidths(selectedGlassesWidths.filter(w => w !== 'medium'));
+                              }
+                            }}
+                          />
+                          <span className="ml-3 mt-3 text-sm text-gray-700">Medium</span>
+                        </label>
+                        <GlassWidthMedium className="text-black-400" size={40} />
+                      </div>
+                      <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="filter-checkbox"
+                            checked={selectedGlassesWidths.includes('large')}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedGlassesWidths([...selectedGlassesWidths, 'large']);
+                              } else {
+                                setSelectedGlassesWidths(selectedGlassesWidths.filter(w => w !== 'large'));
+                              }
+                            }}
+                          />
+                          <span className="ml-3 mt-3 text-sm text-gray-700">Large</span>
+                        </label>
+                        <GlassWidthLarge className="text-black-400" size={40} />
+                      </div>
+                    </div>
+                  </FilterSection>
+
+                  {/* Glass Width Range */}
+                  <FilterSection title="GLASS WIDTH">
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        <input 
+                          type="number" 
+                          placeholder="20 mm" 
+                          className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                        />
+                        <span className="text-gray-400">—</span>
+                        <input 
+                          type="number" 
+                          placeholder="62 mm" 
+                          className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                        />
+                      </div>
+                      <div className="px-1">
+                        <input
+                          type="range"
+                          min="20"
+                          max="62"
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </FilterSection>
+
+                  {/* Nose Bridge */}
+                  <FilterSection title="NOSE BRIDGE">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                        <label className="flex items-center cursor-pointer">
+                          <input type="checkbox" className="filter-checkbox" />
+                          <span className="ml-3 mt-3 text-sm text-gray-700">Rather narrow</span>
+                        </label>
+                        <NoseBridgeSmall className="text-black-400 ml-3 mt-3" size={40} />
+                      </div>
+                      <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                        <label className="flex items-center cursor-pointer">
+                          <input type="checkbox" className="filter-checkbox" />
+                          <span className="ml-3 mt-3 text-sm text-gray-700">Rather medium</span>
+                        </label>
+                        <NoseBridgeMedium className="text-black-400 ml-3 mt-3" size={40} />
+                      </div>
+                      <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
+                        <label className="flex items-center cursor-pointer">
+                          <input type="checkbox" className="filter-checkbox" />
+                          <span className="ml-3 mt-3 text-sm text-gray-700">Rather wide</span>
+                        </label>
+                        <NoseBridgeLarge className="text-black-400 ml-3 mt-3" size={40} />
+                      </div>
+                    </div>
+                  </FilterSection>
+                </>
+              )}
+
+              {/* Frame Tab Content */}
+              {activeFilterTab === 'frame' && (
+                <>
+                  {/* Frame Type */}
+                  <FilterSection title="FRAME TYPE">
+                    <div className="space-y-2">
+                      {Object.values(FrameType).map((frameType) => (
+                        <label key={frameType} className="flex items-center justify-between hover:bg-gray-50 p-2 rounded cursor-pointer">
+                          <div className="flex items-center">
+                            <input 
+                              type="checkbox" 
+                              className="filter-checkbox "
+                              checked={selectedFrameTypes.includes(frameType)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedFrameTypes([...selectedFrameTypes, frameType]);
+                                } else {
+                                  setSelectedFrameTypes(selectedFrameTypes.filter(ft => ft !== frameType));
+                                }
+                              }}
+                            />
+                            <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
+                              {frameType.replace(/_/g, ' ')}
+                            </span>
+                          </div>
+                          <div className="ml-3 mt-3 text-black-400">
+                            {frameTypes[frameType]}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </FilterSection>
+
+                  {/* Frame Material */}
+                  <FilterSection title="FRAME MATERIAL">
+                    <div className="space-y-2">
+                      {Object.values(FrameMaterialType).map((material) => (
+                        <label key={material} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            className="filter-checkbox"
+                            checked={selectedFrameMaterials.includes(material)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedFrameMaterials([...selectedFrameMaterials, material]);
+                              } else {
+                                setSelectedFrameMaterials(selectedFrameMaterials.filter(m => m !== material));
+                              }
+                            }}
+                          />
+                          <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
+                            {material}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </FilterSection>
+
+                  {/* Shape */}
+                  <FilterSection title="SHAPE">
+                    <div className="grid grid-cols-1 gap-2">
+                      {Object.values(FrameShapeType).map((shape) => (
+                        <label key={shape} className="flex items-center justify-between text-xs hover:bg-gray-50 p-2 rounded cursor-pointer">
+                          <div className="flex items-center">
+                            <input 
+                              type="checkbox" 
+                              className="filter-checkbox"
+                              checked={selectedFrameShapes.includes(shape)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedFrameShapes([...selectedFrameShapes, shape]);
+                                } else {
+                                  setSelectedFrameShapes(selectedFrameShapes.filter(s => s !== shape));
+                                }
+                              }}
+                            />
+                            <span className="ml-3 mt-3 text-sm text-gray-700 capitalize">
+                              {shape.replace('_', ' ')}
+                            </span>
+                          </div>
+                          <div className="ml-3 mt-3 text-black-400">
+                            {shapeIcons[shape]}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </FilterSection>
+                </>
+              )}
+
+              {/* Brand Tab Content */}
+              {activeFilterTab === 'brand' && (
+                <FilterSection title="BRAND">
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      placeholder="Search brands..."
+                      value={brandSearchTerm}
+                      onChange={(e) => setBrandSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                    />
+                  </div>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {filteredBrands.map((brand) => (
+                      <label key={brand.id} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="filter-checkbox"
+                          checked={selectedBrands.includes(brand.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedBrands([...selectedBrands, brand.id]);
+                            } else {
+                              setSelectedBrands(selectedBrands.filter(id => id !== brand.id));
+                            }
+                          }}
+                        />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">{brand.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
+              )}
+
+              {/* Price Tab Content */}
+              {activeFilterTab === 'price' && (
+                <FilterSection title="PRICE">
+                  <div className="space-y-2">
+                    {[
+                      { label: '< 50 $', min: 0, max: 50 },
+                      { label: '50 $ to 100 $', min: 50, max: 100 },
+                      { label: '100 $ to 150 $', min: 100, max: 150 },
+                      { label: '150 $ to 200 $', min: 150, max: 200 },
+                      { label: '> 200 $', min: 200, max: 1000000 }
+                    ].map((priceOption) => (
+                      <label key={priceOption.label} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="filter-checkbox"
+                        />
+                        <span className="ml-3 mt-3 text-sm text-gray-700">{priceOption.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
+              )}
+
+              {/* Lens Tab Content */}
+              {activeFilterTab === 'lens' && !shouldHideLensOptions && (
+                <FilterSection title="LENS OPTIONS">
+                  <div className="space-y-3">
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <input 
+                        type="checkbox" 
+                        className="filter-checkbox"
+                        checked={isMultifocalSelected}
+                        onChange={(e) => {
+                          setIsMultifocalSelected(e.target.checked);
+                        }}
+                      />
+                      <span className="ml-3 mt-3 text-sm text-gray-700">
+                        Available with varifocal lenses
+                      </span>
+                    </label>
+                  </div>
+                </FilterSection>
+              )}
+            </div>
+
+            {/* Drawer Footer */}
+            <div className="sticky bottom-0 bg-white border-t px-4 py-4 z-10">
+              <button
+                onClick={() => {
+                  setShowMobileFilters(false);
+                  setActiveFilterTab(null);
+                }}
+                className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+              >
+                Show {total} results
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <section className="py-8">
         <div className="max-w-full mx-auto px-6">
           {/* Desktop Grid Layout (≥1024px) */}
           <div className="product-listing-grid lg:grid lg:grid-cols-[280px_1fr] lg:gap-8">
             
-            {/* Left Sidebar - Filters */}
-            <div className={`filter-area ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
+            {/* Left Sidebar - Filters (Desktop Only) */}
+            <div className="filter-area hidden lg:block">
               <div className="bg-white rounded-lg shadow-sm p-4 space-y-6">                                                                                                                                                                                                                                                                                          
                 {/* Filter Header */}
                 <div className="flex items-center justify-between mb-5 pl-2">
@@ -914,12 +1343,6 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                   <div className="product-total-count">
                     {total} Results
                   </div>
-                  <button
-                    onClick={() => setShowMobileFilters(true)}
-                    className="lg:hidden px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-                  >
-                    Filters
-                  </button>
                 </div>
                 <div className="flex items-center space-x-4">
                   <select
