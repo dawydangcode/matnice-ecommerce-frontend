@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronRight, Heart } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import VirtualTryOnImage from '../assets/Virtual-Eyewear-Try-On.jpg';
@@ -10,6 +10,112 @@ import '../styles/scrollbar.css';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const heroSlides = [
+    {
+      id: 1,
+      image: VirtualTryOnImage,
+      title: "Find Your",
+      highlight: "Perfect Glasses",
+      description: "Tỏa sáng với mắt kính thông minh! AI 'soi' khuôn mặt, AR cho bạn thử kính ảo siêu chất. Chọn kính chuẩn gu, chuẩn dáng, chuẩn luôn tầm nhìn!",
+      primaryBtn: { text: "Shop Glasses", link: "/glasses" },
+      secondaryBtn: { text: "Try AI Fitting", link: "/ai" }
+    },
+    {
+      id: 2,
+      image: WomenGlassesImage,
+      title: "Women's",
+      highlight: "Collection 2025",
+      description: "Khám phá bộ sưu tập kính mắt nữ mới nhất. Thiết kế thanh lịch, phong cách hiện đại, phù hợp với mọi khuôn mặt.",
+      primaryBtn: { text: "Shop Women", link: "/glasses?category=women-s-glasses" },
+      secondaryBtn: { text: "View Sunglasses", link: "/glasses?category=women-s-sunglasses" }
+    },
+    {
+      id: 3,
+      image: MenGlassesImage,
+      title: "Men's",
+      highlight: "Signature Style",
+      description: "Bộ sưu tập kính nam sang trọng, lịch lãm. Từ classic đến trendy, tự tin thể hiện phong cách riêng của bạn.",
+      primaryBtn: { text: "Shop Men", link: "/glasses?category=men-s-glasses" },
+      secondaryBtn: { text: "View Sunglasses", link: "/glasses?category=men-s-sunglasses" }
+    }
+  ];
+
+  // Auto-play slideshow
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(timer);
+  }, [heroSlides.length]);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
+
+  // Touch handlers for swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const currentTouch = e.targetTouches[0].clientX;
+    setTouchEnd(currentTouch);
+    const offset = currentTouch - touchStart;
+    setDragOffset(offset);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) {
+      setIsDragging(false);
+      setDragOffset(0);
+      return;
+    }
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      nextSlide();
+    }
+    if (isRightSwipe) {
+      prevSlide();
+    }
+
+    // Reset
+    setIsDragging(false);
+    setDragOffset(0);
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -19,80 +125,125 @@ const HomePage: React.FC = () => {
         <Navigation />
       </header>
 
-      {/* Hero Section */}
-      <section className="relative h-auto md:h-[600px] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="max-w-7xl mx-auto md:px-4 md:py-0 md:h-[550px]">
-          <div className="flex flex-col md:flex-row items-center h-full">
-            {/* Image First on Mobile, Second on Desktop */}
-            <div className="w-full md:w-1/2 flex justify-center order-1 md:order-2 mb-6 md:mb-0">
-              <div className="relative w-full md:max-w-none">
-                <img 
-                  src={VirtualTryOnImage}
-                  alt="Premium Glasses"
-                  className="w-full h-auto object-cover md:object-contain md:rounded-3xl md:shadow-lg transform transition-transform duration-300 hover:scale-105"
-                />
-              </div>
-            </div>
-
-            {/* Content Second on Mobile, First on Desktop */}
-            <div className="w-full md:w-1/2 space-y-6 md:space-y-8 order-2 md:order-1 px-4 py-6 md:px-0 md:py-0">
-              <div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
-                  Find Your
-                  <span className="block text-blue-600">Perfect Glasses</span>
-                </h1>
-                <p className="hidden md:block text-base sm:text-lg md:text-xl text-gray-600 mt-4 md:mt-6 leading-relaxed">
-                  Tỏa sáng với mắt kính thông minh! AI 'soi' khuôn mặt, AR cho bạn thử kính ảo siêu chất.
-                  Chọn kính chuẩn gu, chuẩn dáng, chuẩn luôn tầm nhìn!
-                </p>
-              </div>
-              
-              <div className="flex flex-row gap-3">
-                <Link 
-                  to="/glasses"
-                  className="flex-1 bg-black text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-semibold rounded-full hover:bg-gray-800 transition-colors shadow-lg text-center"
+      {/* Hero Section - Slideshow */}
+      <section className="relative h-auto md:h-[600px] bg-gray-50 overflow-hidden">
+        <div 
+          className="max-w-7xl mx-auto md:px-4 md:h-[550px]"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Slides Container */}
+          <div className="relative h-full min-h-[550px] md:min-h-0 overflow-hidden">
+            <div 
+              className="flex md:block transition-transform duration-300 ease-out h-full"
+              style={{
+                transform: `translateX(calc(-${currentSlide * 100}% + ${isDragging ? dragOffset : 0}px))`,
+                transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+              }}
+            >
+              {heroSlides.map((slide, index) => (
+                <div
+                  key={slide.id}
+                  className="w-full flex-shrink-0 md:absolute md:inset-0 md:transition-opacity md:duration-700"
+                  style={{
+                    opacity: !isMobile ? (index === currentSlide ? 1 : 0) : 1,
+                    zIndex: !isMobile ? (index === currentSlide ? 10 : 0) : 'auto',
+                    display: 'block'
+                  }}
                 >
-                  Shop Glasses
-                </Link>
-                <Link 
-                  to="/ai"
-                  className="flex-1 border-2 border-blue-600 text-blue-600 px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-semibold rounded-full hover:bg-blue-600 hover:text-white transition-colors text-center"
-                >
-                  Try AI Fitting
-                </Link>
-              </div>
+                <div className="flex flex-col md:flex-row items-center h-full md:gap-8 lg:gap-12">
+                  {/* Image First on Mobile, Second on Desktop */}
+                  <div className="w-full md:w-1/2 flex justify-center order-1 md:order-2 mb-6 md:mb-0">
+                    <div className="relative w-full md:max-w-none">
+                      <img 
+                        src={slide.image}
+                        alt={`${slide.title} ${slide.highlight}`}
+                        className="w-full h-[300px] md:h-[450px] object-cover md:object-contain"
+                      />
+                    </div>
+                  </div>
 
-              <div className="hidden md:flex items-center justify-around sm:justify-start sm:space-x-8 mt-8 md:mt-12">
-                <div className="text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-800">10K+</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Happy Customers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-800">500+</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Frame Styles</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-800">50+</div>
-                  <div className="text-xs sm:text-sm text-gray-600">Premium Brands</div>
+                  {/* Content Second on Mobile, First on Desktop */}
+                  <div className="w-full md:w-1/2 space-y-6 md:space-y-8 order-2 md:order-1 px-4 py-6 md:px-0 md:py-0">
+                    <div>
+                      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
+                        {slide.title}
+                        <span className="block text-gray-900">{slide.highlight}</span>
+                      </h1>
+                      <p className="hidden md:block text-base sm:text-lg md:text-xl text-gray-600 mt-4 md:mt-6 leading-relaxed">
+                        {slide.description}
+                      </p>
+                    </div>
+                    
+                    <div className="flex flex-row gap-3">
+                      <Link 
+                        to={slide.primaryBtn.link}
+                        className="flex-1 bg-gray-900 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-semibold rounded-full hover:bg-gray-800 transition-colors shadow-lg text-center"
+                      >
+                        {slide.primaryBtn.text}
+                      </Link>
+                      <Link 
+                        to={slide.secondaryBtn.link}
+                        className="flex-1 border-2 border-gray-900 text-gray-900 px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-semibold rounded-full hover:bg-gray-900 hover:text-white transition-colors text-center"
+                      >
+                        {slide.secondaryBtn.text}
+                      </Link>
+                    </div>
+
+                    <div className="hidden md:flex items-center justify-around sm:justify-start sm:space-x-8 mt-8 md:mt-12">
+                      <div className="text-center">
+                        <div className="text-2xl sm:text-3xl font-bold text-gray-800">10K+</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Happy Customers</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl sm:text-3xl font-bold text-gray-800">500+</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Frame Styles</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl sm:text-3xl font-bold text-gray-800">50+</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Premium Brands</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
+            ))}
             </div>
           </div>
         </div>
         
-        {/* Navigation arrows - Hidden on mobile */}
+        {/* Navigation arrows */}
         <button 
-          className="hidden md:flex absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:shadow-xl transition"
+          onClick={prevSlide}
+          className="hidden md:flex absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:shadow-xl transition z-20"
           aria-label="Previous slide"
         >
           <ChevronRight className="w-6 h-6 rotate-180" />
         </button>
         <button 
-          className="hidden md:flex absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:shadow-xl transition"
+          onClick={nextSlide}
+          className="hidden md:flex absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:shadow-xl transition z-20"
           aria-label="Next slide"
         >
           <ChevronRight className="w-6 h-6" />
         </button>
+
+        {/* Slide Indicators */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentSlide 
+                  ? 'bg-gray-900 w-8' 
+                  : 'bg-gray-300 hover:bg-gray-400'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
       </section>
 
       {/* Categories Section */}
