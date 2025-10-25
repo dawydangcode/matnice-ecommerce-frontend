@@ -34,6 +34,13 @@ const ProductDetailPage: React.FC = () => {
     safety: false
   });
   
+  // Gallery slideshow states for mobile
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  
   // 3D Model states
   const [product3DModel, setProduct3DModel] = useState<Product3DModel | null>(null);
   const [model3DConfig, setModel3DConfig] = useState<Model3DConfig | null>(null);
@@ -214,6 +221,51 @@ const ProductDetailPage: React.FC = () => {
     return product?.productImages?.slice(0, 4) || [];
   };
 
+  // Touch handlers for mobile gallery swipe
+  const handleGalleryTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsDragging(true);
+  };
+
+  const handleGalleryTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const currentTouch = e.targetTouches[0].clientX;
+    setTouchEnd(currentTouch);
+    const offset = currentTouch - touchStart;
+    setDragOffset(offset);
+  };
+
+  const handleGalleryTouchEnd = () => {
+    if (!touchStart || !touchEnd) {
+      setIsDragging(false);
+      setDragOffset(0);
+      return;
+    }
+    
+    const images = getImagesByColor();
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && currentImageIndex < images.length - 1) {
+      setCurrentImageIndex(prev => prev + 1);
+    }
+    if (isRightSwipe && currentImageIndex > 0) {
+      setCurrentImageIndex(prev => prev - 1);
+    }
+
+    // Reset
+    setIsDragging(false);
+    setDragOffset(0);
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
+  // Reset image index when color changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [selectedColorId]);
+
   const getAdditionalColorsCount = () => {
     const totalColors = product?.productColors?.length || 0;
     return totalColors > 6 ? totalColors - 6 : 0;
@@ -356,6 +408,88 @@ const ProductDetailPage: React.FC = () => {
 
                 return (
                   <>
+                    {/* Mobile Slideshow */}
+                    <div className="md:hidden relative">
+                      <div 
+                        className="relative overflow-hidden"
+                        onTouchStart={handleGalleryTouchStart}
+                        onTouchMove={handleGalleryTouchMove}
+                        onTouchEnd={handleGalleryTouchEnd}
+                      >
+                        <div 
+                          className="flex transition-transform duration-300 ease-out"
+                          style={{
+                            transform: `translateX(calc(-${currentImageIndex * 100}% + ${isDragging ? dragOffset : 0}px))`,
+                            transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+                          }}
+                        >
+                          {images.map((image: any, index: number) => (
+                            <div key={image.id} className="w-full flex-shrink-0 relative">
+                              <img 
+                                src={image.imageUrl} 
+                                alt={`${product.brand?.name} ${product.productName} - ${image.imageOrder}`}
+                                className="w-full h-auto object-contain"
+                                style={{ minHeight: '450px', maxHeight: '500px' }}
+                                loading={index === 0 ? "eager" : "lazy"}
+                                draggable="false"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Dot indicators */}
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+                          {images.map((_: any, index: number) => (
+                            <button
+                              key={index}
+                              onClick={() => setCurrentImageIndex(index)}
+                              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                                index === currentImageIndex 
+                                  ? 'bg-gray-900 w-6' 
+                                  : 'bg-gray-300'
+                              }`}
+                              aria-label={`Go to image ${index + 1}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Fixed Virtual Try-On Button - positioned above dot indicators */}
+                      <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30" style={{ pointerEvents: 'auto' }}>
+                        <div className="virtual-tryon-overlay" style={{ position: 'relative', opacity: 1 }}>
+                          <button 
+                            className={`virtual-tryon-btn ${!product3DModel ? 'disabled' : ''}`}
+                            onClick={() => product3DModel && setIsVirtualTryOnOpen(true)}
+                            disabled={!product3DModel || model3DLoading}
+                            style={{ display: 'block' }}
+                            title={
+                              model3DLoading ? 'Loading 3D model...' :
+                              !product3DModel ? 'No 3D model available' :
+                              model3DError ? 'Error loading 3D model' :
+                              'Try on virtually with AR'
+                            }
+                          >
+                            {model3DLoading ? '⏳ Loading...' : 
+                             !product3DModel ? (
+                               <>
+                                 <X size={16} className="inline mr-1" />
+                                 No 3D Model
+                               </>
+                             ) :
+                             model3DError ? '⚠️ Error' :
+                             (
+                               <>
+                                 <Video size={20} className="inline mr-1" />
+                                 Virtual try-on
+                               </>
+                             )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Desktop Grid Layout */}
+                    <div className="hidden md:block">
                     {/* Row 1: Images A and B */}
                     <div className="gallery-row gallery-row-2">
                       {['a', 'b'].map((order) => {
@@ -446,6 +580,8 @@ const ProductDetailPage: React.FC = () => {
                         </div>
                       </div>
                     )}
+                    </div>
+                    {/* End Desktop Grid Layout */}
                   </>
                 );
               })()}
