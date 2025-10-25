@@ -35,11 +35,12 @@ const ProductDetailPage: React.FC = () => {
   });
   
   // Gallery slideshow states for mobile
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(1); // Start at 1 because we have a clone before
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(true);
   
   // 3D Model states
   const [product3DModel, setProduct3DModel] = useState<Product3DModel | null>(null);
@@ -247,10 +248,14 @@ const ProductDetailPage: React.FC = () => {
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
 
-    if (isLeftSwipe && currentImageIndex < images.length - 1) {
+    setIsTransitioning(true);
+    
+    if (isLeftSwipe) {
+      // Vuốt trái: sang ảnh tiếp theo
       setCurrentImageIndex(prev => prev + 1);
     }
-    if (isRightSwipe && currentImageIndex > 0) {
+    if (isRightSwipe) {
+      // Vuốt phải: về ảnh trước
       setCurrentImageIndex(prev => prev - 1);
     }
 
@@ -261,9 +266,42 @@ const ProductDetailPage: React.FC = () => {
     setTouchEnd(0);
   };
 
+  // Handle infinite loop: reset position when reaching clones
+  useEffect(() => {
+    const images = getImagesByColor();
+    if (images.length === 0) return;
+
+    // If we're at the clone at the end, jump to the real first image
+    if (currentImageIndex === images.length + 1) {
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setCurrentImageIndex(1);
+      }, 300); // Wait for transition to complete
+    }
+    
+    // If we're at the clone at the start, jump to the real last image
+    if (currentImageIndex === 0) {
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setCurrentImageIndex(images.length);
+      }, 300); // Wait for transition to complete
+    }
+  }, [currentImageIndex]);
+
+  // Re-enable transition after jumping
+  useEffect(() => {
+    if (!isTransitioning) {
+      const timer = setTimeout(() => {
+        setIsTransitioning(true);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isTransitioning]);
+
   // Reset image index when color changes
   useEffect(() => {
-    setCurrentImageIndex(0);
+    setCurrentImageIndex(1); // Reset to first real image (index 1 because 0 is clone)
+    setIsTransitioning(true);
   }, [selectedColorId]);
 
   const getAdditionalColorsCount = () => {
@@ -417,12 +455,27 @@ const ProductDetailPage: React.FC = () => {
                         onTouchEnd={handleGalleryTouchEnd}
                       >
                         <div 
-                          className="flex transition-transform duration-300 ease-out"
+                          className="flex"
                           style={{
                             transform: `translateX(calc(-${currentImageIndex * 100}% + ${isDragging ? dragOffset : 0}px))`,
-                            transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+                            transition: isDragging || !isTransitioning ? 'none' : 'transform 0.3s ease-out'
                           }}
                         >
+                          {/* Clone of last image (for infinite loop from first to last) */}
+                          {images.length > 0 && (
+                            <div className="w-full flex-shrink-0 relative">
+                              <img 
+                                src={images[images.length - 1].imageUrl} 
+                                alt={`${product.brand?.name} ${product.productName}`}
+                                className="w-full h-auto object-contain"
+                                style={{ minHeight: '450px', maxHeight: '500px' }}
+                                loading="lazy"
+                                draggable="false"
+                              />
+                            </div>
+                          )}
+                          
+                          {/* Real images */}
                           {images.map((image: any, index: number) => (
                             <div key={image.id} className="w-full flex-shrink-0 relative">
                               <img 
@@ -435,6 +488,20 @@ const ProductDetailPage: React.FC = () => {
                               />
                             </div>
                           ))}
+                          
+                          {/* Clone of first image (for infinite loop from last to first) */}
+                          {images.length > 0 && (
+                            <div className="w-full flex-shrink-0 relative">
+                              <img 
+                                src={images[0].imageUrl} 
+                                alt={`${product.brand?.name} ${product.productName}`}
+                                className="w-full h-auto object-contain"
+                                style={{ minHeight: '450px', maxHeight: '500px' }}
+                                loading="lazy"
+                                draggable="false"
+                              />
+                            </div>
+                          )}
                         </div>
                         
                         {/* Dot indicators */}
@@ -442,9 +509,14 @@ const ProductDetailPage: React.FC = () => {
                           {images.map((_: any, index: number) => (
                             <button
                               key={index}
-                              onClick={() => setCurrentImageIndex(index)}
+                              onClick={() => {
+                                setIsTransitioning(true);
+                                setCurrentImageIndex(index + 1); // +1 because of clone at start
+                              }}
                               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                                index === currentImageIndex 
+                                (currentImageIndex === index + 1 || 
+                                 (currentImageIndex === 0 && index === images.length - 1) ||
+                                 (currentImageIndex === images.length + 1 && index === 0))
                                   ? 'bg-gray-900 w-6' 
                                   : 'bg-gray-300'
                               }`}
