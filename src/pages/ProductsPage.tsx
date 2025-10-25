@@ -200,6 +200,29 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
     );
   }, [brands, brandSearchTerm]);
 
+  // Calculate filter counts for each tab
+  const getYourSizeFilterCount = () => {
+    return selectedGlassesWidths.length;
+  };
+
+  const getFrameFilterCount = () => {
+    return selectedFrameTypes.length + selectedFrameMaterials.length + selectedFrameShapes.length;
+  };
+
+  const getBrandFilterCount = () => {
+    return selectedBrands.length;
+  };
+
+  const getPriceFilterCount = () => {
+    // Price filters are not stored in state, so we return 0 for now
+    // You can add price filter state if needed
+    return 0;
+  };
+
+  const getLensFilterCount = () => {
+    return isMultifocalSelected ? 1 : 0;
+  };
+
   // Fetch products on component mount and when filters change
   useEffect(() => {
     const fetchData = async () => {
@@ -525,45 +548,70 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
               setActiveFilterTab('your-size');
               setShowMobileFilters(true);
             }}
-            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             Your size
+            {getYourSizeFilterCount() > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-gray-900 text-white text-xs font-medium rounded-full">
+                {getYourSizeFilterCount()}
+              </span>
+            )}
           </button>
           <button
             onClick={() => {
               setActiveFilterTab('frame');
               setShowMobileFilters(true);
             }}
-            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             Frame
+            {getFrameFilterCount() > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-gray-900 text-white text-xs font-medium rounded-full">
+                {getFrameFilterCount()}
+              </span>
+            )}
           </button>
           <button
             onClick={() => {
               setActiveFilterTab('brand');
               setShowMobileFilters(true);
             }}
-            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             Brand
+            {getBrandFilterCount() > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-gray-900 text-white text-xs font-medium rounded-full">
+                {getBrandFilterCount()}
+              </span>
+            )}
           </button>
           <button
             onClick={() => {
               setActiveFilterTab('price');
               setShowMobileFilters(true);
             }}
-            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             Price
+            {getPriceFilterCount() > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-gray-900 text-white text-xs font-medium rounded-full">
+                {getPriceFilterCount()}
+              </span>
+            )}
           </button>
           <button
             onClick={() => {
               setActiveFilterTab('lens');
               setShowMobileFilters(true);
             }}
-            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             Lens
+            {getLensFilterCount() > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-gray-900 text-white text-xs font-medium rounded-full">
+                {getLensFilterCount()}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -1359,9 +1407,9 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
                 </div>
               </div>
 
-              {/* Selected Filters */}
+              {/* Selected Filters - Hidden on mobile */}
               {selectedFilters.length > 0 && (
-                <div className="mb-6">
+                <div className="mb-6 hidden md:block">
                   <div className="flex flex-wrap gap-2 items-center">
                     {selectedFilters.map((filter, index) => (
                       <div

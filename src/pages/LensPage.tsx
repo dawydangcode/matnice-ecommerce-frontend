@@ -110,6 +110,24 @@ const LensPage: React.FC = () => {
     );
   }, [brands, brandSearchTerm]);
 
+  // Calculate filter counts for each tab
+  const getTypeFilterCount = () => {
+    return selectedTypes.length;
+  };
+
+  const getFunctionFilterCount = () => {
+    return selectedCategories.length;
+  };
+
+  const getBrandFilterCount = () => {
+    return selectedBrands.length;
+  };
+
+  const getPriceFilterCount = () => {
+    // Price filters are not stored in state, so we return 0 for now
+    return 0;
+  };
+
   // Fetch brands and categories for filter on component mount
   useEffect(() => {
     const fetchFilters = async () => {
@@ -258,36 +276,56 @@ const LensPage: React.FC = () => {
               setActiveFilterTab('type');
               setShowMobileFilters(true);
             }}
-            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             Type
+            {getTypeFilterCount() > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-gray-900 text-white text-xs font-medium rounded-full">
+                {getTypeFilterCount()}
+              </span>
+            )}
           </button>
           <button
             onClick={() => {
               setActiveFilterTab('function');
               setShowMobileFilters(true);
             }}
-            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             Function
+            {getFunctionFilterCount() > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-gray-900 text-white text-xs font-medium rounded-full">
+                {getFunctionFilterCount()}
+              </span>
+            )}
           </button>
           <button
             onClick={() => {
               setActiveFilterTab('brand');
               setShowMobileFilters(true);
             }}
-            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             Brand
+            {getBrandFilterCount() > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-gray-900 text-white text-xs font-medium rounded-full">
+                {getBrandFilterCount()}
+              </span>
+            )}
           </button>
           <button
             onClick={() => {
               setActiveFilterTab('price');
               setShowMobileFilters(true);
             }}
-            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-shrink-0 px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             Price
+            {getPriceFilterCount() > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-gray-900 text-white text-xs font-medium rounded-full">
+                {getPriceFilterCount()}
+              </span>
+            )}
           </button>
         </div>
       </div>

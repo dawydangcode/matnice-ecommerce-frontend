@@ -124,7 +124,7 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
   return (
     <>
       <div className="block md:hidden bg-white shadow-sm border-b">
-        <div className="max-w-full mx-auto px-4 py-4">
+        <div className="max-w-full mx-auto px-2 py-2">
           <div className="flex items-center justify-between">
             {/* Left - Menu Button + Search */}
             <div className="flex items-center space-x-3">
@@ -193,7 +193,7 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
                       <Link 
                         to="/account" 
                         onClick={toggleMobileMenu}
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-600"
                       >
                         {user?.username}
                       </Link>
