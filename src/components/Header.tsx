@@ -362,14 +362,14 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
                       All Glasses
                     </Link>
                     <Link 
-                      to="/glasses?category=women"
+                      to="/glasses?category=women-s-glasses"
                       onClick={toggleMobileMenu}
                       className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
                     >
                       Women's Glasses
                     </Link>
                     <Link 
-                      to="/glasses?category=men"
+                      to="/glasses?category=men-s-glasses"
                       onClick={toggleMobileMenu}
                       className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
                     >
@@ -390,7 +390,7 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
                       Reading Glasses
                     </Link>
                     <Link 
-                      to="/glasses?category=outlet"
+                      to="/glasses?category=reading-glasses"
                       onClick={toggleMobileMenu}
                       className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
                     >

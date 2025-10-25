@@ -19,7 +19,7 @@ const HeroContent: React.FC<HeroContentProps> = ({
   categories = []
 }) => {
   return (
-    <section className="relative bg-gray-100 pt-10 overflow-hidden">
+    <section className="relative bg-gray-100 py-6 md:py-8 overflow-hidden">
       {/* Background overlay */}
       <div className={`absolute inset-0 bg-gradient-to-br ${backgroundColor}`}></div>
       
@@ -53,9 +53,9 @@ const HeroContent: React.FC<HeroContentProps> = ({
             )}
           </div>
           
-          {/* Right Image */}
+          {/* Right Image - Hidden on mobile */}
           {heroImage && (
-            <div className="relative">
+            <div className="relative hidden lg:block">
               <img 
                 src={heroImage}
                 alt={title}
@@ -71,3 +71,4 @@ const HeroContent: React.FC<HeroContentProps> = ({
 };
 
 export default HeroContent;
+
