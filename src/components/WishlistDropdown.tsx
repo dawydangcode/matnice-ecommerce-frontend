@@ -78,7 +78,7 @@ const WishlistDropdown: React.FC = () => {
           <div onClick={handleWishlistClick} className="relative cursor-pointer">
             <Heart className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
             {wishlistCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+              <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
                 {wishlistCount > 99 ? '99+' : wishlistCount}
               </span>
             )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, User, Menu, ChevronRight } from 'lucide-react';
+import { Search, User, Menu, ChevronRight, X } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
 import { Link, useLocation } from 'react-router-dom';
 import smallEyeLogo from '../assets/small_eye_logo.png';
@@ -124,15 +124,19 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
   return (
     <>
       <div className="block md:hidden bg-white shadow-sm border-b">
-        <div className="max-w-full mx-auto px-2 py-2">
-          <div className="flex items-center justify-between">
+        <div className="max-w-full mx-auto px-4 py-3">
+          <div className="relative flex items-center justify-between">
             {/* Left - Menu Button + Search */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 flex-1">
               <button 
                 onClick={toggleMobileMenu}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <Menu className="w-6 h-6" />
+                {isMobileMenuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
               </button>
               <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                 <Search className="w-6 h-6" />
@@ -140,28 +144,28 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
             </div>
             
             {/* Center - Logo */}
-            <div className="flex justify-center">
+            <div className="absolute left-1/2 transform -translate-x-1/2">
               <Link to="/">
                 <img 
                   src={smallEyeLogo} 
                   alt="MATNICE EYEWEAR" 
-                  className="h-12 w-auto"
+                  className="h-10 w-auto"
                 />
               </Link>
             </div>
 
             {/* Right - Icons */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4 flex-1 justify-end">
               <WishlistDropdown />
               <CartDropdown />
               
               {/* User Icon Only */}
               {isLoggedIn ? (
-                <Link to="/account">
+                <Link to="/account" className="p-2">
                   <User className={`w-6 h-6 cursor-pointer ${isAccountPage ? 'text-black font-bold' : 'hover:text-gray-600'} transition-colors`} />
                 </Link>
               ) : (
-                <Link to="/login">
+                <Link to="/login" className="p-2">
                   <User className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
                 </Link>
               )}
@@ -186,16 +190,16 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
             {menuLevel === 'main' && (
               <>
                 {/* User Section */}
-                <div className="p-4 border-b bg-gray-50">
+                <div className="p-4">
                   {isLoggedIn ? (
                     <div>
-                      <h3 className="text-xl font-bold mb-2">Hello!</h3>
+                      <h3 className="text-xl font-bold mb-2">Hello, {user?.username}!</h3>
                       <Link 
                         to="/account" 
                         onClick={toggleMobileMenu}
-                        className="text-blue-600"
+                        className="text-gray-900 hover:text-gray-800 text-sm underline"
                       >
-                        {user?.username}
+                        Open your account
                       </Link>
                     </div>
                   ) : (
@@ -214,69 +218,69 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
 
                 {/* Categories */}
                 <div className="py-2">
-                  <h3 className="px-4 py-2 text-sm font-bold text-gray-500 uppercase">Categories</h3>
+                  <h3 className="px-4 py-2 text-sm font-bold text-gray-900 uppercase">Categories</h3>
                   
                   {/* Glasses */}
-                  <div className="border-b">
+                  <div>
                     <button
                       onClick={() => handleCategoryClick('glasses')}
                       className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
                     >
-                      <span className="font-medium">Glasses</span>
-                      <ChevronRight className="w-5 h-5" />
+                      <span className="font-normal text-gray-600">Glasses</span>
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
                     </button>
                   </div>
 
                   {/* Sunglasses */}
-                  <div className="border-b">
+                  <div>
                     <button
                       onClick={() => handleCategoryClick('sunglasses')}
                       className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
                     >
-                      <span className="font-medium">Sunglasses</span>
-                      <ChevronRight className="w-5 h-5" />
+                      <span className="font-normal text-gray-600">Sunglasses</span>
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
                     </button>
                   </div>
 
                   {/* Contact Lenses */}
-                  <div className="border-b">
+                  <div>
                     <button
                       onClick={() => handleCategoryClick('lens')}
                       className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
                     >
-                      <span className="font-medium">Contact lenses</span>
-                      <ChevronRight className="w-5 h-5" />
+                      <span className="font-normal text-gray-600">Contact lenses</span>
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
                     </button>
                   </div>
 
                   {/* Brands */}
-                  <div className="border-b">
+                  <div>
                     <Link
                       to="/brands"
                       onClick={toggleMobileMenu}
                       className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
                     >
-                      <span className="font-medium">Brands</span>
-                      <ChevronRight className="w-5 h-5" />
+                      <span className="font-normal text-gray-600">Brands</span>
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
                     </Link>
                   </div>
 
                   {/* Boutique */}
-                  <div className="border-b">
+                  <div>
                     <Link
                       to="/boutique"
                       onClick={toggleMobileMenu}
                       className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
                     >
-                      <span className="font-medium">Boutique</span>
-                      <ChevronRight className="w-5 h-5" />
+                      <span className="font-normal text-gray-600">Boutique</span>
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
                     </Link>
                   </div>
                 </div>
 
                 {/* Help & Advice */}
                 <div className="py-2 border-t">
-                  <h3 className="px-4 py-2 text-sm font-bold text-gray-500 uppercase">Help & Advice</h3>
+                  <h3 className="px-4 py-2 text-sm font-bold text-gray-900 uppercase">Help & Advice</h3>
                   <Link 
                     to="/try-on-at-home"
                     onClick={toggleMobileMenu}
@@ -357,56 +361,56 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
                     <Link 
                       to="/glasses?category=all-glasses"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       All Glasses
                     </Link>
                     <Link 
                       to="/glasses?category=women-s-glasses"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Women's Glasses
                     </Link>
                     <Link 
                       to="/glasses?category=men-s-glasses"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Men's Glasses
                     </Link>
                     <Link 
                       to="/glasses?category=varifocals"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Varifocals
                     </Link>
                     <Link 
                       to="/glasses?category=reading"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Reading Glasses
                     </Link>
                     <Link 
                       to="/glasses?category=reading-glasses"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Outlet Glasses
                     </Link>
                     <Link 
                       to="/glasses?category=accessories"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Glasses accessories
                     </Link>
                     <Link 
                       to="/glasses?category=brands"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Our exclusive Brands
                     </Link>
@@ -427,35 +431,35 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
                     <Link 
                       to="/sunglasses?category=all"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       All Sunglasses
                     </Link>
                     <Link 
                       to="/sunglasses?category=women"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Women's Sunglasses
                     </Link>
                     <Link 
                       to="/sunglasses?category=men"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Men's Sunglasses
                     </Link>
                     <Link 
                       to="/sunglasses?category=prescription"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Prescription Sunglasses
                     </Link>
                     <Link 
                       to="/sunglasses?category=sport"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Sport Sunglasses
                     </Link>
@@ -469,28 +473,28 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
                     <Link 
                       to="/lenses?type=single-vision"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Single Vision
                     </Link>
                     <Link 
                       to="/lenses?type=progressive"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Progressive
                     </Link>
                     <Link 
                       to="/lenses?type=drive-safe"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Drive Safe
                     </Link>
                     <Link 
                       to="/lenses?type=office"
                       onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 border-b"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
                     >
                       Office
                     </Link>

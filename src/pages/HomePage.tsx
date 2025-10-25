@@ -6,6 +6,7 @@ import WomenGlassesImage from '../assets/home-page-image/cd72032b96f1b3bf579e848
 import MenGlassesImage from '../assets/home-page-image/8de8cf9366092e37a8d5b2e9148e577b.jpg';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
+import '../styles/scrollbar.css';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,76 +20,75 @@ const HomePage: React.FC = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative h-[600px] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div className="max-w-7xl mx-auto px-4 h-[550px]">
-          <div className="flex items-center h-full">
-            <div className="w-1/2 space-y-8">
+      <section className="relative h-auto md:h-[600px] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="max-w-7xl mx-auto md:px-4 md:py-0 md:h-[550px]">
+          <div className="flex flex-col md:flex-row items-center h-full">
+            {/* Image First on Mobile, Second on Desktop */}
+            <div className="w-full md:w-1/2 flex justify-center order-1 md:order-2 mb-6 md:mb-0">
+              <div className="relative w-full md:max-w-none">
+                <img 
+                  src={VirtualTryOnImage}
+                  alt="Premium Glasses"
+                  className="w-full h-auto object-cover md:object-contain md:rounded-3xl md:shadow-lg transform transition-transform duration-300 hover:scale-105"
+                />
+              </div>
+            </div>
+
+            {/* Content Second on Mobile, First on Desktop */}
+            <div className="w-full md:w-1/2 space-y-6 md:space-y-8 order-2 md:order-1 px-4 py-6 md:px-0 md:py-0">
               <div>
-                <h1 className="text-6xl font-bold text-gray-800 leading-tight">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight">
                   Find Your
                   <span className="block text-blue-600">Perfect Glasses</span>
                 </h1>
-                <p className="text-xl text-gray-600 mt-6 leading-relaxed">
+                <p className="hidden md:block text-base sm:text-lg md:text-xl text-gray-600 mt-4 md:mt-6 leading-relaxed">
                   Tỏa sáng với mắt kính thông minh! AI 'soi' khuôn mặt, AR cho bạn thử kính ảo siêu chất.
-                  Chọn kính chuẩn gu, chuẩn dáng, chuẩn luôn tầm nhìn!
-                </p>
-                <p className="text-xl text-gray-600 mt-6 leading-relaxed">
                   Chọn kính chuẩn gu, chuẩn dáng, chuẩn luôn tầm nhìn!
                 </p>
               </div>
               
-              <div className="flex space-x-4">
+              <div className="flex flex-row gap-3">
                 <Link 
                   to="/glasses"
-                  className="bg-black text-white px-8 py-4 text-lg font-semibold rounded-full hover:bg-gray-800 transition-colors shadow-lg"
+                  className="flex-1 bg-black text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-semibold rounded-full hover:bg-gray-800 transition-colors shadow-lg text-center"
                 >
                   Shop Glasses
                 </Link>
                 <Link 
                   to="/ai"
-                  className="border-2 border-blue-600 text-blue-600 px-8 py-4 text-lg font-semibold rounded-full hover:bg-blue-600 hover:text-white transition-colors"
+                  className="flex-1 border-2 border-blue-600 text-blue-600 px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-semibold rounded-full hover:bg-blue-600 hover:text-white transition-colors text-center"
                 >
                   Try AI Fitting
                 </Link>
               </div>
 
-              <div className="flex items-center space-x-8 mt-12">
+              <div className="hidden md:flex items-center justify-around sm:justify-start sm:space-x-8 mt-8 md:mt-12">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-800">10K+</div>
-                  <div className="text-gray-600">Happy Customers</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-800">10K+</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Happy Customers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-800">500+</div>
-                  <div className="text-gray-600">Frame Styles</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-800">500+</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Frame Styles</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-gray-800">50+</div>
-                  <div className="text-gray-600">Premium Brands</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-800">50+</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Premium Brands</div>
                 </div>
               </div>
-            </div>
-            
-            <div className="w-1/2 flex justify-center">
-              <div className="relative">
-                  <img 
-                    src={VirtualTryOnImage}
-                    alt="Premium Glasses"
-                    className="w-130 h-100 object-contain rounded-3xl shadow-lg transform transition-transform duration-300 hover:scale-105"
-                  />
-                </div>
             </div>
           </div>
         </div>
         
-        {/* Navigation arrows */}
+        {/* Navigation arrows - Hidden on mobile */}
         <button 
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition"
+          className="hidden md:flex absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:shadow-xl transition"
           aria-label="Previous slide"
         >
           <ChevronRight className="w-6 h-6 rotate-180" />
         </button>
         <button 
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition"
+          className="hidden md:flex absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg items-center justify-center hover:shadow-xl transition"
           aria-label="Next slide"
         >
           <ChevronRight className="w-6 h-6" />
@@ -96,45 +96,45 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Categories Section */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-8 md:py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 md:mb-12 gap-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
               Find your new favourite glasses
             </h2>
-            <button className="border border-gray-400 text-gray-700 px-6 py-2 rounded-full hover:bg-gray-100 transition">
+            <button className="border border-gray-400 text-gray-700 px-4 md:px-6 py-2 rounded-full hover:bg-gray-100 transition text-sm md:text-base">
               Discover all glasses
             </button>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {/* Women Category */}
-            <div className="relative h-[650px] rounded-3xl overflow-hidden group cursor-pointer">
+            <div className="relative h-[400px] sm:h-[500px] md:h-[650px] rounded-3xl overflow-hidden group cursor-pointer">
               <img 
                 src={WomenGlassesImage} 
                 alt="Women glasses"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-              <div className="absolute bottom-8 left-8 text-white">
-                <h3 className="text-4xl font-bold mb-4">Women</h3>
+              <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 left-4 sm:left-6 md:left-8 text-white">
+                <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 md:mb-4">Women</h3>
                 <div className="space-y-2">
                   <div 
                     className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => navigate('/glasses?category=women-s-glasses')}
                   >
-                    <span className="text-2xl font-thin opacity-90">Glasses</span>
-                    <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">
-                      <ChevronRight className="w-4 h-4" />
+                    <span className="text-lg sm:text-xl md:text-2xl font-thin opacity-90">Glasses</span>
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 border border-white rounded-full flex items-center justify-center">
+                      <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                     </div>
                   </div>
                   <div 
                     className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => navigate('/glasses?category=women-s-sunglasses')}
                   >
-                    <span className="text-2xl font-thin opacity-90">Sunglasses</span>
-                    <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">
-                      <ChevronRight className="w-4 h-4" />
+                    <span className="text-lg sm:text-xl md:text-2xl font-thin opacity-90">Sunglasses</span>
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 border border-white rounded-full flex items-center justify-center">
+                      <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                     </div>
                   </div>
                 </div>
@@ -142,32 +142,32 @@ const HomePage: React.FC = () => {
             </div>
 
             {/* Men Category */}
-            <div className="relative h-[650px] mt-12 rounded-3xl overflow-hidden group cursor-pointer">
+            <div className="relative h-[400px] sm:h-[500px] md:h-[650px] md:mt-12 rounded-3xl overflow-hidden group cursor-pointer">
               <img 
                 src={MenGlassesImage} 
                 alt="Men glasses"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-              <div className="absolute bottom-8 left-8 text-white">
-                <h3 className="text-4xl font-bold mb-4">Men</h3>
+              <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 left-4 sm:left-6 md:left-8 text-white">
+                <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 md:mb-4">Men</h3>
                 <div className="space-y-2">
                   <div 
                     className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => navigate('/glasses?category=men-s-glasses')}
                   >
-                    <span className="text-2xl font-thin opacity-90">Glasses</span>
-                    <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">
-                      <ChevronRight className="w-4 h-4" />
+                    <span className="text-lg sm:text-xl md:text-2xl font-thin opacity-90">Glasses</span>
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 border border-white rounded-full flex items-center justify-center">
+                      <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                     </div>
                   </div>
                   <div 
                     className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => navigate('/glasses?category=men-s-sunglasses')}
                   >
-                    <span className="text-2xl font-thin opacity-90">Sunglasses</span>
-                    <div className="w-6 h-6 border border-white rounded-full flex items-center justify-center">
-                      <ChevronRight className="w-4 h-4" />
+                    <span className="text-lg sm:text-xl md:text-2xl font-thin opacity-90">Sunglasses</span>
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 border border-white rounded-full flex items-center justify-center">
+                      <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                     </div>
                   </div>
                 </div>
@@ -178,120 +178,122 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Bestsellers Section */}
-      <section className="py-16 bg-white">
+      <section className="py-8 md:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-4xl font-bold text-gray-800 mb-12">Bestsellers</h2>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-8 md:mb-12">Bestsellers</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {/* Product 1 */}
-            <div className="group cursor-pointer">
-              <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
-                <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 text-xs rounded">
-                  -25%
+          <div className="overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+            <div className="flex gap-4 md:gap-6 pb-4">
+              {/* Product 1 */}
+              <div className="group cursor-pointer flex-shrink-0 w-[280px] md:w-[320px] snap-start">
+                <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
+                  <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 text-xs rounded">
+                    -25%
+                  </div>
+                  <div className="absolute top-4 right-4 bg-gray-800 text-white px-3 py-1 text-xs rounded">
+                    Boutique
+                  </div>
+                  <div className="absolute top-4 right-16">
+                    <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
+                  </div>
+                  <img 
+                    src="/api/placeholder/250/200" 
+                    alt="Miu Miu glasses"
+                    className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
+                  />
                 </div>
-                <div className="absolute top-4 right-4 bg-gray-800 text-white px-3 py-1 text-xs rounded">
-                  Boutique
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-gray-800">Miu Miu</h3>
+                  <p className="text-gray-600 text-sm">MU 11WS 1AB5S0</p>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-red-500 line-through text-sm">10.798.500₫</span>
+                    <span className="font-bold text-lg">8.098.500₫</span>
+                  </div>
                 </div>
-                <div className="absolute top-4 right-16">
-                  <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
-                </div>
-                <img 
-                  src="/api/placeholder/250/200" 
-                  alt="Miu Miu glasses"
-                  className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
-                />
               </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-gray-800">Miu Miu</h3>
-                <p className="text-gray-600 text-sm">MU 11WS 1AB5S0</p>
-                <div className="flex items-center space-x-2">
-                  <span className="text-red-500 line-through text-sm">10.798.500₫</span>
-                  <span className="font-bold text-lg">8.098.500₫</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Product 2 */}
-            <div className="group cursor-pointer">
-              <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
-                <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 text-xs rounded">
-                  -30%
+              {/* Product 2 */}
+              <div className="group cursor-pointer flex-shrink-0 w-[280px] md:w-[320px] snap-start">
+                <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
+                  <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 text-xs rounded">
+                    -30%
+                  </div>
+                  <div className="absolute top-4 right-4 bg-gray-800 text-white px-3 py-1 text-xs rounded">
+                    Boutique
+                  </div>
+                  <div className="absolute top-4 right-16">
+                    <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
+                  </div>
+                  <img 
+                    src="/api/placeholder/250/200" 
+                    alt="Saint Laurent glasses"
+                    className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
+                  />
                 </div>
-                <div className="absolute top-4 right-4 bg-gray-800 text-white px-3 py-1 text-xs rounded">
-                  Boutique
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-gray-800">Saint Laurent</h3>
+                  <p className="text-gray-600 text-sm">SL M115 004</p>
+                  <p className="text-sm text-gray-500">Prescription-ready</p>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-red-500 line-through text-sm">8.938.500₫</span>
+                    <span className="font-bold text-lg">6.253.500₫</span>
+                  </div>
                 </div>
-                <div className="absolute top-4 right-16">
-                  <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
-                </div>
-                <img 
-                  src="/api/placeholder/250/200" 
-                  alt="Saint Laurent glasses"
-                  className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
-                />
               </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-gray-800">Saint Laurent</h3>
-                <p className="text-gray-600 text-sm">SL M115 004</p>
-                <p className="text-sm text-gray-500">Prescription-ready</p>
-                <div className="flex items-center space-x-2">
-                  <span className="text-red-500 line-through text-sm">8.938.500₫</span>
-                  <span className="font-bold text-lg">6.253.500₫</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Product 3 */}
-            <div className="group cursor-pointer">
-              <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
-                <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 text-xs rounded">
-                  -25%
+              {/* Product 3 */}
+              <div className="group cursor-pointer flex-shrink-0 w-[280px] md:w-[320px] snap-start">
+                <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
+                  <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 text-xs rounded">
+                    -25%
+                  </div>
+                  <div className="absolute top-4 right-4 bg-gray-800 text-white px-3 py-1 text-xs rounded">
+                    Boutique
+                  </div>
+                  <div className="absolute top-4 right-16">
+                    <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
+                  </div>
+                  <img 
+                    src="/api/placeholder/250/200" 
+                    alt="Tom Ford sunglasses"
+                    className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
+                  />
                 </div>
-                <div className="absolute top-4 right-4 bg-gray-800 text-white px-3 py-1 text-xs rounded">
-                  Boutique
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-gray-800">Tom Ford</h3>
+                  <p className="text-gray-600 text-sm">Bronson FT 1044 01E</p>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-red-500 line-through text-sm">11.218.500₫</span>
+                    <span className="font-bold text-lg">6.163.500₫</span>
+                  </div>
                 </div>
-                <div className="absolute top-4 right-16">
-                  <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
-                </div>
-                <img 
-                  src="/api/placeholder/250/200" 
-                  alt="Tom Ford sunglasses"
-                  className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
-                />
               </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-gray-800">Tom Ford</h3>
-                <p className="text-gray-600 text-sm">Bronson FT 1044 01E</p>
-                <div className="flex items-center space-x-2">
-                  <span className="text-red-500 line-through text-sm">11.218.500₫</span>
-                  <span className="font-bold text-lg">6.163.500₫</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Product 4 */}
-            <div className="group cursor-pointer">
-              <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
-                <div className="absolute top-4 right-4">
-                  <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
+              {/* Product 4 */}
+              <div className="group cursor-pointer flex-shrink-0 w-[280px] md:w-[320px] snap-start">
+                <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
+                  <div className="absolute top-4 right-4">
+                    <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
+                  </div>
+                  <img 
+                    src="/api/placeholder/250/200" 
+                    alt="Boss glasses"
+                    className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
+                  />
                 </div>
-                <img 
-                  src="/api/placeholder/250/200" 
-                  alt="Boss glasses"
-                  className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
-                />
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-gray-800">Boss</h3>
-                <p className="text-gray-600 text-sm">BV 1033 R80</p>
-                <div className="flex items-center space-x-2">
-                  <span className="font-bold text-lg">5.698.500₫</span>
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-gray-800">Boss</h3>
+                  <p className="text-gray-600 text-sm">BV 1033 R80</p>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-lg">5.698.500₫</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-
+          
           {/* View more button */}
-          <div className="text-center mt-12">
+          <div className="text-center mt-8 md:mt-12">
             <button 
               className="w-12 h-12 border border-gray-400 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
               aria-label="View more products"
