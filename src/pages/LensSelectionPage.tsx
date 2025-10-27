@@ -791,17 +791,66 @@ const LensSelectionPage: React.FC = () => {
 
   const selectedOption = lensTypeOptions.find(opt => opt.type === selectedLensType);
 
+  // Calculate progress for mobile footer
+  const calculateProgress = () => {
+    let completedSteps = 0;
+    const totalSteps = 4;
+
+    // Step 1: Glasses Type selected
+    if (selectedLensType) completedSteps++;
+    
+    // Step 2: Prescription filled (if needed)
+    if (selectedLensType === 'NON_PRESCRIPTION' || (showPrescriptionStep && isPrescriptionComplete())) {
+      completedSteps++;
+    }
+    
+    // Step 3: Lens selected
+    if (selectedLens) completedSteps++;
+    
+    // Step 4: Lens options selected
+    if (selectedLensOptions.variant) completedSteps++;
+
+    return (completedSteps / totalSteps) * 100;
+  };
+
+  // Calculate total price (frame + lens options)
+  const calculateTotalPrice = () => {
+    let total = 0;
+    
+    // Add frame price
+    if (selectedProduct) {
+      total += Number(selectedProduct.price) || 0;
+    }
+    
+    // Add lens variant price (already includes base lens price)
+    if (selectedLensOptions.variant) {
+      total += parseFloat(selectedLensOptions.variant.price);
+    }
+    
+    // Add coatings price
+    selectedLensOptions.coatings.forEach(coating => {
+      total += parseFloat(coating.price);
+    });
+    
+    // Add tint color price
+    if (selectedLensOptions.tintColor) {
+      total += parseFloat(selectedLensOptions.tintColor.price);
+    }
+    
+    return total;
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       <Navigation />
       
-      <main className="flex-grow max-w-full mx-auto px-8 py-12">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <main className="flex-grow max-w-full mx-auto px-4 md:px-8 py-6 md:py-12 pb-32 md:pb-12">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-8">
           {/* Left Content - Lens Selection (smaller) */}
           <div className="xl:col-span-2">
-            <div className="bg-white rounded-lg shadow-lg p-8 w-full min-w-[950px] min-h-[1544px]">
-              <h1 className="text-2xl font-bold text-gray-900 mb-8">Lens Selection</h1>
+            <div className="bg-white rounded-lg shadow-lg p-4 md:p-8 w-full">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8">Lens Selection</h1>
           
           {/* Step 1: Your Glasses Type */}
           <div ref={step1Ref} className="mb-8">
@@ -926,7 +975,7 @@ const LensSelectionPage: React.FC = () => {
                 // Full prescription form when not in step 3
                 <>
                   {/* Prescription Options */}
-                  <div className="space-y-4 mb-6 max-w-[900px]">
+                  <div className="space-y-4 mb-6">
                     {/* Saved Prescription Option */}
                     {prescriptionOption === 'saved' ? (
                       <SavedPrescriptionSelector
@@ -961,7 +1010,7 @@ const LensSelectionPage: React.FC = () => {
 
               {/* Manual Prescription Form */}
               {prescriptionOption === 'manual' && (
-                <div className="border-2 rounded-lg p-6 mt-4 max-w-[900px]" style={{borderColor: '#363434'}}>
+                <div className="border-2 rounded-lg p-4 md:p-6 mt-4" style={{borderColor: '#363434'}}>
                   <h3 className="font-semibold text-gray-900 mb-2">Enter your prescription values manually</h3>
                   <p className="text-gray-600 text-sm mb-6">
                     Please enter your prescription values as recorded on your prescription card.
@@ -1430,10 +1479,10 @@ const LensSelectionPage: React.FC = () => {
                 // Show lens grid when not in step 4
                 <>
                   {/* Lens Filter Tabs */}
-                  <div className="bg-white rounded-lg border p-6">
-                <div className="flex flex-wrap gap-4 mb-6">
+                  <div className="bg-white rounded-lg border p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:flex-wrap gap-4 mb-6">
                   {/* Brand Filter */}
-                  <div className="flex-1 min-w-[200px]">
+                  <div className="flex-1 md:min-w-[200px]">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Hãng</label>
                     <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                       <option value="">Tất cả hãng</option>
@@ -1445,7 +1494,7 @@ const LensSelectionPage: React.FC = () => {
                   </div>
 
                   {/* Thickness Filter */}
-                  <div className="flex-1 min-w-[200px]">
+                  <div className="flex-1 md:min-w-[200px]">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Độ dày</label>
                     <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                       <option value="">Tất cả độ dày</option>
@@ -1457,7 +1506,7 @@ const LensSelectionPage: React.FC = () => {
                   </div>
 
                   {/* Price Filter */}
-                  <div className="flex-1 min-w-[200px]">
+                  <div className="flex-1 md:min-w-[200px]">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Giá</label>
                     <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                       <option value="">Tất cả mức giá</option>
@@ -2134,6 +2183,60 @@ const LensSelectionPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Mobile Sticky Footer - Only on Mobile */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 md:hidden z-50">
+        {/* Progress Bar */}
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-gray-600">
+              Bước {Math.ceil(calculateProgress() / 25)}/4
+            </span>
+            <span className="text-xs text-gray-600">{Math.round(calculateProgress())}%</span>
+          </div>
+          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-green-600 transition-all duration-300"
+              style={{ width: `${calculateProgress()}%` }}
+            />
+          </div>
+        </div>
+        
+        {/* Product Summary */}
+        {selectedProduct ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              {selectedProduct.thumbnailUrl && (
+                <img 
+                  src={selectedProduct.thumbnailUrl} 
+                  alt={selectedProduct.displayName}
+                  className="w-12 h-12 object-cover rounded"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {selectedProductDetail ? 
+                    getDisplayNameWithColor() :
+                    selectedProduct.displayName
+                  }
+                </p>
+                <p className="text-xs text-gray-500">
+                  {selectedProduct.brandName}
+                </p>
+              </div>
+            </div>
+            <div className="text-right ml-2">
+              <p className="text-lg font-bold text-green-600">
+                {calculateTotalPrice().toLocaleString('vi-VN')}₫
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-2">
+            <p className="text-sm text-gray-500">Đang tải sản phẩm...</p>
+          </div>
+        )}
+      </div>
 
       <Footer />
     </div>
