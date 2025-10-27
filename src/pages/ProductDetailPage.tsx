@@ -659,7 +659,7 @@ const ProductDetailPage: React.FC = () => {
                       title={`${color.colorName}${isOutOfStock ? ' (Out of stock)' : ''}`}
                     >
                       {previewImage ? (
-                        <div className="color-image-preview">
+                        <div className={`color-image-preview ${isOutOfStock ? 'out-of-stock' : ''}`}>
                           <img 
                             src={previewImage.imageUrl} 
                             alt={color.colorName}
@@ -667,7 +667,7 @@ const ProductDetailPage: React.FC = () => {
                           />
                         </div>
                       ) : (
-                        <div className={`color-swatch ${getColorClass(color.colorName)}`}></div>
+                        <div className={`color-swatch ${getColorClass(color.colorName)} ${isOutOfStock ? 'out-of-stock' : ''}`}></div>
                       )}
                     </button>
                   );
