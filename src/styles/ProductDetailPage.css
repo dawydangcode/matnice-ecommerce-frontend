@@ -1,5 +1,19 @@
 /* Product Detail Page Styles */
 /* Product Detail Page Styles */
+
+/* CRITICAL: Prevent horizontal scroll at all levels */
+#root {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+/* Root container fix for mobile */
+.min-h-screen {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  width: 100% !important;
+}
+
 .product-detail-container {
   display: grid;
   grid-template-columns: 1fr 0.8fr;
@@ -8,11 +22,17 @@
   margin: 0 auto;
   padding: 2rem;
   align-items: start; /* Prevent stretching of product-info */
+  overflow-x: hidden !important; /* Prevent horizontal scroll */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Product Gallery */
 .product-gallery {
   position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden !important; /* Prevent overflow from gallery */
 }
 
 /* Custom layout for ordered images */
@@ -311,7 +331,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: #059669;
+  color: #4e4e4e;
   font-weight: 500;
   background-color: #f5f4f4;
   width: fit-content;
@@ -572,15 +592,60 @@
   .product-detail-container {
     grid-template-columns: 1fr;
     gap: 2rem;
-    padding: 1rem;
+    padding: 0 !important; /* Remove padding to prevent overflow */
+    overflow-x: hidden !important; /* Critical: prevent horizontal scroll */
+    max-width: 100vw !important; /* Ensure container doesn't exceed viewport */
+    width: 100vw !important;
+    margin: 0 !important;
   }
 
   .product-info {
     padding-left: 0;
+    padding: 0 1rem !important; /* Add padding only to product info */
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .gallery-custom-layout {
     gap: 1rem;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow: hidden !important; /* Ensure gallery doesn't overflow */
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Fix for mobile slideshow to prevent horizontal scroll */
+  .md\\:hidden {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Ensure flex container for slides doesn't cause overflow */
+  .md\\:hidden .flex {
+    width: 100% !important;
+  }
+
+  /* Fix for relative wrapper inside slideshow */
+  .md\\:hidden .relative {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow: hidden !important;
+  }
+
+  /* Fix for any child divs */
+  .md\\:hidden > * {
+    max-width: 100vw !important;
+  }
+
+  /* Product details section */
+  .product-details-section {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
   }
 
   .gallery-row {
@@ -1005,6 +1070,15 @@
 @media (max-width: 768px) {
   .product-details-section {
     padding: 2rem 1rem;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    width: 100%;
+    max-width: 100vw; /* Ensure it doesn't exceed viewport width */
+  }
+
+  .product-details-container-full {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   .product-details-title {

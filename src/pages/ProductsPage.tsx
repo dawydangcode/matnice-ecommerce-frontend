@@ -629,9 +629,9 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
           />
           
           {/* Drawer */}
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] overflow-y-auto">
-            {/* Drawer Header */}
-            <div className="sticky top-0 bg-white border-b px-4 py-4 flex items-center justify-between z-10">
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] flex flex-col">
+            {/* Drawer Header - Fixed */}
+            <div className="flex-shrink-0 bg-white border-b px-4 py-4 flex items-center justify-between rounded-t-2xl">
               <h3 className="text-lg font-bold text-gray-900 capitalize">
                 {activeFilterTab === 'your-size' && 'Your Size'}
                 {activeFilterTab === 'frame' && 'Frame'}
@@ -650,8 +650,8 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
               </button>
             </div>
 
-            {/* Drawer Content */}
-            <div className="p-4 space-y-6">
+            {/* Drawer Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
               {/* Your Size Tab Content */}
               {activeFilterTab === 'your-size' && (
                 <>
@@ -963,8 +963,8 @@ const bridgeDesigns: Record<FrameBridgeDesignType, React.ReactNode> = {
               )}
             </div>
 
-            {/* Drawer Footer */}
-            <div className="sticky bottom-0 bg-white border-t px-4 py-4 z-10">
+            {/* Drawer Footer - Fixed */}
+            <div className="flex-shrink-0 bg-white border-t px-4 py-4">
               <button
                 onClick={() => {
                   setShowMobileFilters(false);

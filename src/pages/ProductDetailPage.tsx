@@ -10,7 +10,7 @@ import { product3DModelService, Product3DModel, Model3DConfig } from '../service
 import { localCartService } from '../services/localCart.service';
 import stockService from '../services/stock.service';
 import '../styles/ProductDetailPage.css';
-import { Glasses, Handbag, ShoppingCart, X, Video, RefreshCcw, Package } from 'lucide-react';
+import { Glasses, Handbag, ShoppingCart, X, Video, RefreshCcw, Package, CircleCheck, CircleX } from 'lucide-react';
 import { FrameMeasurement, LensMeasurement, TempleMeasurement } from '../components/icons/Dimensions';
 
 
@@ -119,53 +119,20 @@ const ProductDetailPage: React.FC = () => {
         // Load 3D model data
         await load3DModelData(parseInt(id));
         
-        // Fallback data nếu API không trả về đủ dữ liệu
-        const mockProductData = {
-          ...productData,
-          // Keep original productType from API, don't override with default
-          product_type: productData.product_type || productData.productType || 'glasses',
-          productColors: (productData.productColors && productData.productColors.length > 0) ? productData.productColors : [
-            { id: 5, colorName: 'Havana', productVariantName: '002', productNumber: '6514022', stock: 10, isThumbnail: true },
-            { id: 6, colorName: 'Black', productVariantName: '001', productNumber: '6514021', stock: 0, isThumbnail: false },
-            { id: 7, colorName: 'Green', productVariantName: '003', productNumber: '6514023', stock: 8, isThumbnail: false },
-            { id: 8, colorName: 'Blue', productVariantName: '004', productNumber: '6514024', stock: 0, isThumbnail: false },
-            { id: 9, colorName: 'Red', productVariantName: '005', productNumber: '6514025', stock: 3, isThumbnail: false },
-            { id: 10, colorName: 'Brown', productVariantName: '006', productNumber: '6514026', stock: 0, isThumbnail: false }
-          ],
-          productImages: (productData.productImages && productData.productImages.length > 0) ? productData.productImages : [
-            { id: 13, imageUrl: 'https://testbucket21045081.s3.ap-southeast-2.amazonaws.com/product_images/6514022_ft-5313v/6514022_a.png', imageOrder: 'a', productColorId: 5 },
-            { id: 14, imageUrl: 'https://testbucket21045081.s3.ap-southeast-2.amazonaws.com/product_images/6514022_ft-5313v/6514022_b.png', imageOrder: 'b', productColorId: 5 },
-            { id: 15, imageUrl: 'https://testbucket21045081.s3.ap-southeast-2.amazonaws.com/product_images/6514022_ft-5313v/6514022_c.png', imageOrder: 'c', productColorId: 5 },
-            { id: 16, imageUrl: 'https://testbucket21045081.s3.ap-southeast-2.amazonaws.com/product_images/6514022_ft-5313v/6514022_d.png', imageOrder: 'd', productColorId: 5 }
-          ],
-          productDetail: productData.productDetail || {
-            id: 4,
-            frameWidth: 136,
-            frameMaterial: 'plastic',
-            frameShape: 'rectangle',
-            frameType: 'full_rim',
-            bridgeDesign: 'without_nose_pads',
-            style: 'classic',
-            springHinges: true,
-            weight: 34,
-            multifocal: true,
-            bridgeWidth: 17,
-            lensHeight: 38,
-            lensWidth: 55,
-            templeLength: 145
-          }
-        };
-        
-        setProduct(mockProductData);
+        // Use data directly from API
+        setProduct(productData);
         
         // Set default selections
-        if (mockProductData.productColors && mockProductData.productColors.length > 0) {
-          setSelectedColor(mockProductData.productColors[0].colorName);
-          setSelectedColorId(mockProductData.productColors[0].id);
-          console.log('Selected color:', mockProductData.productColors[0].colorName);
-          console.log('Selected color ID:', mockProductData.productColors[0].id);
+        if (productData.productColors && productData.productColors.length > 0) {
+          setSelectedColor(productData.productColors[0].colorName);
+          setSelectedColorId(productData.productColors[0].id);
+          console.log('Selected color:', productData.productColors[0].colorName);
+          console.log('Selected color ID:', productData.productColors[0].id);
         }
-        console.log('Frame width:', mockProductData.productDetail.frameWidth);
+        
+        if (productData.productDetail) {
+          console.log('Frame width:', productData.productDetail.frameWidth);
+        }
       } catch (err) {
         setError('Failed to fetch product details');
         console.error('Error fetching product:', err);
@@ -719,10 +686,13 @@ const ProductDetailPage: React.FC = () => {
                   {product.productDetail?.frameWidth || 136} mm
                 </span>
               </div>
-              <div className={`stock-status ${getStockStatus().status === 'Out of stock' ? 'text-red-600' : ''}`}>
-                <span 
-                  className={`stock-indicator ${getStockStatus().status === 'Out of stock' ? 'out-of-stock' : ''}`}
-                ></span>
+              <div className="stock-status text-gray-900">
+                {getStockStatus().status !== 'Out of stock' && getStockStatus().status !== 'Hết hàng' && (
+                  <CircleCheck size={20} className="inline mr-1" style={{ color: '#059669' }} />
+                )}
+                {(getStockStatus().status === 'Out of stock' || getStockStatus().status === 'Hết hàng') && (
+                  <CircleX size={20} className="inline mr-1" style={{ color: '#dc2626' }} />
+                )}
                 {getStockStatus().status}
               </div>
             </div>
