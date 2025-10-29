@@ -849,7 +849,7 @@ const LensSelectionPage: React.FC = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-8">
           {/* Left Content - Lens Selection (smaller) */}
           <div className="xl:col-span-2">
-            <div className="bg-white rounded-lg shadow-lg p-4 md:p-8 w-full">
+            <div className="bg-white rounded-lg shadow-lg p-4 md:p-8 w-full md:w-[896px] mx-auto">
               <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8">Lens Selection</h1>
           
           {/* Step 1: Your Glasses Type */}
@@ -998,7 +998,17 @@ const LensSelectionPage: React.FC = () => {
                     {prescriptionOption === 'manual' ? null : (
                       <div
                         className="border rounded-lg p-4 cursor-pointer transition-all border-gray-200 hover:border-gray-300"
-                        onClick={() => setPrescriptionOption('manual')}
+                        onClick={() => {
+                          setPrescriptionOption('manual');
+                          // Reset to default ± 0.00 values when switching to manual
+                          setPrescriptionData(prev => ({
+                            ...prev,
+                            sphereR: '± 0.00',
+                            sphereL: '± 0.00',
+                            cylinderR: '± 0.00',
+                            cylinderL: '± 0.00'
+                          }));
+                        }}
                       >
                         <h3 className="font-semibold text-gray-900 mb-2">Enter your prescription values manually</h3>
                         <p className="text-gray-600 text-sm">
