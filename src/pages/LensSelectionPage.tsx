@@ -1505,8 +1505,100 @@ const LensSelectionPage: React.FC = () => {
                   )}
                   
                   {prescriptionOption === 'saved' && (
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-gray-600 text-sm">Using saved prescription values</p>
+                    <div className="bg-white w-full">
+                      <h4 className="font-semibold text-gray-800 mb-4 md:mb-6">Saved prescription values</h4>
+                      
+                      {/* Mobile View - 2 Column Values Layout */}
+                      <div className="block md:hidden">
+                        {/* Header */}
+                        <div className="grid grid-cols-2 gap-4 mb-4 pb-2">
+                          <div className="font-medium text-gray-900">Right eye</div>
+                          <div className="font-medium text-gray-900">Left eye</div>
+                        </div>
+                        
+                        {/* Values */}
+                        <div className="space-y-4">
+                          {/* Sphere */}
+                          <div className="bg-gray-100 p-2 rounded">
+                            <p className="text-xs text-gray-600 mb-2">Sphere <span className="text-gray-400">(S/SPH)</span></p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.sphereR)} dpt</p>
+                              <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.sphereL)} dpt</p>
+                            </div>
+                          </div>
+                          
+                          {/* Cylinder */}
+                          <div className="bg-gray-100 p-2 rounded">
+                            <p className="text-xs text-gray-600 mb-2">Cylinder <span className="text-gray-400">(ZYL/CYL)</span></p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.cylinderR)} dpt</p>
+                              <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.cylinderL)} dpt</p>
+                            </div>
+                          </div>
+                          
+                          {/* Axis */}
+                          <div className="bg-gray-100 p-2 rounded">
+                            <p className="text-xs text-gray-600 mb-2">Axis <span className="text-gray-400">(A/ACH)</span></p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <p className="text-sm font-medium">{formatAxisValue(prescriptionData.axisR)}°</p>
+                              <p className="text-sm font-medium">{formatAxisValue(prescriptionData.axisL)}°</p>
+                            </div>
+                          </div>
+                          
+                          {/* Add - if needed */}
+                          {needsAddValue() && (
+                            <div className="bg-gray-100 p-2 rounded">
+                              <p className="text-xs text-gray-600 mb-2">Add <span className="text-gray-400">(ADD)</span></p>
+                              <div className="grid grid-cols-2 gap-4">
+                                <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.addR)} dpt</p>
+                                <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.addL)} dpt</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Pupillary Distance */}
+                          <div className="bg-gray-100 p-2 rounded">
+                            <p className="text-xs text-gray-600 mb-2">Pupillary distance <span className="text-gray-400">(PD)</span></p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <p className="text-sm font-medium">{formatPDValue(true)} mm</p>
+                              <p className="text-sm font-medium">{formatPDValue(false)} mm</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Desktop View - Grid Layout */}
+                      <div className="hidden md:block prescription-grid">
+                        {/* Header Row - All Prescription Types */}
+                        <div className="prescription-headers">
+                          <div className="prescription-spacer"></div>
+                          <div className="prescription-type-header">Sphere (S/SPH)</div>
+                          <div className="prescription-type-header">Cylinder (C/CYL)</div>
+                          <div className="prescription-type-header">Axis (A/ACH)</div>
+                          {needsAddValue() && <div className="prescription-type-header">Add (ADD)</div>}
+                          <div className="prescription-type-header">PD</div>
+                        </div>
+
+                        {/* Right Eye Row */}
+                        <div className="prescription-values-row">
+                          <div className="prescription-eye-label">Right eye</div>
+                          <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.sphereR)} dpt</div>
+                          <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.cylinderR)} dpt</div>
+                          <div className="prescription-value-box">{formatAxisValue(prescriptionData.axisR)}°</div>
+                          {needsAddValue() && <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.addR)} dpt</div>}
+                          <div className="prescription-value-box">{formatPDValue(true)} mm</div>
+                        </div>
+
+                        {/* Left Eye Row */}
+                        <div className="prescription-values-row">
+                          <div className="prescription-eye-label">Left eye</div>
+                          <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.sphereL)} dpt</div>
+                          <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.cylinderL)} dpt</div>
+                          <div className="prescription-value-box">{formatAxisValue(prescriptionData.axisL)}°</div>
+                          {needsAddValue() && <div className="prescription-value-box">{formatPrescriptionValue(prescriptionData.addL)} dpt</div>}
+                          <div className="prescription-value-box">{formatPDValue(false)} mm</div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1524,25 +1616,24 @@ const LensSelectionPage: React.FC = () => {
                   </div>
                   <h2 className="text-lg font-semibold">Lens Selection</h2>
                 </div>
-                <button 
-                  onClick={() => {
-                    // Reset to step 3 - show lens selection
-                    setShowLensSelectionStep(false);
-                    
-                    // Reset step 4 selections (lens options)  
-                    setShowLensOptionsStep(false);
-                    setSelectedLens(null);
-                    setLensFullDetails(null);
-                    setSelectedLensOptions({
-                      variant: undefined,
-                      coatings: [],
-                      tintColor: undefined
-                    });
-                  }}
-                  className="text-blue-600 text-sm hover:underline"
-                >
-                  Change
-                </button>
+                {showLensOptionsStep && (
+                  <button 
+                    onClick={() => {
+                      // Reset to step 3 - show lens selection (keep step 3 visible)
+                      setShowLensOptionsStep(false);
+                      setSelectedLens(null);
+                      setLensFullDetails(null);
+                      setSelectedLensOptions({
+                        variant: undefined,
+                        coatings: [],
+                        tintColor: undefined
+                      });
+                    }}
+                    className="text-blue-600 text-sm hover:underline"
+                  >
+                    Change
+                  </button>
+                )}
               </div>
 
               {!showLensOptionsStep ? (
@@ -1708,8 +1799,8 @@ const LensSelectionPage: React.FC = () => {
               ) : (
                 // Show selected lens info when in step 4
                 selectedLens && (
-                  <div className="bg-white rounded-lg border p-6">
-                    <div className="flex items-center justify-between bg-blue-50 rounded-lg p-4">
+                  <div className="bg-white rounded-lg p-2">
+                    <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4">
                       <div className="flex items-center">
                         {selectedLens.imageUrl && (
                           <img 
@@ -1723,8 +1814,8 @@ const LensSelectionPage: React.FC = () => {
                           />
                         )}
                         <div>
-                          <p className="font-medium text-blue-900">{selectedLens.name}</p>
-                          <p className="text-sm text-blue-700">
+                          <p className="font-medium text-gray-900">{selectedLens.name}</p>
+                          <p className="text-sm text-gray-700">
                             {selectedLens.lensType === 'SINGLE_VISION' && 'Single Vision'}
                             {selectedLens.lensType === 'PROGRESSIVE' && 'Progressive'}
                             {selectedLens.lensType === 'OFFICE' && 'Office'}
@@ -1732,12 +1823,9 @@ const LensSelectionPage: React.FC = () => {
                             {selectedLens.lensType === 'NON_PRESCRIPTION' && 'Non-Prescription'}
                             {selectedLens.brandLens && ` - ${selectedLens.brandLens.name}`}
                           </p>
-                          <p className="text-xs text-blue-600">{selectedLens.origin}</p>
+                          <p className="text-xs text-gray-600">{selectedLens.origin}</p>
                         </div>
                       </div>
-                      <span className="text-lg font-semibold text-blue-600">
-                        {selectedLens.basePrice.toLocaleString('vi-VN')}₫
-                      </span>
                     </div>
                   </div>
                 )
