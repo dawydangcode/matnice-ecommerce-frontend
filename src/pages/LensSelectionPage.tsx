@@ -120,6 +120,10 @@ const LensSelectionPage: React.FC = () => {
   const [lensOptionsLoading, setLensOptionsLoading] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   
+  // Date picker modal state
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [datePickerType, setDatePickerType] = useState<'day' | 'month' | 'year'>('day');
+  
   // Auto-scroll utility function
   const scrollToStep = useCallback((stepNumber: number) => {
     const refs = [step1Ref, step2Ref, step3Ref, step4Ref];
@@ -841,15 +845,15 @@ const LensSelectionPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <Navigation />
       
-      <main className="flex-grow max-w-full mx-auto px-4 md:px-8 py-6 md:py-12 pb-32 md:pb-12">
+      <main className="bg-white flex-grow max-w-full mx-auto px-4 md:px-8 py-6 md:py-12 pb-32 md:pb-12">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-8">
           {/* Left Content - Lens Selection (smaller) */}
           <div className="xl:col-span-2">
-            <div className="bg-white rounded-lg shadow-lg p-4 md:p-8 w-full md:w-[896px] mx-auto">
+            <div className="rounded-lg p-4 md:p-8 w-full md:w-[1024px] mx-auto">
               <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8">Lens Selection</h1>
           
           {/* Step 1: Your Glasses Type */}
@@ -964,7 +968,7 @@ const LensSelectionPage: React.FC = () => {
                         tintColor: undefined
                       });
                     }}
-                    className="text-blue-600 text-sm hover:underline"
+                    className="text-black-600 text-sm hover:underline"
                   >
                     Change
                   </button>
@@ -1298,7 +1302,9 @@ const LensSelectionPage: React.FC = () => {
                       <p className="text-gray-600 text-sm mb-3">
                         Your prescription must have been taken within the last two years
                       </p>
-                      <div className="grid grid-cols-3 gap-4">
+                      
+                      {/* Desktop view - dropdowns */}
+                      <div className="hidden md:grid md:grid-cols-3 gap-4">
                         <div>
                           <select
                             value={prescriptionData.prescriptionDate.day}
@@ -1350,6 +1356,40 @@ const LensSelectionPage: React.FC = () => {
                             ))}
                           </select>
                         </div>
+                      </div>
+                      
+                      {/* Mobile view - button triggers */}
+                      <div className="grid grid-cols-3 gap-4 md:hidden">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDatePickerType('day');
+                            setShowDateModal(true);
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-left"
+                        >
+                          {prescriptionData.prescriptionDate.day || 'DD'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDatePickerType('month');
+                            setShowDateModal(true);
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-left"
+                        >
+                          {prescriptionData.prescriptionDate.month || 'MM'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDatePickerType('year');
+                            setShowDateModal(true);
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-left"
+                        >
+                          {prescriptionData.prescriptionDate.year || 'YYYY'}
+                        </button>
                       </div>
                     </div>
 
@@ -1629,7 +1669,7 @@ const LensSelectionPage: React.FC = () => {
                         tintColor: undefined
                       });
                     }}
-                    className="text-blue-600 text-sm hover:underline"
+                    className="text-black-600 text-sm hover:underline"
                   >
                     Change
                   </button>
@@ -2081,13 +2121,6 @@ const LensSelectionPage: React.FC = () => {
                 </div>
                 <h2 className="text-lg font-semibold text-gray-500">Your Lens Options</h2>
               </div>
-              
-              <div className="flex items-center">
-                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
-                  {selectedLensType === 'NON_PRESCRIPTION' ? '4' : '5'}
-                </div>
-                <h2 className="text-lg font-semibold text-gray-500">Your Summary</h2>
-              </div>
             </div>
           )}
 
@@ -2106,13 +2139,6 @@ const LensSelectionPage: React.FC = () => {
                 </div>
                 <h2 className="text-lg font-semibold text-gray-500">Your Lens Options</h2>
               </div>
-              
-              <div className="flex items-center">
-                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
-                  5
-                </div>
-                <h2 className="text-lg font-semibold text-gray-500">Your Summary</h2>
-              </div>
             </div>
           )}
 
@@ -2123,13 +2149,6 @@ const LensSelectionPage: React.FC = () => {
                   {selectedLensType === 'NON_PRESCRIPTION' ? '3' : '4'}
                 </div>
                 <h2 className="text-lg font-semibold text-gray-500">Your Lens Options</h2>
-              </div>
-              
-              <div className="flex items-center">
-                <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 bg-gray-300 text-gray-600">
-                  {selectedLensType === 'NON_PRESCRIPTION' ? '4' : '5'}
-                </div>
-                <h2 className="text-lg font-semibold text-gray-500">Your Summary</h2>
               </div>
             </div>
           )}
@@ -2389,6 +2408,118 @@ const LensSelectionPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Date Picker Bottom Modal - Mobile Only */}
+      {showDateModal && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setShowDateModal(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-slide-up">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">
+                {datePickerType === 'day' && 'Select Day'}
+                {datePickerType === 'month' && 'Select Month'}
+                {datePickerType === 'year' && 'Select Year'}
+              </h3>
+              <button
+                onClick={() => setShowDateModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Scrollable List */}
+            <div className="max-h-96 overflow-y-auto">
+              {datePickerType === 'day' && (
+                <div className="divide-y">
+                  {Array.from({length: 31}, (_, i) => i + 1).map(day => {
+                    const dayStr = day.toString().padStart(2, '0');
+                    const isSelected = prescriptionData.prescriptionDate.day === dayStr;
+                    return (
+                      <button
+                        key={day}
+                        onClick={() => {
+                          setPrescriptionData(prev => ({
+                            ...prev,
+                            prescriptionDate: {...prev.prescriptionDate, day: dayStr}
+                          }));
+                          setShowDateModal(false);
+                        }}
+                        className={`w-full text-left px-4 py-4 hover:bg-gray-50 ${
+                          isSelected ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                        }`}
+                      >
+                        {dayStr}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {datePickerType === 'month' && (
+                <div className="divide-y">
+                  {Array.from({length: 12}, (_, i) => i + 1).map(month => {
+                    const monthStr = month.toString().padStart(2, '0');
+                    const isSelected = prescriptionData.prescriptionDate.month === monthStr;
+                    return (
+                      <button
+                        key={month}
+                        onClick={() => {
+                          setPrescriptionData(prev => ({
+                            ...prev,
+                            prescriptionDate: {...prev.prescriptionDate, month: monthStr}
+                          }));
+                          setShowDateModal(false);
+                        }}
+                        className={`w-full text-left px-4 py-4 hover:bg-gray-50 ${
+                          isSelected ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                        }`}
+                      >
+                        {monthStr}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {datePickerType === 'year' && (
+                <div className="divide-y">
+                  {Array.from({length: 3}, (_, i) => new Date().getFullYear() - i).map(year => {
+                    const yearStr = year.toString();
+                    const isSelected = prescriptionData.prescriptionDate.year === yearStr;
+                    return (
+                      <button
+                        key={year}
+                        onClick={() => {
+                          setPrescriptionData(prev => ({
+                            ...prev,
+                            prescriptionDate: {...prev.prescriptionDate, year: yearStr}
+                          }));
+                          setShowDateModal(false);
+                        }}
+                        className={`w-full text-left px-4 py-4 hover:bg-gray-50 ${
+                          isSelected ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                        }`}
+                      >
+                        {yearStr}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
