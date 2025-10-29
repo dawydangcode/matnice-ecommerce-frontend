@@ -1024,10 +1024,10 @@ const LensSelectionPage: React.FC = () => {
                           <span className="text-gray-400 text-xs">i</span>
                         </div>
                       </div>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">R</label>
-                          <div className="flex">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-600 w-6">R</label>
+                          <div className="flex flex-1">
                             <select
                               value={prescriptionData.sphereR}
                               onChange={(e) => setPrescriptionData(prev => ({...prev, sphereR: e.target.value}))}
@@ -1042,9 +1042,9 @@ const LensSelectionPage: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">L</label>
-                          <div className="flex">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-600 w-6">L</label>
+                          <div className="flex flex-1">
                             <select
                               value={prescriptionData.sphereL}
                               onChange={(e) => setPrescriptionData(prev => ({...prev, sphereL: e.target.value}))}
@@ -1070,10 +1070,10 @@ const LensSelectionPage: React.FC = () => {
                           <span className="text-gray-400 text-xs">i</span>
                         </div>
                       </div>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">R</label>
-                          <div className="flex">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-600 w-6">R</label>
+                          <div className="flex flex-1">
                             <select
                               value={prescriptionData.cylinderR}
                               onChange={(e) => setPrescriptionData(prev => ({...prev, cylinderR: e.target.value}))}
@@ -1088,9 +1088,9 @@ const LensSelectionPage: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">L</label>
-                          <div className="flex">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-600 w-6">L</label>
+                          <div className="flex flex-1">
                             <select
                               value={prescriptionData.cylinderL}
                               onChange={(e) => setPrescriptionData(prev => ({...prev, cylinderL: e.target.value}))}
@@ -1112,10 +1112,10 @@ const LensSelectionPage: React.FC = () => {
                     {needsAddValue() && (
                       <div>
                         <h4 className="font-medium text-black-700 mb-3">Add (ADD)</h4>
-                        <div className="space-y-4 mb-3">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-600 mb-1">R</label>
-                            <div className="flex">
+                        <div className="space-y-3 mb-3">
+                          <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium text-gray-600 w-6">R</label>
+                            <div className="flex flex-1">
                               <select
                                 value={prescriptionData.addR}
                                 onChange={(e) => setPrescriptionData(prev => ({...prev, addR: e.target.value}))}
@@ -1130,9 +1130,9 @@ const LensSelectionPage: React.FC = () => {
                               </div>
                             </div>
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-600 mb-1">L</label>
-                            <div className="flex">
+                          <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium text-gray-600 w-6">L</label>
+                            <div className="flex flex-1">
                               <select
                                 value={prescriptionData.addL}
                                 onChange={(e) => setPrescriptionData(prev => ({...prev, addL: e.target.value}))}
@@ -1169,25 +1169,25 @@ const LensSelectionPage: React.FC = () => {
                           <span className="text-gray-400 text-xs">i</span>
                         </div>
                       </div>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">R</label>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-600 w-6">R</label>
                           <select
                             value={prescriptionData.axisR}
                             onChange={(e) => setPrescriptionData(prev => ({...prev, axisR: e.target.value}))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             {AXIS_VALUES.map(value => (
                               <option key={value} value={value}>{value}</option>
                             ))}
                           </select>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">L</label>
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-600 w-6">L</label>
                           <select
                             value={prescriptionData.axisL}
                             onChange={(e) => setPrescriptionData(prev => ({...prev, axisL: e.target.value}))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             {AXIS_VALUES.map(value => (
                               <option key={value} value={value}>{value}</option>
@@ -1227,10 +1227,10 @@ const LensSelectionPage: React.FC = () => {
                       ) : (
                         // Two PD values
                         <div className="mb-4">
-                          <div className="space-y-4 mb-3">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-600 mb-1">R</label>
-                              <div className="flex">
+                          <div className="space-y-3 mb-3">
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium text-gray-600 w-6">R</label>
+                              <div className="flex flex-1">
                                 <select
                                   value={prescriptionData.pdR}
                                   onChange={(e) => setPrescriptionData(prev => ({...prev, pdR: e.target.value}))}
@@ -1245,9 +1245,9 @@ const LensSelectionPage: React.FC = () => {
                                 </div>
                               </div>
                             </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-600 mb-1">L</label>
-                              <div className="flex">
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium text-gray-600 w-6">L</label>
+                              <div className="flex flex-1">
                                 <select
                                   value={prescriptionData.pdL}
                                   onChange={(e) => setPrescriptionData(prev => ({...prev, pdL: e.target.value}))}
