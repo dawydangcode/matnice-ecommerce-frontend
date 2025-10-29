@@ -1397,10 +1397,70 @@ const LensSelectionPage: React.FC = () => {
                 <div className="border-2 rounded-lg p-4 bg-white" style={{borderColor: '#363434'}}>
                   
                   {prescriptionOption === 'manual' && (
-                    <div className="bg-white border border-gray-200 rounded-lg p-6">
-                      <h4 className="font-semibold text-gray-800 mb-6">Manually entered prescription values</h4>
+                    <div className="bg-white w-full">
+                      <h4 className="font-semibold text-gray-800 mb-4 md:mb-6">Manually entered prescription values</h4>
                       
-                      <div className="prescription-grid">
+                      {/* Mobile View - 2 Column Values Layout */}
+                      <div className="block md:hidden">
+                        {/* Header */}
+                        <div className="grid grid-cols-2 gap-4 mb-4 pb-2">
+                          <div className="font-medium text-gray-900">Right eye</div>
+                          <div className="font-medium text-gray-900">Left eye</div>
+                        </div>
+                        
+                        {/* Values */}
+                        <div className="space-y-4">
+                          {/* Sphere */}
+                          <div className="bg-gray-100 p-2 rounded">
+                            <p className="text-xs text-gray-600 mb-2">Sphere <span className="text-gray-400">(S/SPH)</span></p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.sphereR)} dpt</p>
+                              <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.sphereL)} dpt</p>
+                            </div>
+                          </div>
+                          
+                          {/* Cylinder */}
+                          <div className="bg-gray-100 p-2 rounded">
+                            <p className="text-xs text-gray-600 mb-2">Cylinder <span className="text-gray-400">(ZYL/CYL)</span></p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.cylinderR)} dpt</p>
+                              <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.cylinderL)} dpt</p>
+                            </div>
+                          </div>
+                          
+                          {/* Axis */}
+                          <div className="bg-gray-100 p-2 rounded">
+                            <p className="text-xs text-gray-600 mb-2">Axis <span className="text-gray-400">(A/ACH)</span></p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <p className="text-sm font-medium">{formatAxisValue(prescriptionData.axisR)}°</p>
+                              <p className="text-sm font-medium">{formatAxisValue(prescriptionData.axisL)}°</p>
+                            </div>
+                          </div>
+                          
+                          {/* Add - if needed */}
+                          {needsAddValue() && (
+                            <div className="bg-gray-100 p-2 rounded">
+                              <p className="text-xs text-gray-600 mb-2">Add <span className="text-gray-400">(ADD)</span></p>
+                              <div className="grid grid-cols-2 gap-4">
+                                <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.addR)} dpt</p>
+                                <p className="text-sm font-medium">{formatPrescriptionValue(prescriptionData.addL)} dpt</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Pupillary Distance */}
+                          <div className="bg-gray-100 p-2 rounded">
+                            <p className="text-xs text-gray-600 mb-2">Pupillary distance <span className="text-gray-400">(PD)</span></p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <p className="text-sm font-medium">{formatPDValue(true)} mm</p>
+                              <p className="text-sm font-medium">{formatPDValue(false)} mm</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Desktop View - Grid Layout */}
+                      <div className="hidden md:block prescription-grid">
                         {/* Header Row - All Prescription Types */}
                         <div className="prescription-headers">
                           <div className="prescription-spacer"></div>
@@ -2185,57 +2245,51 @@ const LensSelectionPage: React.FC = () => {
       </main>
 
       {/* Mobile Sticky Footer - Only on Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 md:hidden z-50">
-        {/* Progress Bar */}
-        <div className="mb-3">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-gray-600">
-              Bước {Math.ceil(calculateProgress() / 25)}/4
-            </span>
-            <span className="text-xs text-gray-600">{Math.round(calculateProgress())}%</span>
-          </div>
-          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-green-600 transition-all duration-300"
-              style={{ width: `${calculateProgress()}%` }}
-            />
-          </div>
+      <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg md:hidden z-50">
+        {/* Progress Bar as Border Top */}
+        <div className="w-full h-1 bg-gray-200 overflow-hidden">
+          <div 
+            className="h-full bg-green-600 transition-all duration-300"
+            style={{ width: `${calculateProgress()}%` }}
+          />
         </div>
         
         {/* Product Summary */}
-        {selectedProduct ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {selectedProduct.thumbnailUrl && (
-                <img 
-                  src={selectedProduct.thumbnailUrl} 
-                  alt={selectedProduct.displayName}
-                  className="w-12 h-12 object-cover rounded"
-                />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {selectedProductDetail ? 
-                    getDisplayNameWithColor() :
-                    selectedProduct.displayName
-                  }
-                </p>
-                <p className="text-xs text-gray-500">
-                  {selectedProduct.brandName}
+        <div className="p-4">
+          {selectedProduct ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {selectedProduct.thumbnailUrl && (
+                  <img 
+                    src={selectedProduct.thumbnailUrl} 
+                    alt={selectedProduct.displayName}
+                    className="w-12 h-12 object-cover rounded"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {selectedProductDetail ? 
+                      getDisplayNameWithColor() :
+                      selectedProduct.displayName
+                    }
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {selectedProduct.brandName}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right ml-2">
+                <p className="text-lg font-bold text-green-600">
+                  {calculateTotalPrice().toLocaleString('vi-VN')}₫
                 </p>
               </div>
             </div>
-            <div className="text-right ml-2">
-              <p className="text-lg font-bold text-green-600">
-                {calculateTotalPrice().toLocaleString('vi-VN')}₫
-              </p>
+          ) : (
+            <div className="text-center py-2">
+              <p className="text-sm text-gray-500">Đang tải sản phẩm...</p>
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-2">
-            <p className="text-sm text-gray-500">Đang tải sản phẩm...</p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <Footer />

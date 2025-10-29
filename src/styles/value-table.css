@@ -299,6 +299,13 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  /* Hide the grid layout on mobile - using mobile-specific layout instead */
+  .prescription-grid {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
   .prescription-headers,
   .prescription-values-row {
     grid-template-columns: 80px repeat(auto-fit, minmax(100px, 1fr));
@@ -322,13 +329,8 @@
 }
 
 @media (max-width: 480px) {
+  /* Hide the grid layout on mobile - using mobile-specific layout instead */
   .prescription-grid {
-    overflow-x: auto;
-  }
-  
-  .prescription-headers,
-  .prescription-values-row {
-    min-width: 600px;
-    grid-template-columns: 80px repeat(5, 100px);
+    display: none !important;
   }
 }

@@ -145,8 +145,82 @@ const SavedPrescriptionSelector: React.FC<SavedPrescriptionSelectorProps> = ({
           </p>
 
           {/* Prescription Table */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4">
-            <div className="prescription-grid">
+          <div className="bg-white w-full mb-4">
+            {/* Mobile View - 2 Column Values Layout */}
+            <div className="block md:hidden">
+              {/* Header */}
+              <div className="grid grid-cols-2 gap-4 mb-4 pb-2">
+                <div className="font-medium text-gray-900">Right eye</div>
+                <div className="font-medium text-gray-900">Left eye</div>
+              </div>
+              
+              {/* Values */}
+              <div className="space-y-4">
+                {/* Sphere */}
+                <div className="bg-gray-100 p-2 rounded">
+                  <p className="text-xs text-gray-600 mb-2">
+                    Sphere <span className="text-gray-400">(S / SPH)</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <p className="text-sm font-medium">{Number(selectedPrescription.rightEyeSph).toFixed(2)} dpt</p>
+                    <p className="text-sm font-medium">{Number(selectedPrescription.leftEyeSph).toFixed(2)} dpt</p>
+                  </div>
+                </div>
+                
+                {/* Cylinder */}
+                <div className="bg-gray-100 p-2 rounded">
+                  <p className="text-xs text-gray-600 mb-2">
+                    Cylinder <span className="text-gray-400">(ZYL / CYL)</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <p className="text-sm font-medium">{Number(selectedPrescription.rightEyeCyl).toFixed(2)} dpt</p>
+                    <p className="text-sm font-medium">{Number(selectedPrescription.leftEyeCyl).toFixed(2)} dpt</p>
+                  </div>
+                </div>
+                
+                {/* Axis */}
+                <div className="bg-gray-100 p-2 rounded">
+                  <p className="text-xs text-gray-600 mb-2">
+                    Axis <span className="text-gray-400">(A/ACH)</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <p className="text-sm font-medium">{selectedPrescription.rightEyeAxis}º</p>
+                    <p className="text-sm font-medium">{selectedPrescription.leftEyeAxis}º</p>
+                  </div>
+                </div>
+                
+                {/* Add - if needed */}
+                {needsAddValue() && (
+                  <div className="bg-gray-100 p-2 rounded">
+                    <p className="text-xs text-gray-600 mb-2">
+                      Add <span className="text-gray-400">(ADD)</span>
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <p className="text-sm font-medium">
+                        {selectedPrescription.rightEyeAdd ? Number(selectedPrescription.rightEyeAdd).toFixed(2) : '-'} dpt
+                      </p>
+                      <p className="text-sm font-medium">
+                        {selectedPrescription.leftEyeAdd ? Number(selectedPrescription.leftEyeAdd).toFixed(2) : '-'} dpt
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Pupillary Distance */}
+                <div className="bg-gray-100 p-2 rounded">
+                  <p className="text-xs text-gray-600 mb-2">
+                    Pupillary distance <span className="text-gray-400">(PD)</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <p className="text-sm font-medium">{Number(selectedPrescription.pdRight).toFixed(2)} mm</p>
+                    <p className="text-sm font-medium">{Number(selectedPrescription.pdLeft).toFixed(2)} mm</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop View - Grid Layout */}
+            <div className="hidden md:block prescription-grid">
               {/* Header Row */}
               <div className={`prescription-headers ${needsAddValue() ? 'with-add' : ''}`}>
                 <div className="prescription-spacer"></div>

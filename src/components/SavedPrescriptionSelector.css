@@ -7,7 +7,13 @@
   display: grid;
   gap: 8px;
   max-width: 850px; /* Limit the table width */
-  overflow-x: auto; /* Allow horizontal scroll if needed on very small screens */
+}
+
+/* Hide grid on mobile */
+@media (max-width: 768px) {
+  .prescription-grid {
+    display: none !important;
+  }
 }
 
 .prescription-headers {
