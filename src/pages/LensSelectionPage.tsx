@@ -13,6 +13,7 @@ import { AddLensProductToCartRequest } from '../services/cart.service';
 import { ProductCard } from '../types/product-card.types';
 import { UserPrescription } from '../services/user-prescription.service';
 import SavedPrescriptionSelector from '../components/SavedPrescriptionSelector';
+import { brandLensService, categoryLensService, lensThicknessService, BrandLens, CategoryLens, LensThickness } from '../services/brandLens.service';
 import '../styles/value-table.css';
 
 // Prescription dropdown values
@@ -123,6 +124,32 @@ const LensSelectionPage: React.FC = () => {
   // Date picker modal state
   const [showDateModal, setShowDateModal] = useState(false);
   const [datePickerType, setDatePickerType] = useState<'day' | 'month' | 'year'>('day');
+  
+  // Lens filter modal state
+  const [showLensFilterModal, setShowLensFilterModal] = useState(false);
+  const [lensFilterType, setLensFilterType] = useState<'brand' | 'category' | 'thickness' | 'price' | 'sort'>('brand');
+  const [selectedBrand, setSelectedBrand] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedThickness, setSelectedThickness] = useState<string>('');
+  const [selectedPrice, setSelectedPrice] = useState<string>('');
+  const [selectedSort, setSelectedSort] = useState<string>('');
+  
+  // Filter options from API
+  const [brandLensOptions, setBrandLensOptions] = useState<BrandLens[]>([]);
+  const [categoryLensOptions, setCategoryLensOptions] = useState<CategoryLens[]>([]);
+  const [lensThicknessOptions, setLensThicknessOptions] = useState<LensThickness[]>([]);
+  
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSelectedBrand('');
+    setSelectedCategory('');
+    setSelectedThickness('');
+    setSelectedPrice('');
+    setSelectedSort('');
+  };
+  
+  // Count active filters
+  const activeFilterCount = [selectedBrand, selectedCategory, selectedThickness, selectedPrice, selectedSort].filter(Boolean).length;
   
   // Auto-scroll utility function
   const scrollToStep = useCallback((stepNumber: number) => {
@@ -302,6 +329,27 @@ const LensSelectionPage: React.FC = () => {
     // Auto-scroll to step 1 when page loads
     setTimeout(() => scrollToStep(1), 500);
   }, [scrollToStep, searchParams]);
+
+  // Load brand lens and category lens options for filters
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      try {
+        const [brands, categories, thicknesses] = await Promise.all([
+          brandLensService.getBrandsForFilter(),
+          categoryLensService.getCategoriesForFilter(),
+          lensThicknessService.getThicknessForFilter()
+        ]);
+        setBrandLensOptions(brands);
+        setCategoryLensOptions(categories);
+        setLensThicknessOptions(thicknesses);
+        console.log('Loaded filter options:', { brands, categories, thicknesses });
+      } catch (error) {
+        console.error('Error loading filter options:', error);
+      }
+    };
+    
+    loadFilterOptions();
+  }, []);
 
   const handleLensTypeSelect = (lensType: string) => {
     setSelectedLensType(lensType);
@@ -545,6 +593,65 @@ const LensSelectionPage: React.FC = () => {
       loadFilteredLenses();
     }
   }, [currentPage, loadFilteredLenses, showLensSelectionStep]);
+
+  // Apply client-side filters to filteredLenses
+  const displayedLenses = React.useMemo(() => {
+    let result = [...filteredLenses];
+    
+    // Filter by brand
+    if (selectedBrand) {
+      result = result.filter(lens => 
+        lens.brandLens && String(lens.brandLens.id) === selectedBrand
+      );
+    }
+    
+    // Note: categoryLens is not available in FilteredLens type from backend
+    // Category filter would need backend support
+    
+    // Note: thickness filter would need to check variants, which are not in the list
+    // Thickness will be applied when user selects a variant in step 4
+    
+    // Filter by price
+    if (selectedPrice) {
+      result = result.filter(lens => {
+        const maxPrice = lens.priceRange.max;
+        switch (selectedPrice) {
+          case 'under-1m':
+            return maxPrice < 1000000;
+          case '1m-2m':
+            return maxPrice >= 1000000 && maxPrice <= 2000000;
+          case '2m-3m':
+            return maxPrice > 2000000 && maxPrice <= 3000000;
+          case 'over-3m':
+            return maxPrice > 3000000;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Sort
+    if (selectedSort) {
+      switch (selectedSort) {
+        case 'price-asc':
+          result.sort((a, b) => a.priceRange.min - b.priceRange.min);
+          break;
+        case 'price-desc':
+          result.sort((a, b) => b.priceRange.max - a.priceRange.max);
+          break;
+        case 'name-asc':
+          result.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'name-desc':
+          result.sort((a, b) => b.name.localeCompare(a.name));
+          break;
+        default:
+          break;
+      }
+    }
+    
+    return result;
+  }, [filteredLenses, selectedBrand, selectedPrice, selectedSort]);
 
   const shouldShowAddWarning = () => {
     if (!needsAddValue()) return false;
@@ -1679,50 +1786,235 @@ const LensSelectionPage: React.FC = () => {
               {!showLensOptionsStep ? (
                 // Show lens grid when not in step 4
                 <>
-                  {/* Lens Filter Tabs */}
+                  {/* Lens Filter Section */}
                   <div className="bg-white rounded-lg border p-4 md:p-6">
-                <div className="flex flex-col md:flex-row md:flex-wrap gap-4 mb-6">
-                  {/* Brand Filter */}
-                  <div className="flex-1 md:min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Hãng</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option value="">Tất cả hãng</option>
-                      <option value="essilor">Essilor</option>
-                      <option value="zeiss">Zeiss</option>
-                      <option value="hoya">Hoya</option>
-                      <option value="rodenstock">Rodenstock</option>
-                    </select>
-                  </div>
+                    
+                    {/* Desktop Filter - Dropdowns */}
+                    <div className="hidden md:flex md:flex-wrap gap-4 mb-6">
+                      {/* Brand Filter */}
+                      <div className="flex-1 md:min-w-[200px]">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Hãng</label>
+                        <select 
+                          value={selectedBrand}
+                          onChange={(e) => setSelectedBrand(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Tất cả hãng</option>
+                          {brandLensOptions && brandLensOptions.length > 0 && brandLensOptions.map(brand => (
+                            <option key={brand.brandLensId} value={brand.brandLensId}>
+                              {brand.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                  {/* Thickness Filter */}
-                  <div className="flex-1 md:min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Độ dày</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option value="">Tất cả độ dày</option>
-                      <option value="thin">Mỏng (1.56)</option>
-                      <option value="medium">Trung bình (1.60)</option>
-                      <option value="thick">Dày (1.67)</option>
-                      <option value="ultra-thin">Siêu mỏng (1.74)</option>
-                    </select>
-                  </div>
+                      {/* Category Filter */}
+                      <div className="flex-1 md:min-w-[200px]">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Loại tròng kính</label>
+                        <select 
+                          value={selectedCategory}
+                          onChange={(e) => setSelectedCategory(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Tất cả loại</option>
+                          {categoryLensOptions && categoryLensOptions.length > 0 && categoryLensOptions.map(category => (
+                            <option key={category.categoryLensId} value={category.categoryLensId}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                  {/* Price Filter */}
-                  <div className="flex-1 md:min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Giá</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option value="">Tất cả mức giá</option>
-                      <option value="under-1m">Dưới 1 triệu</option>
-                      <option value="1m-2m">1 - 2 triệu</option>
-                      <option value="2m-3m">2 - 3 triệu</option>
-                      <option value="over-3m">Trên 3 triệu</option>
-                    </select>
-                  </div>
-                </div>
+                      {/* Lens Thickness Filter */}
+                      <div className="flex-1 md:min-w-[200px]">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Độ dày</label>
+                        <select 
+                          value={selectedThickness}
+                          onChange={(e) => setSelectedThickness(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Tất cả độ dày</option>
+                          {lensThicknessOptions && lensThicknessOptions.length > 0 && lensThicknessOptions.map(thickness => (
+                            <option key={thickness.id} value={thickness.id}>
+                              {thickness.name} (Chỉ số: {thickness.indexValue})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Price Filter */}
+                      <div className="flex-1 md:min-w-[200px]">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Giá</label>
+                        <select 
+                          value={selectedPrice}
+                          onChange={(e) => setSelectedPrice(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Tất cả mức giá</option>
+                          <option value="under-1m">Dưới 1 triệu</option>
+                          <option value="1m-2m">1 - 2 triệu</option>
+                          <option value="2m-3m">2 - 3 triệu</option>
+                          <option value="over-3m">Trên 3 triệu</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Mobile Filter - Horizontal Scrollable Chips */}
+                    <div className="md:hidden mb-6">
+                      {/* Filter Chips Row */}
+                      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                        {/* Brand Filter Chip */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLensFilterType('brand');
+                            setShowLensFilterModal(true);
+                          }}
+                          className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap flex items-center gap-2 border transition-colors ${
+                            selectedBrand 
+                              ? 'bg-blue-600 text-white border-blue-600' 
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
+                          }`}
+                        >
+                          <span>Hãng</span>
+                          {selectedBrand && (
+                            <span className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                              1
+                            </span>
+                          )}
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+
+                        {/* Category Filter Chip */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLensFilterType('category');
+                            setShowLensFilterModal(true);
+                          }}
+                          className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap flex items-center gap-2 border transition-colors ${
+                            selectedCategory 
+                              ? 'bg-blue-600 text-white border-blue-600' 
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
+                          }`}
+                        >
+                          <span>Loại TK</span>
+                          {selectedCategory && (
+                            <span className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                              1
+                            </span>
+                          )}
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+
+                        {/* Thickness Filter Chip */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLensFilterType('thickness');
+                            setShowLensFilterModal(true);
+                          }}
+                          className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap flex items-center gap-2 border transition-colors ${
+                            selectedThickness 
+                              ? 'bg-blue-600 text-white border-blue-600' 
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
+                          }`}
+                        >
+                          <span>Độ dày</span>
+                          {selectedThickness && (
+                            <span className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                              1
+                            </span>
+                          )}
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+
+                        {/* Price Filter Chip */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLensFilterType('price');
+                            setShowLensFilterModal(true);
+                          }}
+                          className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap flex items-center gap-2 border transition-colors ${
+                            selectedPrice 
+                              ? 'bg-blue-600 text-white border-blue-600' 
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
+                          }`}
+                        >
+                          <span>Giá</span>
+                          {selectedPrice && (
+                            <span className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                              1
+                            </span>
+                          )}
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+
+                        {/* Sort Filter Chip */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLensFilterType('sort');
+                            setShowLensFilterModal(true);
+                          }}
+                          className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap flex items-center gap-2 border transition-colors ${
+                            selectedSort 
+                              ? 'bg-blue-600 text-white border-blue-600' 
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
+                          }`}
+                        >
+                          <span>Sắp xếp</span>
+                          {selectedSort && (
+                            <span className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                              1
+                            </span>
+                          )}
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      {/* Clear All Button - Show when filters are active */}
+                      {activeFilterCount > 0 && (
+                        <div className="mt-3 flex items-center justify-between">
+                          <span className="text-sm text-gray-600">
+                            {activeFilterCount} bộ lọc đang áp dụng
+                          </span>
+                          <button
+                            type="button"
+                            onClick={clearAllFilters}
+                            className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Xóa tất cả
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
                 {/* Lens Results */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">Tròng kính phù hợp</h3>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Tròng kính phù hợp</h3>
+                      {activeFilterCount > 0 && !lensesLoading && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          Hiển thị {displayedLenses.length} / {filteredLenses.length} kết quả
+                        </p>
+                      )}
+                    </div>
                     {lensesLoading && (
                       <div className="text-sm text-gray-600">Đang tìm kiếm...</div>
                     )}
@@ -1736,17 +2028,17 @@ const LensSelectionPage: React.FC = () => {
                   )}
 
                   {/* No results */}
-                  {!lensesLoading && filteredLenses.length === 0 && (
+                  {!lensesLoading && displayedLenses.length === 0 && (
                     <div className="text-center py-8">
                       <div className="text-gray-500 mb-2">Không tìm thấy tròng kính phù hợp</div>
-                      <div className="text-sm text-gray-400">Vui lòng thử điều chỉnh các thông số đo mắt</div>
+                      <div className="text-sm text-gray-400">Vui lòng thử điều chỉnh các thông số đo mắt hoặc bộ lọc</div>
                     </div>
                   )}
 
                   {/* Lens grid */}
-                  {!lensesLoading && filteredLenses.length > 0 && (
+                  {!lensesLoading && displayedLenses.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {filteredLenses.map((lens) => (
+                      {displayedLenses.map((lens) => (
                         <div 
                           key={lens.id} 
                           className={`border rounded-lg p-4 transition-all cursor-pointer ${
@@ -2511,6 +2803,245 @@ const LensSelectionPage: React.FC = () => {
                         }`}
                       >
                         {yearStr}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lens Filter Bottom Modal - Mobile Only */}
+      {showLensFilterModal && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setShowLensFilterModal(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl animate-slide-up">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">
+                {lensFilterType === 'brand' && 'Chọn hãng'}
+                {lensFilterType === 'category' && 'Chọn loại tròng kính'}
+                {lensFilterType === 'thickness' && 'Chọn độ dày'}
+                {lensFilterType === 'price' && 'Chọn mức giá'}
+                {lensFilterType === 'sort' && 'Sắp xếp'}
+              </h3>
+              <button
+                onClick={() => setShowLensFilterModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Scrollable List */}
+            <div className="max-h-96 overflow-y-auto">
+              {/* Brand Filter Options */}
+              {lensFilterType === 'brand' && (
+                <div className="divide-y">
+                  <button
+                    onClick={() => {
+                      setSelectedBrand('');
+                      setShowLensFilterModal(false);
+                    }}
+                    className={`w-full text-left px-4 py-4 hover:bg-gray-50 flex items-center justify-between ${
+                      selectedBrand === '' ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                    }`}
+                  >
+                    <span>Tất cả hãng</span>
+                    {selectedBrand === '' && (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  {brandLensOptions && brandLensOptions.length > 0 && brandLensOptions.map(brand => {
+                    const isSelected = selectedBrand === String(brand.brandLensId);
+                    return (
+                      <button
+                        key={brand.brandLensId}
+                        onClick={() => {
+                          setSelectedBrand(String(brand.brandLensId));
+                          setShowLensFilterModal(false);
+                        }}
+                        className={`w-full text-left px-4 py-4 hover:bg-gray-50 flex items-center justify-between ${
+                          isSelected ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                        }`}
+                      >
+                        <span>{brand.name}</span>
+                        {isSelected && (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {/* Category Filter Options */}
+              {lensFilterType === 'category' && (
+                <div className="divide-y">
+                  <button
+                    onClick={() => {
+                      setSelectedCategory('');
+                      setShowLensFilterModal(false);
+                    }}
+                    className={`w-full text-left px-4 py-4 hover:bg-gray-50 flex items-center justify-between ${
+                      selectedCategory === '' ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                    }`}
+                  >
+                    <span>Tất cả loại</span>
+                    {selectedCategory === '' && (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  {categoryLensOptions && categoryLensOptions.length > 0 && categoryLensOptions.map(category => {
+                    const isSelected = selectedCategory === String(category.categoryLensId);
+                    return (
+                      <button
+                        key={category.categoryLensId}
+                        onClick={() => {
+                          setSelectedCategory(String(category.categoryLensId));
+                          setShowLensFilterModal(false);
+                        }}
+                        className={`w-full text-left px-4 py-4 hover:bg-gray-50 flex items-center justify-between ${
+                          isSelected ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                        }`}
+                      >
+                        <span>{category.name}</span>
+                        {isSelected && (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {/* Thickness Filter Options */}
+              {lensFilterType === 'thickness' && (
+                <div className="divide-y">
+                  <button
+                    onClick={() => {
+                      setSelectedThickness('');
+                      setShowLensFilterModal(false);
+                    }}
+                    className={`w-full text-left px-4 py-4 hover:bg-gray-50 flex items-center justify-between ${
+                      selectedThickness === '' ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                    }`}
+                  >
+                    <span>Tất cả độ dày</span>
+                    {selectedThickness === '' && (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  {lensThicknessOptions && lensThicknessOptions.length > 0 && lensThicknessOptions.map(thickness => {
+                    const isSelected = selectedThickness === String(thickness.id);
+                    return (
+                      <button
+                        key={thickness.id}
+                        onClick={() => {
+                          setSelectedThickness(String(thickness.id));
+                          setShowLensFilterModal(false);
+                        }}
+                        className={`w-full text-left px-4 py-4 hover:bg-gray-50 flex items-center justify-between ${
+                          isSelected ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span>{thickness.name}</span>
+                          <span className="text-sm text-gray-500">Chỉ số khúc xạ: {thickness.indexValue}</span>
+                        </div>
+                        {isSelected && (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {/* Price Filter Options */}
+              {lensFilterType === 'price' && (
+                <div className="divide-y">
+                  {[
+                    { value: '', label: 'Tất cả mức giá' },
+                    { value: 'under-1m', label: 'Dưới 1 triệu' },
+                    { value: '1m-2m', label: '1 - 2 triệu' },
+                    { value: '2m-3m', label: '2 - 3 triệu' },
+                    { value: 'over-3m', label: 'Trên 3 triệu' }
+                  ].map(option => {
+                    const isSelected = selectedPrice === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSelectedPrice(option.value);
+                          setShowLensFilterModal(false);
+                        }}
+                        className={`w-full text-left px-4 py-4 hover:bg-gray-50 flex items-center justify-between ${
+                          isSelected ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {isSelected && (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {/* Sort Filter Options */}
+              {lensFilterType === 'sort' && (
+                <div className="divide-y">
+                  {[
+                    { value: '', label: 'Mặc định' },
+                    { value: 'price-asc', label: 'Giá: Thấp đến cao' },
+                    { value: 'price-desc', label: 'Giá: Cao đến thấp' },
+                    { value: 'name-asc', label: 'Tên: A-Z' },
+                    { value: 'name-desc', label: 'Tên: Z-A' }
+                  ].map(option => {
+                    const isSelected = selectedSort === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSelectedSort(option.value);
+                          setShowLensFilterModal(false);
+                        }}
+                        className={`w-full text-left px-4 py-4 hover:bg-gray-50 flex items-center justify-between ${
+                          isSelected ? 'bg-blue-50 text-blue-600 font-medium' : ''
+                        }`}
+                      >
+                        <span>{option.label}</span>
+                        {isSelected && (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
                       </button>
                     );
                   })}
