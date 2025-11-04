@@ -41,6 +41,7 @@ const MyAccountPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [userDetail, setUserDetail] = useState<UserDetail | null>(null);
@@ -489,28 +490,28 @@ const MyAccountPage: React.FC = () => {
   ];
 
   const renderOverview = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Account Overview</h3>
-          <span className="text-sm text-gray-500">Customer No. {user?.id || 'N/A'}</span>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Account Overview</h3>
+          <span className="text-xs sm:text-sm text-gray-500">Customer No. {user?.id || 'N/A'}</span>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {/* Account Information */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-3">Account Information</h4>
-            <div className="space-y-1 text-sm text-gray-600">
-              <p className="font-medium text-gray-900">{user?.username || 'Not provided'}</p>
-              <p>{user?.email || 'No email provided'}</p>
+            <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Account Information</h4>
+            <div className="space-y-1 text-xs sm:text-sm text-gray-600">
+              <p className="font-medium text-gray-900 break-all">{user?.username || 'Not provided'}</p>
+              <p className="break-all">{user?.email || 'No email provided'}</p>
               <p className="text-xs text-gray-500">Member since: {new Date(user?.createdAt || '').toLocaleDateString()}</p>
             </div>
           </div>
 
           {/* Account Settings */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-3">Account Settings</h4>
-            <div className="space-y-1 text-sm text-gray-600">
+            <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Account Settings</h4>
+            <div className="space-y-1 text-xs sm:text-sm text-gray-600">
               <p>Role: <span className="font-medium text-gray-900">{user?.role?.name || 'User'}</span></p>
               <p>Status: <span className="font-medium text-green-600">Active</span></p>
             </div>
@@ -519,42 +520,42 @@ const MyAccountPage: React.FC = () => {
       </div>
 
       {/* Order Overview */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Overview</h3>
+      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Order Overview</h3>
         {orders.length === 0 ? (
           <>
-            <p className="text-gray-600 mb-4">You have not placed an order with MATNICE EYEWEAR yet.</p>
+            <p className="text-sm sm:text-base text-gray-600 mb-4">You have not placed an order with MATNICE EYEWEAR yet.</p>
             <Link 
               to="/products" 
-              className="inline-flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors text-sm sm:text-base"
             >
               View All Products
             </Link>
           </>
         ) : (
           <div className="space-y-3">
-            <p className="text-gray-600">You have placed {orders.length} order{orders.length > 1 ? 's' : ''} with us.</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <p className="text-sm sm:text-base text-gray-600">You have placed {orders.length} order{orders.length > 1 ? 's' : ''} with us.</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm">
+              <div className="text-center p-2 sm:p-3 bg-gray-50 rounded-lg">
                 <div className="font-medium text-gray-900">{orders.filter(o => o.status === 'pending').length}</div>
-                <div className="text-gray-600">Pending</div>
+                <div className="text-gray-600 text-xs sm:text-sm">Pending</div>
               </div>
-              <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg">
                 <div className="font-medium text-blue-900">{orders.filter(o => o.status === 'processing').length}</div>
-                <div className="text-blue-600">Processing</div>
+                <div className="text-blue-600 text-xs sm:text-sm">Processing</div>
               </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg">
+              <div className="text-center p-2 sm:p-3 bg-green-50 rounded-lg">
                 <div className="font-medium text-green-900">{orders.filter(o => o.status === 'delivered').length}</div>
-                <div className="text-green-600">Delivered</div>
+                <div className="text-green-600 text-xs sm:text-sm">Delivered</div>
               </div>
-              <div className="text-center p-3 bg-red-50 rounded-lg">
+              <div className="text-center p-2 sm:p-3 bg-red-50 rounded-lg">
                 <div className="font-medium text-red-900">{orders.filter(o => o.status === 'cancelled').length}</div>
-                <div className="text-red-600">Cancelled</div>
+                <div className="text-red-600 text-xs sm:text-sm">Cancelled</div>
               </div>
             </div>
             <button
               onClick={() => setActiveTab('orders')}
-              className="inline-flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors text-sm sm:text-base"
             >
               View All Orders
             </button>
@@ -565,13 +566,13 @@ const MyAccountPage: React.FC = () => {
   );
 
   const renderProfile = () => (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Profile Settings</h3>
+    <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">Profile Settings</h3>
         {!isEditingProfile ? (
           <button
             onClick={() => setIsEditingProfile(true)}
-            className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+            className="flex items-center justify-center sm:justify-start space-x-2 text-blue-600 hover:text-blue-800 text-sm sm:text-base"
           >
             <Edit3 className="w-4 h-4" />
             <span>Edit</span>
@@ -580,14 +581,14 @@ const MyAccountPage: React.FC = () => {
           <div className="flex items-center space-x-2">
             <button
               onClick={handleSaveProfile}
-              className="flex items-center space-x-2 text-green-600 hover:text-green-800"
+              className="flex items-center space-x-2 text-green-600 hover:text-green-800 text-sm sm:text-base"
             >
               <Save className="w-4 h-4" />
               <span>Save</span>
             </button>
             <button
               onClick={() => setIsEditingProfile(false)}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 text-sm sm:text-base"
             >
               <X className="w-4 h-4" />
               <span>Cancel</span>
@@ -596,27 +597,27 @@ const MyAccountPage: React.FC = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Account Information */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <User className="w-4 h-4 inline mr-2" />
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+            <User className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
             Username
           </label>
-          <p className="text-gray-900">{user?.username || 'Not provided'}</p>
+          <p className="text-sm sm:text-base text-gray-900 break-all">{user?.username || 'Not provided'}</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Mail className="w-4 h-4 inline mr-2" />
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+            <Mail className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
             Email
           </label>
-          <p className="text-gray-900">{user?.email || 'Not provided'}</p>
+          <p className="text-sm sm:text-base text-gray-900 break-all">{user?.email || 'Not provided'}</p>
         </div>
 
         {/* Personal Information */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Full Name
           </label>
           {isEditingProfile ? (
@@ -624,16 +625,16 @@ const MyAccountPage: React.FC = () => {
               type="text"
               value={detailFormData.name || ''}
               onChange={(e) => setDetailFormData({ ...detailFormData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your full name"
             />
           ) : (
-            <p className="text-gray-900">{userDetail?.name || 'Not provided'}</p>
+            <p className="text-sm sm:text-base text-gray-900">{userDetail?.name || 'Not provided'}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Date of Birth
           </label>
           {isEditingProfile ? (
@@ -641,17 +642,17 @@ const MyAccountPage: React.FC = () => {
               type="date"
               value={detailFormData.dob || ''}
               onChange={(e) => setDetailFormData({ ...detailFormData, dob: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           ) : (
-            <p className="text-gray-900">
+            <p className="text-sm sm:text-base text-gray-900">
               {userDetail?.dob ? new Date(userDetail.dob).toLocaleDateString('vi-VN') : 'Not provided'}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Gender
           </label>
           {isEditingProfile ? (
@@ -661,7 +662,7 @@ const MyAccountPage: React.FC = () => {
                 ...detailFormData, 
                 gender: e.target.value ? e.target.value as GenderType : undefined
               })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select gender</option>
               <option value={GenderType.MALE}>Male</option>
@@ -669,35 +670,35 @@ const MyAccountPage: React.FC = () => {
               <option value={GenderType.OTHER}>Other</option>
             </select>
           ) : (
-            <p className="text-gray-900">
+            <p className="text-sm sm:text-base text-gray-900">
               {userDetail?.gender ? userDetailService.getGenderDisplayName(userDetail.gender) : 'Not provided'}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
             Age
           </label>
-          <p className="text-gray-900">
+          <p className="text-sm sm:text-base text-gray-900">
             {userDetail?.dob ? userDetailService.calculateAge(userDetail.dob) + ' years old' : 'Not provided'}
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Calendar className="w-4 h-4 inline mr-2" />
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
             Member Since
           </label>
-          <p className="text-gray-900">{new Date(user?.createdAt || '').toLocaleDateString()}</p>
+          <p className="text-sm sm:text-base text-gray-900">{new Date(user?.createdAt || '').toLocaleDateString()}</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Settings className="w-4 h-4 inline mr-2" />
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+            <Settings className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
             Role
           </label>
-          <p className="text-gray-900">{user?.role?.name || 'User'}</p>
+          <p className="text-sm sm:text-base text-gray-900">{user?.role?.name || 'User'}</p>
         </div>
       </div>
     </div>
@@ -1258,37 +1259,56 @@ const MyAccountPage: React.FC = () => {
 
       {/* Main Content */}
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+          {/* Mobile Menu Toggle */}
+          <div className="lg:hidden mb-4">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="w-full flex items-center justify-between bg-white rounded-lg shadow-sm border p-4"
+            >
+              <div className="flex items-center space-x-3">
+                <User className="w-5 h-5" />
+                <span className="font-semibold text-gray-900">
+                  {menuItems.find(item => item.id === activeTab)?.label || 'Menu'}
+                </span>
+              </div>
+              <Settings className={`w-5 h-5 transition-transform ${isMobileMenuOpen ? 'rotate-90' : ''}`} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
             {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Your account</h2>
+            <div className={`lg:col-span-1 ${isMobileMenuOpen ? 'block' : 'hidden lg:block'}`}>
+              <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Your account</h2>
                 
-                <nav className="space-y-2">
+                <nav className="space-y-1 sm:space-y-2">
                   {menuItems.map((item) => {
                     const Icon = item.icon;
                     return (
                       <button
                         key={item.id}
-                        onClick={() => setActiveTab(item.id)}
-                        className={`w-full flex items-center space-x-3 px-3 py-2 text-left rounded-md transition-colors ${
+                        onClick={() => {
+                          setActiveTab(item.id);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center space-x-3 px-3 py-2 text-left rounded-md transition-colors text-sm sm:text-base ${
                           activeTab === item.id
                             ? 'bg-black text-white'
                             : 'text-gray-700 hover:bg-gray-100'
                         }`}
                       >
-                        <Icon className="w-5 h-5" />
-                        <span>{item.label}</span>
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                        <span className="truncate">{item.label}</span>
                       </button>
                     );
                   })}
                 </nav>
 
-                <div className="mt-8 pt-6 border-t">
+                <div className="mt-6 sm:mt-8 pt-6 border-t">
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left text-red-600 hover:text-red-800 font-medium"
+                    className="w-full text-left text-red-600 hover:text-red-800 font-medium text-sm sm:text-base"
                   >
                     Logout
                   </button>
