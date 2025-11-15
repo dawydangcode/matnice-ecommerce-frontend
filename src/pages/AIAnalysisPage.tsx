@@ -856,90 +856,90 @@ const AIAnalysisPage: React.FC = () => {
 
   // Render Features Section
   const renderFeaturesSection = () => (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
       {/* Section Title */}
-      <div className="text-center mb-16">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Tính Năng Nổi Bật</h2>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+      <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Tính Năng Nổi Bật</h2>
+        <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto px-4">
           Khám phá những tính năng độc đáo giúp bạn tìm được chiếc kính hoàn hảo nhất
         </p>
       </div>
 
       {/* Features Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16">
         {features.map((feature, index) => (
           <div
             key={index}
-            className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+            className="bg-white rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
           >
-            <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg bg-gray-50 ${feature.color} mb-4`}>
-              <feature.icon className="h-6 w-6" />
+            <div className={`inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gray-50 ${feature.color} mb-3 sm:mb-4`}>
+              <feature.icon className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
-            <p className="text-gray-600 text-sm">{feature.description}</p>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
           </div>
         ))}
       </div>
 
       {/* How It Works */}
-      <div className="bg-white rounded-2xl shadow-xl p-8">
-        <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">Quy Trình Hoạt Động</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8">
+        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-6 sm:mb-8">Quy Trình Hoạt Động</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
-              <Camera className="h-8 w-8" />
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-blue-100 text-blue-600 mb-3 sm:mb-4">
+              <Camera className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">1. Chụp hoặc Tải Ảnh Lên</h4>
-            <p className="text-gray-600">Sử dụng webcam để chụp ảnh trực tiếp hoặc tải lên một bức ảnh có sẵn.</p>
+            <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">1. Chụp hoặc Tải Ảnh Lên</h4>
+            <p className="text-sm sm:text-base text-gray-600">Sử dụng webcam để chụp ảnh trực tiếp hoặc tải lên một bức ảnh có sẵn.</p>
           </div>
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 text-purple-600 mb-4">
-              <Brain className="h-8 w-8" />
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-purple-100 text-purple-600 mb-3 sm:mb-4">
+              <Brain className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">2. Phân Tích AI</h4>
-            <p className="text-gray-600">Hệ thống AI của chúng tôi sẽ phân tích hình dáng khuôn mặt, tông màu da và các đặc điểm nổi bật.</p>
+            <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">2. Phân Tích AI</h4>
+            <p className="text-sm sm:text-base text-gray-600">Hệ thống AI của chúng tôi sẽ phân tích hình dáng khuôn mặt, tông màu da và các đặc điểm nổi bật.</p>
           </div>
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-4">
-              <Sparkles className="h-8 w-8" />
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-100 text-green-600 mb-3 sm:mb-4">
+              <Sparkles className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">3. Nhận Gợi Ý Cá Nhân Hóa</h4>
-            <p className="text-gray-600">Khám phá danh sách kính mắt và kính râm được thiết kế riêng cho bạn, từ kiểu dáng đến màu sắc.</p>
+            <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">3. Nhận Gợi Ý Cá Nhân Hóa</h4>
+            <p className="text-sm sm:text-base text-gray-600">Khám phá danh sách kính mắt và kính râm được thiết kế riêng cho bạn, từ kiểu dáng đến màu sắc.</p>
           </div>
         </div>
       </div>
 
       {/* Why Choose Us Section */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl shadow-xl p-8 mt-16">
-        <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">Tại Sao Chọn Chúng Tôi?</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mt-8 sm:mt-12 lg:mt-16">
+        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-6 sm:mb-8">Tại Sao Chọn Chúng Tôi?</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
-              <User className="h-8 w-8" />
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-blue-100 text-blue-600 mb-3 sm:mb-4">
+              <User className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">Cá Nhân Hóa</h4>
-            <p className="text-gray-600">Mỗi gợi ý được tạo ra dựa trên đặc điểm độc đáo của bạn.</p>
+            <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Cá Nhân Hóa</h4>
+            <p className="text-sm sm:text-base text-gray-600">Mỗi gợi ý được tạo ra dựa trên đặc điểm độc đáo của bạn.</p>
           </div>
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 text-purple-600 mb-4">
-              <Eye className="h-8 w-8" />
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-purple-100 text-purple-600 mb-3 sm:mb-4">
+              <Eye className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">Trải Nghiệm Thử Kính Ảo</h4>
-            <p className="text-gray-600">Xem trước kính trên khuôn mặt bạn với công nghệ AR 3D.</p>
+            <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Trải Nghiệm Thử Kính Ảo</h4>
+            <p className="text-sm sm:text-base text-gray-600">Xem trước kính trên khuôn mặt bạn với công nghệ AR 3D.</p>
           </div>
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-4">
-              <Sparkles className="h-8 w-8" />
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-100 text-green-600 mb-3 sm:mb-4">
+              <Sparkles className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">Đa Dạng Sản Phẩm</h4>
-            <p className="text-gray-600">Hàng trăm mẫu kính từ các thương hiệu hàng đầu, phù hợp với mọi phong cách.</p>
+            <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Đa Dạng Sản Phẩm</h4>
+            <p className="text-sm sm:text-base text-gray-600">Hàng trăm mẫu kính từ các thương hiệu hàng đầu, phù hợp với mọi phong cách.</p>
           </div>
         </div>
         
         {/* Call to Action */}
-        <div className="text-center mt-8 p-6 bg-white rounded-xl">
-          <h4 className="text-xl font-bold text-gray-900 mb-2">Bắt đầu ngay hôm nay!</h4>
-          <p className="text-gray-600 mb-4">Chụp ảnh hoặc tải ảnh lên để nhận gợi ý kính hoàn hảo chỉ trong vài giây!</p>
+        <div className="text-center mt-6 sm:mt-8 p-4 sm:p-6 bg-white rounded-xl">
+          <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Bắt đầu ngay hôm nay!</h4>
+          <p className="text-sm sm:text-base text-gray-600 mb-4">Chụp ảnh hoặc tải ảnh lên để nhận gợi ý kính hoàn hảo chỉ trong vài giây!</p>
         </div>
       </div>
     </div>
@@ -947,33 +947,35 @@ const AIAnalysisPage: React.FC = () => {
 
   // Render different steps
   const renderIntroStep = () => (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="text-center mb-16">
-        <div className="flex items-center justify-center mb-6">
-          <Brain className="h-12 w-12 text-blue-600 mr-4" />
-          <h1 className="text-4xl font-bold text-gray-900">Khám Phá Kính Phù Hợp Với Khuôn Mặt Của Bạn</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+        <div className="flex flex-col sm:flex-row items-center justify-center mb-4 sm:mb-6">
+          <Brain className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600 mb-3 sm:mb-0 sm:mr-4" />
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 text-center sm:text-left">
+            Khám Phá Kính Phù Hợp Với Khuôn Mặt Của Bạn
+          </h1>
         </div>
-        <p className="text-xl text-gray-600 mb-8 max-w-4xl mx-auto">
+        <p className="text-sm sm:text-base lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-4xl mx-auto px-2 leading-relaxed">
           Chào mừng bạn đến với công nghệ AI Phân Tích Khuôn Mặt tiên tiến của chúng tôi! Chỉ với một bức ảnh, hệ thống AI sẽ phân tích các đặc điểm khuôn mặt của bạn để đưa ra những gợi ý kính mắt và kính râm hoàn hảo, phù hợp với phong cách và cá tính riêng của bạn.
         </p>
         {!showCameraAndResults && (
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
             <button
               onClick={() => {
                 setShowCameraAndResults(true);
                 startCamera();
                 scrollToLiveAnalysis();
               }}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center w-full sm:w-auto"
             >
-              <Camera className="mr-3 h-6 w-6" />
+              <Camera className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
               Trải nghiệm ngay
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="bg-white text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center"
+              className="bg-white text-blue-600 border-2 border-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 inline-flex items-center justify-center w-full sm:w-auto"
             >
-              <Upload className="mr-3 h-6 w-6" />
+              <Upload className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
               Tải Ảnh Lên
             </button>
           </div>
@@ -998,30 +1000,53 @@ const AIAnalysisPage: React.FC = () => {
   );
 
   const renderCameraStep = () => (
-    <div ref={liveAnalysisRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header with close button */}
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">Live Analysis</h2>
+    <div ref={liveAnalysisRef} className="max-w-7xl mx-auto px-0 sm:px-4 lg:px-8 py-0 sm:py-6 lg:py-8">
+      {/* Header with close button - Hidden on mobile when camera active */}
+      <div className={`flex justify-between items-center mb-4 sm:mb-6 lg:mb-8 px-4 sm:px-0 ${cameraActive && !capturedImage && !analysisResult ? 'hidden sm:flex' : 'flex'}`}>
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+          {analysisResult?.status === 'completed' ? 'Kết Quả Phân Tích' : 'Phân Tích Khuôn Mặt'}
+        </h2>
         <button
           onClick={resetAnalysis}
           className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-full transition-colors"
-          title="Close analysis"
+          title="Đóng"
         >
-          <X size={24} />
+          <X size={20} className="sm:w-6 sm:h-6" />
         </button>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700">{error}</p>
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg mx-4 sm:mx-0">
+          <p className="text-sm sm:text-base text-red-700">{error}</p>
         </div>
       )}
 
-      {/* Main Content - Camera and Results Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Left Column - Camera */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6">Camera</h3>
+      {/* Main Content - Full screen camera on mobile, side by side on desktop */}
+      <div className={`grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-8 mb-6 sm:mb-8 ${
+        cameraActive && !capturedImage && !analysisResult ? 'min-h-screen sm:min-h-0' : ''
+      }`}>
+        {/* Camera Section - Full screen on mobile when active */}
+        <div className={`bg-white shadow-xl p-0 sm:p-6 lg:p-8 ${
+          cameraActive && !capturedImage && !analysisResult 
+            ? 'fixed inset-0 z-50 sm:relative sm:rounded-2xl' 
+            : 'rounded-xl sm:rounded-2xl mx-4 sm:mx-0 p-4 sm:p-6 lg:p-8'
+        }`}>
+          {/* Camera header - only show on mobile fullscreen */}
+          {cameraActive && !capturedImage && !analysisResult && (
+            <div className="flex justify-between items-center p-4 bg-black bg-opacity-50 absolute top-0 left-0 right-0 z-10 sm:hidden">
+              <h3 className="text-white font-semibold text-lg">Chụp ảnh khuôn mặt</h3>
+              <button
+                onClick={resetAnalysis}
+                className="text-white p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+          )}
+          
+          <h3 className={`text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 ${
+            cameraActive && !capturedImage && !analysisResult ? 'hidden sm:block' : ''
+          }`}>Camera</h3>
           
           {analysisResult && analysisResult.status === 'completed' ? (
             // After analysis is complete, show live video without face detection features
@@ -1057,30 +1082,21 @@ const AIAnalysisPage: React.FC = () => {
                   {/* Face detection guide overlay */}
                   {autoCapture.showGuide && (
                     <div className="absolute inset-0 pointer-events-none">
-                      {/* 
-                        Visual Guide Size Options:
-                        - w-32 h-32 (128px) - Small circle
-                        - w-40 h-40 (160px) - Medium-small circle  
-                        - w-48 h-48 (192px) - Standard circle [CURRENT]
-                        - w-56 h-56 (224px) - Large circle
-                        - w-64 h-64 (256px) - Extra large circle
-                        
-                        Shape Options:
-                        - rounded-full - Circle shape [CURRENT]
-                        - rounded-2xl - Rounded rectangle
-                        - rounded-lg - Slightly rounded rectangle
-                      */}
                       <div className="face-detection-guide"></div>
-                      <div className="absolute top-4 left-4 right-4 bg-black bg-opacity-50 text-white text-sm p-2 rounded text-center">
-                        Position your face in the circle
+                      {/* Guide text - better positioned for mobile */}
+                      <div className="absolute top-20 sm:top-4 left-4 right-4 bg-black bg-opacity-70 text-white text-sm sm:text-base p-3 rounded-lg text-center">
+                        <span className="block sm:inline">📸 Đặt khuôn mặt vào vòng tròn</span>
+                        <span className="block sm:inline mt-1 sm:mt-0 sm:ml-2 text-xs sm:text-sm opacity-90">
+                          Hệ thống sẽ tự động chụp
+                        </span>
                       </div>
                     </div>
                   )}
 
-                  {/* Auto capture countdown */}
+                  {/* Auto capture countdown - larger on mobile */}
                   {autoCapture.isCountingDown && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="bg-black bg-opacity-70 text-white text-6xl font-bold rounded-full w-24 h-24 flex items-center justify-center">
+                      <div className="bg-gradient-to-br from-blue-500 to-purple-600 bg-opacity-90 text-white text-7xl sm:text-6xl font-bold rounded-full w-32 h-32 sm:w-24 sm:h-24 flex items-center justify-center shadow-2xl animate-pulse">
                         {autoCapture.countdown}
                       </div>
                     </div>
@@ -1088,45 +1104,47 @@ const AIAnalysisPage: React.FC = () => {
 
                   {/* Countdown cancelled notification */}
                   {countdownCancelled && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="bg-red-600 bg-opacity-90 text-white text-lg font-semibold px-6 py-3 rounded-lg text-center">
-                        <X size={20} className="inline mr-2" />
-                        Cancelled! Keep face in frame
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
+                      <div className="bg-red-600 bg-opacity-95 text-white text-base sm:text-lg font-semibold px-6 py-4 rounded-xl text-center shadow-xl max-w-sm">
+                        <X size={24} className="inline mr-2" />
+                        <span className="block sm:inline">Đã hủy!</span>
+                        <span className="block sm:inline text-sm mt-1 sm:mt-0">Giữ khuôn mặt trong khung</span>
                       </div>
                     </div>
                   )}
 
                   {/* Face quality warning */}
-                  {faceQualityWarning && (
-                    <div className="absolute top-4 left-4 right-4 bg-yellow-500 bg-opacity-90 text-white text-sm p-2 rounded text-center">
-                      <Eye size={16} className="inline mr-1" />
-                      Please look directly at the camera
+                  {faceQualityWarning && !autoCapture.isCountingDown && (
+                    <div className="absolute top-20 sm:top-4 left-4 right-4 bg-yellow-500 bg-opacity-95 text-white text-sm sm:text-base p-3 rounded-lg text-center shadow-lg z-20">
+                      <Eye size={18} className="inline mr-2" />
+                      Nhìn thẳng vào camera
                     </div>
                   )}
 
                   {/* Manual capture hint */}
-                  {showManualCaptureHint && (
-                    <div className="absolute top-16 left-4 right-4 bg-blue-500 bg-opacity-90 text-white text-sm p-2 rounded text-center">
-                      <Camera size={16} className="inline mr-1" />
-                      Having trouble? Tap the camera button to capture manually
+                  {showManualCaptureHint && !autoCapture.isCountingDown && (
+                    <div className="absolute bottom-24 sm:bottom-20 left-4 right-4 bg-blue-600 bg-opacity-95 text-white text-sm sm:text-base p-3 rounded-lg text-center shadow-lg">
+                      <Camera size={18} className="inline mr-2" />
+                      Gặp khó khăn? Nhấn nút camera để chụp thủ công
                     </div>
                   )}
 
+                  {/* Capture button - larger and more prominent on mobile */}
                   <button
                     onClick={capturePhoto}
-                    aria-label="capture"
-                    className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-blue-600 p-4 rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                    aria-label="Chụp ảnh"
+                    className="absolute bottom-6 sm:bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-blue-600 p-5 sm:p-4 rounded-full shadow-2xl hover:bg-gray-50 transition-all hover:scale-110 active:scale-95 z-30"
                   >
-                    <Camera size={24} />
+                    <Camera size={28} className="sm:w-6 sm:h-6" />
                   </button>
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <Camera className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-4">Camera is not active</p>
+                <div className="text-center py-8 sm:py-12">
+                  <Camera className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">Camera is not active</p>
                   <button
                     onClick={startCamera}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    className="bg-blue-600 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:bg-blue-700 transition-colors"
                   >
                     Start Camera
                   </button>
@@ -1137,133 +1155,138 @@ const AIAnalysisPage: React.FC = () => {
           )}
         </div>
 
-        {/* Right Column - Results */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6">Analysis Results</h3>
+        {/* Results Section - Full width on mobile when analyzing/completed */}
+        <div className={`bg-white shadow-xl ${
+          (isAnalyzing || analysisResult) && !cameraActive 
+            ? 'mx-0 rounded-none sm:rounded-2xl sm:mx-0 p-6 sm:p-8' 
+            : 'rounded-xl sm:rounded-2xl mx-4 sm:mx-0 p-4 sm:p-6 lg:p-8'
+        }`}>
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">
+            {isAnalyzing ? '⏳ Đang phân tích...' : analysisResult ? 'Kết quả' : 'Kết quả phân tích'}
+          </h3>
           
           {isAnalyzing ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Analyzing Your Face...</h4>
-              <p className="text-gray-600">This may take a few seconds</p>
+            <div className="text-center py-12 sm:py-16">
+              <div className="relative mb-6">
+                <div className="animate-spin rounded-full h-20 w-20 sm:h-24 sm:w-24 border-4 border-gray-200 border-t-blue-600 mx-auto"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Brain className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600 animate-pulse" />
+                </div>
+              </div>
+              <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Đang phân tích khuôn mặt của bạn</h4>
+              <p className="text-sm sm:text-base text-gray-600 mb-4">AI đang xử lý, vui lòng đợi trong giây lát...</p>
+              <div className="flex justify-center gap-1 mt-6">
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
             </div>
           ) : analysisResult ? (
             <div className="space-y-6">
-              {/* Analysis Image */}
+              {/* Success message - simple and clean */}
+              <div className="bg-white border-2 border-gray-200 rounded-lg p-4 text-center">
+                <h4 className="text-xl font-bold text-gray-900 mb-1">Phân tích hoàn tất</h4>
+                <p className="text-sm text-gray-600">Kết quả phân tích khuôn mặt của bạn</p>
+              </div>
+
+              {/* Analysis Image - larger on mobile */}
               {analysisResult.s3Url && (
                 <div className="text-center">
                   <img 
                     src={analysisResult.s3Url} 
-                    alt="Analysis Result" 
-                    className="mx-auto rounded-lg shadow-lg max-w-xs"
+                    alt="Kết quả phân tích" 
+                    className="mx-auto rounded-lg shadow-lg max-w-full sm:max-w-sm border-2 border-gray-200"
                   />
                 </div>
               )}
 
-              {/* Results Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Results Grid - Clean minimalist design */}
+              <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-4">
                 {/* Gender Result */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
-                  <div className="flex items-center mb-3">
-                    <User className="h-6 w-6 text-blue-600 mr-2" />
-                    <h4 className="font-semibold text-gray-900">Gender</h4>
-                  </div>
-                  <div className="text-xl font-bold text-blue-600 capitalize">
-                    {analysisResult.analysis.gender.detected}
+                <div className="bg-white border-2 border-gray-200 rounded-lg p-5 hover:border-gray-300 transition-colors">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Giới tính</h4>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {analysisResult.analysis.gender.detected.toLowerCase() === 'male' ? 'Nam' : 'Nữ'}
                   </div>
                 </div>
 
                 {/* Skin Tone Result */}
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
-                  <div className="flex items-center mb-3">
-                    <Palette className="h-6 w-6 text-purple-600 mr-2" />
-                    <h4 className="font-semibold text-gray-900">Skin Tone</h4>
-                  </div>
-                  <div className="text-xl font-bold text-purple-600 capitalize">
+                <div className="bg-white border-2 border-gray-200 rounded-lg p-5 hover:border-gray-300 transition-colors">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Màu da</h4>
+                  <div className="text-2xl font-bold text-gray-900 capitalize">
                     {analysisResult.analysis.SkinColor.detected}
                   </div>
                 </div>
 
                 {/* Face Shape Result */}
-                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4">
-                  <div className="flex items-center mb-3">
-                    <Circle className="h-6 w-6 text-green-600 mr-2" />
-                    <h4 className="font-semibold text-gray-900">Face Shape</h4>
-                  </div>
-                  <div className="text-xl font-bold text-green-600 capitalize">
+                <div className="bg-white border-2 border-gray-200 rounded-lg p-5 hover:border-gray-300 transition-colors">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Khuôn mặt</h4>
+                  <div className="text-2xl font-bold text-gray-900 capitalize">
                     {analysisResult.analysis.faceShape.detected}
                   </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-2">
+              {/* Action Buttons - Simple design */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <button
                   onClick={resetAnalysis}
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-flex items-center justify-center"
+                  className="flex-1 bg-gray-900 text-white px-6 py-3.5 sm:py-3 rounded-lg text-base font-semibold hover:bg-gray-800 transition-colors shadow-sm hover:shadow-md active:scale-98 inline-flex items-center justify-center"
                 >
-                  <RotateCcw size={16} className="mr-2" />
-                  New Analysis
+                  <RotateCcw size={18} className="mr-2" />
+                  Phân tích lại
                 </button>
                 {analysisResult.s3Url && (
                   <button
                     onClick={handleDownload}
-                    className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors inline-flex items-center justify-center"
+                    className="flex-1 bg-white border-2 border-gray-900 text-gray-900 px-6 py-3.5 sm:py-3 rounded-lg text-base font-semibold hover:bg-gray-50 transition-colors shadow-sm hover:shadow-md active:scale-98 inline-flex items-center justify-center"
                   >
-                    <Download size={16} className="mr-2" />
-                    Download
+                    <Download size={18} className="mr-2" />
+                    Tải ảnh
                   </button>
                 )}
               </div>
             </div>
           ) : (
             <div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              {/* Waiting state - clean and simple */}
+              <div className="text-center py-8 mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                  <Camera className="h-8 w-8 text-gray-400" />
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Sẵn sàng phân tích</h4>
+                <p className="text-sm text-gray-600 px-4">
+                  Chụp ảnh hoặc tải ảnh lên để bắt đầu
+                </p>
+              </div>
+
+              <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-4">
                 {/* Gender Result - Empty State */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4">
-                  <div className="flex items-center mb-3">
-                    <User className="h-6 w-6 text-blue-600 mr-2" />
-                    <h4 className="font-semibold text-gray-900">Gender</h4>
-                  </div>
-                  <div className="text-lg text-gray-400 mb-1">
-                    Waiting for analysis...
-                  </div>
-                  <div className="w-full bg-blue-200 rounded-full h-2">
-                    <div className="bg-blue-300 h-2 rounded-full w-0 transition-all duration-300" />
+                <div className="bg-white border-2 border-gray-200 rounded-lg p-5">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Giới tính</h4>
+                  <div className="text-xl text-gray-300 mb-3">---</div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div className="bg-gray-300 h-1.5 rounded-full w-0 transition-all duration-300" />
                   </div>
                 </div>
 
                 {/* Skin Tone Result - Empty State */}
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4">
-                  <div className="flex items-center mb-3">
-                    <Palette className="h-6 w-6 text-purple-600 mr-2" />
-                    <h4 className="font-semibold text-gray-900">Skin Tone</h4>
-                  </div>
-                  <div className="text-lg text-gray-400 mb-1">
-                    Waiting for analysis...
-                  </div>
-                  <div className="w-full bg-purple-200 rounded-full h-2">
-                    <div className="bg-purple-300 h-2 rounded-full w-0 transition-all duration-300" />
+                <div className="bg-white border-2 border-gray-200 rounded-lg p-5">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Màu da</h4>
+                  <div className="text-xl text-gray-300 mb-3">---</div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div className="bg-gray-300 h-1.5 rounded-full w-0 transition-all duration-300" />
                   </div>
                 </div>
 
                 {/* Face Shape Result - Empty State */}
-                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4">
-                  <div className="flex items-center mb-3">
-                    <Circle className="h-6 w-6 text-green-600 mr-2" />
-                    <h4 className="font-semibold text-gray-900">Face Shape</h4>
-                  </div>
-                  <div className="text-lg text-gray-400 mb-1">
-                    Waiting for analysis...
-                  </div>
-                  <div className="w-full bg-green-200 rounded-full h-2">
-                    <div className="bg-green-300 h-2 rounded-full w-0 transition-all duration-300" />
+                <div className="bg-white border-2 border-gray-200 rounded-lg p-5">
+                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Khuôn mặt</h4>
+                  <div className="text-xl text-gray-300 mb-3">---</div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div className="bg-gray-300 h-1.5 rounded-full w-0 transition-all duration-300" />
                   </div>
                 </div>
-              </div>
-
-              <div className="text-center py-4">
-                <p className="text-sm text-gray-500">Take a photo to start the analysis</p>
               </div>
             </div>
           )}
