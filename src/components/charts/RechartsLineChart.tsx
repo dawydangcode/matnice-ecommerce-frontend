@@ -4,18 +4,18 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   Area,
-  AreaChart
+  ComposedChart,
 } from 'recharts';
 import { MonthlyRevenue } from '../../services/dashboard.service';
 
 interface RechartsLineChartProps {
   data: MonthlyRevenue[];
   loading?: boolean;
+  metric?: 'revenue' | 'orders';
 }
 
-const RechartsLineChart: React.FC<RechartsLineChartProps> = ({ data, loading }) => {
+const RechartsLineChart: React.FC<RechartsLineChartProps> = ({ data, loading, metric = 'orders' }) => {
   if (loading) {
     return (
       <div className="h-64 flex items-center justify-center">
@@ -32,117 +32,134 @@ const RechartsLineChart: React.FC<RechartsLineChartProps> = ({ data, loading }) 
     );
   }
 
-  // Determine how many items to show based on data length
-  const displayData = data.length <= 7 ? data : data.slice(-6);
-
-  // Transform data for Recharts
-  const chartData = displayData.map(item => ({
+  // Prepare chart data - show all periods (months/days)
+  const chartData = data.map(item => ({
     name: item.month,
     orders: item.orders,
     revenue: item.revenue,
-    formattedRevenue: new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(item.revenue)
   }));
 
-  // Custom tooltip component
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  // Custom tooltip with both metrics
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload;
       return (
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-          <p className="text-gray-700 font-medium mb-1">{label}</p>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-[#43AC78] rounded-full"></div>
-            <p className="text-[#43AC78] font-semibold">
-              {payload[0].value} đơn hàng
-            </p>
+          <p className="text-gray-700 font-medium mb-2">{data.name}</p>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-[#43AC78] rounded-full"></div>
+              <p className="text-[#43AC78] font-semibold text-sm">
+                {data.orders} đơn hàng
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-[#3b82f6] rounded-full"></div>
+              <p className="text-[#3b82f6] font-semibold text-sm">
+                {new Intl.NumberFormat('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND',
+                  notation: 'compact',
+                  maximumFractionDigits: 1,
+                }).format(data.revenue)}
+              </p>
+            </div>
           </div>
-          <p className="text-gray-500 text-sm mt-1">
-            Doanh thu: {payload[0].payload.formattedRevenue}
-          </p>
         </div>
       );
     }
     return null;
   };
 
-  // Custom dot component
-  const CustomDot = (props: any) => {
-    const { cx, cy } = props;
-    return (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={4}
-        fill="#43AC78"
-        stroke="#ffffff"
-        strokeWidth={2}
-        className="drop-shadow-sm"
-      />
-    );
-  };
-
   return (
-    <div className="h-64 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart
+    <div className="w-full h-64 overflow-hidden">
+      <div className="w-full h-full flex items-center justify-center">
+        <ComposedChart
+          width={900}
+          height={240}
           data={chartData}
-          margin={{
-            top: 20,
-            right: 30,
-            left: 20,
-            bottom: 20,
-          }}
+          margin={{ top: 10, right: 40, left: 0, bottom: 0 }}
         >
           <defs>
             <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#43AC78" stopOpacity={0.3}/>
               <stop offset="95%" stopColor="#43AC78" stopOpacity={0.05}/>
             </linearGradient>
+            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05}/>
+            </linearGradient>
           </defs>
-          
-          <CartesianGrid 
-            strokeDasharray="3 3" 
-            stroke="#e5e7eb" 
-            opacity={0.5}
-          />
-          
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis 
             dataKey="name" 
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: 12, fill: '#6b7280' }}
-            dy={10}
+            stroke="#6b7280"
+            style={{ fontSize: '11px' }}
+            interval="preserveStartEnd"
+            angle={-45}
+            textAnchor="end"
+            height={60}
           />
           
-          <YAxis 
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: 12, fill: '#6b7280' }}
-            label={{ 
-              value: 'Số đơn hàng', 
-              angle: -90, 
-              position: 'insideLeft',
-              style: { textAnchor: 'middle', fill: '#6b7280', fontSize: '12px' }
-            }}
-          />
+          {metric === 'orders' ? (
+            // Single Y-axis for Orders
+            <YAxis 
+              stroke="#43AC78"
+              style={{ fontSize: '11px' }}
+              allowDecimals={false}
+              label={{ 
+                value: 'Số đơn hàng', 
+                angle: -90, 
+                position: 'insideLeft',
+                style: { fontSize: '11px', fill: '#43AC78' }
+              }}
+            />
+          ) : (
+            // Single Y-axis for Revenue
+            <YAxis 
+              stroke="#3b82f6"
+              style={{ fontSize: '11px' }}
+              tickFormatter={(value) => {
+                if (value >= 1000000) return `${(value / 1000000).toFixed(0)}M`;
+                if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+                return value.toString();
+              }}
+              label={{ 
+                value: 'Doanh thu (₫)', 
+                angle: -90, 
+                position: 'insideLeft',
+                style: { fontSize: '11px', fill: '#3b82f6' }
+              }}
+            />
+          )}
           
           <Tooltip content={<CustomTooltip />} />
           
-          <Area
-            type="monotone"
-            dataKey="orders"
-            stroke="#43AC78"
-            strokeWidth={3}
-            fill="url(#colorOrders)"
-            dot={<CustomDot />}
-            activeDot={{ r: 6, fill: '#43AC78', stroke: '#ffffff', strokeWidth: 3 }}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+          {metric === 'orders' ? (
+            // Area chart for Orders
+            <Area 
+              type="monotone" 
+              dataKey="orders" 
+              stroke="#43AC78" 
+              strokeWidth={2}
+              fill="url(#colorOrders)"
+              dot={{ fill: '#43AC78', r: 3, strokeWidth: 2, stroke: '#fff' }}
+              activeDot={{ r: 5, strokeWidth: 2 }}
+            />
+          ) : (
+            // Area chart for Revenue
+            <Area
+              type="monotone"
+              dataKey="revenue"
+              stroke="#3b82f6"
+              strokeWidth={2}
+              fill="url(#colorRevenue)"
+              dot={{ fill: '#3b82f6', r: 3, strokeWidth: 2, stroke: '#fff' }}
+              activeDot={{ r: 5, strokeWidth: 2 }}
+            />
+          )}
+        </ComposedChart>
+      </div>
     </div>
   );
 };

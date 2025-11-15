@@ -688,6 +688,7 @@ const AdminDashboard: React.FC = () => {
 // Dashboard Content Component
 const DashboardContent: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('monthly');
+  const [selectedMetric, setSelectedMetric] = useState<'revenue' | 'orders'>('orders');
   const { stats, recentOrders, monthlyRevenue, topProducts, loading, error, refetch } = useDashboardData(selectedTimeRange);
 
   if (loading) {
@@ -733,7 +734,14 @@ const DashboardContent: React.FC = () => {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
+        <button 
+          onClick={() => setSelectedMetric('revenue')}
+          className={`bg-white p-6 rounded-lg shadow-sm border-2 transition-all text-left ${
+            selectedMetric === 'revenue' 
+              ? 'border-[#43AC78] shadow-lg ring-2 ring-[#43AC78]/20' 
+              : 'border-[#93E9BE]/20 hover:shadow-md hover:border-[#43AC78]/50'
+          }`}
+        >
           <div className="flex items-center">
             <div className="p-2 bg-gradient-to-br from-[#43AC78] to-[#64C695] rounded-lg shadow-sm">
               <DollarSign className="w-6 h-6 text-white" />
@@ -752,9 +760,16 @@ const DashboardContent: React.FC = () => {
             </span>
             <span className="text-sm text-gray-500 ml-1">{stats?.revenue?.period || 'so với tháng trước'}</span>
           </div>
-        </div>
+        </button>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
+        <button 
+          onClick={() => setSelectedMetric('orders')}
+          className={`bg-white p-6 rounded-lg shadow-sm border-2 transition-all text-left ${
+            selectedMetric === 'orders' 
+              ? 'border-[#43AC78] shadow-lg ring-2 ring-[#43AC78]/20' 
+              : 'border-[#93E9BE]/20 hover:shadow-md hover:border-[#43AC78]/50'
+          }`}
+        >
           <div className="flex items-center">
             <div className="p-2 bg-gradient-to-br from-[#64C695] to-[#66D6A2] rounded-lg shadow-sm">
               <ShoppingCart className="w-6 h-6 text-white" />
@@ -773,7 +788,7 @@ const DashboardContent: React.FC = () => {
             </span>
             <span className="text-sm text-gray-500 ml-1">{stats?.orders?.period || 'so với tháng trước'}</span>
           </div>
-        </div>
+        </button>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
           <div className="flex items-center">
@@ -824,14 +839,14 @@ const DashboardContent: React.FC = () => {
           <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm border border-[#93E9BE]/20 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-gray-900">
-                Số đơn hàng theo {selectedTimeRange === 'monthly' ? 'tháng' : selectedTimeRange === 'weekly' ? 'tuần' : 'năm'}
+                {selectedMetric === 'orders' ? 'Số đơn hàng' : 'Doanh thu'} theo {selectedTimeRange === 'monthly' ? 'ngày' : selectedTimeRange === 'weekly' ? 'tuần' : 'tháng'}
               </h3>
               <TimeFilter 
                 selectedTimeRange={selectedTimeRange}
                 onTimeRangeChange={setSelectedTimeRange}
               />
             </div>
-            <RechartsLineChart data={monthlyRevenue} loading={loading} />
+            <RechartsLineChart data={monthlyRevenue} loading={loading} metric={selectedMetric} />
           </div>
 
           {/* Top Sellers - 1/4 width */}
