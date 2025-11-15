@@ -8,6 +8,7 @@ import {
   boutiqueCategories,
   aiCategories
 } from '../data/categories';
+import { Sparkles } from 'lucide-react';
 
 interface LensCategory {
   id: string;
@@ -179,6 +180,7 @@ const Navigation: React.FC = () => {
                   : 'text-red-600 hover:text-red-700 hover:font-bold border-transparent hover:border-red-400'
               }`}
             >
+              <Sparkles size={18} className="mr-2" />
               <span>AI</span>
              </Link>
           </div>

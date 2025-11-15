@@ -1171,28 +1171,28 @@ const AIAnalysisPage: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Kết quả phân tích</h3>
                   
-                  {/* Results Grid - Horizontal */}
-                  <div className="grid grid-cols-3 gap-3">
+                  {/* Results Grid - Compact */}
+                  <div className="space-y-3">
                     {/* Gender */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                       <div className="text-xs font-medium text-gray-500 uppercase mb-1">Giới tính</div>
-                      <div className="text-lg font-bold text-gray-900">
+                      <div className="text-xl font-bold text-gray-900">
                         {analysisResult.analysis.gender.detected.toLowerCase() === 'male' ? 'Nam' : 'Nữ'}
                       </div>
                     </div>
 
                     {/* Skin Tone */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                       <div className="text-xs font-medium text-gray-500 uppercase mb-1">Màu da</div>
-                      <div className="text-lg font-bold text-gray-900 capitalize">
+                      <div className="text-xl font-bold text-gray-900 capitalize">
                         {analysisResult.analysis.SkinColor.detected}
                       </div>
                     </div>
 
                     {/* Face Shape */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                       <div className="text-xs font-medium text-gray-500 uppercase mb-1">Khuôn mặt</div>
-                      <div className="text-lg font-bold text-gray-900 capitalize">
+                      <div className="text-xl font-bold text-gray-900 capitalize">
                         {analysisResult.analysis.faceShape.detected}
                       </div>
                     </div>
