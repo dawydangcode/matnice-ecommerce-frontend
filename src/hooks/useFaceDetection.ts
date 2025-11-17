@@ -4,6 +4,9 @@ import * as faceapi from 'face-api.js';
 export const useFaceDetection = () => {
   const isInitialized = useRef(false);
   const lastDetectionTime = useRef(0);
+  const cachedDetection = useRef<faceapi.FaceDetection | null>(null);
+  const consecutiveFailures = useRef(0);
+  const performanceMode = useRef<'high' | 'medium' | 'low'>('high');
 
   const initializeFaceAPI = useCallback(async (): Promise<boolean> => {
     try {
@@ -31,25 +34,64 @@ export const useFaceDetection = () => {
           if (!initialized) return null;
         }
 
-        // Throttle detection to avoid too frequent calls
+        // Adaptive throttle based on performance mode
         const now = Date.now();
-        if (now - lastDetectionTime.current < 200) {
-          // Max 5 detections per second
-          return null;
+        const throttleTime =
+          performanceMode.current === 'high'
+            ? 300
+            : performanceMode.current === 'medium'
+              ? 500
+              : 700;
+
+        if (now - lastDetectionTime.current < throttleTime) {
+          // Return cached detection if available and recent
+          return cachedDetection.current;
         }
         lastDetectionTime.current = now;
 
+        // Adaptive inputSize based on performance
+        const inputSize =
+          performanceMode.current === 'high'
+            ? 320
+            : performanceMode.current === 'medium'
+              ? 256
+              : 224;
+
+        const detectionStart = performance.now();
         const detections = await faceapi.detectAllFaces(
           videoElement,
           new faceapi.TinyFaceDetectorOptions({
-            inputSize: 416, // Higher resolution for better accuracy
+            inputSize, // Adaptive input size
             scoreThreshold: minConfidence,
           }),
         );
+        const detectionTime = performance.now() - detectionStart;
 
-        return detections.length > 0 ? detections[0] : null;
+        // Auto-adjust performance mode based on detection time
+        if (detectionTime > 200) {
+          performanceMode.current = 'low';
+        } else if (detectionTime > 100) {
+          performanceMode.current = 'medium';
+        } else {
+          performanceMode.current = 'high';
+        }
+
+        const detection = detections.length > 0 ? detections[0] : null;
+
+        // Cache the detection result
+        cachedDetection.current = detection;
+
+        // Track consecutive failures for adaptive behavior
+        if (!detection) {
+          consecutiveFailures.current++;
+        } else {
+          consecutiveFailures.current = 0;
+        }
+
+        return detection;
       } catch (error) {
         console.error('Face detection error:', error);
+        consecutiveFailures.current++;
         return null;
       }
     },
@@ -67,41 +109,63 @@ export const useFaceDetection = () => {
       const box = detection.box;
       const videoRect = videoElement.getBoundingClientRect();
 
-      // Convert detection box to relative coordinates
-      const faceCenter = {
-        x: (box.x + box.width / 2) / videoElement.videoWidth,
-        y: (box.y + box.height / 2) / videoElement.videoHeight,
-      };
+      // Optimized: Calculate face center in normalized coordinates (0-1)
+      const faceCenterX = (box.x + box.width / 2) / videoElement.videoWidth;
+      const faceCenterY = (box.y + box.height / 2) / videoElement.videoHeight;
 
-      // Convert frame area to relative coordinates
-      const frameCenter = {
-        x: (frameArea.x + frameArea.width / 2) / videoRect.width,
-        y: (frameArea.y + frameArea.height / 2) / videoRect.height,
-      };
+      // Optimized: Calculate frame center in normalized coordinates (0-1)
+      const frameCenterX =
+        (frameArea.x + frameArea.width / 2) / videoRect.width;
+      const frameCenterY =
+        (frameArea.y + frameArea.height / 2) / videoRect.height;
 
-      // Check if face is within acceptable range of frame center
-      const tolerance = 0.15; // 15% tolerance
-      const distanceX = Math.abs(faceCenter.x - frameCenter.x);
-      const distanceY = Math.abs(faceCenter.y - frameCenter.y);
+      // Adaptive tolerance based on consecutive failures
+      const baseTolerance = 0.15;
+      const adaptiveTolerance =
+        consecutiveFailures.current > 5
+          ? baseTolerance * 1.3 // More forgiving if struggling
+          : baseTolerance;
 
-      // Also check if face size is appropriate (not too close or too far)
-      const faceSize =
-        (box.width / videoElement.videoWidth +
-          box.height / videoElement.videoHeight) /
-        2;
-      const idealFaceSize = 0.3; // Face should occupy about 30% of frame
-      const sizeRatio = faceSize / idealFaceSize;
-      const sizeOk = sizeRatio >= 0.6 && sizeRatio <= 1.4; // Allow 60%-140% of ideal size
+      // Check distance from center
+      const distanceX = Math.abs(faceCenterX - frameCenterX);
+      const distanceY = Math.abs(faceCenterY - frameCenterY);
+      const isInPosition =
+        distanceX < adaptiveTolerance && distanceY < adaptiveTolerance;
 
-      return distanceX < tolerance && distanceY < tolerance && sizeOk;
+      // Optimized: Quick face size check
+      const faceArea =
+        (box.width * box.height) /
+        (videoElement.videoWidth * videoElement.videoHeight);
+      const idealFaceArea = 0.09; // Approximately 30% width * 30% height
+      const sizeRatio = faceArea / idealFaceArea;
+
+      // More lenient size check for better UX
+      const sizeOk = sizeRatio >= 0.4 && sizeRatio <= 2.0;
+
+      return isInPosition && sizeOk;
     },
     [],
   );
+
+  // Get current performance mode (useful for debugging)
+  const getPerformanceMode = useCallback(() => {
+    return performanceMode.current;
+  }, []);
+
+  // Reset detection state (useful when restarting)
+  const resetDetection = useCallback(() => {
+    cachedDetection.current = null;
+    consecutiveFailures.current = 0;
+    performanceMode.current = 'high';
+    lastDetectionTime.current = 0;
+  }, []);
 
   return {
     initializeFaceAPI,
     detectFace,
     isFaceInFrame,
+    getPerformanceMode,
+    resetDetection,
     isInitialized: isInitialized.current,
   };
 };

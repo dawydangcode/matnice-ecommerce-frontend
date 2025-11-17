@@ -69,17 +69,20 @@ const AIAnalysisPage: React.FC = () => {
   const isCountingDownRef = useRef(false);
   const missedDetectionsRef = useRef(0);
 
-  const { initializeFaceAPI, detectFace, isFaceInFrame } = useFaceDetection();
+  const { initializeFaceAPI, detectFace, isFaceInFrame, resetDetection } = useFaceDetection();
 
 
 
   // Start camera
   const startCamera = useCallback(async () => {
     try {
+      // Reset detection state when starting camera
+      resetDetection();
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 1920, max: 1920 },
-          height: { ideal: 1080, max: 1080 },
+          width: { ideal: 1280, max: 1920 }, // Reduced from 1920 for better performance
+          height: { ideal: 720, max: 1080 }, // Reduced from 1080 for better performance
           facingMode: 'user'
         }
       });
@@ -98,7 +101,7 @@ const AIAnalysisPage: React.FC = () => {
       setError(`Cannot access camera: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setCameraActive(false);
     }
-  }, []);
+  }, [resetDetection]);
 
   // Monitor face during countdown
   const startFaceMonitoringDuringCountdown = useCallback(() => {
@@ -123,15 +126,13 @@ const AIAnalysisPage: React.FC = () => {
         return;
       }
 
-      try {
-        if (!videoRef.current || !videoRef.current.srcObject || videoRef.current.readyState < 2) {
-          console.log('🔍 Video not ready, skipping...');
-          // Schedule next check
-          faceDetectionTimerRef.current = setTimeout(monitorFace, 200);
-          return;
-        }
-
-        console.log('🔍 Video element found, initializing face-api...');
+        try {
+          if (!videoRef.current || !videoRef.current.srcObject || videoRef.current.readyState < 2) {
+            console.log('🔍 Video not ready, skipping...');
+            // Schedule next check
+            faceDetectionTimerRef.current = setTimeout(monitorFace, 400); // Increased from 200ms to 400ms
+            return;
+          }        console.log('🔍 Video element found, initializing face-api...');
         // Initialize face-api if needed
         await initializeFaceAPI();
         
@@ -180,7 +181,7 @@ const AIAnalysisPage: React.FC = () => {
           } else {
             // Continue monitoring without cancelling
             if (isCountingDownRef.current && cameraActive) {
-              faceDetectionTimerRef.current = setTimeout(monitorFace, 200);
+              faceDetectionTimerRef.current = setTimeout(monitorFace, 400); // Increased from 200ms to 400ms
             }
             return;
           }
@@ -237,14 +238,14 @@ const AIAnalysisPage: React.FC = () => {
         
         // Schedule next check if still counting down
         if (isCountingDownRef.current && cameraActive) {
-          faceDetectionTimerRef.current = setTimeout(monitorFace, 200);
+          faceDetectionTimerRef.current = setTimeout(monitorFace, 400); // Increased from 200ms to 400ms
         }
         
       } catch (error) {
         console.error('🔍 Face monitoring error during countdown:', error);
         // Schedule next check even if error occurred
         if (isCountingDownRef.current && cameraActive) {
-          faceDetectionTimerRef.current = setTimeout(monitorFace, 200);
+          faceDetectionTimerRef.current = setTimeout(monitorFace, 400); // Increased from 200ms to 400ms
         }
       }
     };
@@ -529,7 +530,7 @@ const AIAnalysisPage: React.FC = () => {
           console.error('Face detection error:', error);
         }
       }
-    }, 500);
+    }, 800); // Increased from 500ms to 800ms for better performance on low-end devices
   }, [cameraActive, autoCapture.isEnabled, detectFace, isFaceInFrame, startAutoCapture, analysisResult]);
 
   // Initialize face detection when camera becomes active (only if analysis not completed)
