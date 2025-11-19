@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Upload, User, Palette, Sparkles, Brain, Eye, Zap, RotateCcw, X } from 'lucide-react';
+import { Camera, Upload, User, Palette, Sparkles, Brain, Eye, Zap, RotateCcw, X, UserCircle2 } from 'lucide-react';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
@@ -67,7 +67,27 @@ const AIAnalysisPage: React.FC = () => {
 
   const { initializeFaceAPI, detectFace, isFaceInFrame, resetDetection } = useFaceDetection();
 
+  // Helper functions to translate analysis results to Vietnamese
+  const translateSkinColor = (color: string): string => {
+    const skinColorMap: { [key: string]: string } = {
+      'dark': 'Tối',
+      'medium': 'Trung bình',
+      'light': 'Sáng'
+    };
+    return skinColorMap[color.toLowerCase()] || color;
+  };
 
+  const translateFaceShape = (shape: string): string => {
+    const faceShapeMap: { [key: string]: string } = {
+      'oval': 'Trái xoan',
+      'round': 'Tròn',
+      'square': 'Vuông',
+      'heart': 'Trái tim',
+      'long': 'Dài',
+      'diamond': 'Kim cương'
+    };
+    return faceShapeMap[shape.toLowerCase()] || shape;
+  };
 
   // Start camera
   const startCamera = useCallback(async () => {
@@ -1006,7 +1026,7 @@ const AIAnalysisPage: React.FC = () => {
   );
 
   const renderCameraStep = () => (
-    <div ref={liveAnalysisRef} className="max-w-7xl mx-auto px-0 sm:px-4 lg:px-8 py-0 sm:py-6 lg:py-8">
+    <div ref={liveAnalysisRef} className="w-full max-w-[1600px] mx-auto px-0 sm:px-4 lg:px-8 py-0 sm:py-6 lg:py-8">
       {/* Header with close button */}
       <div className="flex justify-between items-center mb-4 sm:mb-6 px-4 sm:px-0">
         <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
@@ -1166,29 +1186,67 @@ const AIAnalysisPage: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Kết quả phân tích</h3>
                   
-                  {/* Results Grid - Horizontal */}
-                  <div className="grid grid-cols-3 gap-3">
+                  {/* Results Grid - Horizontal with Icons and Colors */}
+                  <div className="grid grid-cols-3 gap-4">
                     {/* Gender */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
-                      <div className="text-xs font-medium text-gray-500 uppercase mb-1">Giới tính</div>
-                      <div className="text-lg font-bold text-gray-900">
+                    <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-all hover:border-blue-300">
+                      <div className="flex items-center justify-center mb-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          analysisResult.analysis.gender.detected.toLowerCase() === 'male' 
+                            ? 'bg-blue-100' 
+                            : 'bg-pink-100'
+                        }`}>
+                          <User className={`w-5 h-5 ${
+                            analysisResult.analysis.gender.detected.toLowerCase() === 'male' 
+                              ? 'text-blue-600' 
+                              : 'text-pink-600'
+                          }`} />
+                        </div>
+                      </div>
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Giới tính</div>
+                      <div className={`text-2xl font-bold ${
+                        analysisResult.analysis.gender.detected.toLowerCase() === 'male' 
+                          ? 'text-blue-600' 
+                          : 'text-pink-600'
+                      }`}>
                         {analysisResult.analysis.gender.detected.toLowerCase() === 'male' ? 'Nam' : 'Nữ'}
                       </div>
                     </div>
 
-                    {/* Skin Tone */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
-                      <div className="text-xs font-medium text-gray-500 uppercase mb-1">Màu da</div>
-                      <div className="text-lg font-bold text-gray-900 capitalize">
-                        {analysisResult.analysis.SkinColor.detected}
+                    {/* Skin Tone with Color Badge */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-all hover:border-orange-300">
+                      <div className="flex items-center justify-center mb-3">
+                        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                          <Palette className="w-5 h-5 text-orange-600" />
+                        </div>
+                      </div>
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Màu da</div>
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <div 
+                          className="w-5 h-5 rounded-full border-2 border-gray-300 shadow-sm"
+                          style={{ 
+                            backgroundColor: 
+                              analysisResult.analysis.SkinColor.detected.toLowerCase() === 'dark' ? '#8B4513' :
+                              analysisResult.analysis.SkinColor.detected.toLowerCase() === 'medium' ? '#D2B48C' :
+                              '#F5E6D3'
+                          }}
+                        />
+                        <div className="text-2xl font-bold text-orange-600">
+                          {translateSkinColor(analysisResult.analysis.SkinColor.detected)}
+                        </div>
                       </div>
                     </div>
 
                     {/* Face Shape */}
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
-                      <div className="text-xs font-medium text-gray-500 uppercase mb-1">Khuôn mặt</div>
-                      <div className="text-lg font-bold text-gray-900 capitalize">
-                        {analysisResult.analysis.faceShape.detected}
+                    <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-all hover:border-purple-300">
+                      <div className="flex items-center justify-center mb-3">
+                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                          <Sparkles className="w-5 h-5 text-purple-600" />
+                        </div>
+                      </div>
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Dáng mặt</div>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {translateFaceShape(analysisResult.analysis.faceShape.detected)}
                       </div>
                     </div>
                   </div>
@@ -1196,7 +1254,7 @@ const AIAnalysisPage: React.FC = () => {
 
                 {/* Recommended Products Section */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Gợi ý kính phù hợp</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Sản phẩm phù hợp dựa trên kết quả phân tích</h3>
                   <ProductRecommendations analysisResult={analysisResult.analysis} />
                 </div>
               </div>
@@ -1215,7 +1273,7 @@ const AIAnalysisPage: React.FC = () => {
       </div>
 
       {/* Upload Section */}
-      <div className="mt-6 text-center mx-4 sm:mx-0">
+      <div className="mt-6 text-center mx-4 sm:mx-0 max-w-[1600px] mx-auto">
         <p className="text-sm text-gray-600 mb-3">Hoặc tải ảnh lên từ thiết bị</p>
         <input
           ref={fileInputRef}
