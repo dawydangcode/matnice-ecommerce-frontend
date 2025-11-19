@@ -45,17 +45,17 @@ const WishlistPage: React.FC = () => {
       <Header />
       <Navigation />
 
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
+      <main className="flex-1 container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                 Favourites ({totalItems} item{totalItems !== 1 ? 's' : ''})
               </h1>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                 <Link to="/" className="hover:text-gray-900 transition-colors flex items-center gap-1">
-                  <Home className="w-4 h-4" />
+                  <Home className="w-3 h-3 sm:w-4 sm:h-4" />
                   Home
                 </Link>
                 <span>/</span>
@@ -100,12 +100,12 @@ const WishlistPage: React.FC = () => {
                 return (
                   <div 
                     key={item.id} 
-                    className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow relative"
+                    className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow relative"
                   >
-                    <div className="flex gap-6">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                       {/* Product Image */}
-                      <Link to={itemUrl} className="flex-shrink-0">
-                        <div className="w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
+                      <Link to={itemUrl} className="flex-shrink-0 mx-auto sm:mx-0">
+                        <div className="w-40 h-40 sm:w-32 sm:h-32 bg-gray-100 rounded-lg overflow-hidden">
                           <img 
                             src={imageUrl}
                             alt={displayName}
@@ -122,10 +122,10 @@ const WishlistPage: React.FC = () => {
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex-1">
                             {item.brandName && (
-                              <p className="text-sm text-gray-600 mb-1">{item.brandName}</p>
+                              <p className="text-xs sm:text-sm text-gray-600 mb-1">{item.brandName}</p>
                             )}
                             <Link to={itemUrl} className="hover:underline">
-                              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                                 {displayName}
                               </h3>
                             </Link>
@@ -143,15 +143,15 @@ const WishlistPage: React.FC = () => {
                         </div>
 
                         {/* Product Details Table */}
-                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                          <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
                             {item.colorName && (
                               <>
                                 <div>
                                   <span className="text-gray-600 font-medium">Colour</span>
                                   <span className="text-gray-500"> (front / side)</span>
                                 </div>
-                                <div className="col-span-2 text-gray-900">
+                                <div className="sm:col-span-2 text-gray-900">
                                   {item.colorName}
                                 </div>
                               </>
@@ -159,34 +159,33 @@ const WishlistPage: React.FC = () => {
                             {item.itemType === 'product' && (
                               <>
                                 <div className="text-gray-600 font-medium">Frame width</div>
-                                <div className="col-span-2 text-gray-900">-</div>
+                                <div className="sm:col-span-2 text-gray-900">-</div>
                               </>
                             )}
                           </div>
                         </div>
 
                         {/* Price and Actions */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                           <div>
                             {item.productPrice && (
-                              <p className="text-2xl font-bold text-gray-900">
+                              <p className="text-xl sm:text-2xl font-bold text-gray-900">
                                 {formatVND(item.productPrice)}
                               </p>
                             )}
-                            <p className="text-sm text-gray-600 mt-1">VAT included</p>
+                            <p className="text-xs sm:text-sm text-gray-600 mt-1">VAT included</p>
                           </div>
 
-                          <div className="flex gap-3">
+                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                             <Link
                               to={itemUrl}
-                              className="px-6 py-3 border-2 border-black text-black rounded-lg hover:bg-black hover:text-white transition-colors font-medium flex items-center gap-2"
+                              className="px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-black text-black rounded-lg hover:bg-black hover:text-white transition-colors font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
                             >
-                              <Home className="w-4 h-4" />
-                              Try on at home
+                              Xem chi tiết
                             </Link>
                             <Link
                               to={item.itemType === 'product' ? `/lens-selection?productId=${item.productId}` : itemUrl}
-                              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2"
+                              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2 text-sm sm:text-base"
                             >
                               <ShoppingBag className="w-4 h-4" />
                               Choose your lenses

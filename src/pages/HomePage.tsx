@@ -29,6 +29,15 @@ const HomePage: React.FC = () => {
     },
     {
       id: 2,
+      image: VirtualTryOnImage,
+      title: "Gọng + Tròng",
+      highlight: "Theo Đơn Mắt",
+      description: "Đo mắt xong rồi? Chọn gọng yêu thích, chúng tôi tự động lọc tròng kính phù hợp với đơn mắt của bạn. Dễ dàng, chính xác, tiết kiệm thời gian!",
+      primaryBtn: { text: "Xem Gọng Kính", link: "/glasses" },
+      secondaryBtn: { text: "Tìm Hiểu Thêm", link: "/lens-selection" }
+    },
+    {
+      id: 3,
       image: WomenGlassesImage,
       title: "Women's",
       highlight: "Collection 2025",
@@ -37,7 +46,7 @@ const HomePage: React.FC = () => {
       secondaryBtn: { text: "View Sunglasses", link: "/glasses?category=women-s-sunglasses" }
     },
     {
-      id: 3,
+      id: 4,
       image: MenGlassesImage,
       title: "Men's",
       highlight: "Signature Style",
