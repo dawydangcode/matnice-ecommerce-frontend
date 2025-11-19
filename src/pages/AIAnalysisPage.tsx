@@ -4,7 +4,6 @@ import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import ProductRecommendations from '../components/ProductRecommendations';
-import ProductRecommendationModal from '../components/ProductRecommendationModal';
 import { useFaceDetection } from '../hooks/useFaceDetection';
 import '../styles/AIAnalysisPage.css';
 
@@ -42,9 +41,6 @@ const AIAnalysisPage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  
-  // Recommendation Modal state
-  const [isRecommendationModalOpen, setIsRecommendationModalOpen] = useState(false);
   
   // Face detection states
   const [faceQualityWarning, setFaceQualityWarning] = useState(false);
@@ -413,11 +409,6 @@ const AIAnalysisPage: React.FC = () => {
                               detectionIntervalRef.current = null;
                             }
                             
-                            // Open recommendation modal after analysis completes
-                            setTimeout(() => {
-                              setIsRecommendationModalOpen(true);
-                            }, 500);
-                            
                             return;
                           } else if (resultData.data.status === 'failed') {
                             setError('Analysis failed. Please try again.');
@@ -654,43 +645,6 @@ const AIAnalysisPage: React.FC = () => {
     setCameraActive(false);
   }, [stopFaceDetection]);
 
-  // Capture photo
-  const capturePhoto = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) return;
-
-    // Zoom in more to focus on face area (crop center 70% of the frame)
-    const zoomFactor = 0.7;
-    const sourceSize = Math.min(video.videoWidth, video.videoHeight) * zoomFactor;
-    const sourceX = (video.videoWidth - sourceSize) / 2;
-    const sourceY = (video.videoHeight - sourceSize) / 2;
-
-    canvas.width = 640;
-    canvas.height = 640;
-    
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.translate(-640, 0);
-    
-    ctx.drawImage(
-      video, 
-      sourceX, sourceY, sourceSize, sourceSize,
-      0, 0, 640, 640
-    );
-    
-    ctx.restore();
-
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-    setCapturedImage(dataUrl);
-    stopCamera();
-    stopFaceDetection(); // Stop face detection after capture
-  }, [stopCamera, stopFaceDetection]);
-
   // Convert data URL to File
   const dataURLtoFile = (dataurl: string, filename: string): File => {
     const arr = dataurl.split(',');
@@ -808,6 +762,48 @@ const AIAnalysisPage: React.FC = () => {
     }, 100); // Small delay to ensure the section is rendered
   }, []);
 
+  // Capture photo (manual capture button)
+  const capturePhoto = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) return;
+
+    // Zoom in more to focus on face area (crop center 70% of the frame)
+    const zoomFactor = 0.7;
+    const sourceSize = Math.min(video.videoWidth, video.videoHeight) * zoomFactor;
+    const sourceX = (video.videoWidth - sourceSize) / 2;
+    const sourceY = (video.videoHeight - sourceSize) / 2;
+
+    canvas.width = 640;
+    canvas.height = 640;
+    
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.translate(-640, 0);
+    
+    ctx.drawImage(
+      video, 
+      sourceX, sourceY, sourceSize, sourceSize,
+      0, 0, 640, 640
+    );
+    
+    ctx.restore();
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    setCapturedImage(dataUrl);
+    stopCamera();
+    stopFaceDetection(); // Stop face detection after capture
+    
+    // Start analysis automatically after manual capture
+    setTimeout(() => {
+      analyzeImage(dataUrl);
+    }, 300);
+  }, [stopCamera, stopFaceDetection, analyzeImage]);
+
   // Handle file upload
   const handleFileSelect = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -845,7 +841,7 @@ const AIAnalysisPage: React.FC = () => {
   const resetAnalysis = useCallback(() => {
     setCapturedImage(null);
     setAnalysisResult(null);
-    setShowCameraAndResults(false);
+    setShowCameraAndResults(true); // Keep camera section visible
     setError(null);
     setIsAnalyzing(false);
     // Reset face detection states
@@ -858,8 +854,13 @@ const AIAnalysisPage: React.FC = () => {
       showGuide: true
     });
     missedDetectionsRef.current = 0;
+    // Stop current camera first, then restart it
     stopCamera();
-  }, [stopCamera]);
+    // Restart camera after a short delay
+    setTimeout(() => {
+      startCamera();
+    }, 300);
+  }, [stopCamera, startCamera]);
 
   // Render Features Section
   const renderFeaturesSection = () => (
@@ -1141,13 +1142,6 @@ const AIAnalysisPage: React.FC = () => {
                   <RotateCcw size={18} className="mr-2" />
                   Phân tích lại
                 </button>
-                <button
-                  onClick={() => setIsRecommendationModalOpen(true)}
-                  className="flex-1 bg-white border-2 border-gray-900 text-gray-900 px-6 py-3 rounded-lg text-base font-semibold hover:bg-gray-900 hover:text-white transition-colors shadow-sm hover:shadow-md inline-flex items-center justify-center"
-                >
-                  <Sparkles size={18} className="mr-2" />
-                  Xem kính phù hợp
-                </button>
               </div>
             )}
           </div>
@@ -1257,15 +1251,6 @@ const AIAnalysisPage: React.FC = () => {
       {renderFeaturesSection()}
 
       <Footer />
-      
-      {/* Product Recommendation Modal */}
-      {analysisResult?.status === 'completed' && (
-        <ProductRecommendationModal
-          isOpen={isRecommendationModalOpen}
-          onClose={() => setIsRecommendationModalOpen(false)}
-          analysisResult={analysisResult.analysis}
-        />
-      )}
     </div>
   );
 };

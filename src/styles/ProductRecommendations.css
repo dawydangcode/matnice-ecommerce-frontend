@@ -572,3 +572,9 @@
     font-size: 0.8rem;
   }
 }
+
+/* Add text-primary class if not defined by Tailwind */
+.text-primary {
+  color: #000000;
+  font-weight: 700;
+}

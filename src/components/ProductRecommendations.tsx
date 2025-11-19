@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Eye, ShoppingCart, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import '../styles/ProductRecommendations.css';
+import '../styles/product-page.css';
+import { formatVND } from '../utils/currency';
 
 interface ProductColor {
   id: number;
@@ -179,10 +182,7 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   }, [checkScrollButtons, products]);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
+    return formatVND(price);
   };
 
   const getMainImage = (product: Product) => {
@@ -199,12 +199,6 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
     }
     
     return '/placeholder-product.jpg';
-  };
-
-  const handleQuickView = (productId: number) => {
-    // Open product detail page in new tab
-    const productDetailUrl = `/product/${productId}`;
-    window.open(productDetailUrl, '_blank');
   };
 
 
@@ -283,71 +277,84 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
         </button>
         
         <div className="products-carousel" ref={scrollContainerRef}>
-          {products.map((product) => (
-            <div key={product.id} className="product-card carousel-card">
-            <div className="product-image-container">
-              <img
-                src={getMainImage(product)}
-                alt={product.productName}
-                className="product-image"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
-                }}
-              />
-              {product.isNew && (
-                <span className="product-badge new-badge">New</span>
-              )}
-              {product.isSustainable && (
-                <span className="product-badge eco-badge">Eco</span>
-              )}
-              <div className="product-actions">
-                <button 
-                  className="action-button view-button" 
-                  title="Quick View"
-                  onClick={() => handleQuickView(product.id)}
-                >
-                  <Eye size={18} />
-                </button>
-                <button className="action-button wishlist-button" title="Add to Wishlist">
-                  <Heart size={18} />
-                </button>
-              </div>
-            </div>
-
-            <div className="product-info">
-              <div className="product-header">
-                <h4 className="product-name">{product.productName}</h4>
-                <div className="product-price">
-                  {formatPrice(product.price)}
-                </div>
-              </div>
-
-              <p className="product-description">{product.description}</p>
-
-              <div className="color-options">
-                {product.productColors.slice(0, 3).map((color) => (
-                  <div key={color.id} className="color-option" title={color.colorName}>
-                    {color.productImage.length > 0 && (
-                      <img
-                        src={color.productImage[0].imageUrl}
-                        alt={color.colorName}
-                        className="color-preview"
-                      />
+          {products.map((product) => {
+            const productId = typeof product.id === 'string' ? parseInt(product.id) : product.id;
+            
+            return (
+              <Link 
+                key={product.id} 
+                to={`/product/${product.id}`}
+                className="group cursor-pointer bg-gray-50 p-2 rounded-lg shadow-sm hover:shadow-md transition-shadow block carousel-card"
+              >
+                <div className="relative rounded-lg mb-6 overflow-hidden h-96 flex items-center justify-center">
+                  {/* Badges */}
+                  <div className="absolute top-4 left-4 flex flex-row space-x-2 z-10">
+                    {!!product.isNew && (
+                      <div className="bg-white text-green-700 px-3 py-1 text-xs font-medium">
+                        New
+                      </div>
+                    )}
+                    {!!product.isBoutique && (
+                      <div className="bg-gray-800 text-white px-3 py-1 text-xs font-medium">
+                        Boutique
+                      </div>
+                    )}
+                    {!!product.isSustainable && (
+                      <div className="sustainable-badge px-3 py-1 text-xs font-medium">
+                        Sustainable
+                      </div>
                     )}
                   </div>
-                ))}
-                {product.productColors.length > 3 && (
-                  <span className="more-colors">+{product.productColors.length - 3}</span>
-                )}
-              </div>
-
-              <button className="add-to-cart-button">
-                <ShoppingCart size={18} />
-                Add to Cart
-              </button>
-            </div>
-            </div>
-          ))}
+                  
+                  {/* Heart Icon */}
+                  <div className="absolute top-2 right-4 z-10">
+                    <button 
+                      className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm hover:shadow-md transition-shadow"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // TODO: Add wishlist functionality
+                        console.log('Add to wishlist:', productId);
+                      }}
+                    >
+                      <Heart className="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" />
+                    </button>
+                  </div>
+                  
+                  {/* Product Image */}
+                  <img 
+                    src={getMainImage(product)}
+                    alt={product.productName}
+                    className="w-full h-full max-w-[350px] max-h-[350px] object-contain group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
+                    }}
+                  />
+                </div>
+                
+                {/* Product Info */}
+                <div className="space-y-4 p-2">
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900 text-secondary">Brand Name</h3>
+                    <p className="text-base font-light text-secondary">{product.productName}</p>
+                  </div>
+                  
+                  {product.productColors.length > 1 && (
+                    <p className="text-sm text-gray-500">{product.productColors.length} variants available</p>
+                  )}
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-light text-secondary">Frame price without lenses</p>
+                      <span className="text-right text-base font-bold text-primary">
+                        {formatPrice(product.price)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
         
         <button 
