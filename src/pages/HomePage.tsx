@@ -6,6 +6,11 @@ import WomenGlassesImage from '../assets/home-page-image/cd72032b96f1b3bf579e848
 import MenGlassesImage from '../assets/home-page-image/8de8cf9366092e37a8d5b2e9148e577b.jpg';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
+import bestsellerService, { BestsellerProduct } from '../services/bestsellerService';
+import { useWishlistStore } from '../stores/wishlist.store';
+import { useAuthStore } from '../stores/auth.store';
+import { toastService } from '../services/toast.service';
+import { formatVND } from '../utils/currency';
 import '../styles/scrollbar.css';
 
 const HomePage: React.FC = () => {
@@ -16,6 +21,15 @@ const HomePage: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
+  
+  // Bestseller state
+  const [bestsellers, setBestsellers] = useState<BestsellerProduct[]>([]);
+  const [bestsellerLoading, setBestsellerLoading] = useState(true);
+  const [bestsellerError, setBestsellerError] = useState<string | null>(null);
+
+  // Wishlist store
+  const { addToWishlist, removeItemByProductId, isItemInWishlist, fetchWishlist } = useWishlistStore();
+  const { user } = useAuthStore();
 
   const heroSlides = [
     {
@@ -65,6 +79,55 @@ const HomePage: React.FC = () => {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Fetch bestsellers on mount
+  useEffect(() => {
+    const fetchBestsellers = async () => {
+      try {
+        setBestsellerLoading(true);
+        setBestsellerError(null);
+        const data = await bestsellerService.getBestsellers({ limit: 8 });
+        setBestsellers(data);
+      } catch (error) {
+        console.error('Failed to fetch bestsellers:', error);
+        setBestsellerError('Không thể tải sản phẩm bán chạy');
+      } finally {
+        setBestsellerLoading(false);
+      }
+    };
+
+    fetchBestsellers();
+  }, []);
+
+  // Fetch wishlist when user is available
+  useEffect(() => {
+    if (user) {
+      fetchWishlist().catch(error => {
+        console.error('Error fetching wishlist:', error);
+      });
+    }
+  }, [user, fetchWishlist]);
+
+  // Handle wishlist toggle
+  const handleWishlistToggle = async (productId: number, isInWishlist: boolean) => {
+    if (!user) {
+      toastService.warning('Please login to add items to wishlist');
+      return;
+    }
+
+    try {
+      if (isInWishlist) {
+        await removeItemByProductId('product', productId);
+        toastService.success('Removed from wishlist');
+      } else {
+        await addToWishlist('product', productId);
+        toastService.success('Added to wishlist successfully!');
+      }
+    } catch (error) {
+      console.error('Failed to update wishlist:', error);
+      toastService.error('Failed to update wishlist. Please try again.');
+    }
+  };
 
   // Handle infinite loop: reset position when reaching clones
   useEffect(() => {
@@ -487,130 +550,168 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Bestsellers Section */}
-      <section className="py-8 md:py-16 bg-white">
+      {/* Bestsellers Section - Redesigned */}
+      <section className="py-12 md:py-20 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-8 md:mb-12">Bestsellers</h2>
-          
-          <div className="overflow-x-auto scrollbar-hide snap-x snap-mandatory">
-            <div className="flex gap-4 md:gap-6 pb-4">
-              {/* Product 1 */}
-              <div className="group cursor-pointer flex-shrink-0 w-[280px] md:w-[320px] snap-start">
-                <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
-                  <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 text-xs rounded">
-                    -25%
-                  </div>
-                  <div className="absolute top-4 right-4 bg-gray-800 text-white px-3 py-1 text-xs rounded">
-                    Boutique
-                  </div>
-                  <div className="absolute top-4 right-16">
-                    <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
-                  </div>
-                  <img 
-                    src="/api/placeholder/250/200" 
-                    alt="Miu Miu glasses"
-                    className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-gray-800">Miu Miu</h3>
-                  <p className="text-gray-600 text-sm">MU 11WS 1AB5S0</p>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-red-500 line-through text-sm">10.798.500₫</span>
-                    <span className="font-bold text-lg">8.098.500₫</span>
-                  </div>
-                </div>
-              </div>
+          {/* Section Header */}
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Sản Phẩm Bán Chạy
+            </h2>
+            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+              Những mẫu kính được yêu thích nhất, kết hợp giữa phong cách thời thượng và chất lượng vượt trội
+            </p>
+          </div>
 
-              {/* Product 2 */}
-              <div className="group cursor-pointer flex-shrink-0 w-[280px] md:w-[320px] snap-start">
-                <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
-                  <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 text-xs rounded">
-                    -30%
-                  </div>
-                  <div className="absolute top-4 right-4 bg-gray-800 text-white px-3 py-1 text-xs rounded">
-                    Boutique
-                  </div>
-                  <div className="absolute top-4 right-16">
-                    <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
-                  </div>
-                  <img 
-                    src="/api/placeholder/250/200" 
-                    alt="Saint Laurent glasses"
-                    className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-gray-800">Saint Laurent</h3>
-                  <p className="text-gray-600 text-sm">SL M115 004</p>
-                  <p className="text-sm text-gray-500">Prescription-ready</p>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-red-500 line-through text-sm">8.938.500₫</span>
-                    <span className="font-bold text-lg">6.253.500₫</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Product 3 */}
-              <div className="group cursor-pointer flex-shrink-0 w-[280px] md:w-[320px] snap-start">
-                <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
-                  <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 text-xs rounded">
-                    -25%
-                  </div>
-                  <div className="absolute top-4 right-4 bg-gray-800 text-white px-3 py-1 text-xs rounded">
-                    Boutique
-                  </div>
-                  <div className="absolute top-4 right-16">
-                    <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
-                  </div>
-                  <img 
-                    src="/api/placeholder/250/200" 
-                    alt="Tom Ford sunglasses"
-                    className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-gray-800">Tom Ford</h3>
-                  <p className="text-gray-600 text-sm">Bronson FT 1044 01E</p>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-red-500 line-through text-sm">11.218.500₫</span>
-                    <span className="font-bold text-lg">6.163.500₫</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Product 4 */}
-              <div className="group cursor-pointer flex-shrink-0 w-[280px] md:w-[320px] snap-start">
-                <div className="relative bg-gray-100 rounded-2xl p-8 mb-4">
-                  <div className="absolute top-4 right-4">
-                    <Heart className="w-6 h-6 text-gray-400 hover:text-red-500 transition" />
-                  </div>
-                  <img 
-                    src="/api/placeholder/250/200" 
-                    alt="Boss glasses"
-                    className="w-full h-48 object-contain group-hover:scale-105 transition-transform"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-gray-800">Boss</h3>
-                  <p className="text-gray-600 text-sm">BV 1033 R80</p>
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-lg">5.698.500₫</span>
-                  </div>
-                </div>
-              </div>
+          {/* Loading State */}
+          {bestsellerLoading && (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-gray-900"></div>
             </div>
-          </div>
-          
-          {/* View more button */}
-          <div className="text-center mt-8 md:mt-12">
-            <button 
-              className="w-12 h-12 border border-gray-400 rounded-full flex items-center justify-center hover:bg-gray-100 transition"
-              aria-label="View more products"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
-          </div>
+          )}
+
+          {/* Error State */}
+          {bestsellerError && (
+            <div className="text-center py-20">
+              <p className="text-red-500 mb-4">{bestsellerError}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition"
+              >
+                Thử lại
+              </button>
+            </div>
+          )}
+
+          {/* Products Grid */}
+          {!bestsellerLoading && !bestsellerError && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {bestsellers.map((product) => {
+                  const productId = product.id;
+                  const currentIsInWishlist = isItemInWishlist('product', productId);
+                  
+                  return (
+                    <Link
+                      key={product.id}
+                      to={`/product/${product.id}`}
+                      className="group cursor-pointer bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                    >
+                      <div className="relative bg-gray-50 aspect-square overflow-hidden flex items-center justify-center">
+                        {/* Badges */}
+                        <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+                          {product.isNew && (
+                            <div className="bg-white text-green-700 px-3 py-1 text-xs font-medium rounded shadow">
+                              New
+                            </div>
+                          )}
+                          {product.isBoutique && (
+                            <div className="bg-gray-800 text-white px-3 py-1 text-xs font-medium rounded shadow">
+                              Boutique
+                            </div>
+                          )}
+                          {product.isPinned && (
+                            <div className="bg-yellow-500 text-white px-3 py-1 text-xs font-semibold rounded shadow">
+                              ⭐ Đề xuất
+                            </div>
+                          )}
+                          {product.discountPercentage && (
+                            <div className="bg-red-500 text-white px-3 py-1 text-xs font-bold rounded shadow">
+                              -{product.discountPercentage}%
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Wishlist Button */}
+                        <div className="absolute top-2 right-4 z-10">
+                          <button
+                            className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm hover:shadow-md transition-shadow"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleWishlistToggle(productId, currentIsInWishlist);
+                            }}
+                          >
+                            <Heart
+                              className={`w-5 h-5 transition-colors ${
+                                currentIsInWishlist
+                                  ? 'text-red-500 fill-red-500'
+                                  : 'text-gray-400 hover:text-red-500'
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Product Image */}
+                        <img
+                          src={product.image || '/api/placeholder/400/320'}
+                          alt={`${product.brand.name} ${product.productName}`}
+                          className="w-full h-full max-w-[350px] max-h-[350px] object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.currentTarget.src = '/api/placeholder/400/320';
+                          }}
+                        />
+                      </div>
+
+                      {/* Product Info */}
+                      <div className="p-4 space-y-2">
+                        <div>
+                          <h3 className="font-bold text-lg text-gray-900">
+                            {product.brand.name}
+                          </h3>
+                          <p className="text-sm text-gray-600 line-clamp-1">
+                            {product.productCode || product.productName}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 pt-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-gray-500">Frame price without lenses</p>
+                            <div className="text-right">
+                              {product.discountPrice ? (
+                                <div className="flex flex-col items-end">
+                                  <span className="text-gray-400 line-through text-xs">
+                                    {formatVND(product.price)}
+                                  </span>
+                                  <span className="text-base font-bold text-red-600">
+                                    {formatVND(product.discountPrice)}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-base font-bold text-gray-900">
+                                  {formatVND(product.price)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Sales Badge */}
+                        {product.totalSales > 0 && (
+                          <div className="pt-2 border-t border-gray-100">
+                            <p className="text-xs text-gray-500">
+                              Đã bán: <span className="font-semibold text-gray-700">{product.totalSales}</span>
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* View More Button */}
+              <div className="text-center mt-12">
+                <button
+                  onClick={() => navigate('/glasses')}
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105 duration-300"
+                >
+                  <span className="font-semibold">Xem Tất Cả Sản Phẩm</span>
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

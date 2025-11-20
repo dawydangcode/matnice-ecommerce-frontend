@@ -46,6 +46,7 @@ import LensCategoryForm from '../components/admin/LensCategoryForm';
 import Product3DModelManagement from '../components/admin/Product3DModelManagement';
 import OrderManagement from '../components/OrderManagement';
 import StockManagementPage from './StockManagementPage';
+import BestsellerManagement from './admin/BestsellerManagement';
 import RechartsLineChart from '../components/charts/RechartsLineChart';
 import TimeFilter, { TimeRange } from '../components/dashboard/TimeFilter';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -56,7 +57,7 @@ import { Lens } from '../types/lens.types';
 import { LensBrand } from '../types/lensBrand.types';
 import { LensCategory } from '../types/lensCategory.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'color-skin-recommendation' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-detail' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form' | 'orders' | 'stock' | 'stock-management';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'color-skin-recommendation' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-detail' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form' | 'orders' | 'stock' | 'stock-management' | 'homepage' | 'homepage-bestsellers';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -325,7 +326,14 @@ const AdminDashboard: React.FC = () => {
         { id: 'color-skin-recommendation', label: 'Color Skin Recommendation', icon: Palette },
       ]
     },
-
+    { 
+      id: 'homepage', 
+      label: 'Quản lý Homepage', 
+      icon: BarChart3,
+      children: [
+        { id: 'homepage-bestsellers', label: 'Bestseller Products', icon: TrendingUp },
+      ]
+    },
     { id: 'brands', label: 'Thương hiệu', icon: Tag },
     { id: 'categories', label: 'Danh mục', icon: Layers },
     // Lens Management (simplified)
@@ -380,7 +388,8 @@ const AdminDashboard: React.FC = () => {
               const isChildActive = hasChildren && item.children?.some(child => 
                 currentView === child.id || 
                 (currentView === 'product-edit' && child.id === 'product-list') ||
-                (currentView === 'enhanced-product-form' && child.id === 'product-list')
+                (currentView === 'enhanced-product-form' && child.id === 'product-list') ||
+                (currentView === 'homepage-bestsellers' && child.id === 'homepage-bestsellers')
               );
               
               return (
@@ -446,6 +455,8 @@ const AdminDashboard: React.FC = () => {
                                 setCurrentView('product-3d-models');
                               } else if (child.id === 'color-skin-recommendation') {
                                 setCurrentView('color-skin-recommendation');
+                              } else if (child.id === 'homepage-bestsellers') {
+                                setCurrentView('homepage-bestsellers');
                               } else if (child.id === 'lens-management') {
                                 setCurrentView('lens-management');
                               } else if (child.id === 'lens-brands') {
@@ -505,6 +516,7 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'product-3d-models' && 'Quản lý 3D Models'}
                 {currentView === 'color-skin-recommendation' && 'Color Skin Recommendation'}
                 {currentView === 'product-edit' && 'Chỉnh sửa sản phẩm'}
+                {currentView === 'homepage-bestsellers' && 'Quản lý Bestseller Products'}
                 {currentView === 'brands' && 'Quản lý thương hiệu'}
                 {currentView === 'brand-form' && 'Thêm/Sửa thương hiệu'}
                 {currentView === 'categories' && 'Quản lý danh mục'}
@@ -677,6 +689,7 @@ const AdminDashboard: React.FC = () => {
           )}
           {currentView === 'lens-thickness' && <LensThicknessPage />}
           {currentView === 'lens-tints' && <div className="p-4 bg-yellow-100 rounded">Lens Tints Page - Coming Soon</div>}
+          {currentView === 'homepage-bestsellers' && <BestsellerManagement />}
           {currentView === 'orders' && <OrderManagement />}
           {currentView === 'stock-management' && <StockManagementPage />}
         </main>
