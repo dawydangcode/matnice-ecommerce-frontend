@@ -223,6 +223,28 @@ const BestsellerManagement: React.FC = () => {
     setSelectedProductId(null);
   };
 
+  const handleSyncSalesData = async () => {
+    try {
+      const confirmed = window.confirm(
+        'Bạn có chắc muốn đồng bộ dữ liệu bán hàng?\nThao tác này sẽ cập nhật số liệu sales từ Orders.'
+      );
+      
+      if (!confirmed) return;
+
+      setLoading(true);
+      await apiService.post('/api/v1/bestsellers/admin/sync-sales', { days: 30 });
+      toast.success('Đã đồng bộ dữ liệu bán hàng thành công!');
+      
+      // Refresh bestsellers data
+      await fetchBestsellers();
+    } catch (error) {
+      console.error('Error syncing sales data:', error);
+      toast.error('Không thể đồng bộ dữ liệu bán hàng');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredBestsellers = bestsellers.filter((item) =>
     item.product.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.product.brand?.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -250,13 +272,23 @@ const BestsellerManagement: React.FC = () => {
             Quản lý sản phẩm bán chạy hiển thị trên Homepage
           </p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center px-4 py-2 bg-gradient-to-r from-[#43AC78] to-[#64C695] text-white rounded-lg hover:shadow-lg transition-all"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Thêm Bestseller
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center px-4 py-2 bg-gradient-to-r from-[#43AC78] to-[#64C695] text-white rounded-lg hover:shadow-lg transition-all"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Thêm Bestseller
+          </button>
+          <button
+            onClick={handleSyncSalesData}
+            disabled={loading}
+            className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <TrendingUp className="w-5 h-5 mr-2" />
+            {loading ? 'Đang đồng bộ...' : 'Đồng bộ Sales'}
+          </button>
+        </div>
       </div>
 
       {/* Info Cards */}
