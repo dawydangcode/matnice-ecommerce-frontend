@@ -558,9 +558,6 @@ const HomePage: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Sản Phẩm Bán Chạy
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-              Những mẫu kính được yêu thích nhất, kết hợp giữa phong cách thời thượng và chất lượng vượt trội
-            </p>
           </div>
 
           {/* Loading State */}
@@ -583,10 +580,18 @@ const HomePage: React.FC = () => {
             </div>
           )}
 
-          {/* Products Grid */}
+          {/* Products Carousel - Horizontal Scroll */}
           {!bestsellerLoading && !bestsellerError && (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Products Horizontal Scroll */}
+              <div 
+                className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide snap-x snap-mandatory scroll-smooth"
+                style={{ 
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                }}
+                id="bestseller-carousel"
+              >
                 {bestsellers.map((product) => {
                   const productId = product.id;
                   const currentIsInWishlist = isItemInWishlist('product', productId);
@@ -595,37 +600,33 @@ const HomePage: React.FC = () => {
                     <Link
                       key={product.id}
                       to={`/product/${product.id}`}
-                      className="group cursor-pointer bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                      className="group cursor-pointer bg-white rounded-2xl overflow-hidden hover: transition-all duration-300 transform hover:-translate-y-2 flex-shrink-0 snap-start"
+                      style={{ width: 'calc(25% - 18px)', minWidth: '280px' }}
                     >
-                      <div className="relative bg-gray-50 aspect-square overflow-hidden flex items-center justify-center">
+                      <div className="relative bg-gray-50 overflow-hidden flex items-center justify-center" style={{ height: '350px' }}>
                         {/* Badges */}
-                        <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+                        <div className="absolute top-6 left-6 flex flex-row space-x-2 z-10">
                           {product.isNew && (
-                            <div className="bg-white text-green-700 px-3 py-1 text-xs font-medium rounded shadow">
+                            <div className="bg-white text-green-700 px-4 py-2 text-sm font-medium rounded shadow-sm">
                               New
                             </div>
                           )}
                           {product.isBoutique && (
-                            <div className="bg-gray-800 text-white px-3 py-1 text-xs font-medium rounded shadow">
+                            <div className="bg-gray-800 text-white px-4 py-2 text-sm font-medium rounded shadow-sm">
                               Boutique
                             </div>
                           )}
-                          {product.isPinned && (
-                            <div className="bg-yellow-500 text-white px-3 py-1 text-xs font-semibold rounded shadow">
-                              ⭐ Đề xuất
-                            </div>
-                          )}
                           {product.discountPercentage && (
-                            <div className="bg-red-500 text-white px-3 py-1 text-xs font-bold rounded shadow">
+                            <div className="bg-red-500 text-white px-4 py-2 text-sm font-bold rounded shadow-sm">
                               -{product.discountPercentage}%
                             </div>
                           )}
                         </div>
 
                         {/* Wishlist Button */}
-                        <div className="absolute top-2 right-4 z-10">
+                        <div className="absolute top-4 right-6 z-10">
                           <button
-                            className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm hover:shadow-md transition-shadow"
+                            className="w-12 h-12 flex items-center justify-center bg-white rounded-full shadow-md hover:shadow-xl transition-all"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
@@ -633,7 +634,7 @@ const HomePage: React.FC = () => {
                             }}
                           >
                             <Heart
-                              className={`w-5 h-5 transition-colors ${
+                              className={`w-6 h-6 transition-colors ${
                                 currentIsInWishlist
                                   ? 'text-red-500 fill-red-500'
                                   : 'text-gray-400 hover:text-red-500'
@@ -646,7 +647,7 @@ const HomePage: React.FC = () => {
                         <img
                           src={product.image || '/api/placeholder/400/320'}
                           alt={`${product.brand.name} ${product.productName}`}
-                          className="w-full h-full max-w-[350px] max-h-[350px] object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-500"
                           onError={(e) => {
                             e.currentTarget.src = '/api/placeholder/400/320';
                           }}
@@ -654,50 +655,69 @@ const HomePage: React.FC = () => {
                       </div>
 
                       {/* Product Info */}
-                      <div className="p-4 space-y-2">
+                      <div className="p-6 space-y-3 bg-gray-50">
                         <div>
-                          <h3 className="font-bold text-lg text-gray-900">
+                          <h3 className="font-bold text-xl text-gray-900">
                             {product.brand.name}
                           </h3>
-                          <p className="text-sm text-gray-600 line-clamp-1">
+                          <p className="text-base text-gray-600 line-clamp-1 mt-1">
                             {product.productCode || product.productName}
                           </p>
                         </div>
 
-                        <div className="space-y-2 pt-2">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs text-gray-500">Frame price without lenses</p>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-end">
                             <div className="text-right">
                               {product.discountPrice ? (
                                 <div className="flex flex-col items-end">
-                                  <span className="text-gray-400 line-through text-xs">
+                                  <span className="text-gray-400 line-through text-sm">
                                     {formatVND(product.price)}
                                   </span>
-                                  <span className="text-base font-bold text-red-600">
+                                  <span className="text-xl font-bold text-red-600">
                                     {formatVND(product.discountPrice)}
                                   </span>
                                 </div>
                               ) : (
-                                <span className="text-base font-bold text-gray-900">
+                                <span className="text-xl font-bold text-gray-900">
                                   {formatVND(product.price)}
                                 </span>
                               )}
                             </div>
                           </div>
                         </div>
-
-                        {/* Sales Badge */}
-                        {product.totalSales > 0 && (
-                          <div className="pt-2 border-t border-gray-100">
-                            <p className="text-xs text-gray-500">
-                              Đã bán: <span className="font-semibold text-gray-700">{product.totalSales}</span>
-                            </p>
-                          </div>
-                        )}
                       </div>
                     </Link>
                   );
                 })}
+              </div>
+
+              {/* Navigation Arrows - Below Carousel (Right Aligned, Hidden on Mobile) */}
+              <div className="hidden md:flex justify-end gap-4 mt-8">
+                <button
+                  onClick={() => {
+                    const carousel = document.getElementById('bestseller-carousel');
+                    if (carousel) {
+                      carousel.scrollBy({ left: -400, behavior: 'smooth' });
+                    }
+                  }}
+                  className="w-12 h-12 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:bg-gray-50"
+                  aria-label="Previous products"
+                >
+                  <ChevronRight className="w-6 h-6 transform rotate-180" />
+                </button>
+
+                <button
+                  onClick={() => {
+                    const carousel = document.getElementById('bestseller-carousel');
+                    if (carousel) {
+                      carousel.scrollBy({ left: 400, behavior: 'smooth' });
+                    }
+                  }}
+                  className="w-12 h-12 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:bg-gray-50"
+                  aria-label="Next products"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
               </div>
 
               {/* View More Button */}

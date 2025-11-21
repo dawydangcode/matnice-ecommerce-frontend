@@ -20,8 +20,6 @@ interface BestsellerProduct {
   id: number;
   productId: number;
   isPinned: boolean;
-  customPriority: number | null;
-  displayOrder: number | null;
   totalSales: number;
   salesLast30Days: number;
   revenueGenerated: number;
@@ -70,8 +68,6 @@ const BestsellerManagement: React.FC = () => {
   // Form state for add/edit
   const [formData, setFormData] = useState({
     isPinned: false,
-    customPriority: '',
-    displayOrder: '',
     notes: '',
   });
 
@@ -140,8 +136,6 @@ const BestsellerManagement: React.FC = () => {
       await apiService.post('/api/v1/bestsellers/admin', {
         productId: selectedProductId,
         isPinned: formData.isPinned,
-        customPriority: formData.customPriority ? parseInt(formData.customPriority) : undefined,
-        displayOrder: formData.displayOrder ? parseInt(formData.displayOrder) : undefined,
         notes: formData.notes || undefined,
       });
 
@@ -159,8 +153,6 @@ const BestsellerManagement: React.FC = () => {
     try {
       await apiService.put(`/api/v1/bestsellers/admin/${id}`, {
         isPinned: formData.isPinned,
-        customPriority: formData.customPriority ? parseInt(formData.customPriority) : undefined,
-        displayOrder: formData.displayOrder ? parseInt(formData.displayOrder) : undefined,
         isActive: true,
         notes: formData.notes || undefined,
       });
@@ -207,8 +199,6 @@ const BestsellerManagement: React.FC = () => {
     setEditingItem(item);
     setFormData({
       isPinned: item.isPinned,
-      customPriority: item.customPriority?.toString() || '',
-      displayOrder: item.displayOrder?.toString() || '',
       notes: item.notes || '',
     });
   };
@@ -216,8 +206,6 @@ const BestsellerManagement: React.FC = () => {
   const resetForm = () => {
     setFormData({
       isPinned: false,
-      customPriority: '',
-      displayOrder: '',
       notes: '',
     });
     setSelectedProductId(null);
@@ -367,9 +355,6 @@ const BestsellerManagement: React.FC = () => {
                   Pinned
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Priority
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Sales (30d)
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -409,51 +394,25 @@ const BestsellerManagement: React.FC = () => {
                                   className="rounded text-[#43AC78] focus:ring-[#43AC78]"
                                 />
                                 <span className="text-sm font-medium text-gray-700">
-                                  Pin Product
+                                  📌 Ghim sản phẩm
                                 </span>
                               </label>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Sản phẩm được ghim sẽ hiển thị trước, tự động sắp xếp theo sales
+                              </p>
                             </div>
 
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Custom Priority
+                                Ghi chú cho admin
                               </label>
-                              <input
-                                type="number"
-                                value={formData.customPriority}
-                                onChange={(e) =>
-                                  setFormData({ ...formData, customPriority: e.target.value })
-                                }
-                                placeholder="1 = Highest"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#43AC78]"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Display Order
-                              </label>
-                              <input
-                                type="number"
-                                value={formData.displayOrder}
-                                onChange={(e) =>
-                                  setFormData({ ...formData, displayOrder: e.target.value })
-                                }
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#43AC78]"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Notes
-                              </label>
-                              <input
-                                type="text"
+                              <textarea
                                 value={formData.notes}
                                 onChange={(e) =>
                                   setFormData({ ...formData, notes: e.target.value })
                                 }
-                                placeholder="Admin notes..."
+                                placeholder="VD: Sản phẩm khuyến mãi, bestseller mùa hè..."
+                                rows={2}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#43AC78]"
                               />
                             </div>
@@ -512,18 +471,6 @@ const BestsellerManagement: React.FC = () => {
                         ) : (
                           <span className="text-gray-400 text-sm">Auto</span>
                         )}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        <div className="text-sm">
-                          {item.customPriority ? (
-                            <span className="font-medium text-blue-600">
-                              #{item.customPriority}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </div>
                       </td>
 
                       <td className="px-6 py-4">
@@ -735,47 +682,12 @@ const BestsellerManagement: React.FC = () => {
                       className="w-4 h-4 rounded text-[#43AC78] focus:ring-[#43AC78]"
                     />
                     <span className="text-sm font-medium text-gray-800">
-                      📌 Ghim sản phẩm (hiển thị ưu tiên hàng đầu)
+                      📌 Ghim sản phẩm lên đầu
                     </span>
                   </label>
                   <p className="text-xs text-gray-500 mt-2 ml-7">
-                    Sản phẩm được ghim sẽ luôn xuất hiện đầu tiên trong danh sách bestseller
+                    Sản phẩm được ghim sẽ hiển thị trước. Trong mỗi nhóm (pin/không pin), sắp xếp theo số lượng bán được (cao xuống thấp).
                   </p>
-                </div>
-
-                {/* Priority & Order */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Độ ưu tiên <span className="text-gray-500">(1 = cao nhất)</span>
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.customPriority}
-                      onChange={(e) =>
-                        setFormData({ ...formData, customPriority: e.target.value })
-                      }
-                      placeholder="VD: 1, 2, 3..."
-                      min="0"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#43AC78]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Thứ tự hiển thị
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.displayOrder}
-                      onChange={(e) =>
-                        setFormData({ ...formData, displayOrder: e.target.value })
-                      }
-                      placeholder="Tùy chọn"
-                      min="0"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#43AC78]"
-                    />
-                  </div>
                 </div>
 
                 {/* Notes */}
