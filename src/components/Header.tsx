@@ -5,6 +5,7 @@ import { Link, useLocation } from 'react-router-dom';
 import smallEyeLogo from '../assets/small_eye_logo.png';
 import CartDropdown from './CartDropdown';
 import WishlistDropdown from './WishlistDropdown';
+import SearchModal from './SearchModal';
 import {
   glassesCategories,
   sunglassesCategories,
@@ -24,62 +25,71 @@ interface HeaderProps {
 const DesktopHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => {
   const location = useLocation();
   const isAccountPage = location.pathname === '/account';
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
-    <div className="hidden md:block bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* Left spacer */}
-          <div className="flex-1"></div>
-          
-          {/* Center Logo */}
-          <div className="flex-1 flex justify-center">
-            <Link to="/" className="bg-black text-white px-6 py-3 font-bold text-2xl">
-              MATNICE EYEWEAR
-            </Link>
-          </div>
-
-          {/* Right Icons */}
-          <div className="flex-1 flex justify-end items-center space-x-4">
-            <Search className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" />
-            <WishlistDropdown />
-            <CartDropdown />
+    <>
+      <div className="hidden md:block bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* Left spacer */}
+            <div className="flex-1"></div>
             
-            {/* User Menu */}
-            {isLoggedIn ? (
-              <div className="flex items-center space-x-3">
-                <Link to="/account" className="flex items-center space-x-2">
-                  <User className={`w-6 h-6 ${isAccountPage ? 'text-black font-bold' : 'hover:text-gray-600'} transition-colors`} />
-                  <span className="text-sm font-medium">{user?.username}</span>
-                </Link>
-                {(user?.role?.name === 'admin' || user?.role?.type === 'admin') && (
-                  <Link to="/admin" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                    Admin
+            {/* Center Logo */}
+            <div className="flex-1 flex justify-center">
+              <Link to="/" className="bg-black text-white px-6 py-3 font-bold text-2xl">
+                MATNICE EYEWEAR
+              </Link>
+            </div>
+
+            {/* Right Icons */}
+            <div className="flex-1 flex justify-end items-center space-x-4">
+              <Search 
+                className="w-6 h-6 cursor-pointer hover:text-gray-600 transition-colors" 
+                onClick={() => setIsSearchOpen(true)}
+              />
+              <WishlistDropdown />
+              <CartDropdown />
+              
+              {/* User Menu */}
+              {isLoggedIn ? (
+                <div className="flex items-center space-x-3">
+                  <Link to="/account" className="flex items-center space-x-2">
+                    <User className={`w-6 h-6 ${isAccountPage ? 'text-black font-bold' : 'hover:text-gray-600'} transition-colors`} />
+                    <span className="text-sm font-medium">{user?.username}</span>
                   </Link>
-                )}
-                <button
-                  onClick={onLogout}
-                  className="text-sm text-red-600 hover:text-red-800 font-medium"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <User className="w-6 h-6" />
-                <Link to="/login" className="text-sm hover:text-gray-600 font-medium">
-                  Login
-                </Link>
-                <span>/</span>
-                <Link to="/register" className="text-sm hover:text-gray-600 font-medium">
-                  Register
-                </Link>
-              </div>
-            )}
+                  {(user?.role?.name === 'admin' || user?.role?.type === 'admin') && (
+                    <Link to="/admin" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                      Admin
+                    </Link>
+                  )}
+                  <button
+                    onClick={onLogout}
+                    className="text-sm text-red-600 hover:text-red-800 font-medium"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <User className="w-6 h-6" />
+                  <Link to="/login" className="text-sm hover:text-gray-600 font-medium">
+                    Login
+                  </Link>
+                  <span>/</span>
+                  <Link to="/register" className="text-sm hover:text-gray-600 font-medium">
+                    Register
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+    </>
   );
 };
 
@@ -90,18 +100,30 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [menuLevel, setMenuLevel] = useState<'main' | 'subcategory'>('main');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Disable/enable body scroll when menu opens/closes
   React.useEffect(() => {
     if (isMobileMenuOpen) {
+      // Prevent scrolling on mobile
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
     } else {
-      document.body.style.overflow = 'unset';
+      // Re-enable scrolling
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
     }
 
     // Cleanup function to ensure scroll is re-enabled when component unmounts
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
     };
   }, [isMobileMenuOpen]);
 
@@ -138,7 +160,10 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
                   <Menu className="w-6 h-6" />
                 )}
               </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <button 
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => setIsSearchOpen(true)}
+              >
                 <Search className="w-6 h-6" />
               </button>
             </div>
@@ -242,39 +267,48 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
                     </button>
                   </div>
 
-                  {/* Contact Lenses */}
+                  {/* Lens */}
                   <div>
                     <button
                       onClick={() => handleCategoryClick('lens')}
                       className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
                     >
-                      <span className="font-normal text-gray-600">Contact lenses</span>
+                      <span className="font-normal text-gray-600">Lens</span>
                       <ChevronRight className="w-5 h-5 text-gray-400" />
                     </button>
                   </div>
 
                   {/* Brands */}
                   <div>
-                    <Link
-                      to="/brands"
-                      onClick={toggleMobileMenu}
+                    <button
+                      onClick={() => handleCategoryClick('brands')}
                       className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
                     >
                       <span className="font-normal text-gray-600">Brands</span>
                       <ChevronRight className="w-5 h-5 text-gray-400" />
-                    </Link>
+                    </button>
                   </div>
 
                   {/* Boutique */}
                   <div>
-                    <Link
-                      to="/boutique"
-                      onClick={toggleMobileMenu}
+                    <button
+                      onClick={() => handleCategoryClick('boutique')}
                       className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
                     >
                       <span className="font-normal text-gray-600">Boutique</span>
                       <ChevronRight className="w-5 h-5 text-gray-400" />
-                    </Link>
+                    </button>
+                  </div>
+
+                  {/* AI */}
+                  <div>
+                    <button
+                      onClick={() => handleCategoryClick('ai')}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <span className="font-normal text-red-600">AI</span>
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                    </button>
                   </div>
                 </div>
 
@@ -349,7 +383,10 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
                     <span className="font-medium">
                       {activeCategory === 'glasses' && 'Glasses'}
                       {activeCategory === 'sunglasses' && 'Sunglasses'}
-                      {activeCategory === 'lens' && 'Contact lenses'}
+                      {activeCategory === 'lens' && 'Lens'}
+                      {activeCategory === 'brands' && 'Brands'}
+                      {activeCategory === 'boutique' && 'Boutique'}
+                      {activeCategory === 'ai' && 'AI'}
                     </span>
                   </button>
                 </div>
@@ -357,154 +394,161 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
                 {/* Glasses Subcategories */}
                 {activeCategory === 'glasses' && (
                   <div className="py-2">
-                    <h3 className="px-4 py-3 text-sm font-bold text-gray-500 uppercase">Category</h3>
-                    <Link 
-                      to="/glasses?category=all-glasses"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      All Glasses
-                    </Link>
-                    <Link 
-                      to="/glasses?category=women-s-glasses"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Women's Glasses
-                    </Link>
-                    <Link 
-                      to="/glasses?category=men-s-glasses"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Men's Glasses
-                    </Link>
-                    <Link 
-                      to="/glasses?category=varifocals"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Varifocals
-                    </Link>
-                    <Link 
-                      to="/glasses?category=reading"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Reading Glasses
-                    </Link>
-                    <Link 
-                      to="/glasses?category=reading-glasses"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Outlet Glasses
-                    </Link>
-                    <Link 
-                      to="/glasses?category=accessories"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Glasses accessories
-                    </Link>
-                    <Link 
-                      to="/glasses?category=brands"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Our exclusive Brands
-                    </Link>
-                    <Link 
-                      to="/glasses"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      More glasses categories
-                    </Link>
+                    {glassesCategories.map((category, index) => (
+                      <div key={index} className="mb-4">
+                        <h3 className="px-4 py-2 text-sm font-bold text-gray-900">{category.title}</h3>
+                        {category.items.map((item, itemIndex) => (
+                          <Link 
+                            key={itemIndex}
+                            to={`/glasses?category=${item.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                            onClick={toggleMobileMenu}
+                            className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                          >
+                            {item}
+                          </Link>
+                        ))}
+                      </div>
+                    ))}
                   </div>
                 )}
 
                 {/* Sunglasses Subcategories */}
                 {activeCategory === 'sunglasses' && (
                   <div className="py-2">
-                    <h3 className="px-4 py-3 text-sm font-bold text-gray-500 uppercase">Category</h3>
-                    <Link 
-                      to="/sunglasses?category=all"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      All Sunglasses
-                    </Link>
-                    <Link 
-                      to="/sunglasses?category=women"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Women's Sunglasses
-                    </Link>
-                    <Link 
-                      to="/sunglasses?category=men"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Men's Sunglasses
-                    </Link>
-                    <Link 
-                      to="/sunglasses?category=prescription"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Prescription Sunglasses
-                    </Link>
-                    <Link 
-                      to="/sunglasses?category=sport"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Sport Sunglasses
-                    </Link>
+                    {sunglassesCategories.map((category, index) => (
+                      <div key={index} className="mb-4">
+                        <h3 className="px-4 py-2 text-sm font-bold text-gray-900">{category.title}</h3>
+                        {category.items.map((item, itemIndex) => (
+                          <Link 
+                            key={itemIndex}
+                            to="/sunglasses"
+                            onClick={toggleMobileMenu}
+                            className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                          >
+                            {item}
+                          </Link>
+                        ))}
+                      </div>
+                    ))}
                   </div>
                 )}
 
                 {/* Lens Subcategories */}
                 {activeCategory === 'lens' && (
                   <div className="py-2">
-                    <h3 className="px-4 py-3 text-sm font-bold text-gray-500 uppercase">Category</h3>
-                    <Link 
-                      to="/lenses?type=single-vision"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Single Vision
-                    </Link>
-                    <Link 
-                      to="/lenses?type=progressive"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Progressive
-                    </Link>
-                    <Link 
-                      to="/lenses?type=drive-safe"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Drive Safe
-                    </Link>
-                    <Link 
-                      to="/lenses?type=office"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Office
-                    </Link>
-                    <Link 
-                      to="/lenses?type=non-prescription"
-                      onClick={toggleMobileMenu}
-                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
-                    >
-                      Non-Prescription
-                    </Link>
+                    <div className="mb-4">
+                      <h3 className="px-4 py-2 text-sm font-bold text-gray-900">Danh mục</h3>
+                      <Link 
+                        to="/lenses?type=single-vision"
+                        onClick={toggleMobileMenu}
+                        className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                      >
+                        Single Vision
+                      </Link>
+                      <Link 
+                        to="/lenses?type=drive-safe"
+                        onClick={toggleMobileMenu}
+                        className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                      >
+                        Drive Safe
+                      </Link>
+                      <Link 
+                        to="/lenses?type=progressive"
+                        onClick={toggleMobileMenu}
+                        className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                      >
+                        Progressive
+                      </Link>
+                      <Link 
+                        to="/lenses?type=office"
+                        onClick={toggleMobileMenu}
+                        className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                      >
+                        Office
+                      </Link>
+                      <Link 
+                        to="/lenses?type=non-prescription"
+                        onClick={toggleMobileMenu}
+                        className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                      >
+                        Non-Prescription
+                      </Link>
+                    </div>
+                    <div className="mb-4">
+                      <h3 className="px-4 py-2 text-sm font-bold text-gray-900">Chức năng</h3>
+                      <p className="px-4 py-2 text-xs text-gray-500">
+                        Vui lòng truy cập trang Lens để xem đầy đủ danh mục
+                      </p>
+                    </div>
+                    <div className="mb-4">
+                      <h3 className="px-4 py-2 text-sm font-bold text-gray-900">Thương hiệu tròng kính</h3>
+                      <p className="px-4 py-2 text-xs text-gray-500">
+                        Vui lòng truy cập trang Lens để xem đầy đủ thương hiệu
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Brands Subcategories */}
+                {activeCategory === 'brands' && (
+                  <div className="py-2">
+                    {brandsCategories.map((category, index) => (
+                      <div key={index} className="mb-4">
+                        <h3 className="px-4 py-2 text-sm font-bold text-gray-900">{category.title}</h3>
+                        {category.items.map((item, itemIndex) => (
+                          <Link 
+                            key={itemIndex}
+                            to="/brands"
+                            onClick={toggleMobileMenu}
+                            className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                          >
+                            {item}
+                          </Link>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Boutique Subcategories */}
+                {activeCategory === 'boutique' && (
+                  <div className="py-2">
+                    {boutiqueCategories.map((category, index) => (
+                      <div key={index} className="mb-4">
+                        <h3 className="px-4 py-2 text-sm font-bold text-gray-900">{category.title}</h3>
+                        {category.items.map((item, itemIndex) => (
+                          <Link 
+                            key={itemIndex}
+                            to="/boutique"
+                            onClick={toggleMobileMenu}
+                            className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                          >
+                            {item}
+                          </Link>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* AI Subcategories */}
+                {activeCategory === 'ai' && (
+                  <div className="py-2">
+                    {aiCategories.map((category, index) => (
+                      <div key={index} className="mb-4">
+                        <h3 className="px-4 py-2 text-sm font-bold text-gray-900">{category.title}</h3>
+                        {category.items.map((item, itemIndex) => (
+                          <Link 
+                            key={itemIndex}
+                            to="/ai"
+                            onClick={toggleMobileMenu}
+                            className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                          >
+                            {item}
+                          </Link>
+                        ))}
+                      </div>
+                    ))}
                   </div>
                 )}
               </>
@@ -512,6 +556,9 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
           </div>
         </>
       )}
+      
+      {/* Search Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 };

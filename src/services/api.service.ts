@@ -182,6 +182,7 @@ class ApiService {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 300000, // 5 minutes for large file uploads (3D models)
       });
       console.log('ApiService.postFormData success:', response.data);
       return response.data;
