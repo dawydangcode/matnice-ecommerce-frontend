@@ -47,6 +47,7 @@ import Product3DModelManagement from '../components/admin/Product3DModelManageme
 import OrderManagement from '../components/OrderManagement';
 import StockManagementPage from './StockManagementPage';
 import BestsellerManagement from './admin/BestsellerManagement';
+import CustomerManagementPage from './admin/CustomerManagementPage';
 import RechartsLineChart from '../components/charts/RechartsLineChart';
 import TimeFilter, { TimeRange } from '../components/dashboard/TimeFilter';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -57,7 +58,7 @@ import { Lens } from '../types/lens.types';
 import { LensBrand } from '../types/lensBrand.types';
 import { LensCategory } from '../types/lensCategory.types';
 
-type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'color-skin-recommendation' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-detail' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form' | 'orders' | 'stock' | 'stock-management' | 'homepage' | 'homepage-bestsellers';
+type AdminView = 'dashboard' | 'products' | 'product-list' | 'product-detail' | 'product-edit' | 'product-3d-models' | 'color-skin-recommendation' | 'enhanced-product-form' | 'brands' | 'brand-form' | 'categories' | 'category-form' | 'lenses' | 'lens-management' | 'lens-form' | 'create-lens' | 'lens-detail' | 'lens-thickness' | 'lens-tints' | 'lens-brands' | 'lens-brand-form' | 'lens-categories' | 'lens-category-form' | 'orders' | 'stock' | 'stock-management' | 'homepage' | 'homepage-bestsellers' | 'customers';
 
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -409,6 +410,8 @@ const AdminDashboard: React.FC = () => {
                           setCurrentView('orders');
                         } else if (item.id === 'stock') {
                           setCurrentView('stock-management');
+                        } else if (item.id === 'customers') {
+                          setCurrentView('customers');
                         }
                         // Handle other menu items later
                       }
@@ -529,6 +532,7 @@ const AdminDashboard: React.FC = () => {
                 {currentView === 'lens-tints' && 'Lens Tints & Colors Management'}
                 {currentView === 'orders' && 'Quản lý đơn hàng'}
                 {currentView === 'stock-management' && 'Quản lý tồn kho'}
+                {currentView === 'customers' && 'Quản lý khách hàng'}
               </h1>
             </div>
             
@@ -692,6 +696,7 @@ const AdminDashboard: React.FC = () => {
           {currentView === 'homepage-bestsellers' && <BestsellerManagement />}
           {currentView === 'orders' && <OrderManagement />}
           {currentView === 'stock-management' && <StockManagementPage />}
+          {currentView === 'customers' && <CustomerManagementPage />}
         </main>
       </div>
     </div>

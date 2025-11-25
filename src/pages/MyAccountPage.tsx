@@ -360,26 +360,59 @@ const MyAccountPage: React.FC = () => {
   const handleUpdateUserDetail = async () => {
     try {
       if (user?.id) {
-        // Convert string date to Date object for API
-        const apiData: UpdateUserDetailRequest = {
-          name: detailFormData.name,
-          dob: detailFormData.dob ? new Date(detailFormData.dob) : undefined,
-          gender: detailFormData.gender
-        };
+        console.log('Starting update user detail...', {
+          userId: user.id,
+          formData: detailFormData,
+          userDetail: userDetail
+        });
 
-        if (userDetail) {
-          await userDetailService.updateUserDetail(user.id, apiData);
+        // Build API data - only include fields that have values
+        const apiData: UpdateUserDetailRequest = {};
+        
+        if (detailFormData.name && detailFormData.name.trim() !== '') {
+          apiData.name = detailFormData.name;
+        }
+        
+        if (detailFormData.dob && detailFormData.dob !== '') {
+          apiData.dob = new Date(detailFormData.dob);
+        }
+        
+        if (detailFormData.gender) {
+          apiData.gender = detailFormData.gender;
+        }
+
+        console.log('API Data to send:', apiData);
+
+        // Check if there's anything to update
+        if (Object.keys(apiData).length === 0) {
+          toast('Không có thông tin nào để cập nhật');
+          setIsEditingProfile(false);
+          return;
+        }
+
+        if (userDetail && userDetail.id) {
+          // Update existing user detail - use userDetail.id, not user.id
+          console.log('Updating existing user detail with ID:', userDetail.id);
+          await userDetailService.updateUserDetail(userDetail.id, apiData);
         } else {
+          // Create new user detail - userId is required for create
+          console.log('Creating new user detail...');
           await userDetailService.createUserDetail({
             userId: user.id,
             ...apiData
           });
         }
+        
+        console.log('Reloading user detail...');
         await reloadUserDetail();
         setIsEditingProfile(false);
+        console.log('Update completed successfully!');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update user detail:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error message:', error.response?.data?.message);
+      throw error; // Re-throw để handleSaveProfile có thể catch
     }
   };
 
@@ -497,24 +530,13 @@ const MyAccountPage: React.FC = () => {
           <span className="text-xs sm:text-sm text-gray-500">Customer No. {user?.id || 'N/A'}</span>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-          {/* Account Information */}
-          <div>
-            <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Account Information</h4>
-            <div className="space-y-1 text-xs sm:text-sm text-gray-600">
-              <p className="font-medium text-gray-900 break-all">{user?.username || 'Not provided'}</p>
-              <p className="break-all">{user?.email || 'No email provided'}</p>
-              <p className="text-xs text-gray-500">Member since: {new Date(user?.createdAt || '').toLocaleDateString()}</p>
-            </div>
-          </div>
-
-          {/* Account Settings */}
-          <div>
-            <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Account Settings</h4>
-            <div className="space-y-1 text-xs sm:text-sm text-gray-600">
-              <p>Role: <span className="font-medium text-gray-900">{user?.role?.name || 'User'}</span></p>
-              <p>Status: <span className="font-medium text-green-600">Active</span></p>
-            </div>
+        {/* Account Information */}
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Account Information</h4>
+          <div className="space-y-1 text-xs sm:text-sm text-gray-600">
+            <p className="font-medium text-gray-900 break-all">{user?.username || 'Not provided'}</p>
+            <p className="break-all">{user?.email || 'No email provided'}</p>
+            <p className="text-xs text-gray-500">Member since: {new Date(user?.createdAt || '').toLocaleDateString()}</p>
           </div>
         </div>
       </div>
@@ -667,7 +689,7 @@ const MyAccountPage: React.FC = () => {
               <option value="">Select gender</option>
               <option value={GenderType.MALE}>Male</option>
               <option value={GenderType.FEMALE}>Female</option>
-              <option value={GenderType.OTHER}>Other</option>
+              <option value={GenderType.UNISEX}>Other</option>
             </select>
           ) : (
             <p className="text-sm sm:text-base text-gray-900">
@@ -691,14 +713,6 @@ const MyAccountPage: React.FC = () => {
             Member Since
           </label>
           <p className="text-sm sm:text-base text-gray-900">{new Date(user?.createdAt || '').toLocaleDateString()}</p>
-        </div>
-
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-            <Settings className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
-            Role
-          </label>
-          <p className="text-sm sm:text-base text-gray-900">{user?.role?.name || 'User'}</p>
         </div>
       </div>
     </div>

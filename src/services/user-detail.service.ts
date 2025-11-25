@@ -1,9 +1,9 @@
 import { apiService } from './api.service';
 
 export enum GenderType {
-  MALE = 'male',
-  FEMALE = 'female',
-  OTHER = 'other',
+  MALE = 'Male',
+  FEMALE = 'Female',
+  UNISEX = 'Unisex',
 }
 
 export interface UserDetail {
@@ -146,7 +146,7 @@ class UserDetailService {
     const genderMap: Record<GenderType, string> = {
       [GenderType.MALE]: 'Nam',
       [GenderType.FEMALE]: 'Nữ',
-      [GenderType.OTHER]: 'Khác',
+      [GenderType.UNISEX]: 'Khác',
     };
     return gender ? genderMap[gender] : 'Chưa xác định';
   }
