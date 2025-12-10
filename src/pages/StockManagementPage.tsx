@@ -14,8 +14,7 @@ import {
   Edit, 
   Search,
   Eye,
-  Plus,
-  Minus
+  Plus
 } from 'lucide-react';
 
 const StockManagementPage: React.FC = () => {
@@ -102,6 +101,9 @@ const StockManagementPage: React.FC = () => {
     }
   };
 
+  // ĐÃ ẨN - Stock tự động trừ khi order confirmed/thanh toán thành công
+  // Giữ lại code để sau này có thể dùng cho trường hợp đặc biệt (offline order, fix lỗi data)
+  /*
   const handleReduceOrderStock = async () => {
     if (!selectedOrderId) {
       toast.error('Vui lòng nhập Order ID');
@@ -129,6 +131,7 @@ const StockManagementPage: React.FC = () => {
       setLoading(false);
     }
   };
+  */
 
   const handleRestoreOrderStock = async () => {
     if (!selectedOrderId) {
@@ -319,14 +322,15 @@ const StockManagementPage: React.FC = () => {
                 Kiểm tra Stock
               </button>
               
-              <button
+              {/* Ẩn chức năng Trừ Stock - stock tự động trừ khi order confirmed */}
+              {/* <button
                 onClick={handleReduceOrderStock}
                 disabled={loading}
                 className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
               >
                 <Minus className="w-4 h-4 mr-2" />
                 Trừ Stock
-              </button>
+              </button> */}
               
               <button
                 onClick={handleRestoreOrderStock}

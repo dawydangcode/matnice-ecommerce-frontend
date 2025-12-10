@@ -5,7 +5,6 @@ import {
   MapPin, 
   Settings, 
   Heart, 
-  CreditCard, 
   Key,
   Mail,
   Calendar,
@@ -518,7 +517,6 @@ const MyAccountPage: React.FC = () => {
     { id: 'addresses', label: 'My Addresses', icon: MapPin },
     { id: 'prescriptions', label: 'My Prescription Values', icon: Settings },
     { id: 'wishlist', label: 'My Favorites', icon: Heart },
-    { id: 'payment', label: 'Payment Methods', icon: CreditCard },
     { id: 'security', label: 'Change Password', icon: Key },
   ];
 
@@ -1217,13 +1215,6 @@ const MyAccountPage: React.FC = () => {
                 })}
               </div>
             )}
-          </div>
-        );
-      case 'payment':
-        return (
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Methods</h3>
-            <p className="text-gray-600">No payment methods saved.</p>
           </div>
         );
       case 'security':

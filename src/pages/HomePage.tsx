@@ -37,25 +37,25 @@ const HomePage: React.FC = () => {
       image: VirtualTryOnImage,
       title: "Find Your",
       highlight: "Perfect Glasses",
-      description: "Tỏa sáng với mắt kính thông minh! AI 'soi' khuôn mặt, AR cho bạn thử kính ảo siêu chất. Chọn kính chuẩn gu, chuẩn dáng, chuẩn luôn tầm nhìn!",
+      description: "Shine Bright with Smart Glasses! AI scans your face, AR brings virtual try-on to life. Find frames that fit your style, face shape, and vision—perfectly!",
       primaryBtn: { text: "Shop Glasses", link: "/glasses" },
       secondaryBtn: { text: "Try AI Fitting", link: "/ai" }
     },
     {
       id: 2,
       image: VirtualTryOnImage,
-      title: "Gọng + Tròng",
-      highlight: "Theo Đơn Mắt",
-      description: "Đo mắt xong rồi? Chọn gọng yêu thích, chúng tôi tự động lọc tròng kính phù hợp với đơn mắt của bạn. Dễ dàng, chính xác, tiết kiệm thời gian!",
-      primaryBtn: { text: "Xem Gọng Kính", link: "/glasses" },
-      secondaryBtn: { text: "Tìm Hiểu Thêm", link: "/lens-selection" }
+      title: "Frame + Lens",
+      highlight: "Custom Prescription",
+      description: "Already have your prescription? Choose your favorite frame, and we'll automatically filter compatible lenses for you. Easy, accurate, and time-saving!",
+      primaryBtn: { text: "Browse Frames", link: "/glasses" },
+      secondaryBtn: { text: "Learn More", link: "/lens-selection" }
     },
     {
       id: 3,
       image: WomenGlassesImage,
       title: "Women's",
       highlight: "Collection 2025",
-      description: "Khám phá bộ sưu tập kính mắt nữ mới nhất. Thiết kế thanh lịch, phong cách hiện đại, phù hợp với mọi khuôn mặt.",
+      description: "Discover our latest women's eyewear collection. Elegant designs, modern styles that suit every face shape.",
       primaryBtn: { text: "Shop Women", link: "/glasses?category=women-s-glasses" },
       secondaryBtn: { text: "View Sunglasses", link: "/glasses?category=women-s-sunglasses" }
     },
@@ -64,7 +64,7 @@ const HomePage: React.FC = () => {
       image: MenGlassesImage,
       title: "Men's",
       highlight: "Signature Style",
-      description: "Bộ sưu tập kính nam sang trọng, lịch lãm. Từ classic đến trendy, tự tin thể hiện phong cách riêng của bạn.",
+      description: "Sophisticated men's eyewear collection. From classic to trendy, confidently express your unique style.",
       primaryBtn: { text: "Shop Men", link: "/glasses?category=men-s-glasses" },
       secondaryBtn: { text: "View Sunglasses", link: "/glasses?category=men-s-sunglasses" }
     }
@@ -556,7 +556,7 @@ const HomePage: React.FC = () => {
           {/* Section Header */}
           <div className="text-center mb-12 md:mb-16">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Sản Phẩm Bán Chạy
+              Bestsellers
             </h2>
           </div>
 
@@ -575,7 +575,7 @@ const HomePage: React.FC = () => {
                 onClick={() => window.location.reload()}
                 className="px-6 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition"
               >
-                Thử lại
+                Try Again
               </button>
             </div>
           )}
@@ -726,7 +726,7 @@ const HomePage: React.FC = () => {
                   onClick={() => navigate('/glasses')}
                   className="inline-flex items-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105 duration-300"
                 >
-                  <span className="font-semibold">Xem Tất Cả Sản Phẩm</span>
+                  <span className="font-semibold">View All Products</span>
                   <ChevronRight className="w-5 h-5" />
                 </button>
               </div>

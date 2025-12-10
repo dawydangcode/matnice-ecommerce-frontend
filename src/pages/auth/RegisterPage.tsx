@@ -1,6 +1,7 @@
 import React from 'react';
 import RegisterForm from '../../components/auth/RegisterForm';
 import '../../styles/auth.css';
+import LoginFooter from '../../components/auth/LoginFooter';
 
 const RegisterPage: React.FC = () => {
   return (
@@ -21,6 +22,10 @@ const RegisterPage: React.FC = () => {
             <RegisterForm />
           </div>
         </div>
+      </div>
+      {/* Footer */}
+      <div className="flex-shrink-0">
+        <LoginFooter />
       </div>
     </div>
   );

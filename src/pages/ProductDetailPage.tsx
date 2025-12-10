@@ -157,7 +157,7 @@ const ProductDetailPage: React.FC = () => {
       };
     }
     return { 
-      status: 'Hết hàng', 
+      status: 'Out of stock', 
       color: stockService.getStockStatusColor(0) 
     };
   };
@@ -687,10 +687,10 @@ const ProductDetailPage: React.FC = () => {
                 </span>
               </div>
               <div className="stock-status text-gray-900">
-                {getStockStatus().status !== 'Out of stock' && getStockStatus().status !== 'Hết hàng' && (
+                {getStockStatus().status !== 'Out of stock' && (
                   <CircleCheck size={20} className="inline mr-1" style={{ color: '#059669' }} />
                 )}
-                {(getStockStatus().status === 'Out of stock' || getStockStatus().status === 'Hết hàng') && (
+                {getStockStatus().status === 'Out of stock' && (
                   <CircleX size={20} className="inline mr-1" style={{ color: '#dc2626' }} />
                 )}
                 {getStockStatus().status}

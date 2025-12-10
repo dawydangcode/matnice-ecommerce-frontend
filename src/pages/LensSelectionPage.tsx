@@ -353,7 +353,7 @@ const LensSelectionPage: React.FC = () => {
 
   const handleLensTypeSelect = (lensType: string) => {
     setSelectedLensType(lensType);
-    // Không tự động chuyển step, chờ user nhấn button Continue
+    // Don't automatically change step, wait for user to click Continue button
   };
 
   const handleContinueToPrescription = () => {
@@ -559,7 +559,7 @@ const LensSelectionPage: React.FC = () => {
       });
     } catch (error) {
       console.error('Error loading lens details:', error);
-      toast.error('Không thể tải thông tin tùy chọn tròng kính');
+      toast.error('Unable to load lens options information');
     } finally {
       setLensOptionsLoading(false);
     }
@@ -687,12 +687,12 @@ const LensSelectionPage: React.FC = () => {
 
   const handleAddToCart = async () => {
     if (!selectedProduct || !selectedLens || !selectedLensOptions.variant) {
-      alert('Vui lòng đảm bảo đã chọn đầy đủ sản phẩm, tròng kính và loại tròng');
+      alert('Please make sure you have selected product, lens, and lens type');
       return;
     }
 
     if (!isPrescriptionComplete()) {
-      alert('Vui lòng hoàn thành thông tin đơn thuốc trước khi thêm vào giỏ hàng');
+      alert('Please complete your prescription information before adding to cart');
       return;
     }
 
@@ -736,8 +736,8 @@ const LensSelectionPage: React.FC = () => {
           },
           selectedCoatingIds: selectedLensOptions.coatings.map(coating => Number(coating.id)),
           selectedTintColorId: selectedLensOptions.tintColor ? Number(selectedLensOptions.tintColor.id) : undefined,
-          prescriptionNotes: 'Từ trang Lens Selection',
-          lensNotes: `Loại tròng: ${selectedLensType}`
+          prescriptionNotes: 'From Lens Selection page',
+          lensNotes: `Lens Type: ${selectedLensType}`
         }
       };
 
@@ -823,7 +823,7 @@ const LensSelectionPage: React.FC = () => {
       });
       
       console.log('Added to cart successfully:', result);
-      toast.success('Đã thêm sản phẩm vào giỏ hàng thành công!');
+      toast.success('Product added to cart successfully!');
       
       // Navigate to cart page after successful addition
       setTimeout(() => {
@@ -880,20 +880,20 @@ const LensSelectionPage: React.FC = () => {
           },
           selectedCoatingIds: selectedLensOptions.coatings.map(coating => Number(coating.id)),
           selectedTintColorId: selectedLensOptions.tintColor ? Number(selectedLensOptions.tintColor.id) : undefined,
-          prescriptionNotes: 'Từ trang Lens Selection',
-          lensNotes: `Loại tròng: ${selectedLensType}`
+          prescriptionNotes: 'From Lens Selection page',
+          lensNotes: `Lens Type: ${selectedLensType}`
         };
         
         // Store lens data in separate localStorage key
         localStorage.setItem(`matnice_lens_data_${addedItem.id}`, JSON.stringify(lensData));
-        toast.success('Đã lưu sản phẩm vào giỏ hàng tạm thời!');
+        toast.success('Product saved to temporary cart!');
         
         setTimeout(() => {
           navigate('/cart');
         }, 1500);
       } catch (fallbackError) {
         console.error('Fallback also failed:', fallbackError);
-        toast.error('Có lỗi xảy ra khi thêm vào giỏ hàng. Vui lòng thử lại.');
+        toast.error('An error occurred while adding to cart. Please try again.');
       }
     } finally {
       setIsAddingToCart(false);
@@ -1793,13 +1793,13 @@ const LensSelectionPage: React.FC = () => {
                     <div className="hidden md:flex md:flex-wrap gap-4 mb-6">
                       {/* Brand Filter */}
                       <div className="flex-1 md:min-w-[200px]">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Hãng</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
                         <select 
                           value={selectedBrand}
                           onChange={(e) => setSelectedBrand(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="">Tất cả hãng</option>
+                          <option value="">All Brands</option>
                           {brandLensOptions && brandLensOptions.length > 0 && brandLensOptions.map(brand => (
                             <option key={brand.brandLensId} value={brand.brandLensId}>
                               {brand.name}
@@ -1810,13 +1810,13 @@ const LensSelectionPage: React.FC = () => {
 
                       {/* Category Filter */}
                       <div className="flex-1 md:min-w-[200px]">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Loại tròng kính</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Lens Type</label>
                         <select 
                           value={selectedCategory}
                           onChange={(e) => setSelectedCategory(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="">Tất cả loại</option>
+                          <option value="">All Types</option>
                           {categoryLensOptions && categoryLensOptions.length > 0 && categoryLensOptions.map(category => (
                             <option key={category.categoryLensId} value={category.categoryLensId}>
                               {category.name}
@@ -1827,16 +1827,16 @@ const LensSelectionPage: React.FC = () => {
 
                       {/* Lens Thickness Filter */}
                       <div className="flex-1 md:min-w-[200px]">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Độ dày</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Thickness</label>
                         <select 
                           value={selectedThickness}
                           onChange={(e) => setSelectedThickness(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="">Tất cả độ dày</option>
+                          <option value="">All Thickness</option>
                           {lensThicknessOptions && lensThicknessOptions.length > 0 && lensThicknessOptions.map(thickness => (
                             <option key={thickness.id} value={thickness.id}>
-                              {thickness.name} (Chỉ số: {thickness.indexValue})
+                              {thickness.name} (Index: {thickness.indexValue})
                             </option>
                           ))}
                         </select>
@@ -1844,17 +1844,17 @@ const LensSelectionPage: React.FC = () => {
 
                       {/* Price Filter */}
                       <div className="flex-1 md:min-w-[200px]">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Giá</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
                         <select 
                           value={selectedPrice}
                           onChange={(e) => setSelectedPrice(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="">Tất cả mức giá</option>
-                          <option value="under-1m">Dưới 1 triệu</option>
-                          <option value="1m-2m">1 - 2 triệu</option>
-                          <option value="2m-3m">2 - 3 triệu</option>
-                          <option value="over-3m">Trên 3 triệu</option>
+                          <option value="">All Price Ranges</option>
+                          <option value="under-1m">Under ₫1M</option>
+                          <option value="1m-2m">₫1M - ₫2M</option>
+                          <option value="2m-3m">₫2M - ₫3M</option>
+                          <option value="over-3m">Over ₫3M</option>
                         </select>
                       </div>
                     </div>
@@ -1876,7 +1876,7 @@ const LensSelectionPage: React.FC = () => {
                               : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
                           }`}
                         >
-                          <span>Hãng</span>
+                          <span>Brand</span>
                           {selectedBrand && (
                             <span className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                               1
@@ -1900,7 +1900,7 @@ const LensSelectionPage: React.FC = () => {
                               : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
                           }`}
                         >
-                          <span>Loại TK</span>
+                          <span>Type</span>
                           {selectedCategory && (
                             <span className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                               1
@@ -1924,7 +1924,7 @@ const LensSelectionPage: React.FC = () => {
                               : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
                           }`}
                         >
-                          <span>Độ dày</span>
+                          <span>Thickness</span>
                           {selectedThickness && (
                             <span className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                               1
@@ -1948,7 +1948,7 @@ const LensSelectionPage: React.FC = () => {
                               : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
                           }`}
                         >
-                          <span>Giá</span>
+                          <span>Price</span>
                           {selectedPrice && (
                             <span className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                               1
@@ -1972,7 +1972,7 @@ const LensSelectionPage: React.FC = () => {
                               : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300'
                           }`}
                         >
-                          <span>Sắp xếp</span>
+                          <span>Sort</span>
                           {selectedSort && (
                             <span className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                               1
@@ -1988,7 +1988,7 @@ const LensSelectionPage: React.FC = () => {
                       {activeFilterCount > 0 && (
                         <div className="mt-3 flex items-center justify-between">
                           <span className="text-sm text-gray-600">
-                            {activeFilterCount} bộ lọc đang áp dụng
+                            {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} applied
                           </span>
                           <button
                             type="button"
@@ -1998,7 +1998,7 @@ const LensSelectionPage: React.FC = () => {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                            Xóa tất cả
+                            Clear All
                           </button>
                         </div>
                       )}
@@ -2008,15 +2008,15 @@ const LensSelectionPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Tròng kính phù hợp</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">Suitable Lenses</h3>
                       {activeFilterCount > 0 && !lensesLoading && (
                         <p className="text-sm text-gray-600 mt-1">
-                          Hiển thị {displayedLenses.length} / {filteredLenses.length} kết quả
+                          Showing {displayedLenses.length} / {filteredLenses.length} results
                         </p>
                       )}
                     </div>
                     {lensesLoading && (
-                      <div className="text-sm text-gray-600">Đang tìm kiếm...</div>
+                      <div className="text-sm text-gray-600">Searching...</div>
                     )}
                   </div>
                   
@@ -2030,8 +2030,8 @@ const LensSelectionPage: React.FC = () => {
                   {/* No results */}
                   {!lensesLoading && displayedLenses.length === 0 && (
                     <div className="text-center py-8">
-                      <div className="text-gray-500 mb-2">Không tìm thấy tròng kính phù hợp</div>
-                      <div className="text-sm text-gray-400">Vui lòng thử điều chỉnh các thông số đo mắt hoặc bộ lọc</div>
+                      <div className="text-gray-500 mb-2">No suitable lenses found</div>
+                      <div className="text-sm text-gray-400">Please try adjusting your prescription values or filters</div>
                     </div>
                   )}
 
@@ -2083,7 +2083,7 @@ const LensSelectionPage: React.FC = () => {
                               {lens.origin || 'Imported'}
                             </span>
                             <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                              {lens.status === 'IN_STOCK' ? 'Còn hàng' : 'Hết hàng'}
+                              {lens.status === 'IN_STOCK' ? 'In Stock' : 'Out of Stock'}
                             </span>
                           </div>
                         </div>
@@ -2104,11 +2104,11 @@ const LensSelectionPage: React.FC = () => {
                         disabled={currentPage === 1}
                         className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Trước
+                        Previous
                       </button>
                       
                       <span className="text-sm text-gray-600">
-                        Trang {currentPage} / {totalPages}
+                        Page {currentPage} / {totalPages}
                       </span>
                       
                       <button
@@ -2121,7 +2121,7 @@ const LensSelectionPage: React.FC = () => {
                         disabled={currentPage === totalPages}
                         className="px-3 py-1 border rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Tiếp
+                        Next
                       </button>
                     </div>
                   )}
@@ -2178,8 +2178,8 @@ const LensSelectionPage: React.FC = () => {
                 }`}
               > 
                 {selectedLens 
-                  ? 'Tiếp tục với tùy chọn cho tròng kính' 
-                  : 'Tiếp tục với tùy chọn cho tròng kính'
+                  ? 'Continue to Lens Options' 
+                  : 'Continue to Lens Options'
                 }
               </button>
             </div>
@@ -2193,7 +2193,7 @@ const LensSelectionPage: React.FC = () => {
                   <div className="rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-3 text-white bg-gray-800">
                     4
                   </div>
-                  <h2 className="text-lg font-semibold">Tùy chỉnh tròng kính</h2>
+                  <h2 className="text-lg font-semibold">Customize Lens</h2>
                 </div>
               </div>
 
@@ -2202,7 +2202,7 @@ const LensSelectionPage: React.FC = () => {
                 {lensOptionsLoading ? (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <span className="ml-3 text-gray-600">Đang tải tùy chọn...</span>
+                    <span className="ml-3 text-gray-600">Loading options...</span>
                   </div>
                 ) : lensFullDetails ? (
                   <div className="space-y-6">
@@ -2211,7 +2211,7 @@ const LensSelectionPage: React.FC = () => {
                     {/* Variants Selection */}
                     {lensFullDetails.variants.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-3">Chọn loại tròng và độ dày</h4>
+                        <h4 className="font-semibold text-gray-900 mb-3">Select Lens Type and Thickness</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {lensFullDetails.variants.map((variant) => (
                             <div 
@@ -2230,17 +2230,17 @@ const LensSelectionPage: React.FC = () => {
                                 </span>
                               </div>
                               <p className="text-sm text-gray-600 mb-1">
-                                Chỉ số khúc xạ: {variant.lensThickness.indexValue}
+                                Refractive Index: {variant.lensThickness.indexValue}
                               </p>
                               <p className="text-sm text-gray-600 mb-2">
-                                Chất liệu: {variant.material} | Design: {variant.design}
+                                Material: {variant.material} | Design: {variant.design}
                               </p>
                               <p className="text-xs text-gray-500">{variant.lensThickness.description}</p>
                               <div className="mt-2">
                                 <span className={`px-2 py-1 text-xs rounded ${
                                   variant.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                 }`}>
-                                  {variant.stock > 0 ? `Còn ${variant.stock} sản phẩm` : 'Hết hàng'}
+                                  {variant.stock > 0 ? `${variant.stock} in stock` : 'Out of stock'}
                                 </span>
                               </div>
                             </div>
@@ -2252,7 +2252,7 @@ const LensSelectionPage: React.FC = () => {
                     {/* Coatings Selection */}
                     {lensFullDetails.coatings.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-3">Chọn lớp phủ</h4>
+                        <h4 className="font-semibold text-gray-900 mb-3">Select Coating</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {lensFullDetails.coatings.map((coating) => (
                             <div 
@@ -2295,7 +2295,7 @@ const LensSelectionPage: React.FC = () => {
                     {/* Tint Colors Selection (if available) */}
                     {lensFullDetails.variants.some(v => v.tintColors.length > 0) && (
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-3">Chọn màu tông (tùy chọn)</h4>
+                        <h4 className="font-semibold text-gray-900 mb-3">Select Tint Color (Optional)</h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           {lensFullDetails.variants
                             .flatMap(v => v.tintColors)
@@ -2337,7 +2337,7 @@ const LensSelectionPage: React.FC = () => {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">Không thể tải thông tin tùy chọn tròng kính</p>
+                    <p className="text-gray-500">Unable to load lens options</p>
                   </div>
                 )}
               </div>
@@ -2354,14 +2354,14 @@ const LensSelectionPage: React.FC = () => {
                         : 'bg-green-700 text-white hover:bg-green-800'
                     }`}
                   >
-                    {isAddingToCart ? 'Đang thêm vào giỏ hàng...' : 'Thêm vào giỏ hàng'}
+                    {isAddingToCart ? 'Adding to cart...' : 'Add to Cart'}
                   </button>
                   
                   {/* Validation message for incomplete prescription */}
                   {!isPrescriptionComplete() && selectedProduct && selectedLens && (
                     <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <p className="text-sm text-yellow-700">
-                        Vui lòng hoàn thành thông tin đơn thuốc để có thể thêm vào giỏ hàng
+                        Please complete your prescription information to add to cart
                       </p>
                     </div>
                   )}
@@ -2370,7 +2370,7 @@ const LensSelectionPage: React.FC = () => {
                   {!selectedLensOptions.variant && selectedProduct && selectedLens && isPrescriptionComplete() && (
                     <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <p className="text-sm text-yellow-700">
-                        Vui lòng chọn loại tròng và độ dày để có thể thêm vào giỏ hàng
+                        Please select lens type and thickness to add to cart
                       </p>
                     </div>
                   )}
@@ -2379,7 +2379,7 @@ const LensSelectionPage: React.FC = () => {
                   {selectedLensType === 'PROGRESSIVE' && shouldShowAddWarning() && (
                     <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                       <p className="text-sm text-red-700">
-                        Với tròng kính Progressive, vui lòng chọn giá trị ADD cho cả hai mắt
+                        For Progressive lenses, please select ADD value for both eyes
                       </p>
                     </div>
                   )}
@@ -2471,11 +2471,11 @@ const LensSelectionPage: React.FC = () => {
                   <>
                     <img 
                       src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=400&h=250&fit=crop&crop=center" 
-                      alt="Đang tải..."
+                      alt="Loading..."
                       className="w-full h-56 object-contain bg-gray-50 rounded-lg animate-pulse"
                     />
                     <p className="text-base text-gray-600 text-center mt-3 font-medium">
-                      Đang tải thông tin sản phẩm...
+                      Loading product information...
                     </p>
                   </>
                 )}
@@ -2483,10 +2483,10 @@ const LensSelectionPage: React.FC = () => {
 
               {/* Price Details */}
               <div className="mb-8">
-                <h3 className="font-semibold text-gray-900 mb-6 text-lg">Chi tiết giá</h3>
+                <h3 className="font-semibold text-gray-900 mb-6 text-lg">Price Details</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 text-base">Gọng kính</span>
+                    <span className="text-gray-600 text-base">Frame</span>
                     <span className="font-semibold text-lg">
                       {selectedProduct?.price ? `${Number(selectedProduct.price).toLocaleString('vi-VN')}₫` : '0₫'}
                     </span>
@@ -2494,22 +2494,22 @@ const LensSelectionPage: React.FC = () => {
                   <div className="text-sm text-gray-500 pl-0">
                     {selectedProductDetail ? 
                       getDisplayNameWithColor() :
-                      (selectedProduct?.displayName || 'Chưa chọn gọng kính')
+                      (selectedProduct?.displayName || 'No frame selected')
                     }
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 text-base">Loại tròng</span>
+                    <span className="text-gray-600 text-base">Lens Type</span>
                     <span className="font-medium text-base">
                       {selectedLens && !showLensOptionsStep ? 
                          `${selectedLens.priceRange.min.toLocaleString('vi-VN')}₫ - ${selectedLens.priceRange.max.toLocaleString('vi-VN')}₫` :
-                       selectedLens && showLensOptionsStep ? 'Đã chọn' :
-                       selectedLensType === 'SINGLE_VISION' ? 'Tròng đơn tròng' :
-                       selectedLensType === 'PROGRESSIVE' ? 'Tròng đa tròng' :
-                       selectedLensType === 'OFFICE' ? 'Tròng văn phòng' :
-                       selectedLensType === 'DRIVE_SAFE' ? 'Tròng lái xe an toàn' :
-                       selectedLensType === 'NON_PRESCRIPTION' ? 'Không có độ' :
-                       'Chọn loại tròng kính'}
+                       selectedLens && showLensOptionsStep ? 'Selected' :
+                       selectedLensType === 'SINGLE_VISION' ? 'Single Vision' :
+                       selectedLensType === 'PROGRESSIVE' ? 'Progressive' :
+                       selectedLensType === 'OFFICE' ? 'Office' :
+                       selectedLensType === 'DRIVE_SAFE' ? 'Drive Safe' :
+                       selectedLensType === 'NON_PRESCRIPTION' ? 'Non-Prescription' :
+                       'Select lens type'}
                     </span>
                   </div>
                   
@@ -2526,13 +2526,13 @@ const LensSelectionPage: React.FC = () => {
                   {selectedLensOptions.variant && (
                     <>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-base">Độ dày tròng</span>
+                        <span className="text-gray-600 text-base">Lens Thickness</span>
                         <span className="font-semibold text-lg">
                           +{Number(selectedLensOptions.variant.price).toLocaleString('vi-VN')}₫
                         </span>
                       </div>
                       <div className="text-sm text-gray-500 pl-0">
-                        {selectedLensOptions.variant.lensThickness.name} (Chỉ số: {selectedLensOptions.variant.lensThickness.indexValue})
+                        {selectedLensOptions.variant.lensThickness.name} (Index: {selectedLensOptions.variant.lensThickness.indexValue})
                       </div>
                     </>
                   )}
@@ -2541,7 +2541,7 @@ const LensSelectionPage: React.FC = () => {
                   {selectedLensOptions.coatings.length > 0 && (
                     <>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-base">Lớp phủ</span>
+                        <span className="text-gray-600 text-base">Coating</span>
                         <span className="font-semibold text-lg">
                           +{selectedLensOptions.coatings.reduce((sum, coating) => sum + Number(coating.price), 0).toLocaleString('vi-VN')}₫
                         </span>
@@ -2556,7 +2556,7 @@ const LensSelectionPage: React.FC = () => {
                   {selectedLensOptions.tintColor && (
                     <>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 text-base">Màu tông</span>
+                        <span className="text-gray-600 text-base">Tint Color</span>
                         <span className="font-semibold text-lg">
                           +{Number(selectedLensOptions.tintColor.price).toLocaleString('vi-VN')}₫
                         </span>
@@ -2568,15 +2568,15 @@ const LensSelectionPage: React.FC = () => {
                   )}
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 text-base">Giao hàng (7-15 ngày)</span>
-                    <span className="font-semibold text-green-600 text-lg">Miễn phí</span>
+                    <span className="text-gray-600 text-base">Shipping (7-15 days)</span>
+                    <span className="font-semibold text-green-600 text-lg">Free</span>
                   </div>
                 </div>
                 
                 <hr className="my-6" />
                 
                 <div className="flex justify-between items-center mb-3">
-                  <span className="font-bold text-xl text-gray-900">Tổng cộng</span>
+                  <span className="font-bold text-xl text-gray-900">Total</span>
                   <span className="font-bold text-2xl text-gray-800">
                     {(() => {
                       const framePrice = Number(selectedProduct?.price) || 0;
@@ -2593,7 +2593,7 @@ const LensSelectionPage: React.FC = () => {
                     })()}₫
                   </span>
                 </div>
-                <p className="text-sm text-gray-500">Đã bao gồm VAT</p>
+                <p className="text-sm text-gray-500">VAT included</p>
               </div>
 
               {/* Trust Indicators */}
@@ -2603,7 +2603,7 @@ const LensSelectionPage: React.FC = () => {
                     <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
-                    <span className="text-base font-semibold">Mua sắm trực tuyến an toàn</span>
+                    <span className="text-base font-semibold">Safe Online Shopping</span>
                   </div>
                 </div>
 
@@ -2611,28 +2611,28 @@ const LensSelectionPage: React.FC = () => {
                   <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
-                  <span className="text-base">Giao hàng nhanh miễn phí</span>
+                  <span className="text-base">Fast Free Shipping</span>
                 </div>
 
                 <div className="flex items-center text-gray-600">
                   <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
-                  <span className="text-base">Bảo hành đổi trả 30 ngày</span>
+                  <span className="text-base">30-Day Return Warranty</span>
                 </div>
 
                 <div className="flex items-center text-gray-600">
                   <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  <span className="text-base">Hơn 15 năm kinh nghiệm chuyên nghiệp</span>
+                  <span className="text-base">Over 15 Years Professional Experience</span>
                 </div>
 
                 <div className="flex items-center justify-center py-5">
                   <div className="flex items-center space-x-2">
                     <span className="text-green-600 text-xl">★</span>
                     <span className="text-base font-medium">Matnice Reviews</span>
-                    <span className="text-xs bg-green-700 text-white px-3 py-1 rounded">UY TÍN & CHẤT LƯỢNG</span>
+                    <span className="text-xs bg-green-700 text-white px-3 py-1 rounded">TRUST & QUALITY</span>
                   </div>
                 </div>
 
@@ -2695,7 +2695,7 @@ const LensSelectionPage: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-2">
-              <p className="text-sm text-gray-500">Đang tải sản phẩm...</p>
+              <p className="text-sm text-gray-500">Loading product...</p>
             </div>
           )}
         </div>
@@ -2827,11 +2827,11 @@ const LensSelectionPage: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="text-lg font-semibold">
-                {lensFilterType === 'brand' && 'Chọn hãng'}
-                {lensFilterType === 'category' && 'Chọn loại tròng kính'}
-                {lensFilterType === 'thickness' && 'Chọn độ dày'}
-                {lensFilterType === 'price' && 'Chọn mức giá'}
-                {lensFilterType === 'sort' && 'Sắp xếp'}
+                {lensFilterType === 'brand' && 'Select Brand'}
+                {lensFilterType === 'category' && 'Select Lens Type'}
+                {lensFilterType === 'thickness' && 'Select Thickness'}
+                {lensFilterType === 'price' && 'Select Price Range'}
+                {lensFilterType === 'sort' && 'Sort By'}
               </h3>
               <button
                 onClick={() => setShowLensFilterModal(false)}
@@ -2857,7 +2857,7 @@ const LensSelectionPage: React.FC = () => {
                       selectedBrand === '' ? 'bg-blue-50 text-blue-600 font-medium' : ''
                     }`}
                   >
-                    <span>Tất cả hãng</span>
+                    <span>All Brands</span>
                     {selectedBrand === '' && (
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -2901,7 +2901,7 @@ const LensSelectionPage: React.FC = () => {
                       selectedCategory === '' ? 'bg-blue-50 text-blue-600 font-medium' : ''
                     }`}
                   >
-                    <span>Tất cả loại</span>
+                    <span>All Types</span>
                     {selectedCategory === '' && (
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -2945,7 +2945,7 @@ const LensSelectionPage: React.FC = () => {
                       selectedThickness === '' ? 'bg-blue-50 text-blue-600 font-medium' : ''
                     }`}
                   >
-                    <span>Tất cả độ dày</span>
+                    <span>All Thickness</span>
                     {selectedThickness === '' && (
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -2967,7 +2967,7 @@ const LensSelectionPage: React.FC = () => {
                       >
                         <div className="flex flex-col">
                           <span>{thickness.name}</span>
-                          <span className="text-sm text-gray-500">Chỉ số khúc xạ: {thickness.indexValue}</span>
+                          <span className="text-sm text-gray-500">Refractive Index: {thickness.indexValue}</span>
                         </div>
                         {isSelected && (
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -2984,11 +2984,11 @@ const LensSelectionPage: React.FC = () => {
               {lensFilterType === 'price' && (
                 <div className="divide-y">
                   {[
-                    { value: '', label: 'Tất cả mức giá' },
-                    { value: 'under-1m', label: 'Dưới 1 triệu' },
-                    { value: '1m-2m', label: '1 - 2 triệu' },
-                    { value: '2m-3m', label: '2 - 3 triệu' },
-                    { value: 'over-3m', label: 'Trên 3 triệu' }
+                    { value: '', label: 'All Price Ranges' },
+                    { value: 'under-1m', label: 'Under ₫1M' },
+                    { value: '1m-2m', label: '₫1M - ₫2M' },
+                    { value: '2m-3m', label: '₫2M - ₫3M' },
+                    { value: 'over-3m', label: 'Over ₫3M' }
                   ].map(option => {
                     const isSelected = selectedPrice === option.value;
                     return (
@@ -3018,11 +3018,11 @@ const LensSelectionPage: React.FC = () => {
               {lensFilterType === 'sort' && (
                 <div className="divide-y">
                   {[
-                    { value: '', label: 'Mặc định' },
-                    { value: 'price-asc', label: 'Giá: Thấp đến cao' },
-                    { value: 'price-desc', label: 'Giá: Cao đến thấp' },
-                    { value: 'name-asc', label: 'Tên: A-Z' },
-                    { value: 'name-desc', label: 'Tên: Z-A' }
+                    { value: '', label: 'Default' },
+                    { value: 'price-asc', label: 'Price: Low to High' },
+                    { value: 'price-desc', label: 'Price: High to Low' },
+                    { value: 'name-asc', label: 'Name: A-Z' },
+                    { value: 'name-desc', label: 'Name: Z-A' }
                   ].map(option => {
                     const isSelected = selectedSort === option.value;
                     return (

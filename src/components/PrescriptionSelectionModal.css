@@ -72,8 +72,8 @@
 }
 
 .prescription-card.selected {
-  border-color: #2563eb; /* blue */
-  background: #f0f7ff;
+  border-color: #0a0a0a; /* blue */
+  background: #fafafa;
 }
 
 .prescription-card-header {
@@ -177,7 +177,7 @@
 }
 
 .use-selected-btn {
-  background-color: #10b981;
+  background-color: #1f2020;
   color: white;
   padding: 12px 32px;
   border: none;
@@ -190,7 +190,7 @@
 }
 
 .use-selected-btn:hover:not(.disabled) {
-  background-color: #059669;
+  background-color: #444645;
   box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
 }
 
