@@ -429,14 +429,14 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
 
           {/* Price Tab Content */}
           {activeTab === 'price' && (
-            <FilterSection title="PRICE">
+            <FilterSection title="GIÁ">
               <div className="space-y-2">
                 {[
-                  { label: '< 50 $', min: 0, max: 50 },
-                  { label: '50 $ to 100 $', min: 50, max: 100 },
-                  { label: '100 $ to 150 $', min: 100, max: 150 },
-                  { label: '150 $ to 200 $', min: 150, max: 200 },
-                  { label: '> 200 $', min: 200, max: 1000000 }
+                  { label: 'Dưới 1.000.000đ', min: 0, max: 1000000 },
+                  { label: '1.000.000đ - 2.000.000đ', min: 1000000, max: 2000000 },
+                  { label: '2.000.000đ - 3.000.000đ', min: 2000000, max: 3000000 },
+                  { label: '3.000.000đ - 5.000.000đ', min: 3000000, max: 5000000 },
+                  { label: 'Trên 5.000.000đ', min: 5000000, max: 100000000 }
                 ].map((priceOption) => (
                   <label key={priceOption.label} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
                     <input 

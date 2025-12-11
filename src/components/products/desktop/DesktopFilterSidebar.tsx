@@ -512,14 +512,14 @@ const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
         </FilterSection>
 
         {/* Price */}
-        <FilterSection title="PRICE">
+        <FilterSection title="GIÁ">
           <div className="space-y-1">
             {[
-              '< 50 $',
-              '50 $ to 100 $', 
-              '100 $ to 150 $',
-              '150 $ to 200 $',
-              '> 200 $'
+              'Dưới 1.000.000đ',
+              '1.000.000đ - 2.000.000đ', 
+              '2.000.000đ - 3.000.000đ',
+              '3.000.000đ - 5.000.000đ',
+              'Trên 5.000.000đ'
             ].map((price) => (
               <label key={price} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
                 <input type="checkbox" className="filter-checkbox" />
