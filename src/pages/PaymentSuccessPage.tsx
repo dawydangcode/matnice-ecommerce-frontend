@@ -219,14 +219,7 @@ const PaymentSuccessPage: React.FC = () => {
             </div>
           )}
 
-          <div className="space-y-3">
-            <button
-              onClick={() => navigate('/')}
-              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 font-medium"
-            >
-              Về trang chủ
-            </button>
-            
+          <div className="space-y-3">       
             {paymentInfo?.cancel && (
               <button
                 onClick={() => navigate('/checkout')}
