@@ -118,12 +118,12 @@ const CartDropdown: React.FC = () => {
           {(user?.id ? items : localItems).length === 0 ? (
             <div className="p-6 text-center">
               <ShoppingCart className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-              <p className="text-gray-500 mb-4">Giỏ hàng trống</p>
+              <p className="text-gray-500 mb-4">Your cart is empty</p>
               <Link 
                 to="/" 
                 className="inline-block bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
               >
-                Tiếp tục mua sắm
+                Continue Shopping
               </Link>
             </div>
           ) : (
@@ -132,10 +132,10 @@ const CartDropdown: React.FC = () => {
               <div className="p-4 border-b">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-lg">
-                    Giỏ hàng ({user?.id ? totalItems : cartCount} sản phẩm)
+                    Cart ({user?.id ? totalItems : cartCount} items)
                     {!user?.id && (
                       <span className="text-sm font-normal text-gray-500 ml-2">
-                        (Chưa đăng nhập)
+                        (Not logged in)
                       </span>
                     )}
                   </h3>
@@ -309,24 +309,24 @@ const CartDropdown: React.FC = () => {
               {/* Footer */}
               <div className="p-4 border-t bg-gray-50">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-semibold text-gray-900">Tổng cộng:</span>
+                  <span className="font-semibold text-gray-900">Total:</span>
                   <span className="text-lg font-bold text-green-600">
                     {formatVND(user?.id ? totalPrice : localItems.reduce((sum, item) => sum + item.totalPrice, 0))}
                   </span>
                 </div>
                 <div className="text-xs text-gray-500 mb-3">
-                  Giao hàng (7 - 15 ngày): Miễn phí
+                  Shipping (7 - 15 days): Free
                 </div>
                 {!user?.id && (
                   <div className="text-xs text-amber-600 mb-3 p-2 bg-amber-50 rounded">
-                    💡 Đăng nhập để đồng bộ giỏ hàng trên các thiết bị
+                    💡 Log in to sync your cart across devices
                   </div>
                 )}
                 <Link
                   to="/cart"
                   className="block w-full bg-green-600 text-white text-center py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
                 >
-                  Đi đến giỏ hàng
+                  Go to Cart
                 </Link>
               </div>
             </>

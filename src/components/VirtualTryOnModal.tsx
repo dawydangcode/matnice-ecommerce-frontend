@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../styles/VirtualTryOnModal.css';
 import ThreeJSOverlay from './ThreeJSOverlay';
+import { Camera } from 'lucide-react';
 
 // Declare global MediaPipe types
 declare global {
@@ -266,13 +267,13 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
         setModel3dReady(true);
         setCurrentLandmarks(landmarks);
         setStatus('3D model loaded! Try on glasses.');
-        drawFaceMesh(canvasCtx, landmarks);
+        // drawFaceMesh(canvasCtx, landmarks); // Commented out - hide face mesh visualization
       } else {
         // Model 3D is ready - track face anywhere on screen
         setFaceDetected(true);
         setCurrentLandmarks(landmarks);
         setStatus('Try on glasses - move freely!');
-        drawFaceMesh(canvasCtx, landmarks);
+        // drawFaceMesh(canvasCtx, landmarks); // Commented out - hide face mesh visualization
       }
     } else {
       // No face detected
@@ -571,10 +572,7 @@ const VirtualTryOnModal: React.FC<VirtualTryOnModalProps> = ({
               {/* Camera Controls */}
               <div className="camera-controls">
                 <button className="control-btn camera-btn" title="Take Photo">
-                  📸
-                </button>
-                <button className="control-btn" title="Switch Camera">
-                  🔄
+                  <Camera />
                 </button>
               </div>
             </div>

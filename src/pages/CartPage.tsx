@@ -42,7 +42,7 @@ const CartPage: React.FC = () => {
     } catch (error: any) {
       console.error('Error loading cart data:', error);
       if (isLoggedIn) {
-        toast.error('Không thể tải giỏ hàng');
+        toast.error('Unable to load cart');
       } else {
         // Fallback to empty local cart
         setLocalCartItems([]);
@@ -87,18 +87,18 @@ const CartPage: React.FC = () => {
   // Translation helpers
   const translateLensType = (lensType: string) => {
     const translations: { [key: string]: string } = {
-      'PROGRESSIVE': 'Đa tròng',
-      'SINGLE_VISION': 'Đơn tròng',
-      'BIFOCAL': 'Hai tròng'
+      'PROGRESSIVE': 'Progressive',
+      'SINGLE_VISION': 'Single Vision',
+      'BIFOCAL': 'Bifocal'
     };
     return translations[lensType] || lensType;
   };
 
   const translateDesign = (design: string) => {
     const translations: { [key: string]: string } = {
-      'NONE': 'Không',
-      'STANDARD': 'Tiêu chuẩn',
-      'PREMIUM': 'Cao cấp'
+      'NONE': 'None',
+      'STANDARD': 'Standard',
+      'PREMIUM': 'Premium'
     };
     return translations[design] || design;
   };
@@ -119,7 +119,7 @@ const CartPage: React.FC = () => {
     
     try {
       await cartService.deleteCartItem(parseInt(itemToDelete));
-      toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
+      toast.success('Product removed from cart');
       await loadCartData();
       setShowDeleteModal(false);
       setItemToDelete(null);
@@ -127,7 +127,7 @@ const CartPage: React.FC = () => {
       document.body.style.overflow = 'unset';
     } catch (error: any) {
       console.error('Error deleting cart item:', error);
-      toast.error('Không thể xóa sản phẩm');
+      toast.error('Unable to delete product');
     }
   };
 
@@ -157,7 +157,7 @@ const CartPage: React.FC = () => {
         <Header />
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <div className="text-xl">Đang tải giỏ hàng...</div>
+          <div className="text-xl">Loading cart...</div>
         </div>
         <Footer />
       </div>
@@ -186,21 +186,21 @@ const CartPage: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
             <div className="text-5xl sm:text-6xl mb-4 sm:mb-6">🛒</div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
-              Giỏ hàng của bạn đang trống
+              Your cart is empty
             </h2>
             <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8 max-w-md mx-auto">
-              Hãy khám phá bộ sưu tập kính mắt và tròng kính của chúng tôi để tìm những sản phẩm phù hợp với bạn.
+              Explore our collection of eyewear and lenses to find products that suit you.
             </p>
             {!isLoggedIn && (
               <div className="mb-6 p-3 sm:p-4 bg-blue-50 rounded-lg max-w-md mx-auto border border-blue-200">
                 <p className="text-blue-800 text-xs sm:text-sm">
-                  💡 <strong>Mẹo:</strong> Đăng nhập để lưu giỏ hàng và đồng bộ trên mọi thiết bị
+                  💡 <strong>Tip:</strong> Log in to save your cart and sync across all devices
                 </p>
                 <Link
                   to="/login"
                   className="inline-block mt-2 text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium"
                 >
-                  Đăng nhập ngay →
+                  Log in now →
                 </Link>
               </div>
             )}
@@ -209,13 +209,13 @@ const CartPage: React.FC = () => {
                 to="/glasses"
                 className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
               >
-                Mua kính mắt
+                Shop Glasses
               </Link>
               <Link
                 to="/lenses"
                 className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
               >
-                Mua tròng kính
+                Shop Lenses
               </Link>
             </div>
           </div>
@@ -237,7 +237,7 @@ const CartPage: React.FC = () => {
           <div className="text-center">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Basket</h1>
             <div className="mt-2 inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-green-100 text-green-800">
-              ✓ Tròng kính đã được thêm vào giỏ hàng
+              ✓ Lenses added to cart
             </div>
           </div>
         </div>
@@ -276,7 +276,7 @@ const CartPage: React.FC = () => {
                           <div className="flex-1 pr-2">
                             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">
                               {(() => {
-                                let displayName = item.productName || `Sản phẩm #${item.productId}`;
+                                let displayName = item.productName || `Product #${item.productId}`;
                                 if (item.selectedColor?.productVariantName) {
                                   displayName += ` ${item.selectedColor.productVariantName}`;
                                 }
@@ -287,12 +287,12 @@ const CartPage: React.FC = () => {
                             {/* Display selected color if available */}
                             {item.selectedColor && (
                               <p className="text-xs sm:text-sm text-gray-600 mb-2">
-                                <strong>Màu:</strong> {item.selectedColor.colorName}
+                                <strong>Color:</strong> {item.selectedColor.colorName}
                               </p>
                             )}
                             
                             <p className="text-xs sm:text-sm text-gray-600">
-                              <strong>Số lượng:</strong> {item.quantity}
+                              <strong>Quantity:</strong> {item.quantity}
                             </p>
                           </div>
 
@@ -309,12 +309,12 @@ const CartPage: React.FC = () => {
                         <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-3 sm:mb-4">
                           <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-600">
                             <div className="flex justify-between">
-                              <span><strong>Giá gọng:</strong></span>
+                              <span><strong>Frame Price:</strong></span>
                               <span>{formatPrice(item.framePrice)}</span>
                             </div>
                             {item.lensDetail && (
                               <div className="flex justify-between">
-                                <span><strong>Giá tròng:</strong></span>
+                                <span><strong>Lens Price:</strong></span>
                                 <span>{formatPrice(item.lensDetail.lensPrice)}</span>
                               </div>
                             )}
@@ -324,7 +324,7 @@ const CartPage: React.FC = () => {
                               <div>
                                 {item.lensDetail.selectedCoatings.map((coating, index) => (
                                   <div key={index} className="flex justify-between">
-                                    <span><strong>Lớp phủ ({coating.name}):</strong></span>
+                                    <span><strong>Coating ({coating.name}):</strong></span>
                                     <span>+{formatPrice(coating.price)}</span>
                                   </div>
                                 ))}
@@ -334,21 +334,21 @@ const CartPage: React.FC = () => {
                             {/* Tint color price */}
                             {item.lensDetail?.selectedTintColor?.price && (
                               <div className="flex justify-between">
-                                <span><strong>Màu tông ({item.lensDetail.selectedTintColor.name}):</strong></span>
+                                <span><strong>Tint Color ({item.lensDetail.selectedTintColor.name}):</strong></span>
                                 <span>+{formatPrice(item.lensDetail.selectedTintColor.price)}</span>
                               </div>
                             )}
                             
                             {safeParseNumber(item.discount) > 0 && (
                               <div className="flex justify-between">
-                                <span><strong>Giảm giá:</strong></span>
+                                <span><strong>Discount:</strong></span>
                                 <span>-{formatPrice(item.discount)}</span>
                               </div>
                             )}
                             
                             {/* Total Price */}
                             <div className="border-t border-gray-300 pt-2 mt-2 flex justify-between">
-                              <span className="text-sm sm:text-lg font-bold text-black"><strong>Tổng tiền:</strong></span>
+                              <span className="text-sm sm:text-lg font-bold text-black"><strong>Total:</strong></span>
                               <span className="text-sm sm:text-lg font-bold text-black">
                                 {formatPrice((() => {
                                   let total = safeParseNumber(item.totalPrice) + safeParseNumber(item.lensDetail?.lensPrice);
@@ -375,7 +375,7 @@ const CartPage: React.FC = () => {
                         {/* Lens Information */}
                         {(item.lensInfo || item.lensVariantInfo) && (
                           <div className="mt-3 sm:mt-4">
-                            <h4 className="text-xs sm:text-sm font-semibold text-gray-800 mb-2 sm:mb-3">Thông tin tròng kính</h4>
+                            <h4 className="text-xs sm:text-sm font-semibold text-gray-800 mb-2 sm:mb-3">Lens Information</h4>
                             <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
                               {item.lensInfo && (
                                 <div className="flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-4 mb-3 sm:mb-4">
@@ -394,9 +394,9 @@ const CartPage: React.FC = () => {
                                   <div className="flex-1 w-full">
                                     <h5 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">{item.lensInfo.name}</h5>
                                     <div className="text-xs sm:text-sm text-gray-600 space-y-1">
-                                      <p><span className="font-medium">Loại:</span> {translateLensType(item.lensInfo.lensType)}</p>
+                                      <p><span className="font-medium">Type:</span> {translateLensType(item.lensInfo.lensType)}</p>
                                       {item.lensInfo.origin && (
-                                        <p><span className="font-medium">Xuất xứ:</span> {item.lensInfo.origin}</p>
+                                        <p><span className="font-medium">Origin:</span> {item.lensInfo.origin}</p>
                                       )}
                                     </div>
                                   </div>
@@ -406,24 +406,24 @@ const CartPage: React.FC = () => {
                               {/* Lens Variant Info */}
                               {item.lensVariantInfo && (
                                 <div className="border-t border-gray-200 pt-3">
-                                  <h6 className="text-xs sm:text-sm font-medium text-gray-800 mb-2">Tùy chọn</h6>
+                                  <h6 className="text-xs sm:text-sm font-medium text-gray-800 mb-2">Options</h6>
                                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                                     <div>
-                                      <span className="font-medium text-gray-700">Thiết kế:</span>
+                                      <span className="font-medium text-gray-700">Design:</span>
                                       <span className="ml-2 text-gray-600">{translateDesign(item.lensVariantInfo.design)}</span>
                                     </div>
                                     <div>
-                                      <span className="font-medium text-gray-700">Chất liệu:</span>
+                                      <span className="font-medium text-gray-700">Material:</span>
                                       <span className="ml-2 text-gray-600">{item.lensVariantInfo.material}</span>
                                     </div>
                                     <div>
-                                      <span className="font-medium text-gray-700">Giá:</span>
+                                      <span className="font-medium text-gray-700">Price:</span>
                                       <span className="ml-2 text-gray-600">{formatPrice(item.lensVariantInfo.price)}</span>
                                     </div>
                                     {item.lensVariantInfo.lensThickness && (
                                       <div className="sm:col-span-2">
-                                        <span className="font-medium text-gray-700">Độ dày:</span>
-                                        <span className="ml-2 text-gray-600">{item.lensVariantInfo.lensThickness.name} (Chỉ số: {item.lensVariantInfo.lensThickness.indexValue})</span>
+                                        <span className="font-medium text-gray-700">Thickness:</span>
+                                        <span className="ml-2 text-gray-600">{item.lensVariantInfo.lensThickness.name} (Index: {item.lensVariantInfo.lensThickness.indexValue})</span>
                                       </div>
                                     )}
                                   </div>
@@ -433,7 +433,7 @@ const CartPage: React.FC = () => {
                               {/* Lens Coating Info */}
                               {item.lensDetail?.selectedCoatings && item.lensDetail.selectedCoatings.length > 0 && (
                                 <div className="border-t border-gray-200 pt-3 mt-3">
-                                  <h6 className="text-xs sm:text-sm font-medium text-gray-800 mb-2">Lớp phủ</h6>
+                                  <h6 className="text-xs sm:text-sm font-medium text-gray-800 mb-2">Coating</h6>
                                   <div className="space-y-2">
                                     {item.lensDetail.selectedCoatings.map((coating, index) => (
                                       <div key={index} className="text-xs sm:text-sm">
@@ -568,7 +568,7 @@ const CartPage: React.FC = () => {
                           <div className="flex-1">
                             <h3 className="text-lg font-semibold text-gray-900 mb-1">
                               {(() => {
-                                let displayName = item.productName || `Sản phẩm #${item.productId}`;
+                                let displayName = item.productName || `Product #${item.productId}`;
                                 if (item.selectedColor?.productVariantName) {
                                   displayName += ` ${item.selectedColor.productVariantName}`;
                                 }
@@ -579,46 +579,46 @@ const CartPage: React.FC = () => {
                             {/* Display selected color if available and not 'Unknown' */}
                             {item.selectedColor && item.selectedColor.colorName !== 'Unknown' && (
                               <p className="text-sm text-gray-600 mb-2">
-                                <strong>Màu:</strong> {item.selectedColor.colorName}
+                                <strong>Color:</strong> {item.selectedColor.colorName}
                               </p>
                             )}
                             
                             <p className="text-sm text-gray-600">
-                              <strong>Số lượng:</strong> {item.quantity}
+                              <strong>Quantity:</strong> {item.quantity}
                             </p>
                           </div>
 
                           {/* Right side - Price Information */}
                           <div className="text-right space-y-1">
                             <div className="text-sm text-gray-600">
-                              <p><strong>Giá gọng:</strong> {formatPrice(item.framePrice)}</p>
+                              <p><strong>Frame Price:</strong> {formatPrice(item.framePrice)}</p>
                               {item.lensDetail && (
-                                <p><strong>Giá tròng:</strong> {formatPrice(item.lensDetail.lensPrice)}</p>
+                                <p><strong>Lens Price:</strong> {formatPrice(item.lensDetail.lensPrice)}</p>
                               )}
                               
                               {/* Coating prices */}
                               {item.lensDetail?.selectedCoatings && item.lensDetail.selectedCoatings.length > 0 && (
                                 <div>
                                   {item.lensDetail.selectedCoatings.map((coating, index) => (
-                                    <p key={index}><strong>Lớp phủ ({coating.name}):</strong> +{formatPrice(coating.price)}</p>
+                                    <p key={index}><strong>Coating ({coating.name}):</strong> +{formatPrice(coating.price)}</p>
                                   ))}
                                 </div>
                               )}
                               
                               {/* Tint color price */}
                               {item.lensDetail?.selectedTintColor?.price && (
-                                <p><strong>Màu tông ({item.lensDetail.selectedTintColor.name}):</strong> +{formatPrice(item.lensDetail.selectedTintColor.price)}</p>
+                                <p><strong>Tint Color ({item.lensDetail.selectedTintColor.name}):</strong> +{formatPrice(item.lensDetail.selectedTintColor.price)}</p>
                               )}
                               
                               {safeParseNumber(item.discount) > 0 && (
-                                <p><strong>Giảm giá:</strong> -{formatPrice(item.discount)}</p>
+                                <p><strong>Discount:</strong> -{formatPrice(item.discount)}</p>
                               )}
                             </div>
                             
                             {/* Total Price */}
                             <div className="border-t border-gray-200 pt-2 mt-2">
                               <p className="text-lg font-bold text-black">
-                                <strong>Tổng tiền:</strong> 
+                                <strong>Total:</strong> 
                                 {formatPrice((() => {
                                   let total = safeParseNumber(item.framePrice) + safeParseNumber(item.lensDetail?.lensPrice);
                                   
@@ -644,7 +644,7 @@ const CartPage: React.FC = () => {
                         {/* Lens Information */}
                         {(item.lensInfo || item.lensVariantInfo) && (
                           <div className="mt-4">
-                            <h4 className="text-sm font-semibold text-gray-800 mb-3">Thông tin tròng kính</h4>
+                            <h4 className="text-sm font-semibold text-gray-800 mb-3">Lens Information</h4>
                             <div className="bg-gray-50 p-4 rounded-lg">
                               {item.lensInfo && (
                                 <div className="flex items-start space-x-4 mb-4">
@@ -663,9 +663,9 @@ const CartPage: React.FC = () => {
                                   <div className="flex-1">
                                     <h5 className="font-medium text-gray-900 mb-1">{item.lensInfo.name}</h5>
                                     <div className="text-sm text-gray-600 space-y-1">
-                                      <p><span className="font-medium">Loại:</span> {translateLensType(item.lensInfo.lensType)}</p>
+                                      <p><span className="font-medium">Type:</span> {translateLensType(item.lensInfo.lensType)}</p>
                                       {item.lensInfo.origin && (
-                                        <p><span className="font-medium">Xuất xứ:</span> {item.lensInfo.origin}</p>
+                                        <p><span className="font-medium">Origin:</span> {item.lensInfo.origin}</p>
                                       )}
                                     </div>
                                   </div>
@@ -675,24 +675,24 @@ const CartPage: React.FC = () => {
                               {/* Lens Variant Info */}
                               {item.lensVariantInfo && (
                                 <div className="border-t border-gray-200 pt-3">
-                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Tùy chọn</h6>
+                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Options</h6>
                                   <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
-                                      <span className="font-medium text-gray-700">Thiết kế:</span>
+                                      <span className="font-medium text-gray-700">Design:</span>
                                       <span className="ml-2 text-gray-600">{translateDesign(item.lensVariantInfo.design)}</span>
                                     </div>
                                     <div>
-                                      <span className="font-medium text-gray-700">Chất liệu:</span>
+                                      <span className="font-medium text-gray-700">Material:</span>
                                       <span className="ml-2 text-gray-600">{item.lensVariantInfo.material}</span>
                                     </div>
                                     <div>
-                                      <span className="font-medium text-gray-700">Giá:</span>
+                                      <span className="font-medium text-gray-700">Price:</span>
                                       <span className="ml-2 text-gray-600">{formatPrice(item.lensVariantInfo.price)}</span>
                                     </div>
                                     {item.lensVariantInfo.lensThickness && (
                                       <div>
-                                        <span className="font-medium text-gray-700">Độ dày:</span>
-                                        <span className="ml-2 text-gray-600">{item.lensVariantInfo.lensThickness.name} (Chỉ số: {item.lensVariantInfo.lensThickness.indexValue})</span>
+                                        <span className="font-medium text-gray-700">Thickness:</span>
+                                        <span className="ml-2 text-gray-600">{item.lensVariantInfo.lensThickness.name} (Index: {item.lensVariantInfo.lensThickness.indexValue})</span>
                                       </div>
                                     )}
                                   </div>
@@ -702,7 +702,7 @@ const CartPage: React.FC = () => {
                               {/* Lens Coating Info */}
                               {item.lensDetail?.selectedCoatings && item.lensDetail.selectedCoatings.length > 0 && (
                                 <div className="border-t border-gray-200 pt-3 mt-3">
-                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Lớp phủ</h6>
+                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Coating</h6>
                                   <div className="space-y-2">
                                     {item.lensDetail.selectedCoatings.map((coating, index) => (
                                       <div key={index} className="text-sm">
@@ -721,7 +721,7 @@ const CartPage: React.FC = () => {
                               {/* Lens Tint Color Info */}
                               {item.lensDetail?.selectedTintColor && (
                                 <div className="border-t border-gray-200 pt-3 mt-3">
-                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Màu tông</h6>
+                                  <h6 className="text-sm font-medium text-gray-800 mb-2">Tint Color</h6>
                                   <div className="text-sm">
                                     <div className="flex items-center">
                                       <span className="font-medium text-gray-700">{item.lensDetail.selectedTintColor.name}</span>
@@ -736,12 +736,12 @@ const CartPage: React.FC = () => {
                         {/* Prescription Information */}
                         {item.lensDetail?.prescription && (
                           <div className="border-t border-gray-200 pt-4 mt-4">
-                            <h6 className="text-sm font-medium text-gray-800 mb-3">Thông tin đơn thuốc</h6>
+                            <h6 className="text-sm font-medium text-gray-800 mb-3">Prescription Information</h6>
                             <div className="overflow-x-auto bg-gray-50 p-4 rounded-lg">
                               <table className="min-w-full text-sm">
                                 <thead>
                                   <tr className="border-b border-gray-300">
-                                    <th className="text-left py-3 px-3 font-medium text-gray-700">Mắt</th>
+                                    <th className="text-left py-3 px-3 font-medium text-gray-700">Eye</th>
                                     <th className="text-center py-3 px-3 font-medium text-gray-700">SPH</th>
                                     <th className="text-center py-3 px-3 font-medium text-gray-700">CYL</th>
                                     <th className="text-center py-3 px-3 font-medium text-gray-700">AXIS</th>
@@ -753,7 +753,7 @@ const CartPage: React.FC = () => {
                                 </thead>
                                 <tbody>
                                   <tr className="border-b border-gray-200">
-                                    <td className="py-3 px-3 font-medium text-gray-700">Phải</td>
+                                    <td className="py-3 px-3 font-medium text-gray-700">Right</td>
                                     <td className="text-center py-3 px-3 text-gray-600">
                                       {formatPrescriptionValue(item.lensDetail.prescription.rightEye.sphere)}
                                     </td>
@@ -773,7 +773,7 @@ const CartPage: React.FC = () => {
                                     </td>
                                   </tr>
                                   <tr>
-                                    <td className="py-3 px-3 font-medium text-gray-700">Trái</td>
+                                    <td className="py-3 px-3 font-medium text-gray-700">Left</td>
                                     <td className="text-center py-3 px-3 text-gray-600">
                                       {formatPrescriptionValue(item.lensDetail.prescription.leftEye.sphere)}
                                     </td>
@@ -805,10 +805,10 @@ const CartPage: React.FC = () => {
                         <button
                           className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                           onClick={() => {
-                            if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
+                            if (window.confirm('Are you sure you want to remove this product?')) {
                               localCartService.removeFromLocalCart(item.id);
                               loadCartData(); // Refresh cart
-                              toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
+                              toast.success('Product removed from cart');
                             }
                           }}
                         >
@@ -825,29 +825,29 @@ const CartPage: React.FC = () => {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 lg:sticky lg:top-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Tổng đơn hàng</h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Order Summary</h2>
               
               {isLoggedIn && cartSummary ? (
                 // Backend cart summary
                 <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm">
                   <div className="flex justify-between">
-                    <span>Tổng giá gọng ({cartSummary.totalItems} sản phẩm)</span>
+                    <span>Total Frame Price ({cartSummary.totalItems} items)</span>
                     <span>{formatPrice(cartSummary.totalFramePrice)}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span>Tổng giá tròng</span>
+                    <span>Total Lens Price</span>
                     <span>{formatPrice(cartSummary.totalLensPrice)}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span>Giảm giá</span>
+                    <span>Discount</span>
                     <span className="text-green-600">-{formatPrice(cartSummary.totalDiscount)}</span>
                   </div>
                   
                   <div className="border-t pt-3 sm:pt-4">
                     <div className="flex justify-between items-center text-base sm:text-lg font-semibold">
-                      <span>Tổng cộng</span>
+                      <span>Total</span>
                       <span className="text-black-600">{formatPrice(cartSummary.grandTotal)}</span>
                     </div>
                   </div>
@@ -856,25 +856,25 @@ const CartPage: React.FC = () => {
                 // Local cart summary
                 <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm">
                   <div className="flex justify-between">
-                    <span>Tổng giá gọng ({localCartItems.length} sản phẩm)</span>
+                    <span>Total Frame Price ({localCartItems.length} items)</span>
                     <span>{formatPrice(localCartItems.reduce((sum, item) => sum + item.framePrice * item.quantity, 0))}</span>
                   </div>
                   
                   {localCartItems.some(item => item.lensDetail?.lensPrice && item.lensDetail.lensPrice > 0) && (
                     <div className="flex justify-between">
-                      <span>Tổng giá tròng</span>
+                      <span>Total Lens Price</span>
                       <span>{formatPrice(localCartItems.reduce((sum, item) => sum + ((item.lensDetail?.lensPrice || 0) * item.quantity), 0))}</span>
                     </div>
                   )}
                   
                   <div className="flex justify-between">
-                    <span>Giảm giá</span>
+                    <span>Discount</span>
                     <span className="text-green-600">-{formatPrice(localCartItems.reduce((sum, item) => sum + item.discount, 0))}</span>
                   </div>
                   
                   <div className="border-t pt-3 sm:pt-4">
                     <div className="flex justify-between items-center text-base sm:text-lg font-semibold">
-                      <span>Tổng cộng</span>
+                      <span>Total</span>
                       <span className="text-black-600">{formatPrice(localCartItems.reduce((sum, item) => sum + item.totalPrice, 0))}</span>
                     </div>
                   </div>
@@ -882,10 +882,10 @@ const CartPage: React.FC = () => {
                   {!isLoggedIn && (
                     <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-amber-50 border border-amber-200 rounded-lg">
                       <p className="text-amber-800 text-xs mb-2">
-                        💡 <strong>Lưu ý:</strong> Giỏ hàng tạm thời
+                        💡 <strong>Note:</strong> Temporary Cart
                       </p>
                       <p className="text-amber-700 text-xs">
-                        Đăng nhập để lưu giỏ hàng và tiếp tục thanh toán
+                        Log in to save your cart and proceed to checkout
                       </p>
                     </div>
                   )}
@@ -897,7 +897,7 @@ const CartPage: React.FC = () => {
                   onClick={handleCheckout}
                   className="w-full mt-4 sm:mt-6 bg-green-700 text-white py-2.5 sm:py-3 px-4 rounded-lg hover:bg-green-800 transition-colors font-medium text-sm sm:text-base"
                 >
-                  Thanh toán
+                  Checkout
                 </button>
               ) : (
                 <>
@@ -905,13 +905,13 @@ const CartPage: React.FC = () => {
                     to="/login"
                     className="w-full mt-4 sm:mt-6 block text-center bg-blue-600 text-white py-2.5 sm:py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
                   >
-                    Đăng nhập để thanh toán
+                    Log in to Checkout
                   </Link>
                   
                   {/* Debug button - remove in production */}
                   <button
                     onClick={() => {
-                      if (window.confirm('Xóa toàn bộ dữ liệu giỏ hàng trong localStorage?')) {
+                      if (window.confirm('Delete all cart data in localStorage?')) {
                         localStorage.removeItem('matnice_cart');
                         localStorage.removeItem('matnice_cart_count');
                         // Remove lens data
@@ -934,7 +934,7 @@ const CartPage: React.FC = () => {
                 to="/glasses"
                 className="w-full mt-2 sm:mt-3 block text-center border border-gray-300 text-gray-700 py-2.5 sm:py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
               >
-                Tiếp tục mua hàng
+                Continue Shopping
               </Link>
             </div>
           </div>
@@ -982,11 +982,11 @@ const CartPage: React.FC = () => {
                   {/* Modal Text */}
                   <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
                     <h3 className="text-lg font-semibold leading-6 text-gray-900">
-                      Xác nhận xóa sản phẩm
+                      Confirm Product Removal
                     </h3>
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">
-                        Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng? Hành động này không thể hoàn tác.
+                        Are you sure you want to remove this product from your cart? This action cannot be undone.
                       </p>
                     </div>
                   </div>
@@ -1000,14 +1000,14 @@ const CartPage: React.FC = () => {
                   className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition-colors duration-200"
                   onClick={handleDeleteItem}
                 >
-                  Xóa sản phẩm
+                  Remove Product
                 </button>
                 <button
                   type="button"
                   className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto transition-colors duration-200"
                   onClick={handleCancelDelete}
                 >
-                  Hủy bỏ
+                  Cancel
                 </button>
               </div>
             </div>

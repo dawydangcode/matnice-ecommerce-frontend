@@ -7,6 +7,7 @@ import GlassWidthLarge from '../../icons/GlassWidth/GlassWidthLarge';
 import NoseBridgeSmall from '../../icons/NoseBridge/NoseBridgeSmall';
 import NoseBridgeMedium from '../../icons/NoseBridge/NoseBridgeMedium';
 import NoseBridgeLarge from '../../icons/NoseBridge/NoseBridgeLarge';
+import { authService } from '../../../services/auth.service';
 import { 
   FrameType, 
   FrameShapeType, 
@@ -26,6 +27,11 @@ interface DesktopFilterSidebarProps {
   // Glasses width
   selectedGlassesWidths: string[];
   setSelectedGlassesWidths: (widths: string[]) => void;
+  // Glass width range
+  minGlassWidth: number;
+  setMinGlassWidth: (width: number) => void;
+  maxGlassWidth: number;
+  setMaxGlassWidth: (width: number) => void;
   // Frame filters
   selectedFrameShapes: FrameShapeType[];
   setSelectedFrameShapes: (shapes: FrameShapeType[]) => void;
@@ -55,6 +61,10 @@ const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
   setSelectedGenders,
   selectedGlassesWidths,
   setSelectedGlassesWidths,
+  minGlassWidth,
+  setMinGlassWidth,
+  maxGlassWidth,
+  setMaxGlassWidth,
   selectedFrameShapes,
   setSelectedFrameShapes,
   selectedFrameTypes,
@@ -82,28 +92,30 @@ const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
           <h2 className="filter-header">Filters</h2>
         </div>
         
-        {/* Recommendations Section */}
-        <FilterSection title="RECOMMENDATIONS FOR YOU">
-          <div className="space-y-3">
-            <label className="flex items-start space-x-3">
-              <input type="checkbox" className="mt-1 filter-checkbox" />
-              <span className="text-sm text-gray-700">Your recommended glasses width</span>
-            </label>
-            <div className="bg-gray-200 p-3 rounded-lg border border-gray-100">
-              <div className="flex items-start space-x-2">
-                <div className="w-4 h-4 rounded-full bg-gray-100 text-black-600 flex items-center justify-center mt-1 text-xs font-medium">
-                  i
+        {/* Recommendations Section - Only show if not logged in */}
+        {!authService.isLoggedIn() && (
+          <FilterSection title="RECOMMENDATIONS FOR YOU">
+            <div className="space-y-3">
+              <label className="flex items-start space-x-3">
+                <input type="checkbox" className="mt-1 filter-checkbox" />
+                <span className="text-sm text-gray-700">Your recommended glasses width</span>
+              </label>
+              <div className="bg-gray-200 p-3 rounded-lg border border-gray-100">
+                <div className="flex items-start space-x-2">
+                  <div className="w-4 h-4 rounded-full bg-gray-100 text-black-600 flex items-center justify-center mt-1 text-xs font-medium">
+                    i
+                  </div>
+                  <div className="text-[14px] text-black-700">
+                    Do you already own a pair of our glasses? Log in now and filter glasses in your size.
+                  </div>
                 </div>
-                <div className="text-[14px] text-black-700">
-                  Do you already own a pair of our glasses? Log in now and filter glasses in your size.
-                </div>
+                <button className="w-full mt-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-black-600 hover:bg-gray-50 transition-colors">
+                  Log in now
+                </button>
               </div>
-              <button className="w-full mt-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-black-600 hover:bg-gray-50 transition-colors">
-                Log in now
-              </button>
             </div>
-          </div>
-        </FilterSection>
+          </FilterSection>
+        )}
 
         {/* Glasses For - Hide if specific gender is already selected from category */}
         {!shouldHideGenderFilter && (
@@ -200,22 +212,77 @@ const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
             <div className="flex items-center space-x-3">
               <input 
                 type="number" 
-                placeholder="20 mm" 
+                placeholder="20 mm"
+                value={minGlassWidth || ''}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 20;
+                  setMinGlassWidth(Math.min(value, maxGlassWidth - 1));
+                }}
+                min="20"
+                max="62"
                 className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
               />
               <span className="text-gray-400">—</span>
               <input 
                 type="number" 
-                placeholder="62 mm" 
+                placeholder="62 mm"
+                value={maxGlassWidth || ''}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 62;
+                  setMaxGlassWidth(Math.max(value, minGlassWidth + 1));
+                }}
+                min="20"
+                max="62"
                 className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
               />
             </div>
-            <div className="px-1">
+            <div className="px-1 relative" style={{ height: '20px' }}>
+              {/* Track background */}
+              <div className="absolute w-full h-2 bg-gray-200 rounded-lg" style={{ top: '50%', transform: 'translateY(-50%)' }}>
+                {/* Active range highlight */}
+                <div 
+                  className="absolute h-full bg-gray-400 rounded-lg"
+                  style={{
+                    left: `${((minGlassWidth - 20) / (62 - 20)) * 100}%`,
+                    width: `${((maxGlassWidth - minGlassWidth) / (62 - 20)) * 100}%`
+                  }}
+                />
+              </div>
+              {/* Min slider */}
               <input
                 type="range"
                 min="20"
                 max="62"
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                value={minGlassWidth}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  setMinGlassWidth(Math.min(value, maxGlassWidth - 1));
+                }}
+                className="absolute w-full appearance-none bg-transparent cursor-pointer pointer-events-auto"
+                style={{ 
+                  top: '50%', 
+                  transform: 'translateY(-50%)',
+                  zIndex: minGlassWidth > maxGlassWidth - 5 ? 5 : 3,
+                  height: '20px'
+                }}
+              />
+              {/* Max slider */}
+              <input
+                type="range"
+                min="20"
+                max="62"
+                value={maxGlassWidth}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  setMaxGlassWidth(Math.max(value, minGlassWidth + 1));
+                }}
+                className="absolute w-full appearance-none bg-transparent cursor-pointer pointer-events-auto"
+                style={{ 
+                  top: '50%', 
+                  transform: 'translateY(-50%)',
+                  zIndex: 4,
+                  height: '20px'
+                }}
               />
             </div>
           </div>

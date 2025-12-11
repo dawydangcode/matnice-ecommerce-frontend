@@ -59,7 +59,7 @@ const CheckoutPage: React.FC = () => {
         setCartSummary(summary);
       } catch (error) {
         console.error('Error fetching cart data:', error);
-        toast.error('Không thể tải giỏ hàng');
+        toast.error('Unable to load cart');
         setCartSummary(null);
       } finally {
         setLoading(false);
@@ -107,7 +107,7 @@ const CheckoutPage: React.FC = () => {
         setProvinces(provincesData);
       } catch (error) {
         console.error('Error loading provinces:', error);
-        toast.error('Không thể tải dữ liệu tỉnh thành');
+        toast.error('Unable to load provinces data');
       }
     };
     loadProvinces();
@@ -125,7 +125,7 @@ const CheckoutPage: React.FC = () => {
           setCustomerInfo(prev => ({ ...prev, district: '', ward: '' }));
         } catch (error) {
           console.error('Error loading districts:', error);
-          toast.error('Không thể tải dữ liệu quận/huyện');
+          toast.error('Unable to load districts data');
         }
       } else {
         setDistricts([]);
@@ -146,7 +146,7 @@ const CheckoutPage: React.FC = () => {
           setCustomerInfo(prev => ({ ...prev, ward: '' }));
         } catch (error) {
           console.error('Error loading wards:', error);
-          toast.error('Không thể tải dữ liệu phường/xã');
+          toast.error('Unable to load wards data');
         }
       } else {
         setWards([]);
@@ -195,7 +195,7 @@ const CheckoutPage: React.FC = () => {
   // Redirect if cart is empty (only after loading is complete)
   useEffect(() => {
     if (!loading && (!cartSummary || cartSummary.items.length === 0)) {
-      toast.error('Giỏ hàng của bạn đang trống');
+      toast.error('Your cart is empty');
       navigate('/cart');
     }
   }, [cartSummary, navigate, loading]);
@@ -216,35 +216,35 @@ const CheckoutPage: React.FC = () => {
     const newErrors: Partial<CustomerInfo> = {};
 
     if (!customerInfo.fullName.trim()) {
-      newErrors.fullName = 'Họ và tên là bắt buộc';
+      newErrors.fullName = 'Full name is required';
     }
 
     if (!customerInfo.phone.trim()) {
-      newErrors.phone = 'Số điện thoại là bắt buộc';
+      newErrors.phone = 'Phone number is required';
     } else if (!/^[0-9]{10,11}$/.test(customerInfo.phone.trim())) {
-      newErrors.phone = 'Số điện thoại không hợp lệ';
+      newErrors.phone = 'Invalid phone number';
     }
 
     if (!customerInfo.email.trim()) {
-      newErrors.email = 'Email là bắt buộc';
+      newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerInfo.email.trim())) {
-      newErrors.email = 'Email không hợp lệ';
+      newErrors.email = 'Invalid email';
     }
 
     if (!customerInfo.province) {
-      newErrors.province = 'Vui lòng chọn Tỉnh/Thành phố';
+      newErrors.province = 'Please select Province/City';
     }
 
     if (!customerInfo.district) {
-      newErrors.district = 'Vui lòng chọn Quận/Huyện';
+      newErrors.district = 'Please select District';
     }
 
     if (!customerInfo.ward) {
-      newErrors.ward = 'Vui lòng chọn Phường/Xã';
+      newErrors.ward = 'Please select Ward';
     }
 
     if (!customerInfo.address.trim()) {
-      newErrors.address = 'Địa chỉ là bắt buộc';
+      newErrors.address = 'Address is required';
     }
 
     setErrors(newErrors);
@@ -364,15 +364,15 @@ const CheckoutPage: React.FC = () => {
         discount,
         isValid: true
       });
-      toast.success(`Áp dụng mã khuyến mãi thành công! Giảm ${formatPrice(discount)}`);
+      toast.success(`Promo code applied successfully! Save ${formatPrice(discount)}`);
     } else {
-      toast.error('Mã khuyến mãi không hợp lệ');
+      toast.error('Invalid promo code');
     }
   };
 
   const handleSubmitOrder = async () => {
     if (!validateForm()) {
-      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+      toast.error('Please fill in all required information');
       return;
     }
 
@@ -400,7 +400,7 @@ const CheckoutPage: React.FC = () => {
       // Check if user is logged in
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        toast.error('Vui lòng đăng nhập để đặt hàng');
+        toast.error('Please log in to place an order');
         return;
       }
 
@@ -416,7 +416,7 @@ const CheckoutPage: React.FC = () => {
           const stockValidation = await stockService.validateStockForCart(stockItems);
           if (!stockValidation.isValid) {
             const errorMessages = stockValidation.errors.map(error => error.message).join('\n');
-            toast.error(`Không đủ hàng trong kho:\n${errorMessages}`);
+            toast.error(`Insufficient stock:\n${errorMessages}`);
             setIsSubmitting(false);
             return;
           }
@@ -465,12 +465,12 @@ const CheckoutPage: React.FC = () => {
       // Clear cart from localStorage
       localStorage.removeItem('cart');
       
-      toast.success('Đặt hàng thành công! Đơn hàng sẽ được giao trong 3-5 ngày làm việc.');
+      toast.success('Order placed successfully! Your order will be delivered in 3-5 business days.');
       
       navigate(`/order-success?payment=${selectedPaymentMethod}&order=${createdOrder.id}`);
     } catch (error) {
       console.error('Error creating order:', error);
-      toast.error('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại.');
+      toast.error('An error occurred while placing your order. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -490,14 +490,14 @@ const CheckoutPage: React.FC = () => {
     
     // Clear cart from localStorage
     localStorage.removeItem('cart');
-    toast.success('Thanh toán thành công! Đơn hàng sẽ được xử lý sớm nhất.');
+    toast.success('Payment successful! Your order will be processed soon.');
     navigate(`/order-success?payment=payos&order=${orderCode}`);
   };
 
   const handlePayOSCancel = () => {
     // Handle PayOS payment cancellation
     setShowPayOSPayment(false);
-    toast('Thanh toán đã bị hủy');
+    toast('Payment cancelled');
   };
 
   // Memoize customer info to prevent unnecessary re-renders
@@ -523,7 +523,7 @@ const CheckoutPage: React.FC = () => {
           <div className="flex justify-center items-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Đang tải thông tin giỏ hàng...</p>
+              <p className="mt-4 text-gray-600">Loading cart information...</p>
             </div>
           </div>
         </div>
@@ -540,8 +540,8 @@ const CheckoutPage: React.FC = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Thanh toán</h1>
-          <p className="text-gray-600 mt-2">Vui lòng điền thông tin để hoàn tất đơn hàng</p>
+          <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+          <p className="text-gray-600 mt-2">Please fill in the information to complete your order</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -549,12 +549,12 @@ const CheckoutPage: React.FC = () => {
           <div className="space-y-8">
             {/* Customer Info */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Thông tin khách hàng</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Customer Information</h2>
               
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Họ và tên <span className="text-red-500">*</span>
+                    Full Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -563,7 +563,7 @@ const CheckoutPage: React.FC = () => {
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       errors.fullName ? 'border-red-500' : 'border-gray-300'
                     }`}
-                    placeholder="Nhập họ và tên"
+                    placeholder="Enter full name"
                   />
                   {errors.fullName && (
                     <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
@@ -572,7 +572,7 @@ const CheckoutPage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Số điện thoại <span className="text-red-500">*</span>
+                    Phone Number <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -581,7 +581,7 @@ const CheckoutPage: React.FC = () => {
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       errors.phone ? 'border-red-500' : 'border-gray-300'
                     }`}
-                    placeholder="Nhập số điện thoại"
+                    placeholder="Enter phone number"
                   />
                   {errors.phone && (
                     <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
@@ -599,7 +599,7 @@ const CheckoutPage: React.FC = () => {
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       errors.email ? 'border-red-500' : 'border-gray-300'
                     }`}
-                    placeholder="Nhập email"
+                    placeholder="Enter email"
                   />
                   {errors.email && (
                     <p className="text-red-500 text-sm mt-1">{errors.email}</p>
@@ -610,12 +610,12 @@ const CheckoutPage: React.FC = () => {
 
             {/* Shipping Address */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Địa chỉ giao hàng</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Shipping Address</h2>
               
               {/* Address Selection for Logged in Users */}
               {isLoggedIn && userAddresses.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Chọn địa chỉ có sẵn</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Select saved address</h3>
                   <div className="space-y-3">
                     {userAddresses.map((address) => (
                       <div key={address.id} className="flex items-start space-x-3">
@@ -633,12 +633,12 @@ const CheckoutPage: React.FC = () => {
                               {userAddressService.formatFullAddress(address)}
                               {address.isDefault && (
                                 <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                  Mặc định
+                                  Default
                                 </span>
                               )}
                             </div>
                             {address.notes && (
-                              <div className="text-gray-500 mt-1">Ghi chú: {address.notes}</div>
+                              <div className="text-gray-500 mt-1">Note: {address.notes}</div>
                             )}
                           </div>
                         </label>
@@ -657,7 +657,7 @@ const CheckoutPage: React.FC = () => {
                       />
                       <label htmlFor="new-address" className="flex-1 cursor-pointer">
                         <div className="text-sm font-medium text-gray-900">
-                          Sử dụng địa chỉ mới
+                          Use new address
                         </div>
                       </label>
                     </div>
@@ -673,7 +673,7 @@ const CheckoutPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tỉnh / Thành phố <span className="text-red-500">*</span>
+                      Province / City <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={selectedProvinceCode || ''}
@@ -682,7 +682,7 @@ const CheckoutPage: React.FC = () => {
                         errors.province ? 'border-red-500' : 'border-gray-300'
                       }`}
                     >
-                      <option value="">Chọn tỉnh/thành phố...</option>
+                      <option value="">Select province/city...</option>
                       {provinces.map(province => (
                         <option key={province.code} value={province.code}>
                           {province.name}
@@ -696,7 +696,7 @@ const CheckoutPage: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quận/ Huyện <span className="text-red-500">*</span>
+                      District <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={selectedDistrictCode || ''}
@@ -706,7 +706,7 @@ const CheckoutPage: React.FC = () => {
                       }`}
                       disabled={!selectedProvinceCode}
                     >
-                      <option value="">Chọn quận/huyện...</option>
+                      <option value="">Select district...</option>
                       {districts.map(district => (
                         <option key={district.code} value={district.code}>
                           {district.name}
@@ -720,7 +720,7 @@ const CheckoutPage: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phường/ Xã <span className="text-red-500">*</span>
+                      Ward <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={wards.find(w => w.name === customerInfo.ward)?.code || ''}
@@ -730,7 +730,7 @@ const CheckoutPage: React.FC = () => {
                       }`}
                       disabled={!selectedDistrictCode}
                     >
-                      <option value="">Chọn phường/xã...</option>
+                      <option value="">Select ward...</option>
                       {wards.map(ward => (
                         <option key={ward.code} value={ward.code}>
                           {ward.name}
@@ -745,7 +745,7 @@ const CheckoutPage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Số nhà <span className="text-red-500">*</span>
+                    Street Address <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -754,7 +754,7 @@ const CheckoutPage: React.FC = () => {
                     className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       errors.address ? 'border-red-500' : 'border-gray-300'
                     }`}
-                    placeholder="Nhập số nhà cụ thể"
+                    placeholder="Enter street address"
                   />
                   {errors.address && (
                     <p className="text-red-500 text-sm mt-1">{errors.address}</p>
@@ -763,14 +763,14 @@ const CheckoutPage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ghi chú
+                    Notes
                   </label>
                   <textarea
                     value={customerInfo.notes}
                     onChange={(e) => handleInputChange('notes', e.target.value)}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ghi chú thêm (không bắt buộc)"
+                    placeholder="Additional notes (optional)"
                   />
                 </div>
               </div>
@@ -779,7 +779,7 @@ const CheckoutPage: React.FC = () => {
 
             {/* Payment Method */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Hình thức thanh toán</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Payment Method</h2>
               
               <div className="space-y-4">
                 <div className="flex items-center">
@@ -797,11 +797,11 @@ const CheckoutPage: React.FC = () => {
                     <div className="flex items-center">
                       <span className="mr-3"><HandCoins /></span>
                       <div>
-                        <div className="font-semibold">Thanh toán khi nhận hàng (COD)</div>
-                        <div className="text-gray-500 text-sm">Thanh toán bằng tiền mặt khi nhận hàng</div>
+                        <div className="font-semibold">Cash on Delivery (COD)</div>
+                        <div className="text-gray-500 text-sm">Pay with cash upon delivery</div>
                         {hasLenses && (
                           <div className="text-red-500 text-xs mt-1">
-                            Không khả dụng cho đơn hàng có tròng kính
+                            Not available for orders with lenses
                           </div>
                         )}
                       </div>
@@ -823,8 +823,8 @@ const CheckoutPage: React.FC = () => {
                     <div className="flex items-center">
                       <span className="mr-3"><CreditCard /></span>
                       <div>
-                        <div className="font-semibold">Thanh toán trực tuyến (PayOS)</div>
-                        <div className="text-gray-500 text-sm">Thanh toán qua thẻ ATM, Internet Banking, QR Code</div>
+                        <div className="font-semibold">Online Payment (PayOS)</div>
+                        <div className="text-gray-500 text-sm">Pay via ATM card, Internet Banking, QR Code</div>
                       </div>
                     </div>
                   </label>
@@ -840,10 +840,10 @@ const CheckoutPage: React.FC = () => {
                     </div>
                     <div className="ml-3">
                       <h4 className="text-sm font-medium text-blue-900">
-                        Thông báo đặc biệt
+                        Special Notice
                       </h4>
                       <p className="mt-1 text-sm text-blue-700">
-                        Với đơn hàng có tròng kính đi kèm vui lòng thanh toán trước để đảm bảo chất lượng và độ chính xác của sản phẩm.
+                        For orders with lenses, please pay in advance to ensure the quality and accuracy of the product.
                       </p>
                     </div>
                   </div>
@@ -856,7 +856,7 @@ const CheckoutPage: React.FC = () => {
           <div className="space-y-6">
             {/* Order Items */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Đơn hàng</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Items</h2>
               
               <div className="space-y-6">
                 {cartSummary?.items?.map((item) => (
@@ -876,7 +876,7 @@ const CheckoutPage: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-700">Màu:</span>
+                              <span className="font-medium text-gray-700">Color:</span>
                               {item.selectedColor && (
                                 <>
                                   <span className="text-gray-900">{item.selectedColor.colorName}</span>
@@ -884,11 +884,11 @@ const CheckoutPage: React.FC = () => {
                               )}
                             </div>
                             <div>
-                              <span className="font-medium text-gray-700">Số lượng:</span>
+                              <span className="font-medium text-gray-700">Quantity:</span>
                               <span className="ml-2 text-gray-900">{item.quantity}</span>
                             </div>
                             <div>
-                              <span className="font-medium text-gray-700">Giá gọng:</span>
+                              <span className="font-medium text-gray-700">Frame Price:</span>
                               <span className="ml-2 text-gray-900">{formatPrice(Number(item.framePrice))}</span>
                             </div>
                           </div>
@@ -897,14 +897,14 @@ const CheckoutPage: React.FC = () => {
                             {item.lensDetail && (
                               <>
                                 <div>
-                                  <span className="font-medium text-gray-700">Giá tròng:</span>
+                                  <span className="font-medium text-gray-700">Lens Price:</span>
                                   <span className="ml-2 text-gray-900">{formatPrice(Number(item.lensDetail.lensPrice))}</span>
                                 </div>
                                 {item.lensDetail.selectedCoatings && item.lensDetail.selectedCoatings.length > 0 && (
                                   <div>
                                     {item.lensDetail.selectedCoatings.map((coating, index) => (
                                       <div key={index}>
-                                        <span className="font-medium text-gray-700">Lớp phủ ({coating.name}):</span>
+                                        <span className="font-medium text-gray-700">Coating ({coating.name}):</span>
                                         <span className="ml-2 text-gray-900">+{formatPrice(coating.price)}</span>
                                       </div>
                                     ))}
@@ -920,7 +920,7 @@ const CheckoutPage: React.FC = () => {
                             )}
                             <div className="border-t pt-2 mt-2">
                               <span className="text-lg font-bold text-black">
-                                Tổng tiền: {formatPrice(Number(item.totalPrice))}
+                                Total: {formatPrice(Number(item.totalPrice))}
                               </span>
                             </div>
                           </div>
@@ -929,15 +929,15 @@ const CheckoutPage: React.FC = () => {
                         {/* Lens Information */}
                         {item.lensDetail && (
                           <div className="bg-white rounded-lg p-4 mb-4">
-                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Thông tin tròng kính</h4>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Lens Information</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-2">
                                 <div>
-                                  <span className="font-medium text-gray-700">Loại:</span>
+                                  <span className="font-medium text-gray-700">Type:</span>
                                   <span className="ml-2 text-gray-900">{item.lensDetail.lensType}</span>
                                 </div>
                                 <div>
-                                  <span className="font-medium text-gray-700">Giá:</span>
+                                  <span className="font-medium text-gray-700">Price:</span>
                                   <span className="ml-2 text-gray-900">{formatPrice(Number(item.lensDetail.lensPrice))}</span>
                                 </div>
                               </div>
@@ -945,7 +945,7 @@ const CheckoutPage: React.FC = () => {
                               {/* Coating details */}
                               {item.lensDetail.selectedCoatings && item.lensDetail.selectedCoatings.length > 0 && (
                                 <div>
-                                  <h5 className="font-medium text-gray-700 mb-2">Lớp phủ</h5>
+                                  <h5 className="font-medium text-gray-700 mb-2">Coating</h5>
                                   {item.lensDetail.selectedCoatings.map((coating, index) => (
                                     <div key={index} className="bg-gray-50 p-2 rounded mb-2">
                                       <div className="font-medium text-blue-900">{coating.name}</div>
@@ -963,12 +963,12 @@ const CheckoutPage: React.FC = () => {
                         {/* Prescription Information */}
                         {item.lensDetail?.prescription && (
                           <div className="bg-white rounded-lg p-4">
-                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Thông tin đơn thuốc</h4>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-3">Prescription Information</h4>
                             <div className="overflow-x-auto">
                               <table className="w-full text-sm border-collapse border border-gray-300">
                                 <thead>
                                   <tr className="bg-gray-100">
-                                    <th className="border border-gray-300 px-3 py-2 text-left">Mắt</th>
+                                    <th className="border border-gray-300 px-3 py-2 text-left">Eye</th>
                                     <th className="border border-gray-300 px-3 py-2 text-center">SPH</th>
                                     <th className="border border-gray-300 px-3 py-2 text-center">CYL</th>
                                     <th className="border border-gray-300 px-3 py-2 text-center">AXIS</th>
@@ -978,7 +978,7 @@ const CheckoutPage: React.FC = () => {
                                 </thead>
                                 <tbody>
                                   <tr>
-                                    <td className="border border-gray-300 px-3 py-2 font-medium">Phải</td>
+                                    <td className="border border-gray-300 px-3 py-2 font-medium">Right</td>
                                     <td className="border border-gray-300 px-3 py-2 text-center">
                                       {item.lensDetail.prescription.rightEye.sphere || 0}
                                     </td>
@@ -996,7 +996,7 @@ const CheckoutPage: React.FC = () => {
                                     </td>
                                   </tr>
                                   <tr>
-                                    <td className="border border-gray-300 px-3 py-2 font-medium">Trái</td>
+                                    <td className="border border-gray-300 px-3 py-2 font-medium">Left</td>
                                     <td className="border border-gray-300 px-3 py-2 text-center">
                                       {item.lensDetail.prescription.leftEye.sphere || 0}
                                     </td>
@@ -1027,72 +1027,72 @@ const CheckoutPage: React.FC = () => {
 
             {/* Promo Code */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Nhập mã khuyến mãi</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Enter Promo Code</h3>
               <div className="flex space-x-2">
                 <input
                   type="text"
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value)}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Nhập mã khuyến mãi"
+                  placeholder="Enter promo code"
                 />
                 <button
                   onClick={handleApplyPromo}
                   className="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800 transition-colors"
                 >
-                  Sử dụng
+                  Apply
                 </button>
               </div>
               {appliedPromo && (
                 <div className="mt-2 text-sm text-green-600">
-                  Mã "{appliedPromo.code}" đã được áp dụng
+                  Code "{appliedPromo.code}" applied
                 </div>
               )}
             </div>
 
             {/* Order Total */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Tổng đơn hàng</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
               
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Đơn hàng</span>
+                  <span className="text-gray-600">Subtotal</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
                 
                 {appliedPromo && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Khuyến mãi</span>
+                    <span className="text-gray-600">Discount</span>
                     <span className="text-red-600">-{formatPrice(appliedPromo.discount)}</span>
                   </div>
                 )}
                 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">
-                    Ship
+                    Shipping
                     {hasLenses && (
-                      <span className="text-green-600 text-xs ml-1">(Miễn phí)</span>
+                      <span className="text-green-600 text-xs ml-1">(Free)</span>
                     )}
                     {!hasLenses && (
-                      <span className="text-orange-600 text-xs ml-1">(Chỉ có gọng)</span>
+                      <span className="text-orange-600 text-xs ml-1">(Frame only)</span>
                     )}
                   </span>
                   <span className={hasLenses ? "text-green-600" : ""}>
-                    {hasLenses ? "Miễn phí" : formatPrice(shippingCost)}
+                    {hasLenses ? "Free" : formatPrice(shippingCost)}
                   </span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Hình thức thanh toán</span>
+                  <span className="text-gray-600">Payment Method</span>
                   <span className="text-blue-600">
-                    {selectedPaymentMethod === PaymentMethod.CASH ? 'Thanh toán khi nhận hàng' : 'PayOS'}
+                    {selectedPaymentMethod === PaymentMethod.CASH ? 'Cash on Delivery' : 'PayOS'}
                   </span>
                 </div>
                 
                 <hr className="border-gray-200" />
                 
                 <div className="flex justify-between text-lg font-semibold">
-                  <span>Tổng đơn</span>
+                  <span>Total</span>
                   <span className="text-black">{formatPrice(calculateTotal())}</span>
                 </div>
               </div>
@@ -1102,8 +1102,8 @@ const CheckoutPage: React.FC = () => {
                 disabled={isSubmitting}
                 className="w-full mt-6 bg-green-700 text-white py-3 px-4 rounded-lg hover:bg-green-800 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Đang xử lý...' : 
-                 selectedPaymentMethod === PaymentMethod.CASH ? 'Đặt hàng (COD)' : 'Thanh toán trực tuyến'}
+                {isSubmitting ? 'Processing...' : 
+                 selectedPaymentMethod === PaymentMethod.CASH ? 'Place Order (COD)' : 'Pay Online'}
               </button>
             </div>
           </div>
@@ -1116,7 +1116,7 @@ const CheckoutPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full m-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Thanh toán trực tuyến</h2>
+                <h2 className="text-xl font-semibold">Online Payment</h2>
                 <button
                   onClick={() => setShowPayOSPayment(false)}
                   className="text-gray-500 hover:text-gray-700"

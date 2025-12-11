@@ -66,6 +66,9 @@ const ProductsPage: React.FC = () => {
   const [brandSearchTerm, setBrandSearchTerm] = useState('');
   // Glasses Width filter: 'small' | 'medium' | 'large'
   const [selectedGlassesWidths, setSelectedGlassesWidths] = useState<string[]>([]);
+  // Glass Width Range filter (in mm)
+  const [minGlassWidth, setMinGlassWidth] = useState<number>(20);
+  const [maxGlassWidth, setMaxGlassWidth] = useState<number>(62);
   // Multifocal lens option filter
   const [isMultifocalSelected, setIsMultifocalSelected] = useState<boolean>(false);
 
@@ -500,6 +503,10 @@ const ProductsPage: React.FC = () => {
         total={total}
         selectedGlassesWidths={selectedGlassesWidths}
         setSelectedGlassesWidths={setSelectedGlassesWidths}
+        minGlassWidth={minGlassWidth}
+        setMinGlassWidth={setMinGlassWidth}
+        maxGlassWidth={maxGlassWidth}
+        setMaxGlassWidth={setMaxGlassWidth}
         selectedFrameTypes={selectedFrameTypes}
         setSelectedFrameTypes={setSelectedFrameTypes}
         selectedFrameMaterials={selectedFrameMaterials}
@@ -530,6 +537,10 @@ const ProductsPage: React.FC = () => {
               setSelectedGenders={setSelectedGenders}
               selectedGlassesWidths={selectedGlassesWidths}
               setSelectedGlassesWidths={setSelectedGlassesWidths}
+              minGlassWidth={minGlassWidth}
+              setMinGlassWidth={setMinGlassWidth}
+              maxGlassWidth={maxGlassWidth}
+              setMaxGlassWidth={setMaxGlassWidth}
               selectedFrameShapes={selectedFrameShapes}
               setSelectedFrameShapes={setSelectedFrameShapes}
               selectedFrameTypes={selectedFrameTypes}

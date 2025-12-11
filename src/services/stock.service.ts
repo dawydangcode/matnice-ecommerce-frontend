@@ -279,13 +279,13 @@ class StockService {
    */
   formatStockMessage(stock: number): string {
     if (stock <= 0) {
-      return 'Hết hàng';
+      return 'Out of stock';
     } else if (stock <= 5) {
-      return `Chỉ còn ${stock} sản phẩm`;
+      return `Only ${stock} left`;
     } else if (stock <= 20) {
-      return `Còn ${stock} sản phẩm`;
+      return `${stock} in stock`;
     } else {
-      return 'Còn hàng';
+      return 'In stock';
     }
   }
 

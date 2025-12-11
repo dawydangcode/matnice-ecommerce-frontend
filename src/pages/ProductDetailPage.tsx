@@ -9,6 +9,7 @@ import productService, { ProductDetail } from '../services/productService';
 import { product3DModelService, Product3DModel, Model3DConfig } from '../services/product3dModel.service';
 import { localCartService } from '../services/localCart.service';
 import stockService from '../services/stock.service';
+import { authService } from '../services/auth.service';
 import '../styles/ProductDetailPage.css';
 import { Glasses, Handbag, ShoppingCart, X, Video, RefreshCcw, Package, CircleCheck, CircleX } from 'lucide-react';
 import { FrameMeasurement, LensMeasurement, TempleMeasurement } from '../components/icons/Dimensions';
@@ -697,10 +698,12 @@ const ProductDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Prescription Info */}
-            <div className="prescription-info">
-              <p>Do you already own a pair of our glasses? <button className="text-link">Log in now</button> to see if this frame fits the recommended size.</p>
-            </div>
+            {/* Prescription Info - Only show if not logged in */}
+            {!authService.isLoggedIn() && (
+              <div className="prescription-info">
+                <p>Do you already own a pair of our glasses? <button className="text-link" onClick={() => navigate('/login')}>Log in now</button> to see if this frame fits the recommended size.</p>
+              </div>
+            )}
 
             {/* Pricing */}
             <div className="pricing-section">
@@ -713,26 +716,30 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="action-buttons">
-              {isGlasses() ? (
+              {getStockStatus().status === 'Out of stock' ? (
+                // Out of stock - show single "Discover Another Product" button
+                <button 
+                  className="btn-primary"
+                  onClick={() => navigate('/glasses')}
+                >
+                  <Package className="icon-inline" size={24} />
+                  Discover Another Product
+                </button>
+              ) : isGlasses() ? (
+                // Glasses with stock
                 <>
                   <button 
-                    className={`btn-primary ${getStockStatus().status === 'Out of stock' ? 'disabled' : ''}`}
-                    onClick={() => {
-                      if (getStockStatus().status !== 'Out of stock') {
-                        navigate(`/lens-selection?productId=${id}&selectedColorId=${selectedColorId}`);
-                      }
-                    }}
-                    disabled={getStockStatus().status === 'Out of stock'}
+                    className="btn-primary"
+                    onClick={() => navigate(`/lens-selection?productId=${id}&selectedColorId=${selectedColorId}`)}
                   >
                     <Handbag className="icon-inline" size={24} />
-                    {getStockStatus().status === 'Out of stock' ? 'Out of stock' : `With prescription from ${formatVND(getPrescriptionPrice())}`}
+                    {`With prescription from ${formatVND(getPrescriptionPrice())}`}
                   </button>
                   <button 
-                    className={`btn-secondary ${getStockStatus().status === 'Out of stock' ? 'disabled' : ''}`} 
-                    onClick={getStockStatus().status === 'Out of stock' ? undefined : handleAddFrameToCart}
-                    disabled={getStockStatus().status === 'Out of stock'}
+                    className="btn-secondary" 
+                    onClick={handleAddFrameToCart}
                   >
-                    {getStockStatus().status === 'Out of stock' ? 'Out of stock' : 'Buy frame only'}
+                    Buy frame only
                   </button>
                   <div className="divider">or</div>
                   <button className="btn-outline">
@@ -740,14 +747,14 @@ const ProductDetailPage: React.FC = () => {
                   </button>
                 </>
               ) : (
+                // Sunglasses with stock
                 <>
                   <button 
-                    className={`btn-primary ${getStockStatus().status === 'Out of stock' ? 'disabled' : ''}`} 
-                    onClick={getStockStatus().status === 'Out of stock' ? undefined : handleAddFrameToCart}
-                    disabled={getStockStatus().status === 'Out of stock'}
+                    className="btn-primary" 
+                    onClick={handleAddFrameToCart}
                   >
                     <ShoppingCart className="icon-inline" size={24} />
-                    {getStockStatus().status === 'Out of stock' ? 'Out of stock' : 'Add to basket'}
+                    Add to basket
                   </button>
                   <div className="divider">or</div>
                   <button className="btn-outline">
@@ -763,12 +770,10 @@ const ProductDetailPage: React.FC = () => {
               {isGlasses() ? (
                 <>
                   <div className="delivery-option">
-                    <Glasses className="inline-icon" />                
                     <span className="delivery-text">With prescription / Tint</span>
                     <span className="delivery-time">7 - 15 days</span>
                   </div>
                   <div className="delivery-option">
-                    <span className="delivery-icon">👓</span>
                     <span className="delivery-text">Try at home / Frame only</span>
                     <span className="delivery-time">3 - 5 days</span>
                   </div>
@@ -776,12 +781,10 @@ const ProductDetailPage: React.FC = () => {
               ) : (
                 <>
                   <div className="delivery-option">
-                    <span className="delivery-icon">🕶️</span>
                     <span className="delivery-text">Sunglasses delivery</span>
                     <span className="delivery-time">3 - 5 days</span>
                   </div>
                   <div className="delivery-option">
-                    <span className="delivery-icon">👓</span>
                     <span className="delivery-text">Try at home</span>
                     <span className="delivery-time">3 - 5 days</span>
                   </div>
