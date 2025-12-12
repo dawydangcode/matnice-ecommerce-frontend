@@ -592,7 +592,15 @@ class OrderService {
       }>('/api/v1/orders/my-orders');
 
       console.log('OrderService.getUserOrders: Success', response);
-      return response.data;
+
+      // Sort orders by orderDate descending (newest first)
+      const sortedOrders = response.data.sort((a, b) => {
+        return (
+          new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
+        );
+      });
+
+      return sortedOrders;
     } catch (error) {
       console.error('OrderService.getUserOrders: Error', error);
       throw error;

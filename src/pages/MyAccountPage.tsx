@@ -48,6 +48,8 @@ const MyAccountPage: React.FC = () => {
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
   const [isCreatingAddress, setIsCreatingAddress] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState<number | null>(null);
   const [addressFormData, setAddressFormData] = useState<CreateUserAddressRequest>({
     province: '',
     district: '',
@@ -309,9 +311,11 @@ const MyAccountPage: React.FC = () => {
         setSelectedDistrictCode(null);
         setDistricts([]);
         setWards([]);
+        toast.success('Đã thêm địa chỉ mới thành công');
       }
     } catch (error) {
       console.error('Failed to create address:', error);
+      toast.error('Không thể thêm địa chỉ mới');
     }
   };
 
@@ -333,26 +337,47 @@ const MyAccountPage: React.FC = () => {
       setSelectedDistrictCode(null);
       setDistricts([]);
       setWards([]);
+      toast.success('Đã cập nhật địa chỉ thành công');
     } catch (error) {
       console.error('Failed to update address:', error);
+      toast.error('Không thể cập nhật địa chỉ');
     }
   };
 
-  const handleDeleteAddress = async (addressId: number) => {
+  const handleDeleteAddress = (addressId: number) => {
+    setAddressToDelete(addressId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteAddress = async () => {
+    if (!addressToDelete) return;
+
     try {
-      await userAddressService.deleteUserAddress(addressId);
+      await userAddressService.deleteUserAddress(addressToDelete);
       await reloadAddresses();
+      toast.success('Đã xóa địa chỉ thành công');
     } catch (error) {
       console.error('Failed to delete address:', error);
+      toast.error('Không thể xóa địa chỉ');
+    } finally {
+      setShowDeleteConfirm(false);
+      setAddressToDelete(null);
     }
+  };
+
+  const cancelDeleteAddress = () => {
+    setShowDeleteConfirm(false);
+    setAddressToDelete(null);
   };
 
   const handleSetDefaultAddress = async (addressId: number) => {
     try {
       await userAddressService.setDefaultAddress(addressId);
       await reloadAddresses();
+      toast.success('Đã đặt làm địa chỉ mặc định');
     } catch (error) {
       console.error('Failed to set default address:', error);
+      toast.error('Không thể đặt địa chỉ mặc định');
     }
   };
 
@@ -416,40 +441,45 @@ const MyAccountPage: React.FC = () => {
   };
 
   const handleEditAddress = async (address: UserAddress) => {
-    setAddressFormData({
-      province: address.province,
-      district: address.district,
-      ward: address.ward,
-      addressDetail: address.addressDetail,
-      isDefault: address.isDefault,
-      notes: address.notes || ''
-    });
-    
-    // Find and set the corresponding codes for dropdowns
-    const selectedProvince = provinces.find(p => p.name === address.province);
-    if (selectedProvince) {
-      setSelectedProvinceCode(selectedProvince.code);
-      
-      try {
+    try {
+      // Find and set the corresponding codes for dropdowns
+      const selectedProvince = provinces.find(p => p.name === address.province);
+      if (selectedProvince) {
         // Load districts for the selected province
         const districtsData = await vietnamAddressService.getDistrictsByProvinceCode(selectedProvince.code);
-        setDistricts(districtsData);
         
         const selectedDistrict = districtsData.find(d => d.name === address.district);
+        let wardsData: Ward[] = [];
+        
         if (selectedDistrict) {
-          setSelectedDistrictCode(selectedDistrict.code);
-          
           // Load wards for the selected district
-          const wardsData = await vietnamAddressService.getWardsByDistrictCode(selectedDistrict.code);
-          setWards(wardsData);
+          wardsData = await vietnamAddressService.getWardsByDistrictCode(selectedDistrict.code);
         }
-      } catch (error) {
-        console.error('Error loading address data for edit:', error);
+        
+        // Set all states together after loading data
+        setDistricts(districtsData);
+        setWards(wardsData);
+        setSelectedProvinceCode(selectedProvince.code);
+        setSelectedDistrictCode(selectedDistrict?.code || null);
+        
+        setAddressFormData({
+          province: address.province,
+          district: address.district,
+          ward: address.ward,
+          addressDetail: address.addressDetail,
+          isDefault: address.isDefault,
+          notes: address.notes || ''
+        });
+        
+        setEditingAddressId(address.id);
+        setIsEditingAddress(true);
+      } else {
+        toast.error('Không tìm thấy thông tin tỉnh/thành phố');
       }
+    } catch (error) {
+      console.error('Error loading address data for edit:', error);
+      toast.error('Không thể tải thông tin địa chỉ');
     }
-    
-    setEditingAddressId(address.id);
-    setIsEditingAddress(true);
   };
 
   // Redirect if not logged in
@@ -1331,6 +1361,40 @@ const MyAccountPage: React.FC = () => {
 
       {/* Footer */}
       <Footer />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 animate-fade-in">
+            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+            
+            <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
+              Xóa địa chỉ
+            </h3>
+            
+            <p className="text-sm text-gray-600 text-center mb-6">
+              Bạn có chắc chắn muốn xóa địa chỉ này không? Hành động này không thể hoàn tác.
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={cancelDeleteAddress}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmDeleteAddress}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium"
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
