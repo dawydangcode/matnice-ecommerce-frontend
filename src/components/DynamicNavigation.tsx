@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import {
   glassesCategories,
   sunglassesCategories,
-  brandsCategories,
   boutiqueCategories,
   aiCategories
 } from '../data/categories';
@@ -228,49 +227,6 @@ const DynamicNavigation: React.FC = () => {
                         ))}
                       </ul>
                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Brands Dropdown */}
-          <div 
-            className="relative group"
-            onMouseEnter={() => handleMouseEnter('brands')}
-            onMouseLeave={handleMouseLeave}
-          >
-            <Link
-              to="/brands"
-              className="flex items-center text-gray-700 hover:text-black transition-colors duration-200 font-medium"
-            >
-              BRANDS
-              <ChevronDown className="ml-1 h-4 w-4" />
-            </Link>
-
-            {/* Brands Dropdown Content */}
-            {activeDropdown === 'brands' && (
-              <div className="absolute left-0 mt-0 w-[800px] bg-white shadow-lg rounded-md border z-50">
-                <div className="p-6">
-                  <div className="grid grid-cols-4 gap-6">
-                    {/* Use data from categories.ts */}
-                    {brandsCategories.map((category, index) => (
-                      <div key={index}>
-                        <h3 className="text-sm font-semibold text-gray-900 mb-3">{category.title}</h3>
-                        <ul className="space-y-2">
-                          {category.items.map((item) => (
-                            <li key={item}>
-                              <Link
-                                to={`/brands/${item.toLowerCase().replace(' ', '-').replace('&', 'and')}`}
-                                className="block py-2 px-2 text-sm text-gray-600 hover:text-black hover:bg-gray-50 rounded transition-all duration-200"
-                              >
-                                {item}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>

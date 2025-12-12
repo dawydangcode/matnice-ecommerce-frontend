@@ -51,4 +51,5 @@ export interface ProductCardQueryParams {
   springHinges?: boolean;
   weight?: number | [number, number];
   multifocal?: boolean;
+  boutique?: boolean;
 }

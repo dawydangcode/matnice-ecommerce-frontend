@@ -26,6 +26,7 @@ import OrderSuccessPage from './pages/OrderSuccessPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import MyAccountPage from './pages/MyAccountPage';
 import StockManagementPage from './pages/StockManagementPage';
+import BoutiquePage from './pages/BoutiquePage';
 
 // Protected Route Component for Admin
 interface AdminRouteProps {
@@ -159,6 +160,9 @@ function App() {
           <Route path="/sunglasses" element={<ProductsPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
+
+          {/* Boutique Page - accessible by everyone */}
+          <Route path="/boutique" element={<BoutiquePage />} />
 
           {/* Lens Pages - accessible by everyone */}
           <Route path="/lenses" element={<LensPage />} />

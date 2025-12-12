@@ -140,6 +140,9 @@ class ProductCardService {
       if (params.multifocal !== undefined) {
         queryParams.append('multifocal', params.multifocal ? '1' : '0');
       }
+      if (params.boutique !== undefined) {
+        queryParams.append('boutique', params.boutique ? '1' : '0');
+      }
 
       // Add sorting
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);

@@ -4,7 +4,6 @@ import { lensService } from '../services/lens.service';
 import {
   glassesCategories,
   sunglassesCategories,
-  brandsCategories,
   boutiqueCategories,
   aiCategories
 } from '../data/categories';
@@ -127,24 +126,6 @@ const Navigation: React.FC = () => {
               }`}
             >
               <span>LENS</span>
-             </Link>
-          </div>
-
-          {/* Brands Dropdown */}
-          <div 
-            className="relative group"
-            onMouseEnter={() => handleMouseEnter('brands')}
-            onMouseLeave={handleMouseLeave}
-          >
-            <Link 
-              to="/brands"
-              className={`flex items-center space-x-1 font-medium text-base transition-all duration-200 py-2 px-4 border-b-2 ${
-                activeDropdown === 'brands' 
-                  ? 'text-gray-900 border-black font-bold' 
-                  : 'text-gray-700 hover:text-gray-900 hover:font-bold border-transparent hover:border-gray-300'
-              }`}
-            >
-              <span>BRANDS</span>
              </Link>
           </div>
 
@@ -343,28 +324,6 @@ const Navigation: React.FC = () => {
                     </ul>
                   )}
                 </div>
-              </div>
-            )}
-
-            {activeDropdown === 'brands' && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                {brandsCategories.map((category, index) => (
-                  <div key={index}>
-                    <h3 className="font-semibold text-gray-900 mb-3">{category.title}</h3>
-                    <ul className="space-y-2">
-                      {category.items.map((item, itemIndex) => (
-                        <li key={itemIndex}>
-                          <Link 
-                            to="/brands"
-                            className="text-sm text-gray-600 hover:text-gray-900"
-                          >
-                            {item}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
               </div>
             )}
 
