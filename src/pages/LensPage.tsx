@@ -544,29 +544,6 @@ const LensPage: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Recommendations Section */}
-                <FilterSection title="RECOMMENDATIONS FOR YOU">
-                  <div className="space-y-3">
-                    <label className="flex items-start space-x-3">
-                      <input type="checkbox" className="mt-1 filter-checkbox" />
-                      <span className="text-sm text-gray-700">Your recommended lens size</span>
-                    </label>
-                    <div className="bg-gray-200 p-3 rounded-lg border border-gray-100">
-                      <div className="flex items-start space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-gray-100 text-black-600 flex items-center justify-center mt-1 text-xs font-medium">
-                          i
-                        </div>
-                        <div className="text-[14px] text-black-700">
-                          Do you already own a pair of our lenses? Log in now and filter lenses in your size.
-                        </div>
-                      </div>
-                      <button className="w-full mt-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-black-600 hover:bg-gray-50 transition-colors">
-                        Log in now
-                      </button>
-                    </div>
-                  </div>
-                </FilterSection>
-
                 {/* Type */}
                 <FilterSection title="TYPE">
                   <div className="space-y-2">

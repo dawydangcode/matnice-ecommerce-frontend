@@ -43,6 +43,12 @@ interface MobileFilterDrawerProps {
   isMultifocalSelected: boolean;
   setIsMultifocalSelected: (selected: boolean) => void;
   shouldHideLensOptions: boolean;
+  // Nose Bridge filter
+  selectedNoseBridges: string[];
+  setSelectedNoseBridges: (bridges: string[]) => void;
+  // Price range filter
+  selectedPriceRanges: string[];
+  setSelectedPriceRanges: (ranges: string[]) => void;
 }
 
 const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
@@ -69,7 +75,11 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
   filteredBrands,
   isMultifocalSelected,
   setIsMultifocalSelected,
-  shouldHideLensOptions
+  shouldHideLensOptions,
+  selectedNoseBridges,
+  setSelectedNoseBridges,
+  selectedPriceRanges,
+  setSelectedPriceRanges
 }) => {
   if (!isOpen || !activeTab) {
     return null;
@@ -279,21 +289,54 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
                     <label className="flex items-center cursor-pointer">
-                      <input type="checkbox" className="filter-checkbox" />
+                      <input 
+                        type="checkbox" 
+                        className="filter-checkbox"
+                        checked={selectedNoseBridges.includes('narrow')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedNoseBridges([...selectedNoseBridges, 'narrow']);
+                          } else {
+                            setSelectedNoseBridges(selectedNoseBridges.filter(b => b !== 'narrow'));
+                          }
+                        }}
+                      />
                       <span className="ml-3 mt-3 text-sm text-gray-700">Rather narrow</span>
                     </label>
                     <NoseBridgeSmall className="text-black-400 ml-3 mt-3" size={40} />
                   </div>
                   <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
                     <label className="flex items-center cursor-pointer">
-                      <input type="checkbox" className="filter-checkbox" />
+                      <input 
+                        type="checkbox" 
+                        className="filter-checkbox"
+                        checked={selectedNoseBridges.includes('medium')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedNoseBridges([...selectedNoseBridges, 'medium']);
+                          } else {
+                            setSelectedNoseBridges(selectedNoseBridges.filter(b => b !== 'medium'));
+                          }
+                        }}
+                      />
                       <span className="ml-3 mt-3 text-sm text-gray-700">Rather medium</span>
                     </label>
                     <NoseBridgeMedium className="text-black-400 ml-3 mt-3" size={40} />
                   </div>
                   <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded">
                     <label className="flex items-center cursor-pointer">
-                      <input type="checkbox" className="filter-checkbox" />
+                      <input 
+                        type="checkbox" 
+                        className="filter-checkbox"
+                        checked={selectedNoseBridges.includes('wide')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedNoseBridges([...selectedNoseBridges, 'wide']);
+                          } else {
+                            setSelectedNoseBridges(selectedNoseBridges.filter(b => b !== 'wide'));
+                          }
+                        }}
+                      />
                       <span className="ml-3 mt-3 text-sm text-gray-700">Rather wide</span>
                     </label>
                     <NoseBridgeLarge className="text-black-400 ml-3 mt-3" size={40} />
@@ -442,6 +485,14 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
                     <input 
                       type="checkbox" 
                       className="filter-checkbox"
+                      checked={selectedPriceRanges.includes(priceOption.label)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedPriceRanges([...selectedPriceRanges, priceOption.label]);
+                        } else {
+                          setSelectedPriceRanges(selectedPriceRanges.filter(p => p !== priceOption.label));
+                        }
+                      }}
                     />
                     <span className="ml-3 mt-3 text-sm text-gray-700">{priceOption.label}</span>
                   </label>

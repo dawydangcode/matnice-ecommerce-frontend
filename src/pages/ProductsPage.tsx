@@ -71,6 +71,10 @@ const ProductsPage: React.FC = () => {
   const [maxGlassWidth, setMaxGlassWidth] = useState<number>(62);
   // Multifocal lens option filter
   const [isMultifocalSelected, setIsMultifocalSelected] = useState<boolean>(false);
+  // Nose Bridge filter: 'narrow' | 'medium' | 'wide'
+  const [selectedNoseBridges, setSelectedNoseBridges] = useState<string[]>([]);
+  // Price range filter checkboxes
+  const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
 
   // Determine product type from URL
   const productType = searchParams.get('type') || category || 
@@ -240,11 +244,68 @@ const ProductsPage: React.FC = () => {
           }
         }
 
+        // Calculate nose bridge width range based on selected categories
+        let bridgeWidthRange: [number, number] | undefined = undefined;
+        if (selectedNoseBridges.length > 0) {
+          let minBridge = Infinity;
+          let maxBridge = -Infinity;
+          
+          if (selectedNoseBridges.includes('narrow')) {
+            minBridge = Math.min(minBridge, 0);
+            maxBridge = Math.max(maxBridge, 14.99);
+          }
+          if (selectedNoseBridges.includes('medium')) {
+            minBridge = Math.min(minBridge, 15);
+            maxBridge = Math.max(maxBridge, 19);
+          }
+          if (selectedNoseBridges.includes('wide')) {
+            minBridge = Math.min(minBridge, 19.01);
+            maxBridge = Math.max(maxBridge, 9999);
+          }
+          
+          if (minBridge !== Infinity && maxBridge !== -Infinity) {
+            bridgeWidthRange = [minBridge, maxBridge];
+          }
+        }
+
+        // Calculate price range based on selected price ranges
+        let finalMinPrice = minPrice > 0 ? minPrice : undefined;
+        let finalMaxPrice = maxPrice < 1000000 ? maxPrice : undefined;
+        
+        if (selectedPriceRanges.length > 0) {
+          let minPriceFromRanges = Infinity;
+          let maxPriceFromRanges = -Infinity;
+          
+          selectedPriceRanges.forEach(range => {
+            if (range === 'Dưới 1.000.000đ') {
+              minPriceFromRanges = Math.min(minPriceFromRanges, 0);
+              maxPriceFromRanges = Math.max(maxPriceFromRanges, 999999);
+            } else if (range === '1.000.000đ - 2.000.000đ') {
+              minPriceFromRanges = Math.min(minPriceFromRanges, 1000000);
+              maxPriceFromRanges = Math.max(maxPriceFromRanges, 2000000);
+            } else if (range === '2.000.000đ - 3.000.000đ') {
+              minPriceFromRanges = Math.min(minPriceFromRanges, 2000000);
+              maxPriceFromRanges = Math.max(maxPriceFromRanges, 3000000);
+            } else if (range === '3.000.000đ - 5.000.000đ') {
+              minPriceFromRanges = Math.min(minPriceFromRanges, 3000000);
+              maxPriceFromRanges = Math.max(maxPriceFromRanges, 5000000);
+            } else if (range === 'Trên 5.000.000đ') {
+              minPriceFromRanges = Math.min(minPriceFromRanges, 5000001);
+              maxPriceFromRanges = Math.max(maxPriceFromRanges, 999999999);
+            }
+          });
+          
+          if (minPriceFromRanges !== Infinity && maxPriceFromRanges !== -Infinity) {
+            finalMinPrice = minPriceFromRanges;
+            finalMaxPrice = maxPriceFromRanges;
+          }
+        }
+
         const response = await productCardService.getProductCards({
           page: currentPage,
           limit: pageSize,
-          minPrice: minPrice > 0 ? minPrice : undefined,
-          maxPrice: maxPrice < 1000000 ? maxPrice : undefined,
+          minPrice: finalMinPrice,
+          maxPrice: finalMaxPrice,
           sortBy: backendSortBy,
           sortOrder: sortOrder,
           productType: productType,
@@ -256,6 +317,7 @@ const ProductsPage: React.FC = () => {
           bridgeDesign: selectedBridgeDesigns.length > 0 ? selectedBridgeDesigns.map(f => f.toLowerCase()) : undefined,
           style: selectedStyles.length > 0 ? selectedStyles.map(f => f.toLowerCase()) : undefined,
           frameWidth,
+          bridgeWidth: bridgeWidthRange,
           multifocal: isMultifocalSelected ? true : undefined,
         });
         
@@ -318,7 +380,7 @@ const ProductsPage: React.FC = () => {
     };
 
     fetchData();
-  }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, selectedGlassesWidths, isMultifocalSelected, productType]);
+  }, [currentPage, pageSize, minPrice, maxPrice, sortBy, selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, selectedGlassesWidths, isMultifocalSelected, productType, selectedNoseBridges, selectedPriceRanges]);
 
   // Helper function to get selected filter labels
   const getSelectedFilters = () => {
@@ -410,13 +472,15 @@ const ProductsPage: React.FC = () => {
     setBrandSearchTerm('');
     setSelectedGlassesWidths([]);
     setIsMultifocalSelected(false);
+    setSelectedNoseBridges([]);
+    setSelectedPriceRanges([]);
   };
 
   // Reset page to 1 when filter changes
   useEffect(() => {
     setCurrentPage(1);
     // eslint-disable-next-line
-  }, [selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, priceRange, selectedGlassesWidths, isMultifocalSelected]);
+  }, [selectedBrands, selectedGenders, selectedFrameTypes, selectedFrameShapes, selectedFrameMaterials, selectedBridgeDesigns, selectedStyles, priceRange, selectedGlassesWidths, isMultifocalSelected, selectedNoseBridges, selectedPriceRanges]);
 
   // Fetch wishlist when user is available (on mount and when user changes)
   useEffect(() => {
@@ -522,6 +586,10 @@ const ProductsPage: React.FC = () => {
         isMultifocalSelected={isMultifocalSelected}
         setIsMultifocalSelected={setIsMultifocalSelected}
         shouldHideLensOptions={shouldHideLensOptions}
+        selectedNoseBridges={selectedNoseBridges}
+        setSelectedNoseBridges={setSelectedNoseBridges}
+        selectedPriceRanges={selectedPriceRanges}
+        setSelectedPriceRanges={setSelectedPriceRanges}
       />
 
       {/* Main Content Area */}
@@ -559,6 +627,10 @@ const ProductsPage: React.FC = () => {
               shouldHideLensOptions={shouldHideLensOptions}
               isMultifocalSelected={isMultifocalSelected}
               setIsMultifocalSelected={setIsMultifocalSelected}
+              selectedNoseBridges={selectedNoseBridges}
+              setSelectedNoseBridges={setSelectedNoseBridges}
+              selectedPriceRanges={selectedPriceRanges}
+              setSelectedPriceRanges={setSelectedPriceRanges}
             />
 
             {/* Product Grid */}
