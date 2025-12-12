@@ -45,14 +45,36 @@ const PaymentSuccessPage: React.FC = () => {
         const cartData = await cartService.getOrCreateCart();
         await cartService.clearCart(cartData.cartId);
         console.log('Cart cleared from database after PayOS order creation');
+        
+        // After clearing cart from database, update all UI components
+        // 1. Clear localStorage
+        localStorage.removeItem('checkoutCustomerInfo');
+        localStorage.removeItem('cart');
+        localStorage.setItem('matnice_cart_count', '0');
+        
+        // 2. Dispatch cartUpdated event with count = 0
+        window.dispatchEvent(new CustomEvent('cartUpdated', { 
+          detail: { count: 0 } 
+        }));
+        
+        // 3. Dispatch storage event for cross-tab sync
+        const storageEvent = new StorageEvent('storage', {
+          key: 'matnice_cart_count',
+          newValue: '0',
+          oldValue: null,
+          storageArea: localStorage,
+          url: window.location.href
+        });
+        window.dispatchEvent(storageEvent);
+        
+        // 4. Dispatch custom event to reload cart in CartDropdown
+        window.dispatchEvent(new CustomEvent('cartCleared'));
+        
+        console.log('✅ All cart update events dispatched');
       } catch (cartError) {
         console.error('Error clearing cart from database after PayOS order:', cartError);
         // Don't block the flow if cart clearing fails
       }
-
-      // Clear customer info and cart from localStorage after successful order creation
-      localStorage.removeItem('checkoutCustomerInfo');
-      localStorage.removeItem('cart');
     } catch (error) {
       console.error('Error creating order from payment:', error);
       toast.error('Có lỗi xảy ra khi tạo đơn hàng. Vui lòng liên hệ hỗ trợ.');
@@ -88,7 +110,11 @@ const PaymentSuccessPage: React.FC = () => {
 
     setPaymentInfo(paymentData);
 
-    console.log('Payment return params:', paymentData);
+    console.log('=== PayOS Return URL Info ===');
+    console.log('Full URL:', window.location.href);
+    console.log('Search params:', location.search);
+    console.log('Parsed payment data:', paymentData);
+    console.log('============================');
 
     // Removed auto redirect - user will use button instead
   }, [location.search, navigate]);

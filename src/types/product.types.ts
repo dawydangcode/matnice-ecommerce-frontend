@@ -114,7 +114,7 @@ export enum FaceShapeType {
   SQUARE = 'square',
   OVAL = 'oval',
   HEART = 'heart',
-  DIAMOND = 'diamond',
+  OBLONG = 'oblong',
 }
 // Product Detail interface
 export interface ProductDetail {

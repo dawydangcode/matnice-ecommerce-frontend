@@ -471,6 +471,57 @@ const LensSelectionPage: React.FC = () => {
     return isNaN(numericValue) ? undefined : numericValue;
   };
 
+  // Prescription validation helpers
+  const parseNumeric = (value: string): number | null => {
+    if (!value || value === '-' ) return null;
+    if (value === '± 0.00') return 0;
+    // remove degree symbol
+    if (value.includes('°')) {
+      const v = parseFloat(value.replace('°', '').replace('+', ''));
+      return isNaN(v) ? null : v;
+    }
+    const v = parseFloat(value.replace('+', ''));
+    return isNaN(v) ? null : v;
+  };
+
+  const haveDifferentSigns = (a: string, b: string) => {
+    const na = parseNumeric(a);
+    const nb = parseNumeric(b);
+    if (na === null || nb === null) return false;
+    // treat 0 as neutral — only report if one positive and one negative
+    return (na > 0 && nb < 0) || (na < 0 && nb > 0);
+  };
+
+  const absoluteDiffExceeds = (a: string, b: string, threshold: number) => {
+    const na = parseNumeric(a);
+    const nb = parseNumeric(b);
+    if (na === null || nb === null) return false;
+    return Math.abs(na - nb) > threshold;
+  };
+
+  const isAboveManufactureThreshold = () => {
+    const sR = parseNumeric(prescriptionData.sphereR);
+    const sL = parseNumeric(prescriptionData.sphereL);
+    const cR = parseNumeric(prescriptionData.cylinderR);
+    const cL = parseNumeric(prescriptionData.cylinderL);
+    const sphereExceeded = (sR !== null && Math.abs(sR) > 6) || (sL !== null && Math.abs(sL) > 6);
+    const cylExceeded = (cR !== null && Math.abs(cR) > 2) || (cL !== null && Math.abs(cL) > 2);
+    return sphereExceeded || cylExceeded;
+  };
+
+  const hasAxisWithoutCylinder = () => {
+    const cR = parseNumeric(prescriptionData.cylinderR);
+    const cL = parseNumeric(prescriptionData.cylinderL);
+    const aR = parseNumeric(prescriptionData.axisR);
+    const aL = parseNumeric(prescriptionData.axisL);
+    
+    // Check if axis is non-zero but cylinder is zero
+    const rightIssue = (aR !== null && aR !== 0) && (cR === null || cR === 0);
+    const leftIssue = (aL !== null && aL !== 0) && (cL === null || cL === 0);
+    
+    return rightIssue || leftIssue;
+  };
+
   // Function to load filtered lenses based on prescription
   const loadFilteredLenses = useCallback(async () => {
     // Reset selected lens when filtering changes
@@ -1181,6 +1232,27 @@ const LensSelectionPage: React.FC = () => {
                           </div>
                         </div>
                       </div>
+                      
+                      {/* Sphere validation messages */}
+                      <div className="space-y-2 mt-3">
+                        {/* Signs mismatch for sphere */}
+                        {haveDifferentSigns(prescriptionData.sphereR, prescriptionData.sphereL) && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <p className="text-red-700 text-sm">
+                              The signs given for Sphere are different. Please check the inputs or call us: 0123 456 789.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Large difference between eyes validation */}
+                        {absoluteDiffExceeds(prescriptionData.sphereR, prescriptionData.sphereL, 3) && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <p className="text-red-700 text-sm">
+                              The sphere values for both eyes differ unusually greatly. Please check the inputs or call us: 0123 456 789.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* Cylinder */}
@@ -1226,6 +1298,27 @@ const LensSelectionPage: React.FC = () => {
                             </div>
                           </div>
                         </div>
+                      </div>
+                      
+                      {/* Cylinder validation messages */}
+                      <div className="space-y-2 mt-3">
+                        {/* Signs mismatch for cylinder */}
+                        {haveDifferentSigns(prescriptionData.cylinderR, prescriptionData.cylinderL) && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <p className="text-red-700 text-sm">
+                              The signs given for Cylinder are different. Please check the inputs or call us: 0123 456 789.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Axis without Cylinder validation */}
+                        {hasAxisWithoutCylinder() && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                            <p className="text-red-700 text-sm">
+                              Please provide a cylinder value if you have specified an axis.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -2643,7 +2736,7 @@ const LensSelectionPage: React.FC = () => {
                     <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
-                    <span className="font-bold text-lg">1900 8828</span>
+                    <span className="font-bold text-lg">0123 456 789</span>
                   </div>
                   <p className="text-sm text-gray-500">T2 - T6: 8:00 - 17:00</p>
                 </div>

@@ -70,21 +70,21 @@ const AIAnalysisPage: React.FC = () => {
   // Helper functions to translate analysis results to Vietnamese
   const translateSkinColor = (color: string): string => {
     const skinColorMap: { [key: string]: string } = {
-      'dark': 'Tối',
-      'medium': 'Trung bình',
-      'light': 'Sáng'
+      'dark': 'Dark',
+      'medium': 'Medium',
+      'light': 'Light'
     };
     return skinColorMap[color.toLowerCase()] || color;
   };
 
   const translateFaceShape = (shape: string): string => {
     const faceShapeMap: { [key: string]: string } = {
-      'oval': 'Trái xoan',
-      'round': 'Tròn',
-      'square': 'Vuông',
-      'heart': 'Trái tim',
-      'long': 'Dài',
-      'diamond': 'Kim cương'
+      'oval': 'Oval',
+      'round': 'Round',
+      'square': 'Square',
+      'heart': 'Heart',
+      'long': 'Long',
+      'oblong': 'Oblong'
     };
     return faceShapeMap[shape.toLowerCase()] || shape;
   };

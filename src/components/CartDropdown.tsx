@@ -47,6 +47,26 @@ const CartDropdown: React.FC = () => {
     }
   }, [cartCount, user?.id]);
 
+  // Listen for cart cleared event (e.g., after successful payment)
+  useEffect(() => {
+    const handleCartCleared = () => {
+      console.log('CartDropdown: Cart cleared event received, reloading cart...');
+      if (user?.id) {
+        // Reload cart from backend for logged-in users
+        fetchCartItems();
+      } else {
+        // Clear local cart for guest users
+        setLocalItems([]);
+      }
+    };
+
+    window.addEventListener('cartCleared', handleCartCleared);
+    
+    return () => {
+      window.removeEventListener('cartCleared', handleCartCleared);
+    };
+  }, [user?.id, fetchCartItems]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {

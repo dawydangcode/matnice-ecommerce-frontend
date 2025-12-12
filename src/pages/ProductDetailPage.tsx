@@ -741,10 +741,6 @@ const ProductDetailPage: React.FC = () => {
                   >
                     Buy frame only
                   </button>
-                  <div className="divider">or</div>
-                  <button className="btn-outline">
-                    Try at home
-                  </button>
                 </>
               ) : (
                 // Sunglasses with stock
@@ -774,7 +770,7 @@ const ProductDetailPage: React.FC = () => {
                     <span className="delivery-time">7 - 15 days</span>
                   </div>
                   <div className="delivery-option">
-                    <span className="delivery-text">Try at home / Frame only</span>
+                    <span className="delivery-text">Frame only</span>
                     <span className="delivery-time">3 - 5 days</span>
                   </div>
                 </>
@@ -785,7 +781,6 @@ const ProductDetailPage: React.FC = () => {
                     <span className="delivery-time">3 - 5 days</span>
                   </div>
                   <div className="delivery-option">
-                    <span className="delivery-text">Try at home</span>
                     <span className="delivery-time">3 - 5 days</span>
                   </div>
                 </>

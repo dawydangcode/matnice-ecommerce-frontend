@@ -15,7 +15,9 @@ export const useCartCount = () => {
 
     // Listen for cart updates
     const handleCartUpdate = (event: CustomEvent) => {
-      setCartCount(event.detail.count);
+      // Safely handle event detail
+      const count = event.detail?.count ?? 0;
+      setCartCount(count);
     };
 
     window.addEventListener('cartUpdated', handleCartUpdate as EventListener);
