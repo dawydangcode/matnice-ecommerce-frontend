@@ -47,13 +47,20 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
   const [editingOrder, setEditingOrder] = useState<OrderResponse | null>(null);
   const [newStatus, setNewStatus] = useState<OrderStatus>(OrderStatus.PENDING);
   const [newPaymentStatus, setNewPaymentStatus] = useState<PaymentStatus>(PaymentStatus.PENDING);
+  const [showInvalidStatusModal, setShowInvalidStatusModal] = useState(false);
+  const [invalidStatusMessage, setInvalidStatusMessage] = useState('');
+  
+  // Temporary states for order detail form (before submit)
+  const [tempOrderStatus, setTempOrderStatus] = useState<OrderStatus | null>(null);
+  const [tempPaymentStatus, setTempPaymentStatus] = useState<PaymentStatus | null>(null);
+  const [tempNotes, setTempNotes] = useState<string>('');
   
   // Advanced filter states
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [sortBy, setSortBy] = useState<'orderDate' | 'totalPrice' | 'status' | 'id'>('orderDate');
+  const [sortBy, setSortBy] = useState<'orderDate' | 'totalPrice' | 'status' | 'id'>('id');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   // Tracking info
@@ -97,6 +104,12 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
     fetchOrders();
   }, [fetchOrders]);
 
+  // Debug modal state changes
+  useEffect(() => {
+    console.log('Modal state changed:', showInvalidStatusModal);
+    console.log('Modal message:', invalidStatusMessage);
+  }, [showInvalidStatusModal, invalidStatusMessage]);
+
   // Handle search
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -114,6 +127,48 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
     setCurrentPage(1);
   };
 
+  // Validate status transition
+  const validateStatusTransition = (currentStatus: OrderStatus, newStatus: OrderStatus): { valid: boolean; message: string } => {
+    // Define status hierarchy (lower number = earlier stage)
+    const statusHierarchy: Record<OrderStatus, number> = {
+      [OrderStatus.PENDING]: 1,
+      [OrderStatus.PROCESSING]: 2,
+      [OrderStatus.SHIPPED]: 3,
+      [OrderStatus.DELIVERED]: 4,
+      [OrderStatus.CANCELLED]: 5, // Can be set at any time
+    };
+
+    // Allow cancellation from any status
+    if (newStatus === OrderStatus.CANCELLED) {
+      return { valid: true, message: '' };
+    }
+
+    // Don't allow changing from cancelled or delivered
+    if (currentStatus === OrderStatus.CANCELLED) {
+      return { 
+        valid: false, 
+        message: 'Không thể thay đổi trạng thái của đơn hàng đã hủy. Vui lòng tạo đơn hàng mới.' 
+      };
+    }
+
+    if (currentStatus === OrderStatus.DELIVERED) {
+      return { 
+        valid: false, 
+        message: 'Không thể thay đổi trạng thái của đơn hàng đã giao thành công.' 
+      };
+    }
+
+    // Don't allow going backwards in the status flow
+    if (statusHierarchy[newStatus] < statusHierarchy[currentStatus]) {
+      return { 
+        valid: false, 
+        message: `Không thể chuyển từ trạng thái "${orderService.getStatusDisplayName(currentStatus)}" về "${orderService.getStatusDisplayName(newStatus)}". Chỉ có thể tiến về các trạng thái tiếp theo.` 
+      };
+    }
+
+    return { valid: true, message: '' };
+  };
+
   // Handle view order detail
   const handleViewOrder = async (order: OrderResponse) => {
     try {
@@ -122,6 +177,11 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
       console.log('Detailed Order Data:', detailedOrder); // Debug log
       setSelectedOrder(detailedOrder);
       setShowOrderDetail(true);
+      
+      // Reset temp states when opening a new order
+      setTempOrderStatus(null);
+      setTempPaymentStatus(null);
+      setTempNotes('');
     } catch (error) {
       console.error('Error fetching order details:', error);
       toast.error('Có lỗi khi tải chi tiết đơn hàng');
@@ -145,6 +205,14 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
   // Submit status update
   const submitStatusUpdate = async () => {
     if (!editingOrder) return;
+
+    // Validate status transition
+    const validation = validateStatusTransition(editingOrder.status as OrderStatus, newStatus);
+    if (!validation.valid) {
+      setInvalidStatusMessage(validation.message);
+      setShowInvalidStatusModal(true);
+      return;
+    }
 
     try {
       await orderService.updateOrderStatus(editingOrder.id, newStatus);
@@ -261,7 +329,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
     setEndDate('');
     setMinPrice('');
     setMaxPrice('');
-    setSortBy('orderDate');
+    setSortBy('id');
     setSortOrder('desc');
     setCurrentPage(1);
   };
@@ -344,44 +412,86 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
     }
   };
 
-  // Handle update order status
-  const handleUpdateOrderStatus = async (newStatus: OrderStatus) => {
-    if (selectedOrder) {
-      try {
-        await orderService.updateOrderStatus(selectedOrder.id, newStatus);
-        setSelectedOrder({ ...selectedOrder, status: newStatus });
-        toast.success('Cập nhật trạng thái thành công!');
-      } catch (error) {
-        console.error('Error updating order status:', error);
-        toast.error('Có lỗi khi cập nhật trạng thái');
+  // Handle order status dropdown change (just update temp state)
+  const handleOrderStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newStatus = e.target.value as OrderStatus;
+    setTempOrderStatus(newStatus);
+  };
+
+  // Handle payment status dropdown change (just update temp state)
+  const handlePaymentStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPaymentStatus = e.target.value as PaymentStatus;
+    setTempPaymentStatus(newPaymentStatus);
+  };
+
+  // Handle notes change (just update temp state)
+  const handleNotesChange = (newNotes: string) => {
+    setTempNotes(newNotes);
+  };
+
+  // Handle submit all changes with validation
+  const handleSubmitChanges = async () => {
+    if (!selectedOrder) return;
+
+    const statusToUpdate = tempOrderStatus || selectedOrder.status;
+    const paymentStatusToUpdate = tempPaymentStatus || selectedOrder.paymentStatus;
+    const notesToUpdate = tempNotes || selectedOrder.notes || '';
+
+    console.log('=== SUBMIT DEBUG ===');
+    console.log('Current status:', selectedOrder.status);
+    console.log('Temp status:', tempOrderStatus);
+    console.log('Will validate:', tempOrderStatus && tempOrderStatus !== selectedOrder.status);
+
+    // Validate status transition if status changed
+    if (tempOrderStatus && tempOrderStatus !== selectedOrder.status) {
+      const validation = validateStatusTransition(
+        selectedOrder.status as OrderStatus, 
+        tempOrderStatus
+      );
+      
+      console.log('Validation result:', validation);
+      
+      if (!validation.valid) {
+        console.log('Setting modal to show...');
+        setInvalidStatusMessage(validation.message);
+        setShowInvalidStatusModal(true);
+        console.log('Modal state set. Message:', validation.message);
+        return;
       }
     }
-  };
 
-  // Handle update payment status
-  const handleUpdatePaymentStatus = async (newPaymentStatus: PaymentStatus) => {
-    if (selectedOrder) {
-      try {
-        await orderService.updatePaymentStatus(selectedOrder.id, newPaymentStatus);
-        setSelectedOrder({ ...selectedOrder, paymentStatus: newPaymentStatus });
-        toast.success('Cập nhật trạng thái thanh toán thành công!');
-      } catch (error) {
-        console.error('Error updating payment status:', error);
-        toast.error('Có lỗi khi cập nhật trạng thái thanh toán');
+    try {
+      // Update order status if changed
+      if (tempOrderStatus && tempOrderStatus !== selectedOrder.status) {
+        await orderService.updateOrderStatus(selectedOrder.id, tempOrderStatus);
       }
-    }
-  };
 
-  // Handle update notes
-  const handleUpdateNotes = (newNotes: string) => {
-    if (selectedOrder) {
-      setSelectedOrder({ ...selectedOrder, notes: newNotes });
-    }
-  };
+      // Update payment status if changed
+      if (tempPaymentStatus && tempPaymentStatus !== selectedOrder.paymentStatus) {
+        await orderService.updatePaymentStatus(selectedOrder.id, tempPaymentStatus);
+      }
 
-  // Handle submit changes
-  const handleSubmitChanges = () => {
-    toast.success('Thay đổi đã được lưu!');
+      // Update the selected order with all new values
+      setSelectedOrder({
+        ...selectedOrder,
+        status: statusToUpdate,
+        paymentStatus: paymentStatusToUpdate,
+        notes: notesToUpdate,
+      });
+
+      // Reset temp states
+      setTempOrderStatus(null);
+      setTempPaymentStatus(null);
+      setTempNotes('');
+
+      toast.success('Cập nhật thông tin đơn hàng thành công!');
+      
+      // Refresh order list
+      fetchOrders();
+    } catch (error) {
+      console.error('Error updating order:', error);
+      toast.error('Có lỗi khi cập nhật đơn hàng');
+    }
   };
 
   if (loading) {
@@ -400,7 +510,13 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => setShowOrderDetail(false)}
+              onClick={() => {
+                setShowOrderDetail(false);
+                // Reset temp states when closing order detail
+                setTempOrderStatus(null);
+                setTempPaymentStatus(null);
+                setTempNotes('');
+              }}
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -763,8 +879,8 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Order Status</label>
                     <select
-                      value={selectedOrder.status}
-                      onChange={(e) => handleUpdateOrderStatus(e.target.value as OrderStatus)}
+                      value={tempOrderStatus || selectedOrder.status}
+                      onChange={handleOrderStatusChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="pending">Pending</option>
@@ -788,8 +904,8 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Order Transaction</label>
                     <select
-                      value={selectedOrder.paymentStatus}
-                      onChange={(e) => handleUpdatePaymentStatus(e.target.value as PaymentStatus)}
+                      value={tempPaymentStatus || selectedOrder.paymentStatus}
+                      onChange={handlePaymentStatusChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="pending">Pending</option>
@@ -804,8 +920,8 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Comment</label>
                     <textarea
-                      value={selectedOrder.notes || ''}
-                      onChange={(e) => handleUpdateNotes(e.target.value)}
+                      value={tempNotes || selectedOrder.notes || ''}
+                      onChange={(e) => handleNotesChange(e.target.value)}
                       rows={4}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Add your comment..."
@@ -823,6 +939,41 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
             </div>
           </div>
         </div>
+
+        {/* Invalid Status Transition Modal - Order Detail View */}
+        {showInvalidStatusModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <AlertCircle className="w-6 h-6 text-red-600" />
+                  </div>
+                </div>
+                
+                <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
+                  Không thể thay đổi trạng thái
+                </h3>
+                
+                <p className="text-gray-600 text-center mb-6">
+                  {invalidStatusMessage}
+                </p>
+
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => {
+                      setShowInvalidStatusModal(false);
+                      setInvalidStatusMessage('');
+                    }}
+                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    Đã hiểu
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1326,6 +1477,41 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                   className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
                 >
                   Cập nhật
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invalid Status Transition Modal */}
+      {showInvalidStatusModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+              </div>
+              
+              <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
+                Không thể thay đổi trạng thái
+              </h3>
+              
+              <p className="text-gray-600 text-center mb-6">
+                {invalidStatusMessage}
+              </p>
+
+              <div className="flex justify-center">
+                <button
+                  onClick={() => {
+                    setShowInvalidStatusModal(false);
+                    setInvalidStatusMessage('');
+                  }}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  Đã hiểu
                 </button>
               </div>
             </div>

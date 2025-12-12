@@ -14,6 +14,7 @@ const PaymentSuccessPage: React.FC = () => {
   const [orderCreated, setOrderCreated] = useState(false);
   const [orderCreating, setOrderCreating] = useState(false);
   const [orderCreationAttempted, setOrderCreationAttempted] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState<number | null>(null);
 
   const createOrderFromPayment = useCallback(async (orderCode: string) => {
     if (orderCreationAttempted) {
@@ -35,7 +36,20 @@ const PaymentSuccessPage: React.FC = () => {
 
       const customerInfo = JSON.parse(customerInfoStr);
 
-      await payosService.createOrderFromPayment(orderCode, customerInfo);
+      const orderResponse = await payosService.createOrderFromPayment(orderCode, customerInfo);
+      
+      console.log('📦 Order response structure:', JSON.stringify(orderResponse, null, 2));
+      
+      // Save the real order ID from database
+      // Response might be nested in data object
+      const orderId = orderResponse?.data?.orderId || orderResponse?.orderId;
+      
+      if (orderId) {
+        setCreatedOrderId(orderId);
+        console.log('✅ Order created with ID:', orderId);
+      } else {
+        console.warn('⚠️ No orderId found in response:', orderResponse);
+      }
       
       setOrderCreated(true);
       toast.success('Đơn hàng đã được tạo thành công!');
@@ -164,8 +178,8 @@ const PaymentSuccessPage: React.FC = () => {
 
       if (orderCreated) {
         return {
-          title: 'Thanh toán và đặt hàng thành công!',
-          message: 'Cảm ơn bạn đã đặt hàng. Chúng tôi sẽ xử lý đơn hàng và giao hàng trong thời gian sớm nhất.',
+          title: 'Payment and Order Successful!',
+          message: 'Thank you for your order. We will process and deliver your order as soon as possible.',
           className: 'text-green-600',
         };
       }
@@ -215,30 +229,32 @@ const PaymentSuccessPage: React.FC = () => {
 
           {paymentInfo && (
             <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-              <h3 className="font-semibold mb-3">Thông tin giao dịch:</h3>
+              <h3 className="font-semibold mb-3">Transaction Information:</h3>
               <div className="space-y-2 text-sm">
+                {/* Show real order ID from database if available */}
+                {createdOrderId && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Order ID:</span>
+                    <span className="font-medium text-green-600">#{createdOrderId}</span>
+                  </div>
+                )}
+                {/* Show PayOS orderCode (not the transaction hash) */}
                 {paymentInfo.orderCode && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Mã đơn hàng:</span>
+                    <span className="text-gray-600">PayOS Payment Code:</span>
                     <span className="font-medium">{paymentInfo.orderCode}</span>
                   </div>
                 )}
-                {paymentInfo.id && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Mã giao dịch:</span>
-                    <span className="font-medium">{paymentInfo.id}</span>
-                  </div>
-                )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Trạng thái:</span>
+                  <span className="text-gray-600">Status:</span>
                   <span className={`font-medium ${statusDisplay.className}`}>
                     {paymentInfo.status || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Thời gian:</span>
+                  <span className="text-gray-600">Time:</span>
                   <span className="font-medium">
-                    {new Date().toLocaleString('vi-VN')}
+                    {new Date().toLocaleString('en-US')}
                   </span>
                 </div>
               </div>
@@ -259,16 +275,16 @@ const PaymentSuccessPage: React.FC = () => {
           <div className="mt-6">
             <button
               onClick={() => navigate('/')}
-              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 font-medium transition-colors"
+              className="w-full bg-black text-white py-3 px-6 rounded-lg hover:bg-gray-700 font-medium transition-colors"
             >
-              Trở về trang chủ
+              Back to Home
             </button>
           </div>
         </div>
 
         {/* Contact Support Section */}
         <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="font-semibold mb-4">Cần hỗ trợ?</h3>
+          <h3 className="font-semibold mb-4">Need Support?</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <strong>Hotline:</strong> 1900 xxxx
@@ -277,10 +293,10 @@ const PaymentSuccessPage: React.FC = () => {
               <strong>Email:</strong> support@matnice.com
             </div>
             <div>
-              <strong>Giờ hỗ trợ:</strong> 8:00 - 22:00 (T2-CN)
+              <strong>Support Hours:</strong> 8:00 - 22:00 (Mon-Sun)
             </div>
             <div>
-              <strong>Chat:</strong> Messenger Facebook
+              <strong>Chat:</strong> Facebook Messenger
             </div>
           </div>
         </div>
