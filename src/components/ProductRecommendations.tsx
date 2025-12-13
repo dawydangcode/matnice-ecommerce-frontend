@@ -45,6 +45,10 @@ interface Product {
   productName: string;
   productType: string;
   brandId: number;
+  brand?: {
+    id: number;
+    name: string;
+  };
   gender: string;
   price: number;
   description: string;
@@ -335,7 +339,9 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                 {/* Product Info */}
                 <div className="space-y-4 p-2">
                   <div>
-                    <h3 className="font-bold text-lg text-gray-900 text-secondary">Brand Name</h3>
+                    <h3 className="font-bold text-lg text-gray-900 text-secondary">
+                      {product.brand?.name || 'Brand Name'}
+                    </h3>
                     <p className="text-base font-light text-secondary">{product.productName}</p>
                   </div>
                   

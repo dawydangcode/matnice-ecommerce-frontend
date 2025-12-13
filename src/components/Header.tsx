@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, User, Menu, ChevronRight, X } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import smallEyeLogo from '../assets/small_eye_logo.png';
 import CartDropdown from './CartDropdown';
 import WishlistDropdown from './WishlistDropdown';
@@ -555,9 +555,11 @@ const MobileHeader: React.FC<HeaderProps> = ({ isLoggedIn, user, onLogout }) => 
 // Main Header Component
 const Header: React.FC = () => {
   const { isLoggedIn, user, logout } = useAuthStore();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
+    navigate('/'); // Redirect to home page after logout
   };
 
   const sharedProps = {
