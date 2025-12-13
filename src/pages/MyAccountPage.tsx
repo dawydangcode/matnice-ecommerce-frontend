@@ -688,12 +688,34 @@ const MyAccountPage: React.FC = () => {
             Date of Birth
           </label>
           {isEditingProfile ? (
-            <input
-              type="date"
-              value={detailFormData.dob || ''}
-              onChange={(e) => setDetailFormData({ ...detailFormData, dob: e.target.value })}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div>
+              <input
+                type="date"
+                value={detailFormData.dob || ''}
+                onChange={(e) => {
+                  const selectedDate = new Date(e.target.value);
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  
+                  if (selectedDate > today) {
+                    toast.error('Ngày sinh không thể là ngày trong tương lai');
+                    return;
+                  }
+                  
+                  // Check if age would be reasonable (not more than 150 years old)
+                  const age = today.getFullYear() - selectedDate.getFullYear();
+                  if (age > 150) {
+                    toast.error('Ngày sinh không hợp lệ');
+                    return;
+                  }
+                  
+                  setDetailFormData({ ...detailFormData, dob: e.target.value });
+                }}
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Ngày sinh không được là ngày trong tương lai</p>
+            </div>
           ) : (
             <p className="text-sm sm:text-base text-gray-900">
               {userDetail?.dob ? new Date(userDetail.dob).toLocaleDateString('vi-VN') : 'Not provided'}
@@ -731,7 +753,19 @@ const MyAccountPage: React.FC = () => {
             Age
           </label>
           <p className="text-sm sm:text-base text-gray-900">
-            {userDetail?.dob ? userDetailService.calculateAge(userDetail.dob) + ' years old' : 'Not provided'}
+            {userDetail?.dob ? (() => {
+              const age = userDetailService.calculateAge(userDetail.dob);
+              if (age === null || age === undefined) {
+                return 'Not provided';
+              }
+              if (age < 0) {
+                return <span className="text-red-600">Ngày sinh không hợp lệ (trong tương lai)</span>;
+              }
+              if (age > 150) {
+                return <span className="text-red-600">Ngày sinh không hợp lệ</span>;
+              }
+              return age + ' years old';
+            })() : 'Not provided'}
           </p>
         </div>
 
