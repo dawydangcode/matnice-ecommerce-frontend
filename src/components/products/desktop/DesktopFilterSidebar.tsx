@@ -555,14 +555,14 @@ const DesktopFilterSidebar: React.FC<DesktopFilterSidebarProps> = ({
         </FilterSection>
 
         {/* Price */}
-        <FilterSection title="GIÁ">
+        <FilterSection title="PRICE">
           <div className="space-y-1">
             {[
-              'Dưới 1.000.000đ',
+              '< 1.000.000đ',
               '1.000.000đ - 2.000.000đ', 
               '2.000.000đ - 3.000.000đ',
               '3.000.000đ - 5.000.000đ',
-              'Trên 5.000.000đ'
+              '> 5.000.000đ'
             ].map((price) => (
               <label key={price} className="flex items-center hover:bg-gray-50 p-2 rounded cursor-pointer">
                 <input 

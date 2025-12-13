@@ -128,6 +128,67 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
     fetchProducts();
   };
 
+  // Pagination handlers
+  const handlePageChange = (newPage: number) => {
+    fetchProducts({
+      search: searchTerm || undefined,
+      category: selectedCategory,
+      brand: selectedBrand,
+      type: selectedType,
+      gender: selectedGender,
+      page: newPage,
+      limit: pagination.limit,
+    });
+  };
+
+  const handlePreviousPage = () => {
+    if (pagination.page > 1) {
+      handlePageChange(pagination.page - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    const totalPages = Math.ceil(pagination.total / pagination.limit);
+    if (pagination.page < totalPages) {
+      handlePageChange(pagination.page + 1);
+    }
+  };
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const totalPages = Math.ceil(pagination.total / pagination.limit);
+    const currentPage = pagination.page;
+
+    if (totalPages <= 7) {
+      // Show all pages if total <= 7
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+
+      if (currentPage > 3) {
+        pages.push('...');
+      }
+
+      // Show pages around current page
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+        pages.push(i);
+      }
+
+      if (currentPage < totalPages - 2) {
+        pages.push('...');
+      }
+
+      // Always show last page
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
   const handleDeleteProduct = async (productId: number, productName: string) => {
     if (window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${productName}"?`)) {
       try {
@@ -756,40 +817,112 @@ const ProductListPage: React.FC<ProductListPageProps> = ({ onEditProduct, onCrea
             )}
 
             {/* Pagination */}
-            {products.length > 0 && (
-              <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                <div className="flex-1 flex justify-between sm:hidden">
-                  <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Trước
-                  </button>
-                  <button className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Sau
-                  </button>
-                </div>
-                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm text-gray-700">
-                      Hiển thị <span className="font-medium">1</span> đến{' '}
-                      <span className="font-medium">{products.length}</span> của{' '}
-                      <span className="font-medium">{pagination.total}</span> kết quả
-                    </p>
+            {products.length > 0 && (() => {
+              const totalPages = Math.ceil(pagination.total / pagination.limit);
+              const startItem = (pagination.page - 1) * pagination.limit + 1;
+              const endItem = Math.min(pagination.page * pagination.limit, pagination.total);
+              
+              return (
+                <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                  {/* Mobile Pagination */}
+                  <div className="flex-1 flex justify-between sm:hidden">
+                    <button 
+                      onClick={handlePreviousPage}
+                      disabled={pagination.page === 1}
+                      className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                        pagination.page === 1
+                          ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                          : 'text-gray-700 bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      Trước
+                    </button>
+                    <button 
+                      onClick={handleNextPage}
+                      disabled={pagination.page === totalPages}
+                      className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                        pagination.page === totalPages
+                          ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                          : 'text-gray-700 bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      Sau
+                    </button>
                   </div>
-                  <div>
-                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                      <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        Trước
-                      </button>
-                      <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        1
-                      </button>
-                      <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        Sau
-                      </button>
-                    </nav>
+                  
+                  {/* Desktop Pagination */}
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        Hiển thị <span className="font-medium">{startItem}</span> đến{' '}
+                        <span className="font-medium">{endItem}</span> của{' '}
+                        <span className="font-medium">{pagination.total}</span> kết quả
+                      </p>
+                    </div>
+                    <div>
+                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        {/* Previous Button */}
+                        <button 
+                          onClick={handlePreviousPage}
+                          disabled={pagination.page === 1}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 text-sm font-medium ${
+                            pagination.page === 1
+                              ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                              : 'text-gray-500 bg-white hover:bg-gray-50'
+                          }`}
+                        >
+                          Trước
+                        </button>
+                        
+                        {/* Page Numbers */}
+                        {getPageNumbers().map((pageNum, index) => {
+                          if (pageNum === '...') {
+                            return (
+                              <span
+                                key={`ellipsis-${index}`}
+                                className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                              >
+                                ...
+                              </span>
+                            );
+                          }
+                          
+                          const page = pageNum as number;
+                          const isCurrentPage = page === pagination.page;
+                          
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => handlePageChange(page)}
+                              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                isCurrentPage
+                                  ? 'z-10 bg-blue-600 border-blue-600 text-white'
+                                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          );
+                        })}
+                        
+                        {/* Next Button */}
+                        <button 
+                          onClick={handleNextPage}
+                          disabled={pagination.page === totalPages}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 text-sm font-medium ${
+                            pagination.page === totalPages
+                              ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                              : 'text-gray-500 bg-white hover:bg-gray-50'
+                          }`}
+                        >
+                          Sau
+                        </button>
+                      </nav>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </>
         )}
       </div>

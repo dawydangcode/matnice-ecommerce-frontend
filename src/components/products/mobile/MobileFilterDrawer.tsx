@@ -472,7 +472,7 @@ const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
 
           {/* Price Tab Content */}
           {activeTab === 'price' && (
-            <FilterSection title="GIÁ">
+            <FilterSection title="PRICE">
               <div className="space-y-2">
                 {[
                   { label: 'Dưới 1.000.000đ', min: 0, max: 1000000 },
