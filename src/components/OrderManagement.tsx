@@ -505,38 +505,98 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
   // Conditional rendering based on view state
   if (showOrderDetail && selectedOrder) {
     return (
-      <div className="p-6">
-        {/* Header with back button */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
+      <>
+        {/* Print Styles */}
+        <style>{`
+          @media print {
+            /* Hide everything except the invoice */
+            body * {
+              visibility: hidden;
+            }
+            
+            /* Show only the printable invoice */
+            #printable-invoice,
+            #printable-invoice * {
+              visibility: visible;
+            }
+            
+            /* Position invoice at top of page */
+            #printable-invoice {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+            }
+            
+            /* Hide non-printable elements */
+            .no-print {
+              display: none !important;
+            }
+            
+            /* Remove backgrounds and shadows for print */
+            .bg-white,
+            .bg-gray-50,
+            .bg-blue-50 {
+              background-color: white !important;
+            }
+            
+            .shadow-sm,
+            .shadow-xl {
+              box-shadow: none !important;
+            }
+            
+            /* Ensure borders print */
+            .border {
+              border: 1px solid #e5e7eb !important;
+            }
+            
+            /* Remove page margins */
+            @page {
+              margin: 0.5cm;
+            }
+          }
+        `}</style>
+        
+        <div className="p-6">
+          {/* Header with back button - Hide on print */}
+          <div className="flex items-center justify-between mb-6 no-print">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => {
+                  setShowOrderDetail(false);
+                  // Reset temp states when closing order detail
+                  setTempOrderStatus(null);
+                  setTempPaymentStatus(null);
+                  setTempNotes('');
+                }}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                <span>Back to List</span>
+              </button>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Order Details #{selectedOrder.id}
+              </h1>
+            </div>
             <button
-              onClick={() => {
-                setShowOrderDetail(false);
-                // Reset temp states when closing order detail
-                setTempOrderStatus(null);
-                setTempPaymentStatus(null);
-                setTempNotes('');
-              }}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
+              onClick={() => window.print()}
+              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             >
-              <ChevronLeft className="w-5 h-5" />
-              <span>Quay lại danh sách</span>
+              <FileText className="w-4 h-4" />
+              <span>Print Invoice</span>
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Chi tiết đơn hàng #{selectedOrder.id}
-            </h1>
           </div>
-          <button
-            onClick={() => window.print()}
-            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
-            <FileText className="w-4 h-4" />
-            <span>In hóa đơn</span>
-          </button>
-        </div>
 
-        {/* Order Detail Content */}
-        <div className="bg-white border border-gray-200 rounded-lg p-8">
+        {/* Order Detail Content - Printable Invoice */}
+        <div id="printable-invoice" className="bg-white border border-gray-200 rounded-lg p-8">
+          {/* Print Header - Company Info (only visible when printing) */}
+          <div className="hidden print:block mb-8 text-center border-b pb-4">
+            <h1 className="text-3xl font-bold text-gray-900">Mat Nice Eyewear Store</h1>
+            <p className="text-gray-600 mt-2">Address: 123 Main Street, District 1, Ho Chi Minh City</p>
+            <p className="text-gray-600">Phone: (028) 1234 5678 | Email: contact@matnice.com</p>
+            <h2 className="text-2xl font-semibold text-gray-800 mt-4">SALES INVOICE</h2>
+          </div>
+          
           {/* Order Header */}
           <div className="border-b pb-6 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -565,7 +625,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
             <div className="bg-white border rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Delivery Address</h3>
-                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
+                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium no-print">Edit</button>
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
@@ -585,7 +645,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
             <div className="bg-white border rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Customer Info</h3>
-                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</button>
+                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium no-print">Edit</button>
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
@@ -613,7 +673,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
             <div className="bg-white border rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Invoice Detail</h3>
-                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">Download</button>
+                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium no-print">Download</button>
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
@@ -860,8 +920,8 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
               </div>
             </div>
 
-            {/* Right Column - Status Orders (positioned below Invoice Detail) */}
-            <div className="md:col-span-1">
+            {/* Right Column - Status Orders (positioned below Invoice Detail) - Hide on print */}
+            <div className="md:col-span-1 no-print">
               <div className="bg-white border rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Orders</h3>
                 
@@ -974,7 +1034,8 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </>
     );
   }
 
