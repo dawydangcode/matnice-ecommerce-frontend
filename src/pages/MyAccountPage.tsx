@@ -20,7 +20,7 @@ import {
   ShoppingBag
 } from 'lucide-react';
 import { useAuthStore } from '../stores/auth.store';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
@@ -37,7 +37,8 @@ const MyAccountPage: React.FC = () => {
   const { user, isLoggedIn, logout } = useAuthStore();
   const { items: wishlistItems, totalItems: wishlistTotalItems, fetchWishlist, removeFromWishlist, loading: wishlistLoading } = useWishlistStore();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

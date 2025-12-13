@@ -25,6 +25,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import MyAccountPage from './pages/MyAccountPage';
+import OrderDetailPage from './pages/OrderDetailPage';
 import StockManagementPage from './pages/StockManagementPage';
 import BoutiquePage from './pages/BoutiquePage';
 
@@ -219,6 +220,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyAccountPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Order Detail Page - requires login */}
+          <Route 
+            path="/orders/:orderId" 
+            element={
+              <ProtectedRoute>
+                <OrderDetailPage />
               </ProtectedRoute>
             } 
           />

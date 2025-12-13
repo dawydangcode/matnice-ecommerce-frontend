@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft,
   Printer,
@@ -18,6 +18,9 @@ import {
   AlertCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Header from '../components/Header';
+import Navigation from '../components/Navigation';
+import Footer from '../components/Footer';
 import orderService, { OrderResponse } from '../services/order.service';
 
 const OrderDetailPage: React.FC = () => {
@@ -28,25 +31,26 @@ const OrderDetailPage: React.FC = () => {
 
   useEffect(() => {
     const fetchOrderDetail = async () => {
+      if (!orderId) {
+        toast.error('Invalid order ID');
+        navigate('/account');
+        return;
+      }
+
       try {
         setLoading(true);
-        // Get order from the detailed orders list (since we have the data there)
-        const response = await orderService.getOrdersWithDetails({ 
-          page: 1, 
-          limit: 1000 // Get all to find the specific order
-        });
-        const orderDetail = response.data.find(o => o.id.toString() === orderId);
-        
-        if (orderDetail) {
-          setOrder(orderDetail);
+        const orderData = await orderService.getOrderDetails(parseInt(orderId));
+        setOrder(orderData);
+      } catch (error: any) {
+        console.error('Error fetching order details:', error);
+        if (error.response?.status === 404) {
+          toast.error('Order not found');
+        } else if (error.response?.status === 403) {
+          toast.error('You do not have permission to view this order');
         } else {
-          toast.error('Không tìm thấy đơn hàng');
-          navigate('/admin/orders');
+          toast.error('Failed to load order details');
         }
-      } catch (error) {
-        console.error('Error fetching order detail:', error);
-        toast.error('Không thể tải chi tiết đơn hàng');
-        navigate('/admin/orders');
+        navigate('/account');
       } finally {
         setLoading(false);
       }
@@ -132,24 +136,39 @@ const OrderDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-white">
+        <header className="relative z-50">
+          <Header />
+          <Navigation />
+        </header>
+        <div className="flex items-center justify-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Không tìm thấy đơn hàng</h2>
-          <button
-            onClick={() => navigate('/admin/orders')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Quay lại danh sách đơn hàng
-          </button>
+      <div className="min-h-screen bg-white">
+        <header className="relative z-50">
+          <Header />
+          <Navigation />
+        </header>
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Order not found</h2>
+            <button
+              onClick={() => navigate('/account')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Back to My Account
+            </button>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -157,35 +176,34 @@ const OrderDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header - Hide when printing */}
+      <header className="relative z-50 print:hidden">
+        <Header />
+        <Navigation />
+      </header>
+
+      {/* Page Header with Back Button */}
       <div className="bg-white shadow-sm border-b print:hidden">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate('/admin/orders')}
+                onClick={() => navigate('/account?tab=orders')}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="w-5 h-5" />
-                <span>Quay lại</span>
+                <span className="hidden sm:inline">Back to Orders</span>
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Hóa đơn #{order.id}
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                Order #{order.id}
               </h1>
             </div>
             <div className="flex items-center space-x-2">
               <button
                 onClick={handlePrint}
-                className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                className="flex items-center space-x-2 px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
               >
                 <Printer className="w-4 h-4" />
-                <span>In hóa đơn</span>
-              </button>
-              <button
-                onClick={handleDownload}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                <Download className="w-4 h-4" />
-                <span>Tải PDF</span>
+                <span className="hidden sm:inline">Print</span>
               </button>
             </div>
           </div>
@@ -193,29 +211,29 @@ const OrderDetailPage: React.FC = () => {
       </div>
 
       {/* Invoice Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8 print:py-0 print:px-0">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:py-0 print:px-0">
         <div className="bg-white rounded-lg shadow-lg print:shadow-none print:rounded-none">
           {/* Invoice Header */}
           <div className="border-b border-gray-200 p-8 print:p-6">
             <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">HÓA ĐƠN BÁN HÀNG</h1>
-                <p className="text-gray-600">Cửa hàng kính mắt Mat Nice</p>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">SALES INVOICE</h1>
+                <p className="text-gray-600">Mat Nice Eyewear Store</p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM
+                  Address: 123 ABC Street, District 1, Ho Chi Minh City
                 </p>
                 <p className="text-sm text-gray-500">
-                  Điện thoại: 0123-456-789 | Email: info@matnice.com
+                  Phone: 0123-456-789 | Email: info@matnice.com
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-gray-900 mb-2">
-                  Mã đơn hàng: #{order.id}
+                  Order ID: #{order.id}
                 </div>
                 <div className="flex items-center space-x-2 mb-1">
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <span className="text-sm text-gray-600">
-                    Ngày đặt: {formatDate(order.orderDate)}
+                    Order Date: {formatDate(order.orderDate)}
                   </span>
                 </div>
                 <div className="flex items-center justify-end space-x-2">
@@ -230,7 +248,7 @@ const OrderDetailPage: React.FC = () => {
 
           {/* Customer Info */}
           <div className="border-b border-gray-200 p-8 print:p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Thông tin khách hàng</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Customer Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
@@ -252,7 +270,7 @@ const OrderDetailPage: React.FC = () => {
                 <div className="flex items-start space-x-3">
                   <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="font-medium text-gray-900">Địa chỉ giao hàng:</p>
+                    <p className="font-medium text-gray-900">Delivery Address:</p>
                     <p className="text-gray-700 mt-1">{order.addressDetail}</p>
                     <p className="text-gray-600 text-sm">
                       {order.ward}, {order.district}, {order.province}
@@ -262,7 +280,7 @@ const OrderDetailPage: React.FC = () => {
                 {order.notes && (
                   <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800">
-                      <strong>Ghi chú:</strong> {order.notes}
+                      <strong>Note:</strong> {order.notes}
                     </p>
                   </div>
                 )}
@@ -272,7 +290,7 @@ const OrderDetailPage: React.FC = () => {
 
           {/* Order Items */}
           <div className="border-b border-gray-200 p-8 print:p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Chi tiết đơn hàng</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Details</h2>
             
             {/* Items Table */}
             <div className="overflow-x-auto">
@@ -280,16 +298,16 @@ const OrderDetailPage: React.FC = () => {
                 <thead>
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-3 text-sm font-medium text-gray-500 uppercase tracking-wider">
-                      Sản phẩm
+                      Product
                     </th>
                     <th className="text-center py-3 text-sm font-medium text-gray-500 uppercase tracking-wider">
-                      Số lượng
+                      Quantity
                     </th>
                     <th className="text-right py-3 text-sm font-medium text-gray-500 uppercase tracking-wider">
-                      Đơn giá
+                      Unit Price
                     </th>
                     <th className="text-right py-3 text-sm font-medium text-gray-500 uppercase tracking-wider">
-                      Thành tiền
+                      Total
                     </th>
                   </tr>
                 </thead>
@@ -303,13 +321,13 @@ const OrderDetailPage: React.FC = () => {
                             <Package className="w-5 h-5 text-blue-500 mt-1" />
                             <div>
                               <h4 className="font-medium text-gray-900">
-                                {item.productInfo?.productName || 'Sản phẩm không xác định'}
+                                {item.productInfo?.productName || 'Product'}
                               </h4>
                               <div className="text-sm text-gray-600 space-y-1 mt-1">
-                                <p>Thương hiệu: <span className="font-medium">{item.productInfo?.brandName || 'N/A'}</span></p>
+                                <p>Brand: <span className="font-medium">{item.productInfo?.brandName || 'N/A'}</span></p>
                                 {item.productInfo?.colorInfo && (
                                   <p>
-                                    Màu sắc: <span className="font-medium">{item.productInfo.colorInfo.colorName}</span>
+                                    Color: <span className="font-medium">{item.productInfo.colorInfo.colorName}</span>
                                     <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
                                       #{item.productInfo.colorInfo.productNumber}
                                     </span>
@@ -336,7 +354,7 @@ const OrderDetailPage: React.FC = () => {
                           <td className="py-4 pl-8">
                             <div className="space-y-2">
                               <div className="font-medium text-blue-900">
-                                + Tròng kính: {lensDetail.lensInfo?.lensName || 'Tròng kính'}
+                                + Lens: {lensDetail.lensInfo?.lensName || 'Lens'}
                               </div>
                               
                               {/* Lens Specifications */}
@@ -344,20 +362,20 @@ const OrderDetailPage: React.FC = () => {
                                 {/* Lens Info */}
                                 {lensDetail.lensInfo && (
                                   <div className="space-y-1">
-                                    <p><strong>Loại:</strong> {lensDetail.lensInfo.lensType}</p>
-                                    <p><strong>Thương hiệu:</strong> {lensDetail.lensInfo.brandLens}</p>
+                                    <p><strong>Type:</strong> {lensDetail.lensInfo.lensType}</p>
+                                    <p><strong>Brand:</strong> {lensDetail.lensInfo.brandLens}</p>
                                     {lensDetail.lensInfo.lensVariant && (
-                                      <p><strong>Chất liệu:</strong> {lensDetail.lensInfo.lensVariant.material}</p>
+                                      <p><strong>Material:</strong> {lensDetail.lensInfo.lensVariant.material}</p>
                                     )}
                                     {lensDetail.lensInfo.lensThickness && (
                                       <p>
-                                        <strong>Độ dày:</strong> {lensDetail.lensInfo.lensThickness.name} 
-                                        (Chỉ số: {lensDetail.lensInfo.lensThickness.indexValue})
+                                        <strong>Thickness:</strong> {lensDetail.lensInfo.lensThickness.name} 
+                                        (Index: {lensDetail.lensInfo.lensThickness.indexValue})
                                       </p>
                                     )}
                                     {lensDetail.lensInfo.lensCoatings && lensDetail.lensInfo.lensCoatings.length > 0 && (
                                       <p>
-                                        <strong>Lớp phủ:</strong> {lensDetail.lensInfo.lensCoatings.map((c: any) => c.name).join(', ')}
+                                        <strong>Coating:</strong> {lensDetail.lensInfo.lensCoatings.map((c: any) => c.name).join(', ')}
                                       </p>
                                     )}
                                   </div>
@@ -365,10 +383,10 @@ const OrderDetailPage: React.FC = () => {
 
                                 {/* Prescription */}
                                 <div className="space-y-1">
-                                  <p><strong>Đơn thuốc:</strong></p>
+                                  <p><strong>Prescription:</strong></p>
                                   <div className="grid grid-cols-2 gap-2 text-xs">
                                     <div className="bg-white p-2 rounded border">
-                                      <p className="font-medium">Mắt phải (OD)</p>
+                                      <p className="font-medium">Right Eye (OD)</p>
                                       <p>SPH: {lensDetail.rightEyeSphere || 0}</p>
                                       <p>CYL: {lensDetail.rightEyeCylinder || 0}</p>
                                       <p>Axis: {lensDetail.rightEyeAxis || 0}°</p>
@@ -376,7 +394,7 @@ const OrderDetailPage: React.FC = () => {
                                       {lensDetail.addRight && <p>ADD: {lensDetail.addRight}</p>}
                                     </div>
                                     <div className="bg-white p-2 rounded border">
-                                      <p className="font-medium">Mắt trái (OS)</p>
+                                      <p className="font-medium">Left Eye (OS)</p>
                                       <p>SPH: {lensDetail.leftEyeSphere || 0}</p>
                                       <p>CYL: {lensDetail.leftEyeCylinder || 0}</p>
                                       <p>Axis: {lensDetail.leftEyeAxis || 0}°</p>
@@ -391,10 +409,10 @@ const OrderDetailPage: React.FC = () => {
                               {(lensDetail.prescriptionNotes || lensDetail.lensNotes) && (
                                 <div className="text-xs text-blue-700 bg-blue-100 p-2 rounded">
                                   {lensDetail.prescriptionNotes && (
-                                    <p><strong>Ghi chú đơn thuốc:</strong> {lensDetail.prescriptionNotes}</p>
+                                    <p><strong>Prescription Note:</strong> {lensDetail.prescriptionNotes}</p>
                                   )}
                                   {lensDetail.lensNotes && (
-                                    <p><strong>Ghi chú tròng:</strong> {lensDetail.lensNotes}</p>
+                                    <p><strong>Lens Note:</strong> {lensDetail.lensNotes}</p>
                                   )}
                                 </div>
                               )}
@@ -426,16 +444,16 @@ const OrderDetailPage: React.FC = () => {
           <div className="border-b border-gray-200 p-8 print:p-6">
             <div className="flex justify-between items-start">
               <div className="w-1/2">
-                <h3 className="font-semibold text-gray-900 mb-3">Thông tin thanh toán</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">Payment Information</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center space-x-2">
                     <CreditCard className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600">Phương thức:</span>
+                    <span className="text-gray-600">Method:</span>
                     <span className="font-medium">{orderService.getPaymentMethodDisplayName(order.paymentMethod)}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className={`w-4 h-4 rounded-full ${order.paymentStatus === 'completed' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                    <span className="text-gray-600">Trạng thái:</span>
+                    <span className="text-gray-600">Status:</span>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPaymentStatusColor(order.paymentStatus)}`}>
                       {orderService.getPaymentStatusDisplayName(order.paymentStatus)}
                     </span>
@@ -445,19 +463,19 @@ const OrderDetailPage: React.FC = () => {
                 {/* Tracking Info */}
                 {(order.trackingNumber || order.deliveryDate) && (
                   <div className="mt-6">
-                    <h3 className="font-semibold text-gray-900 mb-3">Thông tin vận chuyển</h3>
+                    <h3 className="font-semibold text-gray-900 mb-3">Shipping Information</h3>
                     <div className="space-y-2 text-sm">
                       {order.trackingNumber && (
                         <div className="flex items-center space-x-2">
                           <Truck className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-600">Mã vận đơn:</span>
+                          <span className="text-gray-600">Tracking Number:</span>
                           <span className="font-medium">{order.trackingNumber}</span>
                         </div>
                       )}
                       {order.deliveryDate && (
                         <div className="flex items-center space-x-2">
                           <Calendar className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-600">Ngày giao dự kiến:</span>
+                          <span className="text-gray-600">Expected Delivery:</span>
                           <span className="font-medium">{formatDate(order.deliveryDate)}</span>
                         </div>
                       )}
@@ -469,19 +487,19 @@ const OrderDetailPage: React.FC = () => {
               {/* Price Summary */}
               <div className="w-1/2 pl-8">
                 <div className="bg-gray-50 rounded-lg p-6">
-                  <h3 className="font-semibold text-gray-900 mb-4">Tổng kết đơn hàng</h3>
+                  <h3 className="font-semibold text-gray-900 mb-4">Order Summary</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Tạm tính:</span>
+                      <span className="text-gray-600">Subtotal:</span>
                       <span className="font-medium">{formatCurrency(order.subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Phí vận chuyển:</span>
+                      <span className="text-gray-600">Shipping Fee:</span>
                       <span className="font-medium">{formatCurrency(order.shippingCost)}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between text-lg font-bold">
-                        <span className="text-gray-900">Tổng cộng:</span>
+                        <span className="text-gray-900">Total:</span>
                         <span className="text-gray-900">{formatCurrency(order.totalPrice)}</span>
                       </div>
                     </div>
@@ -491,17 +509,38 @@ const OrderDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="p-8 print:p-6">
+          {/* Invoice Footer */}
+          <div className="p-8 print:p-6 border-t border-gray-200">
             <div className="text-center text-sm text-gray-500">
-              <p className="mb-2">Cảm ơn bạn đã mua hàng tại Mat Nice!</p>
-              <p>Mọi thắc mắc xin liên hệ: 0123-456-789 hoặc email: support@matnice.com</p>
+              <p className="mb-2">Thank you for shopping at Mat Nice!</p>
+              <p>For any questions, please contact: 0123-456-789 or email: support@matnice.com</p>
               <p className="mt-4 text-xs">
-                Hóa đơn được tạo tự động vào {formatDate(new Date().toISOString())}
+                Invoice generated automatically on {formatDate(new Date().toISOString())}
               </p>
             </div>
           </div>
         </div>
+
+        {/* Action Buttons */}
+        <div className="mt-6 flex flex-col sm:flex-row gap-4 print:hidden">
+          <Link
+            to="/products"
+            className="flex-1 bg-black text-white text-center py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+          >
+            Continue Shopping
+          </Link>
+          <Link
+            to="/contact"
+            className="flex-1 bg-white text-gray-900 text-center py-3 px-6 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors font-medium"
+          >
+            Need Help?
+          </Link>
+        </div>
+      </div>
+
+      {/* Footer - Hide when printing */}
+      <div className="print:hidden mt-8">
+        <Footer />
       </div>
     </div>
   );
