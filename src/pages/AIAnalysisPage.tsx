@@ -4,7 +4,9 @@ import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import ProductRecommendations from '../components/ProductRecommendations';
+import AIVirtualTryOn from '../components/AIVirtualTryOn';
 import { useFaceDetection } from '../hooks/useFaceDetection';
+import { product3DModelService, Product3DModel, Model3DConfig } from '../services/product3dModel.service';
 import '../styles/AIAnalysisPage.css';
 
 interface AnalysisResult {
@@ -53,6 +55,13 @@ const AIAnalysisPage: React.FC = () => {
     showGuide: true
   });
 
+  // Virtual Try-On states
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [product3DModel, setProduct3DModel] = useState<Product3DModel | null>(null);
+  const [model3DConfig, setModel3DConfig] = useState<Model3DConfig | null>(null);
+  const [model3DLoading, setModel3DLoading] = useState(false);
+  const [showVirtualTryOn, setShowVirtualTryOn] = useState(false);
+
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -87,6 +96,68 @@ const AIAnalysisPage: React.FC = () => {
       'oblong': 'Oblong'
     };
     return faceShapeMap[shape.toLowerCase()] || shape;
+  };
+
+  // Helper function to create backend proxy URL for 3D model
+  const getModelProxyUrl = (productId: number): string => {
+    const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+    return `${backendUrl}/api/v1/product-3d-model/serve/${productId}`;
+  };
+
+  // Load 3D model and config for selected product
+  const load3DModelForProduct = async (productId: number) => {
+    try {
+      setModel3DLoading(true);
+      console.log('Loading 3D model for product ID:', productId);
+      
+      // Get active 3D model for this product
+      const activeModels = await product3DModelService.getActiveByProductId(productId);
+      console.log('Active 3D models:', activeModels);
+      
+      if (activeModels && activeModels.length > 0) {
+        const model = activeModels[0];
+        setProduct3DModel(model);
+        console.log('✅ 3D Model loaded:', model);
+        
+        // Load config for this model
+        const config = await product3DModelService.getConfigByModelId(model.id);
+        if (config) {
+          setModel3DConfig(config);
+          console.log('✅ Model config loaded:', config);
+        } else {
+          console.log('⚠️ No config found for model');
+          setModel3DConfig(null);
+        }
+        
+        return true;
+      } else {
+        console.log('⚠️ No 3D model found for product');
+        setProduct3DModel(null);
+        setModel3DConfig(null);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error loading 3D model:', error);
+      setProduct3DModel(null);
+      setModel3DConfig(null);
+      return false;
+    } finally {
+      setModel3DLoading(false);
+    }
+  };
+
+  // Handle product selection for Virtual Try-On
+  const handleProductSelect = async (product: any) => {
+    console.log('Product selected for Virtual Try-On:', product);
+    setSelectedProduct(product);
+    
+    const hasModel = await load3DModelForProduct(product.id);
+    if (hasModel) {
+      setShowVirtualTryOn(true);
+      // Camera is already active after analysis, just enable virtual try-on
+    } else {
+      setError('This product does not have a 3D model available');
+    }
   };
 
   // Start camera
@@ -1056,14 +1127,40 @@ const AIAnalysisPage: React.FC = () => {
             
             <div className="relative mb-4">
               {analysisResult && analysisResult.status === 'completed' ? (
-                // After analysis: show video
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="camera-video mirror-video rounded-lg"
-                />
+                // After analysis: show video with Virtual Try-On overlay
+                <div className="relative">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="camera-video mirror-video rounded-lg"
+                  />
+                  
+                  {/* Virtual Try-On Overlay */}
+                  {showVirtualTryOn && selectedProduct && product3DModel && (
+                    <AIVirtualTryOn
+                      productName={selectedProduct.productName}
+                      model3dUrl={getModelProxyUrl(selectedProduct.id)}
+                      glassesConfig={model3DConfig ? {
+                        offsetX: model3DConfig.offsetX,
+                        offsetY: model3DConfig.offsetY,
+                        positionOffsetX: model3DConfig.positionOffsetX,
+                        positionOffsetY: model3DConfig.positionOffsetY,
+                        positionOffsetZ: model3DConfig.positionOffsetZ,
+                        initialScale: model3DConfig.initialScale
+                      } : undefined}
+                      videoElement={videoRef.current}
+                      isActive={showVirtualTryOn}
+                      onClose={() => {
+                        setShowVirtualTryOn(false);
+                        setSelectedProduct(null);
+                        setProduct3DModel(null);
+                        setModel3DConfig(null);
+                      }}
+                    />
+                  )}
+                </div>
               ) : capturedImage && !cameraActive ? (
                 // Captured image
                 <img
@@ -1255,7 +1352,10 @@ const AIAnalysisPage: React.FC = () => {
                 {/* Recommended Products Section */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommended products based on analysis results</h3>
-                  <ProductRecommendations analysisResult={analysisResult.analysis} />
+                  <ProductRecommendations 
+                    analysisResult={analysisResult.analysis}
+                    onProductTryOn={handleProductSelect}
+                  />
                 </div>
               </div>
             ) : (

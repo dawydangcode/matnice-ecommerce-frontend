@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ChevronLeft, ChevronRight, Glasses } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import '../styles/ProductRecommendations.css';
 import '../styles/product-page.css';
 import { formatVND } from '../utils/currency';
+import { product3DModelService } from '../services/product3dModel.service';
 
 interface ProductColor {
   id: number;
@@ -75,10 +76,12 @@ interface ProductRecommendationsProps {
       confidence: number;
     };
   };
+  onProductTryOn?: (product: Product) => void;
 }
 
 const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   analysisResult,
+  onProductTryOn,
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -88,6 +91,7 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   const [total, setTotal] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [productsWithModels, setProductsWithModels] = useState<Set<number>>(new Set());
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -161,11 +165,43 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
     }
   }, [analysisResult]);
 
+  // Check which products have 3D models
+  const check3DModels = useCallback(async (productIds: number[]) => {
+    try {
+      const modelChecks = await Promise.all(
+        productIds.map(async (id) => {
+          try {
+            const models = await product3DModelService.getActiveByProductId(id);
+            return { id, hasModel: models && models.length > 0 };
+          } catch {
+            return { id, hasModel: false };
+          }
+        })
+      );
+      
+      const productIdsWithModels = new Set(
+        modelChecks.filter(check => check.hasModel).map(check => check.id)
+      );
+      
+      setProductsWithModels(productIdsWithModels);
+    } catch (error) {
+      console.error('Error checking 3D models:', error);
+    }
+  }, []);
+
   useEffect(() => {
     if (analysisResult) {
       fetchRecommendations(1);
     }
   }, [analysisResult, fetchRecommendations]);
+
+  // Check 3D models when products change
+  useEffect(() => {
+    if (products.length > 0) {
+      const productIds = products.map(p => p.id);
+      check3DModels(productIds);
+    }
+  }, [products, check3DModels]);
 
   // Add scroll event listener and initial check
   useEffect(() => {
@@ -357,6 +393,21 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                       </span>
                     </div>
                   </div>
+                  
+                  {/* Virtual Try-On Button */}
+                  {productsWithModels.has(product.id) && onProductTryOn && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onProductTryOn(product);
+                      }}
+                      className="w-full mt-2 py-2 px-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                    >
+                      <Glasses size={18} />
+                      <span>Virtual Try-On</span>
+                    </button>
+                  )}
                 </div>
               </Link>
             );

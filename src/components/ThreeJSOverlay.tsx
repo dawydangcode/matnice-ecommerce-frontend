@@ -215,13 +215,13 @@ const ThreeJSOverlay: React.FC<ThreeJSOverlayProps> = ({
 
     // Use middleBetweenEyes as main center, with adjustment for glasses position
     const centerX = middleBetweenEyes.x;
-    const centerY = (middleBetweenEyes.y + leftEye.y + rightEye.y) / 3 + 0.04; // Lower glasses slightly
+    const centerY = (middleBetweenEyes.y + leftEye.y + rightEye.y) / 3; // Removed hardcoded +0.04 offset
     const centerZ = middleBetweenEyes.z;
 
     // Convert normalized coordinates to world coordinates (flip X for camera mirror)
     // Reduced multipliers for more precise tracking
-    const worldX = -(centerX - 0.5) * 4;  // Reduced from 8 to 4
-    const worldY = -(centerY - 0.5) * 3;  // Reduced from 6 to 3
+    const worldX = -(centerX - config.offsetX) * 4;  // Use config.offsetX instead of hardcoded 0.5
+    const worldY = -(centerY - config.offsetY) * 3;  // Use config.offsetY instead of hardcoded 0.5
     const worldZ = centerZ * 2;           // Reduced from 6 to 2
 
     // Calculate scale based on eye distance (like in working demo)
