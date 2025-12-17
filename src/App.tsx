@@ -8,6 +8,8 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import VerifyEmailPage from './pages/auth/VerifyEmailPage';
+import RegistrationSuccessPage from './pages/auth/RegistrationSuccessPage';
 import DashboardPage from './pages/DashboardPage';
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
@@ -149,6 +151,22 @@ function App() {
             element={
               <PublicRoute>
                 <ResetPasswordPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/verify-email"
+            element={
+              <PublicRoute>
+                <VerifyEmailPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/registration-success"
+            element={
+              <PublicRoute>
+                <RegistrationSuccessPage />
               </PublicRoute>
             }
           />

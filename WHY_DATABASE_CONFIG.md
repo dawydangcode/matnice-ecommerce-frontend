@@ -1,6 +1,7 @@
 # Final Solution: Use Database Config Instead of Hardcoded Values
 
 ## 📌 Vấn đề ban đầu
+
 Code đã được thay đổi để hardcode config thay vì load từ database:
 
 ```tsx
@@ -18,11 +19,13 @@ glassesConfig={{
 ## ❓ Tại sao lại hardcode?
 
 **Lý do ban đầu (SAI LẦM)**:
+
 - Tôi nghĩ config từ database được tune cho VirtualTryOnModal (fullscreen)
 - Nghĩ rằng AIVirtualTryOn (inline) cần config khác
 - Hardcode để "fix nhanh" vấn đề position offset
 
 **Tại sao đây là sai lầm**:
+
 1. ❌ Mất tính configurable - không thể adjust per product
 2. ❌ Duplicate logic - 2 components dùng 2 config khác nhau
 3. ❌ Admin không thể control config qua database
@@ -45,36 +48,42 @@ glassesConfig={model3DConfig ? {
 ## 🎯 Lợi ích của giải pháp này
 
 ### 1. **Unified Config System**
+
 - VirtualTryOnModal và AIVirtualTryOn dùng **cùng config source**
 - Consistent behavior across different contexts
 - Easier to maintain
 
 ### 2. **Per-Product Configuration**
+
 - Mỗi product có thể có config riêng trong database
 - Admin có thể fine-tune qua admin panel
 - Không cần sửa code khi adjust
 
 ### 3. **Fallback to Defaults**
+
 - Nếu `model3DConfig` null → ThreeJSOverlay dùng default config
 - Default config trong ThreeJSOverlay đã được optimize:
+
 ```tsx
 const defaultConfig: GlassesConfig = {
-  offsetX: 0.5,        
-  offsetY: 0.5,       
-  positionOffsetX: 0.4, 
-  positionOffsetY: 0.097, 
-  positionOffsetZ: -0.4, 
-  initialScale: 0.16    
+  offsetX: 0.5,
+  offsetY: 0.5,
+  positionOffsetX: 0.4,
+  positionOffsetY: 0.097,
+  positionOffsetZ: -0.4,
+  initialScale: 0.16,
 };
 ```
 
 ### 4. **Flexibility**
+
 - Nếu inline và fullscreen cần config khác → Tạo 2 config records trong database
 - Không cần hardcode → Query config dựa trên context (modal vs inline)
 
 ## 🔧 Cách config hoạt động
 
 ### Data Flow:
+
 ```
 1. User selects product
    ↓
@@ -92,6 +101,7 @@ const defaultConfig: GlassesConfig = {
 ```
 
 ### Config Structure in Database:
+
 ```sql
 CREATE TABLE product_3d_model_config (
   id INT PRIMARY KEY,
@@ -107,18 +117,19 @@ CREATE TABLE product_3d_model_config (
 
 ## 📊 Comparison: Hardcode vs Database
 
-| Aspect | Hardcoded ❌ | Database ✅ |
-|--------|-------------|------------|
-| **Flexibility** | Fixed values | Per-product config |
-| **Maintenance** | Code change needed | Admin panel update |
-| **Deployment** | Redeploy required | No redeploy |
-| **Consistency** | Different configs | Unified system |
-| **Admin Control** | No | Yes |
-| **Scalability** | Poor | Excellent |
+| Aspect            | Hardcoded ❌       | Database ✅        |
+| ----------------- | ------------------ | ------------------ |
+| **Flexibility**   | Fixed values       | Per-product config |
+| **Maintenance**   | Code change needed | Admin panel update |
+| **Deployment**    | Redeploy required  | No redeploy        |
+| **Consistency**   | Different configs  | Unified system     |
+| **Admin Control** | No                 | Yes                |
+| **Scalability**   | Poor               | Excellent          |
 
 ## 🎨 Example Use Cases
 
 ### Scenario 1: Different Glasses Need Different Positions
+
 ```
 Product A (Small frames):
 - positionOffsetX: 0.2
@@ -135,6 +146,7 @@ Product B (Large frames):
 **With Database**: Each product has custom config ✅
 
 ### Scenario 2: Modal vs Inline Different Context
+
 ```
 // Option 1: Same config for both (current approach)
 VirtualTryOnModal → Load model3DConfig
@@ -152,13 +164,13 @@ ThreeJSOverlay đã được fix để **không có hardcoded offsets**:
 ```tsx
 // BEFORE (Had hardcoded values)
 const centerY = (middleBetweenEyes.y + leftEye.y + rightEye.y) / 3 + 0.04; // ❌
-const worldX = -(centerX - 0.5) * 4;  // ❌
-const worldY = -(centerY - 0.5) * 3;  // ❌
+const worldX = -(centerX - 0.5) * 4; // ❌
+const worldY = -(centerY - 0.5) * 3; // ❌
 
 // AFTER (Uses config)
 const centerY = (middleBetweenEyes.y + leftEye.y + rightEye.y) / 3; // ✅
-const worldX = -(centerX - config.offsetX) * 4;  // ✅
-const worldY = -(centerY - config.offsetY) * 3;  // ✅
+const worldX = -(centerX - config.offsetX) * 4; // ✅
+const worldY = -(centerY - config.offsetY) * 3; // ✅
 ```
 
 **Kết quả**: ThreeJSOverlay hoàn toàn dựa vào config → Dễ tune via database
@@ -166,6 +178,7 @@ const worldY = -(centerY - config.offsetY) * 3;  // ✅
 ## 🚀 How to Adjust Config
 
 ### Via Admin Panel (Future):
+
 1. Login to admin
 2. Go to Product 3D Model Config
 3. Select product
@@ -177,9 +190,10 @@ const worldY = -(centerY - config.offsetY) * 3;  // ✅
 6. User refreshes → New config loaded automatically
 
 ### Via Database Directly (Current):
+
 ```sql
-UPDATE product_3d_model_config 
-SET 
+UPDATE product_3d_model_config
+SET
   positionOffsetX = 0.3,
   positionOffsetY = 0.05,
   initialScale = 0.14
@@ -197,17 +211,21 @@ WHERE model_id = 8;
 ## 📝 Summary
 
 ### What Changed:
+
 - ❌ Before: Hardcoded config in AIAnalysisPage
 - ✅ After: Load config from database via `model3DConfig` state
 
 ### Files Modified:
+
 - `AIAnalysisPage.tsx` - Use `model3DConfig` instead of hardcoded values
 - `ThreeJSOverlay.tsx` - Already fixed (no hardcoded offsets)
 
 ### Key Takeaway:
+
 **"Config belongs in database, not in code"** 🎯
 
 This allows:
+
 - Per-product customization
 - Admin control without code changes
 - Consistent config system

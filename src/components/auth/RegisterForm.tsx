@@ -35,13 +35,15 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       clearError();
       await registerUser(data);
       
-      toast.success('Registration successful! Please check your email to verify your account.');
+      // Navigate to success page with email
+      navigate('/registration-success', { 
+        state: { email: data.email } 
+      });
+      
       reset();
       
       if (onSuccess) {
         onSuccess();
-      } else {
-        navigate('/login');
       }
     } catch (error: any) {
       toast.error(error.message || 'Registration failed');

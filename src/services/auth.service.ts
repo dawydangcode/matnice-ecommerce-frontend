@@ -107,6 +107,34 @@ class AuthService {
     }
   }
 
+  async verifyEmail(token: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiService.post<{
+        success: boolean;
+        message: string;
+      }>(`${this.baseUrl}/verify-email`, { token });
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Email verification failed"
+      );
+    }
+  }
+
+  async resendVerificationEmail(email: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiService.post<{
+        success: boolean;
+        message: string;
+      }>(`${this.baseUrl}/resend-verification-email`, { email });
+      return response;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to resend verification email"
+      );
+    }
+  }
+
   async getCurrentUser(): Promise<any> {
     try {
       const response = await apiService.get(`${this.baseUrl}/profile`);

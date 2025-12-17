@@ -1,10 +1,10 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Camera, Upload, User, Palette, Sparkles, Brain, Eye, Zap, RotateCcw, X, UserCircle2 } from 'lucide-react';
+import { Camera, Upload, User, Palette, Sparkles, Brain, Eye, Zap, RotateCcw, X } from 'lucide-react';
 import Header from '../components/Header';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import ProductRecommendations from '../components/ProductRecommendations';
-import AIVirtualTryOn from '../components/AIVirtualTryOn';
+import VirtualTryOnModal from '../components/VirtualTryOnModal';
 import { useFaceDetection } from '../hooks/useFaceDetection';
 import { product3DModelService, Product3DModel, Model3DConfig } from '../services/product3dModel.service';
 import '../styles/AIAnalysisPage.css';
@@ -629,15 +629,34 @@ const AIAnalysisPage: React.FC = () => {
     }
   }, [cameraActive, initializeFaceAPI, startFaceDetection, analysisResult]);
 
-  // Auto start camera when analysis is completed
+  // Stop camera when analysis is completed (to save resources)
   useEffect(() => {
-    if (analysisResult && analysisResult.status === 'completed' && !cameraActive) {
-      // Small delay to ensure UI is updated
-      setTimeout(() => {
-        startCamera();
-      }, 500);
+    if (analysisResult && analysisResult.status === 'completed' && cameraActive) {
+      console.log('✅ Analysis completed - stopping camera to save resources');
+      // Stop face detection
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current);
+        detectionIntervalRef.current = null;
+      }
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
+      if (faceDetectionTimerRef.current) {
+        clearTimeout(faceDetectionTimerRef.current);
+        faceDetectionTimerRef.current = null;
+      }
+      // Stop camera stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      setCameraActive(false);
     }
-  }, [analysisResult, cameraActive, startCamera]);
+  }, [analysisResult, cameraActive]);
 
   // Cleanup on component unmount
   useEffect(() => {
@@ -1127,40 +1146,14 @@ const AIAnalysisPage: React.FC = () => {
             
             <div className="relative mb-4">
               {analysisResult && analysisResult.status === 'completed' ? (
-                // After analysis: show video with Virtual Try-On overlay
-                <div className="relative">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="camera-video mirror-video rounded-lg"
+                // After analysis: show captured image (camera stopped to save resources)
+                capturedImage ? (
+                  <img
+                    src={capturedImage}
+                    alt="Analyzed"
+                    className="w-full rounded-lg shadow-lg"
                   />
-                  
-                  {/* Virtual Try-On Overlay */}
-                  {showVirtualTryOn && selectedProduct && product3DModel && (
-                    <AIVirtualTryOn
-                      productName={selectedProduct.productName}
-                      model3dUrl={getModelProxyUrl(selectedProduct.id)}
-                      glassesConfig={model3DConfig ? {
-                        offsetX: model3DConfig.offsetX,
-                        offsetY: model3DConfig.offsetY,
-                        positionOffsetX: model3DConfig.positionOffsetX,
-                        positionOffsetY: model3DConfig.positionOffsetY,
-                        positionOffsetZ: model3DConfig.positionOffsetZ,
-                        initialScale: model3DConfig.initialScale
-                      } : undefined}
-                      videoElement={videoRef.current}
-                      isActive={showVirtualTryOn}
-                      onClose={() => {
-                        setShowVirtualTryOn(false);
-                        setSelectedProduct(null);
-                        setProduct3DModel(null);
-                        setModel3DConfig(null);
-                      }}
-                    />
-                  )}
-                </div>
+                ) : null
               ) : capturedImage && !cameraActive ? (
                 // Captured image
                 <img
@@ -1409,6 +1402,29 @@ const AIAnalysisPage: React.FC = () => {
       {renderFeaturesSection()}
 
       <Footer />
+
+      {/* Virtual Try-On Modal - Fullscreen */}
+      {showVirtualTryOn && selectedProduct && product3DModel && (
+        <VirtualTryOnModal
+          isOpen={showVirtualTryOn}
+          productName={selectedProduct.productName}
+          model3dUrl={getModelProxyUrl(selectedProduct.id)}
+          glassesConfig={model3DConfig ? {
+            offsetX: model3DConfig.offsetX,
+            offsetY: model3DConfig.offsetY,
+            positionOffsetX: model3DConfig.positionOffsetX,
+            positionOffsetY: model3DConfig.positionOffsetY,
+            positionOffsetZ: model3DConfig.positionOffsetZ,
+            initialScale: model3DConfig.initialScale
+          } : undefined}
+          onClose={() => {
+            setShowVirtualTryOn(false);
+            setSelectedProduct(null);
+            setProduct3DModel(null);
+            setModel3DConfig(null);
+          }}
+        />
+      )}
     </div>
   );
 };

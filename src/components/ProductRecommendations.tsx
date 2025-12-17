@@ -145,6 +145,10 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
       console.log('API response:', data);
       
       if (data.success) {
+        // Debug: Check if products have brand data
+        console.log('🔍 First product brand check:', data.data.products[0]?.brand);
+        console.log('🔍 First product full:', data.data.products[0]);
+        
         // If it's page 1, replace products; otherwise append
         if (page === 1) {
           setProducts(data.data.products);
@@ -376,7 +380,7 @@ const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                 <div className="space-y-4 p-2">
                   <div>
                     <h3 className="font-bold text-lg text-gray-900 text-secondary">
-                      {product.brand?.name || 'Brand Name'}
+                      {product.brand?.name || `Brand ID: ${product.brandId}` || 'Unknown Brand'}
                     </h3>
                     <p className="text-base font-light text-secondary">{product.productName}</p>
                   </div>

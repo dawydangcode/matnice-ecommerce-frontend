@@ -6,6 +6,7 @@ import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '../../stores/auth.store';
 import { loginSchema, LoginFormData } from '../../utils/validation.schemas';
+import ResendVerificationEmail from './ResendVerificationEmail';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -13,6 +14,8 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [showResendVerification, setShowResendVerification] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
   const { login, isLoading, error, clearError } = useAuthStore();
 
@@ -29,6 +32,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       clearError();
+      setShowResendVerification(false);
+      setUserEmail(data.username); // Save for resend verification
       await login(data.username, data.password);
       
       toast.success('Login successful!');
@@ -48,7 +53,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         }
       }
     } catch (error: any) {
-      toast.error(error.message || 'Login failed');
+      const errorMessage = error.message || 'Login failed';
+      toast.error(errorMessage);
+      
+      // Check if error is about email verification
+      if (errorMessage.toLowerCase().includes('verify') || errorMessage.toLowerCase().includes('verification')) {
+        setShowResendVerification(true);
+      }
     }
   };
 
@@ -65,6 +76,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Resend Verification Email */}
+        {showResendVerification && (
+          <div className="mb-6">
+            <ResendVerificationEmail 
+              email={userEmail} 
+              onSuccess={() => {
+                setShowResendVerification(false);
+                toast.success('Please check your email and verify your account.');
+              }}
+            />
           </div>
         )}
 
